@@ -1,0 +1,6 @@
+<div id="map" class="map">
+</div>
+<app-layer-panel [editLayers]="loadedWfsLayers" (layerVisClick)="updateMapVisibleLayer($event)"
+(editLayerClick)="updateEditingLayer($event)"
+(layersOrder) = "updateOrderVisibleLayers($event)"></app-layer-panel>
+

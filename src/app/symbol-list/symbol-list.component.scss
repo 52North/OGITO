@@ -1,0 +1,28 @@
+// to remove the padding in mat-list
+:host ::ng-deep .mat-list-item-content {
+  padding: 0!important;
+}
+
+// to remove the padding on the text of the list
+:host ::ng-deep .mat-list-text {
+  padding: 0 5px !important;
+}
+.example-list{
+  margin-left: 70% !important;
+  max-width: 20%;
+}
+
+.toolbarDivider {
+  padding-top: 5px !important;
+  color:darkred ;
+}
+
+.closeIcon :hover {
+  background-color: #e35183;  //to focus the icons
+}
+.canvasSymbol {
+  background-color: #e35183;
+  border: 1px;
+  width: 2vw;  // responsive to the size of the VW
+  height: 1vw;
+}

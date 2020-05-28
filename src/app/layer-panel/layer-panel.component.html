@@ -1,0 +1,50 @@
+<!--suppress AngularUndefinedBinding -->  <!-- to fix a bug in webstorm -->
+<div class ="example-list"   *ngIf="showLayerPanel$ | async" [style.left.px]="x" [style.top.px]="y"
+     (panstart)="onPanStart($event)" (panmove)="onPan($event)">
+
+<mat-card class = 'layerPanelCard'>
+  <mat-card-title-group>
+      <mat-card-title class ="panelTitle">Layers  </mat-card-title>
+      <button mat-mini-fab   (click)="closeLayerPanel(false)" class="matCloseWrapper" >
+        <mat-icon  class= "closeIcon">close</mat-icon>
+      </button>
+  </mat-card-title-group>
+  <mat-divider class = "toolbarDivider"></mat-divider>
+   <div class="example-list-top" cdkDropList (cdkDropListDropped)="drop($event)">
+   <mat-selection-list #listElayer (selectionChange)="onEditListChange($event,listElayer.selectedOptions.selected,listElayer.selectedOptions)">
+      <mat-list-option class="example-box mat-primary" *ngFor= "let layer of editLayers" [value]="layer['layerName']"
+                       (click)="onLayerVisClick($event,layer)" checkboxPosition="before" cdkDrag
+                       [ngClass]="layerActive == layer['layerName']? 'active': 'normal'">
+        <div class="selectList">
+          <div style="display:flex;align-items:center">
+          {{layer['layerTitle']}}
+          </div>
+          <div>
+            <button mat-icon-button (click)="onEditLayerClick($event, layer)">
+              <mat-icon  class= "editIcon">edit</mat-icon>
+            </button>
+          </div>
+        </div>
+      </mat-list-option>
+  </mat-selection-list>
+  </div>
+
+  <mat-divider class = "toolbarDivider"></mat-divider>
+   <span>Background Layers</span>
+
+  <mat-selection-list   #sbLayers (selectionChange)="onBackListChange($event,sbLayers.selectedOptions.selected,sbLayers.selectedOptions)">
+   <!-- <span class = "title-layer">Citra satelit</span> -->
+    <div cdkDropList (cdkDropListDropped)="dropBase($event)">
+      <!--
+     <ng-container   >
+
+       <mat-list-option class="example-box" *ngFor= "let layer of baseLayers" [selected]="preSelection.indexOf(layer[0]) > -1"
+                        [value]="layer[0]" (click)="onLayerBackVisClick($event,layer)"
+                        checkboxPosition="before" cdkDrag>
+         {{layer[1]}}
+       </mat-list-option>
+     </ng-container>-->
+    </div>
+  </mat-selection-list>
+</mat-card>
+</div>

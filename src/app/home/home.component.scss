@@ -1,0 +1,102 @@
+
+.toolbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  //height: 40px;
+  height: 7%;
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+  //border: dashed;
+ }
+.toolbarWrapper {
+  display:flex;
+  flex-direction: column;
+  height: 7%;
+}
+
+.title {
+  padding-left: 20px;
+}
+.spacer {
+  flex: 1 1 auto;
+}
+.mat-toolbar{
+  height: 100%;
+}
+footer {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  line-height: 20px;
+}
+
+footer a {
+  display: flex;
+  align-items: center;
+}
+
+
+.terminal {
+  position: relative;
+  width: 80%;
+  max-width: 600px;
+  border-radius: 6px;
+  padding-top: 45px;
+  margin-top: 8px;
+  overflow: hidden;
+  background-color: rgb(15, 15, 16);
+}
+
+@media screen and (min-width: 900px) {
+  .mat-toolbar {
+    background-color: #78002e; // primary dark color only for test removed later to keep the primary color
+  }
+  .mat-icon {
+    font-size: 24px;
+  }
+  .title {
+    padding-left: 5px;
+  }
+}
+  @media screen and (min-width: 1400px){
+    .mat-toolbar {
+      background-color: #ad1457; // primary normal color only for test removed later to keep the primary color
+    }
+    .mat-icon {
+        font-size: 36px;
+     }
+
+  }
+
+  @media screen and (min-width: 1900px){
+    .mat-toolbar  {
+      background-color: darkred;  // only for test removed later to keep the primary color
+      .mat-icon {
+        font-size: 48px;
+      }
+    }
+  }
+
+// iiyama 24'' // resolution is 1920 x 1080 //viewable area 521.28 x 293.22mm //Pixel pitch	0.272mm
+@media screen and (min-width: 5200px){
+  .mat-toolbar  {
+    background-color: #e35183;  // primary light only for test removed later to keep the primary color
+    .mat-icon {
+      font-size: 72px;
+    }
+  }
+}
+
+// iiyama 27'' // resolution is 1920 x 1080// viewable area 597.6 x 336.2mm //Pixel pitch	0.311mm
+@media screen and (min-width: 5800px){
+  .mat-toolbar  {
+    background-color: darkred;  // only for test removed later to keep the primary color
+    .mat-icon {
+      font-size: 72px;
+    }
+  }
+}
+

@@ -1,0 +1,39 @@
+.mapToolbar{
+  z-index: 2;
+  width: 3%;  //3%
+  max-height: 60%;
+  margin-left: 90%;  //95%
+  margin-top:10%;
+  flex-direction: column;
+  position: absolute;
+  border-radius: 3px;
+  background-color: #ad1457;   //same that primary color
+}
+.mapToolbar:hover {
+  cursor:pointer;
+ }
+.mat-toolbar {
+  flex-direction: column;
+  height: 100%; //100% of the parent (div)
+  // the primary color of the theme
+}
+.mat-toolbar :hover {
+  background-color: #e35183;  //to focus the icons
+}
+
+.spacetitle {
+  padding-top: 15px;  //20
+  padding-left: 0px;
+  padding-right: 0px;
+  margin: 0 0;
+  background-color:#ad1457 !important;
+}
+.toolbarTitle:hover {
+  background-color: aqua;
+}
+.toolbarDivider {
+  background-color: white;  // for testing --
+}
+.svgIconToolbar {
+  color:white;
+}

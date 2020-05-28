@@ -1,0 +1,46 @@
+/* You can add global styles to this file, and also import other style files */
+//@import '@angular/material/prebuilt-themes/deeppurple-amber.css';
+@import "../node_modules/ol/ol.css";
+
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; overflow: hidden;}
+.example-list {
+  // width: 13%;
+  max-width: 20%;
+  border: solid 1px #ccc;
+  min-height: 40px;
+  display: block; // este esta bien
+  //background: darkred;
+  border-radius: 4px;
+  overflow: auto;
+  margin-left: 4%;
+  margin-top: 5%;
+  z-index: 3;
+  position: absolute;
+  opacity:0.9
+}
+.example-list:hover{
+  cursor:pointer;
+  //border-bottom-color: aqua;
+}
+.panelTitle{
+  font-size:1.2vw !important;  // responsive text 2% of the viewport width
+}
+
+.matCloseWrapper{
+  padding: 0 0 0 0;
+  width: 1.7vw !important;
+  height: 1.7vw !important;
+  // line-height: 18px !important;
+  margin-top: 0;
+}
+.closeIcon {
+  font-size: 1vw;
+  text-align: center;
+  vertical-align: top !important;
+  width: 1.5vw !important;
+  height:  1.5vw !important;
+  padding-top: 0;
+  margin-top: -3px;  // To center the icon in the wrapper
+  padding-right: 0;
+}

@@ -1,0 +1,55 @@
+<!--suppress AngularUndefinedBinding -->  <!-- to fix a bug in webstorm -->
+<div class="editToolbar"   *ngIf="isVisible$ | async"  [style.left.px]="x" [style.top.px]="y"
+     (panstart)="onPanStart($event)" (panmove)="onPan($event)">
+<mat-card>
+   <mat-divider [vertical]="true"></mat-divider>
+    <mat-toolbar>
+      <button   *ngIf= " (layerTypeEdit$ == 'Point' || layerTypeEdit$ == 'Multi') " mat-icon-button
+                (click)="drawingShapes('Point')" matTooltip="Add point/marker" [ngClass]="actionActive['Point'] ? 'active': 'normal'">
+        <mat-icon>add_location</mat-icon>
+      </button>
+
+      <button mat-icon-button *ngIf="(layerTypeEdit$ == 'Line' || layerTypeEdit$ =='Multi' || layerTypeEdit$ == 'Polygon') "
+              (click)="drawingShapes('LineString')" matTooltip="Add line" [ngClass]="actionActive['LineString'] ? 'active': 'normal'">
+        <mat-icon    svgIcon="add_line"></mat-icon>
+      </button>
+
+      <button *ngIf="(layerTypeEdit$ == 'Polygon' || layerTypeEdit$ == 'Multi') " mat-icon-button
+              (click)="drawingShapes('Polygon')" matTooltip="Add polygon" [ngClass]="actionActive['Polygon'] ? 'active': 'normal'">
+        <mat-icon    svgIcon="add_poly"></mat-icon>
+      </button>
+      <button mat-icon-button (click)="selectingBoxFeatures();showSymbolPanel(false)" matTooltip="Select element(s)"
+              [ngClass]="actionActive['modifyBox'] ? 'active': 'normal'" >
+        <mat-icon svgIcon="selectBoxFeature"></mat-icon>
+      </button>
+
+      <button mat-icon-button (click)="deleteFeat();showSymbolPanel(false)"  aria-label="delete" matTooltip="Delete element"
+              [ngClass]="actionActive['delete'] ? 'active': 'normal'">
+        <mat-icon>delete_forever</mat-icon>
+      </button>
+
+      <button mat-icon-button (click)="showSymbolPanel(true)" matTooltip="Select/Change symbol"
+        [ngClass]="actionActive['showSymbols'] ? 'active': 'normal'">
+        <mat-icon   aria-label="">category</mat-icon>
+      </button>
+
+      <button mat-icon-button aria-label="UndoLastEdit" (click)="undoEdit(actionActive);" matTooltip="Undo">
+        <mat-icon>undo</mat-icon>
+      </button>
+
+      <button mat-icon-button (click)="saveLayer()" matTooltip = "Save edits into the layer">
+        <mat-icon>save_alt</mat-icon>
+      </button>
+
+      <span class = "spacer"></span>
+      <div class="divClosing">
+        <button mat-mini-fab (click)="closeEditingToolbar()" class="matCloseWrapper" >
+          <mat-icon  class= "closeIcon ">close</mat-icon>
+        </button>
+      </div>
+     </mat-toolbar>
+
+
+
+</mat-card>
+</div>

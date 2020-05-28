@@ -1,0 +1,45 @@
+
+<div class="toolbarWrapper">
+<!-- Toolbar -->
+
+  <div class="toolbar" role="banner">
+    <mat-toolbar color = "primary">
+
+    <button mat-icon-button   [matMenuTriggerFor]="myMenu" aria-label="Menu">
+      <mat-icon>menu</mat-icon>
+    </button>
+    <mat-menu  #myMenu="matMenu">
+     <!-- <button mat-menu-item  (click)="openProject()">
+        <mat-icon>folder_open</mat-icon>
+        <span>Open project</span>
+      </button> -->
+      <button mat-menu-item disabled (click) = "editSettings()">
+        <mat-icon>settings </mat-icon>
+        <span>Settings</span>
+      </button>
+      <button mat-menu-item (click)="showInfo()">
+        <mat-icon>info </mat-icon>
+        <span>About</span>
+      </button>
+     </mat-menu>
+     <span class="title">&nbsp;OGITO </span>
+     <span class="spacer"></span>
+     <button mat-icon-button (click)="exitToApp()">
+        <mat-icon> exit_to_app</mat-icon>
+     </button>
+     </mat-toolbar>
+   </div>
+<!--// here put the divs/cards and the design-->
+
+
+
+  <!--
+  <div class="terminal" >
+    <span> Keeping alive to copy the style</span>
+  </div>
+-->
+</div>
+<app-map></app-map>
+<app-toolbar></app-toolbar>
+<app-editing-toolbar></app-editing-toolbar>
+<app-symbol-list></app-symbol-list>

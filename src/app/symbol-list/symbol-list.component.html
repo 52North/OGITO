@@ -1,0 +1,24 @@
+<div class ="example-list"   *ngIf="displaySymbolList$ | async" [style.left.px]="x" [style.top.px]="y"
+     (panstart)="onPanStart($event)" (panmove)="onPan($event)">
+<mat-card class="symbol-list"  #symListCard>
+  <mat-card-title-group>
+    <mat-card-title class="panelTitle">Symbols</mat-card-title>
+    <button mat-mini-fab (click)="closeListSymbols()" class="matCloseWrapper">
+      <mat-icon  class= "closeIcon">close</mat-icon>
+    </button>
+  </mat-card-title-group>
+  <mat-divider class = "toolbarDivider"></mat-divider>
+  <span *ngIf= "symbolsLength == 0"> ..creating Lis of Symbols</span>
+  <!--<mat-list-item *ngFor="let symbol of symbols | keyvalue" class = "mat-list-item active" >
+    <button mat-icon-button (click)="changeCurrentSymbol(img)" > <img src = {{img.value}} > {{ img.key}}
+    </button>
+  </mat-list-item>  !-->
+  <!--<canvas id="symbolList" width="200" height="200"></canvas> -->
+  <span>{{variable}}</span>
+  <div class="symbol" *ngFor="let symbol of symbols$ | keyvalue">
+    <canvas id ={{symbol.key}} class="canvasSymbol" #cmp></canvas>
+    <span> {{symbol.key}} </span>
+  </div>
+
+</mat-card>
+</div>

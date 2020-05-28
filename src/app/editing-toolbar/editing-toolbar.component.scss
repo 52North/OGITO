@@ -1,0 +1,62 @@
+.editToolbar{
+  z-index: 2;
+  #width: 3%;  //3%
+  max-width: 40%;
+  margin-left: 50%;  //95%
+  margin-top:5%;
+  flex-direction: row;
+  position: absolute;
+  border-radius: 3px;
+  //background-color: #ad1457!important;   //same that primary color
+}
+.editToolbar:hover {
+  cursor:pointer;
+}
+.mat-toolbar {
+  flex-direction: row;
+  height: 100%; //100% of the parent (div)
+  // the primary color of the theme
+}
+.mat-toolbar :hover {
+  background-color: #e35183;  //to focus the icons
+}
+.closeIcon {
+  font-size: 0.8vw;
+  text-align: center;
+  vertical-align: top !important;
+  width: 1.5vw !important;
+  height:  1.5vw !important;
+  padding-top: 0;
+  margin-top: 0;
+  padding-right: 0;
+ }
+.closeIcon:hover {
+  background-color: #fff2e1 !important;
+}
+.matCloseWrapper{
+  padding: 0 0 0 0;
+  width: 1.7vw !important;
+  height: 1.7vw !important;
+  // line-height: 18px !important;
+}
+.mat-card{
+  padding:1px 1px;
+}
+.divClosing{
+  float: right;
+  height: 100%;
+}
+.editingTools{
+  float:left;
+  height: 100%;
+  background-color: white;
+}
+.spacer {
+  flex: 1 1 auto;
+}
+.active {
+  background: #e35183;   //green;
+}
+.toolbarDivider {
+  background-color: #e35183;  // for testing --
+}

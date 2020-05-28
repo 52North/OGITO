@@ -1,0 +1,31 @@
+<!--suppress AngularUndefinedBinding -->  <!-- to fix a bug in webstorm -->
+
+<div class ="mapToolbar"   *ngIf="existingProject" [style.left.px]="x" [style.top.px]="y"
+     (panstart)="onPanStart($event)" (panmove)="onPan($event)">
+<mat-card class="spacetitle" color="primary">
+ <!-- <mat-card-title-group>
+    <mat-card-title class="toolbarTitle">&nbsp;</mat-card-title>
+  </mat-card-title-group> -->
+  <mat-divider class = "toolbarDivider"></mat-divider>  <!-- to provide a space to drag -->
+  <mat-toolbar color="primary">
+    <button matTooltip="Zoom to the study area" aria-labelledby="Zoom to the study area" mat-icon-button (click)="zoomHome()">
+      <mat-icon>home</mat-icon>
+    </button>
+    <button mat-icon-button aria-labelledby="Show Layer Panel" matTooltip="Show List of layers" (click)="createScratchLayer()" >
+      <mat-icon class="svgIconToolbar">layers</mat-icon>
+    </button>
+    <button mat-icon-button aria-labelledby="Edit layers" matTooltip="Edit layers" (click)="layerEditingChange()">
+      <mat-icon>edit</mat-icon>
+    </button>
+    <button mat-icon-button aria-labelledby="Add a scratch layer" matTooltip="Add a scratch layer" (click)="createScratchLayer()" >
+    <mat-icon class="svgIconToolbar" svgIcon="layerScratch"></mat-icon>
+    </button>
+  </mat-toolbar>
+</mat-card>
+ <!--  <div class="location">({{x}}, {{y}})</div> esto muestra las coordenas que se usan para la nueva pos-->
+</div>
+
+
+
+
+

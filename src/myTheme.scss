@@ -1,0 +1,9 @@
+/* You can add global styles to this file, and also import other style files */
+@import '~@angular/material/theming';
+@include mat-core();
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+$myOgito-app-primary: mat-palette($mat-pink,800,100,900);
+$myOgito-app-accent: mat-palette($mat-amber,50);
+$myOgito-app-theme:mat-light-theme($myOgito-app-primary,$myOgito-app-accent);
+@include angular-material-theme($myOgito-app-theme);
