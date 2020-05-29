@@ -159,7 +159,7 @@ export class MapComponent implements OnInit, OnDestroy {
       // fromLonLat([AppConfiguration.mapCenterLng,AppConfiguration.mapCenterLat],this.myProjection)
         center:  [this.mapCenterXY[0], this.mapCenterXY[1]],  // [-66,10] ,
         // extent: this.mapCanvasExtent, // not sure if this will prevent the draggig outside the extent.
-        zoom: 10, // this.mapZoom,
+        zoom: 13, // this.mapZoom,
         // minZoom: AppConfiguration.minZoom,
         // maxZoom: AppConfiguration.maxZoom,
         projection: this.srsID // this.projectProjection // 'EPSG:4326'

@@ -6,7 +6,7 @@ export class AppConfiguration{
   static wfsVersion = '2.0';
   static wmtsVersion = '1.0.0';
   static qgsProject = '/qgs_projects/DenaiLama/mappingDenaiLama.qgs';  //mappingDenaiLama
-   static srsName = 'EPSG:32647'   // tomarlo de aqui o del projecto?
+  static srsName = 'EPSG:32647'   // tomarlo de aqui o del projecto?
   // la ruta para accederlo dentro de la app
   static curProject = '../../assets' + AppConfiguration.qgsProject;
   static qgsProjectFolder = 'D:/PhD/code/fromScratch/myOgito/src/assets/';

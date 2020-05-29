@@ -15,6 +15,7 @@ export class MapQgsStyleService {
   /** Retrieves the styles for WFS layers in the Qgs project associated
    *
    */
+  svgFolder = '../../assets/svg/';
   nodes = {};
   canvas = document.createElement('canvas');
   context = this.canvas.getContext('2d');
@@ -99,6 +100,16 @@ export class MapQgsStyleService {
     return (thePattern);
   }
 
+  getRGBAcolor(color: any){
+    /** takes a color and retunr in a rgba format used in OL
+     * @param color: string color as given in the qgs project file
+     * by default it put 1 as the transparency.
+     * return a string with the color in the rgba format
+     */
+    let rgbaColor = color .split(',');
+    rgbaColor = 'rgba('.concat(rgbaColor[0], ', ', rgbaColor[1], ', ', rgbaColor[2], ', 1)');
+    return(rgbaColor);
+  }
 
   mapQgsSymbol(symType: any, symLyrCls: any, symAlpha: any, props: any){
     /** Retrieves a OL style that is "equivalent" to the style described in a QGS project
@@ -225,10 +236,43 @@ export class MapQgsStyleService {
             }),
             stroke:symStroke,
           });
-
           break;
         }
-        case "FontMarker":{
+        case 'SvgMarker':
+        {
+        console.log('entra svgMarker?');
+        const color = this.getRGBAcolor(symStyle['color']);   // this is symStyle["color"]
+        let outColor = this.getRGBAcolor(symStyle['outline_color']);
+        const filename = this.svgFolder.concat(symStyle['name']);
+        const size = symStyle['size'] * 20;
+        console.log('color size ', color,size);
+        let  outlineWidth = +symStyle["outline_width"];
+        let verticalAnchorPoint = symStyle['vertical_anchor_point'];
+        /* <prop k="angle" v="0"/>
+         <prop k="fixedAspectRatio" v="0"/>
+         <prop k="horizontal_anchor_point" v="1"/>
+         <prop k="offset" v="0,0"/>
+         <prop k="offset_map_unit_scale" v="3x:0,0,0,0,0,0"/>
+         <prop k="offset_unit" v="MM"/>
+         <prop k="outline_width_map_unit_scale" v="3x:0,0,0,0,0,0"/>
+         <prop k="outline_width_unit" v="MM"/>
+         <prop k="scale_method" v="diameter"/>
+         <prop k="size_map_unit_scale" v="3x:0,0,0,0,0,0"/>
+         <prop k="size_unit" v="MM"/>
+         <prop k="vertical_anchor_point" v="1"/> */
+         newStyle = new Style({
+           image: new Icon({
+             color: color,
+             crossOrigin: 'anonymous',
+             //imgSize: [50, 50],   // it was 20 #TODO responsive to zoom scale
+             scale: 0.03, //#TODO verificar size qgis/ol vamos bien
+             src: filename
+           })
+         });
+          break;
+        }
+        case "FontMarker":
+          {
           let offset = symStyle["offset"].split(",");
           let color = symStyle["color"].split(",");
           color = 'rgba('.concat(color[0], ', ', color[1], ', ', color[2], ', 1)');
@@ -271,7 +315,7 @@ export class MapQgsStyleService {
           });
           newStyle = new Style({
             text: symText,
-            //stroke:symStroke
+            // stroke:symStroke
           });
           break;
         }
@@ -335,10 +379,11 @@ export class MapQgsStyleService {
             }
           }
           if (olStyleLst.length > 1){
-            // switch the order of the styles
+            // switch the order of the styles   #TODO check if needed
             let olStyleLst2 = [];
             for (let s = 0; s < olStyleLst.length; s++){
-              olStyleLst2.push(olStyleLst[olStyleLst.length -s]);}
+              olStyleLst2.push(olStyleLst[olStyleLst.length - 1 - s]); }
+            // olStyleLst = olStyleLst2;
           }
           tnodes[symName].style = olStyleLst;   // using the tnodes[symName].style is te same than tnodes[symName]["style"]
           tnodes[symName].alpha = symAlpha;

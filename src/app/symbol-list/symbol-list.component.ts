@@ -8,6 +8,7 @@ import Feature from 'ol/Feature';
 import Polygon from 'ol/geom/Polygon';
 import Point from 'ol/geom/Point';
 import LineString from 'ol/geom/LineString';
+import {Style, Stroke, Text} from 'ol/style';
 
 @Component({
   selector: 'app-symbol-list',
@@ -25,6 +26,7 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
   startY = 0;
   symbols$ = {};
   symbolsLength = 0;
+  geometryTypeSymbols: string;
   displaySymbolList$: Observable<boolean>;
   subscriptionToShowSymbols: Subscription;
   editLayerName$: Observable<string>;
@@ -40,9 +42,10 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
   this.subscriptionToLayerEditing = this.openLayersService.layerEditing$.subscribe(
     data => {
       this.styles = this.mapQgsStyleService.getLayerStyle(data.layerName);
-      console.log('styles in symbolList.. pasito a pasito', this.styles);
+      // console.log('styles in symbolList.. pasito a pasito', this.styles);
       this.symbols$ = this.getSymbolList (this.styles);
       this.symbolsLength = Object.keys(this.symbols$).length;
+      this.geometryTypeSymbols = data.layerGeom;
     },
       error => console.log('Error in subscription to Layer Editing in SymbolList', error)
   );
@@ -99,30 +102,77 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
     * @param layerGeom: geometry of the layer as specified in the QGIS project ;
     */
    // let canvas = this.myCanvas.toArray()[i].nativeElement;
-   console.log('mycanvas in createSymbolsinCanvas', this.myCanvas.toArray());
+   let feature: any;
    const allCanvas = this.myCanvas.toArray();
-   this.myCanvas.forEach(canvas => {
-     console.log('en el foreach', canvas);
-     if (canvas.nativeElement.getContext('2d')) {
-       console.log (canvas.nativeElement.getContext('2d'));
-     }
-   } );
-
    for (let i = 0 ; i < allCanvas.length ; i++) {
-     let canvas = allCanvas[i];
-      console.log("tipo", typeof(canvas) );
-     let context: CanvasRenderingContext2D;
-     //context = canvas.getContext('2d');
-     const render = toContext(context, { size: [this.symbolList.nativeElement.width, this.symbolList.nativeElement.height] });
-     const feature = new Feature(new Point([10, 10]));
-     const stylelayer = this.symbols$['Gereja'][0];
-     render.drawFeature(feature, stylelayer);
-   }
-   setTimeout(() => {
-    // this.variable = this.myCanvas.map(p => p.id).join(', ');
-   }, 0);
+     const canvas = allCanvas[i];
+     if (canvas.nativeElement.getContext('2d')) {
+       let key = canvas.nativeElement.id;
+       console.log('get the key?', key);
+       const width = canvas.nativeElement.width * devicePixelRatio;
+       const height = canvas.nativeElement.height * devicePixelRatio;
+       canvas.nativeElement.width = width;
+       canvas.nativeElement.height = height;
+      // console.log('width and height', height, width, canvas.nativeElement.width , devicePixelRatio  );
+       const render = toContext(canvas.nativeElement.getContext('2d'));
+       const stylelayer = this.symbols$[key];
+       switch (this.geometryTypeSymbols) {
+         case 'Point': {
+          /* let text = stylelayer[0].getText();
+           console.log(`is a style? ${typeof (stylelayer[0])}  texto ${stylelayer[0]}`);
+           let scaleText = stylelayer[0].getText().getScale() * 15;
+           let fillText = stylelayer[0].getText().getFill();
+           let fontText = stylelayer[0].getText().getFont();
+           console.log(text, scaleText, fillText, fontText);*/
+           feature = new Feature(new Point([width / 4, height / 2]));
+           break;
+         }
+         case 'Line': {
+           // calculate the start and end point and draw as styles are defined in the array
+           render.lineWidth = 5;
+           //feature = new Feature(new LineString([[0, 10], [width - (width / 10 * 2), 10]]));
+           let stroke = stylelayer[0].getStroke();
+           let stylelayerTemp = new Style({
+             stroke: new Stroke({
+               color: '#3399CC',
+               width: 20
+             })
+           });
+           let W = Number(stroke.getWidth()) * 20;
+           console.log( 'color and width', stroke.getColor(), W);
+           let testStyle = new Style({
+             stroke: new Stroke({
+               color: stroke.getColor(),
+               width: W
+             })
+           });
+           //console.log( 'temp and test Styles', testStyle);
+           feature = new Feature(new LineString([[10, height / 2], [ width - (width / 4), height / 2]]));
+           //render.drawFeature(feature, stylelayerTemp);
+           //feature = new Feature(new LineString([[10, height / 3], [width / 2, height / 3]]));
+           render.drawFeature(feature, testStyle);
+           break;
+         }
+         case 'Polygon': {
+           // en landuse 9 es muy interesante, pattern
+           render.lineWidth = 5;
+           const wide = width - (width / 4);
+           const high = height - (height / 4);
+           feature = new Feature(new Polygon([[[0, 0], [0, high], [wide, high], [wide, 0], [0, 0]]]));
+           break;
+         }
+       }
+       // console.log('stylelayer', stylelayer);
+       for (const style of stylelayer) {
+         render.drawFeature(feature, style);
+       }
 
-
+       /* render = toContext(context, {size: [this.symbolList.nativeElement.width, this.symbolList.nativeElement.height]});
+       feature = new Feature(new Point([10, 10]));
+       stylelayer = this.symbols$['Gereja'][0];
+       render.drawFeature(feature, stylelayer); */
+     }
+    }
  }
 
   createSymbolPanel(layerGeom: string, styles: any){
