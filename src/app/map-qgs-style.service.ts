@@ -1,12 +1,8 @@
 import { Injectable } from '@angular/core';
-import Style from 'ol/style/Style';
-import Stroke from 'ol/style/Stroke';
-import Fill from 'ol/style/Fill';
-import Icon from 'ol/style/Icon';
-import Text from 'ol/style/Text';
 import CircleStyle from 'ol/style/Circle';
+import {Fill, RegularShape, Stroke, Style, Icon, Text, Circle} from 'ol/style';
 import {DEVICE_PIXEL_RATIO} from 'ol/has.js';
-
+import {AppConfiguration} from './app-configuration';
 
 @Injectable({
   providedIn: 'root'
@@ -15,7 +11,7 @@ export class MapQgsStyleService {
   /** Retrieves the styles for WFS layers in the Qgs project associated
    *
    */
-  svgFolder = '../../assets/svg/';
+  svgFolder = AppConfiguration.svgFolder;
   nodes = {};
   canvas = document.createElement('canvas');
   context = this.canvas.getContext('2d');
@@ -100,14 +96,15 @@ export class MapQgsStyleService {
     return (thePattern);
   }
 
-  getRGBAcolor(color: any){
+  getRGBAcolor(color: any, transparency: string = '1'){
     /** takes a color and retunr in a rgba format used in OL
      * @param color: string color as given in the qgs project file
+     * @param transparency: string containing de transparency from 0 to 1
      * by default it put 1 as the transparency.
      * return a string with the color in the rgba format
      */
     let rgbaColor = color .split(',');
-    rgbaColor = 'rgba('.concat(rgbaColor[0], ', ', rgbaColor[1], ', ', rgbaColor[2], ', 1)');
+    rgbaColor = 'rgba('.concat(rgbaColor[0], ', ', rgbaColor[1], ', ', rgbaColor[2], ',', transparency , ')');
     return(rgbaColor);
   }
 
@@ -123,8 +120,10 @@ export class MapQgsStyleService {
      */
 
       let newStyle: any;
-      let symStroke: any;
-      let symFill: any;
+      let color: string;
+      let outColor: string;
+      let stroke: any;
+      let fill: any;
       let symText: any;
       let symStyle = {};
       for (let l = 0; l < props.length; l++) {
@@ -136,67 +135,62 @@ export class MapQgsStyleService {
       }
       switch (symLyrCls) {
         case "SimpleFill": {
-          symStroke = new Stroke({
+          stroke = new Stroke({
             lineJoin: symStyle["joinstyle"],
             width: +symStyle["outline_width"],
           });
-          let color = symStyle["color"].split(",");
-          color = 'rgba('.concat(color[0], ', ', color[1], ', ', color[2], ', 0.7)');
-          let outColor = symStyle["outline_color"].split(",");
-          outColor = 'rgba('.concat(outColor[0], ', ', outColor[1], ', ', outColor[2], ', 1)');   // made poly a bit transparent
-          symStroke.setColor(outColor);
+          color = this.getRGBAcolor(symStyle["color"], '0.7');
+          outColor = this.getRGBAcolor(symStyle["outline_color"],'1');
+          stroke.setColor(outColor);
           let fillStyle = symStyle["style"];
           switch (fillStyle)
           {
             case "no":{
               newStyle = new Style({
-                stroke: symStroke,
-                //fill: symFill
+                stroke
               });
               break;
             }
-            default:{
+            default: {
               // by default fills the style
-              symFill = new Fill({
-                color: color
+              fill = new Fill({
+                color
               });
               newStyle = new Style({
-                stroke: symStroke,
-                fill: symFill
+                stroke,
+                fill
               });
             }
           }
           break;
         }
-        case "LinePatternFill": {
-          symStroke = new Stroke({
+        case 'LinePatternFill': {
+          stroke = new Stroke({
             lineJoin: symStyle["joinstyle"],
             width: +symStyle["line_width"],
           });
-          let color = symStyle["color"].split(",");
-          color = 'rgba('.concat(color[0], ', ', color[1], ', ', color[2], ', 0.7)');
-          symFill = new Fill();
+          color = this.getRGBAcolor(symStyle['color'],'0.7');
+          fill = new Fill();
           let pattern = this.createLinePattern(color,+symStyle["angle"] , symStyle["distance"], +symStyle["line_width"]); //
-          symFill.setColor(pattern);
-          symStroke.setColor("black");
+          fill.setColor(pattern);
+          stroke.setColor("black");
           newStyle = new Style({
-            stroke: symStroke,
-            fill: symFill
+            stroke,
+            fill
           });
           break;
         }
-        case "SimpleLine": {
+        case 'SimpleLine': {
           let capStyle = symStyle["capstyle"];
           if (symStyle["capstyle"] =='flat'){
             capStyle ='butt'
           }
-          let lineDash = "";
+          let lineDash = '';
           if (symStyle["use_custom_dash"] == "1"){
             lineDash = symStyle["customdash"].split(";").map(Number);
           }
-          let color = symStyle["line_color"].split(",");
-          color = 'rgba('.concat(color[0], ', ', color[1], ', ', color[2], ', 1)');
-          symStroke = new Stroke({
+          color = this.getRGBAcolor(symStyle["line_color"],'1');
+          stroke = new Stroke({
             color: color,
             lineCap: capStyle,    // symStyle["capstyle"],
             lineJoin: symStyle["joinstyle"],
@@ -206,86 +200,65 @@ export class MapQgsStyleService {
             width: +symStyle["line_width"]
           });
           newStyle = new Style({
-            stroke: symStroke
+            stroke: stroke
           });
           break;
         }
-        case "SimpleMarker":{
+        case 'SimpleMarker': {
           // console.log("THIS is NEEXXXXT");
           let offset = symStyle["offset"].split(",");
-          let color = symStyle["color"].split(",");
-          color = 'rgba('.concat(color[0], ', ', color[1], ', ', color[2], ', 1)');
-          let outColor = symStyle["outline_color"].split(",");
-          outColor = 'rgba('.concat(color[0], ', ', color[1], ', ', color[2], ', 1)');
-          let symFill = new Fill({
-            color: color
+          color = this.getRGBAcolor(symStyle['color']);
+          outColor = this.getRGBAcolor(symStyle['outline_color']);
+          fill = new Fill({
+            color
           });
-          symStroke = new Stroke({
+          stroke = new Stroke({
             color: outColor,
-            //lineCap: capStyle,    // symStyle["capstyle"],
-            lineJoin: symStyle["joinstyle"],
-            // lineDash: lineDash,
-            lineDashOffset: symStyle["offset"],
-            //miterLimit: symStyle["joinstyle"],
-            width: +symStyle["line_width"]
+            lineJoin: symStyle['joinstyle'],
+            width: +symStyle ['outline_width'] * 2  // test *2
           });
           newStyle = new Style({
             image: new CircleStyle({
-              radius: +symStyle["size"],
-              fill: symFill
-            }),
-            stroke:symStroke,
+              radius: +symStyle['size']*2, // test *2 make it responsive..
+              fill,
+              stroke,
+            })
           });
           break;
         }
         case 'SvgMarker':
         {
-        console.log('entra svgMarker?');
-        const color = this.getRGBAcolor(symStyle['color']);   // this is symStyle["color"]
-        let outColor = this.getRGBAcolor(symStyle['outline_color']);
+        color = this.getRGBAcolor(symStyle['color']);   // this is symStyle["color"]
+        outColor = this.getRGBAcolor(symStyle['outline_color']);
         const filename = this.svgFolder.concat(symStyle['name']);
-        const size = symStyle['size'] * 20;
-        console.log('color size ', color,size);
-        let  outlineWidth = +symStyle["outline_width"];
-        let verticalAnchorPoint = symStyle['vertical_anchor_point'];
-        /* <prop k="angle" v="0"/>
-         <prop k="fixedAspectRatio" v="0"/>
-         <prop k="horizontal_anchor_point" v="1"/>
-         <prop k="offset" v="0,0"/>
-         <prop k="offset_map_unit_scale" v="3x:0,0,0,0,0,0"/>
-         <prop k="offset_unit" v="MM"/>
-         <prop k="outline_width_map_unit_scale" v="3x:0,0,0,0,0,0"/>
-         <prop k="outline_width_unit" v="MM"/>
-         <prop k="scale_method" v="diameter"/>
-         <prop k="size_map_unit_scale" v="3x:0,0,0,0,0,0"/>
-         <prop k="size_unit" v="MM"/>
-         <prop k="vertical_anchor_point" v="1"/> */
-         newStyle = new Style({
+        const size = symStyle['size'] ;
+        const  outlineWidth = +symStyle["outline_width"];
+        const verticalAnchorPoint = symStyle['vertical_anchor_point'];
+        newStyle = new Style({
            image: new Icon({
-             color: color,
+             color,
              crossOrigin: 'anonymous',
-             //imgSize: [50, 50],   // it was 20 #TODO responsive to zoom scale
-             scale: 0.03, //#TODO verificar size qgis/ol vamos bien
-             src: filename
-           })
+             // imgSize: [50, 50],   // it was 20 #TODO responsive to zoom scale
+             scale: 0.03, // #TODO verificar size qgis/ol
+             src: filename })
          });
-          break;
+        //console.log('svgMarker in the case', newStyle);
+        break;
         }
-        case "FontMarker":
+        case 'FontMarker':
           {
-          let offset = symStyle["offset"].split(",");
-          let color = symStyle["color"].split(",");
-          color = 'rgba('.concat(color[0], ', ', color[1], ', ', color[2], ', 1)');
-          let outColor = symStyle["outline_color"].split(",");
-          outColor = 'rgba('.concat(color[0], ', ', color[1], ', ', color[2], ', 1)');
-          symStroke = new Stroke({
-            color: color,
-            lineJoin: symStyle["joinstyle"],
-            lineDashOffset: symStyle["offset"],
+
+          color = this.getRGBAcolor(symStyle['color']);
+          outColor = this.getRGBAcolor(symStyle['outline_color']);
+          stroke = new Stroke({
+            color,
+            lineJoin: symStyle['joinstyle'],
+            lineDashOffset: symStyle['offset'],
             width: +symStyle["line_width"]
           });
           let textBaseline ='top';
-          let offsetY =offset[1];
+          let offset = symStyle["offset"].split(",");
+          let offsetY = offset[1];
           if (symStyle["chr"] =="o" &&symStyle["font"] =="Geosiana Desa"){
             offsetY = 2*19;
             textBaseline = "bottom";
@@ -293,30 +266,95 @@ export class MapQgsStyleService {
           }
           symText  = new Text({
             font:   "normal ".concat(symStyle["size"], "px ", symStyle["font"]) ,    //symStyle["size"]
-            //  maxAngle: ,
             offsetX: offset[0],
             offsetY: offsetY, //offset[1],
             textBaseline: textBaseline ,  // 'top' ,
-            //  overflow: ,
-            //placement: ,   // lets keep the dafault that is point
+            //placement: ,   // lets keep the default that is point
             scale: 2, //symStyle["size"] ,
-            //  rotateWithView: ,
-            //  rotation: symStyle["angle"],
-            text: symStyle["chr"],
+            text: symStyle['chr'],
             fill: new Fill({
-              color:  color,
+              color,   // equiv --> color:  color
             }),
-            //  textAlign: ,
-            //   fill: ,
-            //   stroke: ,
-            //   backgroundFill: ,
-            //   backgroundStroke: ,
-            //   padding: ,
           });
           newStyle = new Style({
             text: symText,
-            // stroke:symStroke
+            // stroke  # ? no se pq esta comentado?
           });
+          break;
+        }
+        case 'FilledMarker': {
+          color = this.getRGBAcolor(symStyle['color']);
+          const size = symStyle['size'];
+          const scaleMethod = symStyle['diameter'];
+          const angle = symStyle['angle'];
+          fill = new Fill({color});
+          stroke = new Stroke({color: 'black', width: 2 });   //
+          switch (symStyle['name']) {
+            case 'star': {
+              newStyle = new Style({
+                image: new RegularShape({
+                fill,
+                stroke,
+                points: 5,
+                radius: size * 2,   // test * 2 #TODO make responsive
+                radius2: size,
+                angle: 0
+                })
+              });
+              break;
+            }
+            case 'cross_fill': {
+              newStyle = new Style({
+                image: new RegularShape({
+                  fill,
+                  stroke,
+                  points: 4,
+                  radius: size * 2,   // test * 2 #TODO make responsive
+                  radius2: 0,
+                  angle: 0
+                })
+              });
+              break;
+            }
+            case 'square': {
+              newStyle = new Style({
+                image: new RegularShape({
+                  fill,
+                  stroke,
+                  points: 4,
+                  radius: size * 2,   // test * 2 #TODO make responsive
+                  angle: Math.PI / 4
+                })
+              });
+              break;
+            }
+            case 'triangle': {
+              newStyle = new Style({
+                image: new RegularShape({
+                  fill,
+                  stroke,
+                  points: 3,
+                  radius: size * 2,   // test * 2 #TODO make responsive
+                  angle: 0
+                })
+              });
+              break;
+            }
+            default: {
+              // by default a x
+             newStyle = new Style({
+                image: new RegularShape({
+                  fill,
+                  stroke,
+                  points: 4,
+                  radius: 10,
+                  radius2: 0,
+                  angle: Math.PI / 4
+                })
+             });
+             break;
+            }
+          }
           break;
         }
 
@@ -371,7 +409,7 @@ export class MapQgsStyleService {
           for (let l = 0; l < layers.length; l++) {
             let symLyrCls = symNode.getElementsByTagName("layer")[l].getAttribute("class");
             let props = symNode.getElementsByTagName("layer")[l].getElementsByTagName("prop");
-            let olStyle = this.mapQgsSymbol(symType, symLyrCls, symAlpha, props);
+            let olStyle = this.mapQgsSymbol(symType, symLyrCls, symAlpha, props);  // #TODO add symbol inside filledMarker
             if (olStyle) {
               olStyleLst.push(olStyle);
               tnodes[symName]["symLyrCls"] = symLyrCls;

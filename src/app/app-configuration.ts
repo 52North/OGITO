@@ -9,6 +9,7 @@ export class AppConfiguration{
   static srsName = 'EPSG:32647'   // tomarlo de aqui o del projecto?
   // la ruta para accederlo dentro de la app
   static curProject = '../../assets' + AppConfiguration.qgsProject;
+  static svgFolder = '../../assets/svg/';
   static qgsProjectFolder = 'D:/PhD/code/fromScratch/myOgito/src/assets/';
   // la ruta para accederlo desde Qgs Server
   static QgsFileProject = AppConfiguration.qgsProjectFolder + AppConfiguration.qgsProject;

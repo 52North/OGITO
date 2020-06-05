@@ -8,8 +8,10 @@ import Feature from 'ol/Feature';
 import Polygon from 'ol/geom/Polygon';
 import Point from 'ol/geom/Point';
 import LineString from 'ol/geom/LineString';
-import {Style, Stroke, Text} from 'ol/style';
-
+import {AppConfiguration} from '../app-configuration';
+import {Fill, Stroke, Style, Icon, Circle, RegularShape} from 'ol/style';
+import {style} from '@angular/animations';
+import {extend} from 'ol/extent';
 @Component({
   selector: 'app-symbol-list',
   templateUrl: './symbol-list.component.html',
@@ -108,23 +110,37 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
      const canvas = allCanvas[i];
      if (canvas.nativeElement.getContext('2d')) {
        let key = canvas.nativeElement.id;
-       console.log('get the key?', key);
        const width = canvas.nativeElement.width * devicePixelRatio;
        const height = canvas.nativeElement.height * devicePixelRatio;
        canvas.nativeElement.width = width;
        canvas.nativeElement.height = height;
       // console.log('width and height', height, width, canvas.nativeElement.width , devicePixelRatio  );
        const render = toContext(canvas.nativeElement.getContext('2d'));
-       const stylelayer = this.symbols$[key];
+       let stylelayer = this.symbols$[key];
        switch (this.geometryTypeSymbols) {
          case 'Point': {
-          /* let text = stylelayer[0].getText();
-           console.log(`is a style? ${typeof (stylelayer[0])}  texto ${stylelayer[0]}`);
-           let scaleText = stylelayer[0].getText().getScale() * 15;
-           let fillText = stylelayer[0].getText().getFill();
-           let fontText = stylelayer[0].getText().getFont();
-           console.log(text, scaleText, fillText, fontText);*/
-           feature = new Feature(new Point([width / 4, height / 2]));
+           const cx = width / 2;
+           const cy = height / 2;
+           feature = new Feature(new Point([width / 2, width / 2]));
+           const img = stylelayer[0].getImage();  // #TODO should be a for loop
+           /*  #TODO replace for the correct code
+            if ( img && img.getSize() != null) {
+                   // #TODO Temporal to replace
+                   const anchor = img.getAnchor();
+                   const si = img.getSize();
+                   console.log('anchor, size', anchor, si);
+                 }
+                 else {
+                 stylelayer = new Style({
+                     image: new RegularShape({
+                       fill: new Fill({color: 'yellow'}),
+                       stroke: new Stroke({color: 'red'}),
+                       points: 3,
+                       radius: 30,
+                       rotation: Math.PI / 4,
+                       angle: 0 })
+                   });
+                 } */
            break;
          }
          case 'Line': {
@@ -163,14 +179,10 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
          }
        }
        // console.log('stylelayer', stylelayer);
-       for (const style of stylelayer) {
+       for (let style of stylelayer) {
+         console.log('style', style );
          render.drawFeature(feature, style);
        }
-
-       /* render = toContext(context, {size: [this.symbolList.nativeElement.width, this.symbolList.nativeElement.height]});
-       feature = new Feature(new Point([10, 10]));
-       stylelayer = this.symbols$['Gereja'][0];
-       render.drawFeature(feature, stylelayer); */
      }
     }
  }
