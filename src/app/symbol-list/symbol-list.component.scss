@@ -27,3 +27,10 @@
   width: 2vw;  // responsive to the size of the VW
   height: 1vw;
 }
+.symbol:hover {
+  background-color: #fff2e1;  //to focus the icons
+  border: 1px solid #fff2e1;
+}
+.active {
+  background: #fff2e1;
+}

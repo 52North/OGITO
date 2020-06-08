@@ -367,7 +367,7 @@ export class MapQgsStyleService {
      * This function receives the content of the Xml project to parse it and get the symbology of each layer
      * This is to avoid asking the user to fill the qml files per layer
      * @param {xmlRendererV2} the portion of the xml related to styles - renderer-v2
-     * @returns {layerStyles} a dictionary containing layerNames as keys and styles (symbology) as values
+     * @returns {layerName} the name of the layerNames as keys and styles (symbology) as values
      */
     // console.log(`layerName ${ layerName }`);
     let renderer = xmlRendererV2;
@@ -376,7 +376,7 @@ export class MapQgsStyleService {
     if (symbolType == "categorizedSymbol") {
       const attr = renderer.getAttribute('attr').split(".")[0];
       let categories = renderer.getElementsByTagName("categories");  // aqui tengo el id era el [1].
-      console.log('cuantos valores', categories[0].children.length);
+      // console.log('cuantos valores', categories[0].children.length);
       let tnodes = {};
       for (let i = 0; i < categories[0].children.length; i++) {
         let node = renderer.getElementsByTagName("category")[i];
@@ -421,7 +421,7 @@ export class MapQgsStyleService {
             let olStyleLst2 = [];
             for (let s = 0; s < olStyleLst.length; s++){
               olStyleLst2.push(olStyleLst[olStyleLst.length - 1 - s]); }
-            // olStyleLst = olStyleLst2;
+             // olStyleLst = olStyleLst2;
           }
           tnodes[symName].style = olStyleLst;   // using the tnodes[symName].style is te same than tnodes[symName]["style"]
           tnodes[symName].alpha = symAlpha;

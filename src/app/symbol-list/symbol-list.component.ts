@@ -22,6 +22,7 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
   //@ViewChildren('canvas') myCanvas: ElementRef<HTMLCanvasElement>;   // to access the properties of canvas
   @ViewChildren('cmp') myCanvas: QueryList<ElementRef<HTMLCanvasElement>>; // it works
   variable = '';
+  symbolActive:any = null;
   x = 0;
   y = 0;
   startX = 0;
@@ -107,6 +108,7 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
    let feature: any;
    const allCanvas = this.myCanvas.toArray();
    for (let i = 0 ; i < allCanvas.length ; i++) {
+     const factor = 10; // factor to use in scaling symbol in the canvas
      const canvas = allCanvas[i];
      if (canvas.nativeElement.getContext('2d')) {
        let key = canvas.nativeElement.id;
@@ -117,12 +119,34 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
       // console.log('width and height', height, width, canvas.nativeElement.width , devicePixelRatio  );
        const render = toContext(canvas.nativeElement.getContext('2d'));
        let stylelayer = this.symbols$[key];
+       let stylelayerClone = [];   // clone the style hopefully deep copy
        switch (this.geometryTypeSymbols) {
          case 'Point': {
            const cx = width / 2;
            const cy = height / 2;
-           feature = new Feature(new Point([width / 2, width / 2]));
-           const img = stylelayer[0].getImage();  // #TODO should be a for loop
+           feature = new Feature(new Point([cx, cy]));
+           // possible solution or workaround for SVG
+           // https://stackoverflow.com/questions/54696758/how-do-i-draw-a-javascript-modified-svg-object-on-a-html5-canvas
+           let tempStyle = new Style({
+             image: new Icon({
+               color: '#8959A8',
+               crossOrigin: 'anonymous',
+               imgSize: [20, 20],
+               src: 'svg/religion/place_of_worship_christian3.svg'
+             })
+           });
+           render.drawFeature(feature, tempStyle);
+           feature = new Feature(new Point([cx + cx/3, cy]));  // only for testing
+           stylelayerClone.push(new Style({
+             image: new RegularShape({
+               fill: new Fill({color: 'yellow'}),
+               stroke: new Stroke({color: 'red'}),
+               points: 3,
+               radius: 30,
+               rotation: Math.PI / 4,
+               angle: 0 })
+           }));
+
            /*  #TODO replace for the correct code
             if ( img && img.getSize() != null) {
                    // #TODO Temporal to replace
@@ -131,42 +155,26 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
                    console.log('anchor, size', anchor, si);
                  }
                  else {
-                 stylelayer = new Style({
-                     image: new RegularShape({
-                       fill: new Fill({color: 'yellow'}),
-                       stroke: new Stroke({color: 'red'}),
-                       points: 3,
-                       radius: 30,
-                       rotation: Math.PI / 4,
-                       angle: 0 })
-                   });
+
                  } */
            break;
          }
          case 'Line': {
            // calculate the start and end point and draw as styles are defined in the array
-           render.lineWidth = 5;
-           //feature = new Feature(new LineString([[0, 10], [width - (width / 10 * 2), 10]]));
-           let stroke = stylelayer[0].getStroke();
-           let stylelayerTemp = new Style({
-             stroke: new Stroke({
-               color: '#3399CC',
-               width: 20
-             })
-           });
-           let W = Number(stroke.getWidth()) * 20;
-           console.log( 'color and width', stroke.getColor(), W);
-           let testStyle = new Style({
-             stroke: new Stroke({
-               color: stroke.getColor(),
-               width: W
-             })
-           });
-           //console.log( 'temp and test Styles', testStyle);
-           feature = new Feature(new LineString([[10, height / 2], [ width - (width / 4), height / 2]]));
-           //render.drawFeature(feature, stylelayerTemp);
-           //feature = new Feature(new LineString([[10, height / 3], [width / 2, height / 3]]));
-           render.drawFeature(feature, testStyle);
+           let heigthStroke = height / 2;
+           let cloneStyle: any;
+           let strokeClone: any;
+           for (const style of stylelayer) {
+             cloneStyle = style.clone();
+             strokeClone = cloneStyle.getStroke();
+             strokeClone.setWidth(strokeClone.getWidth() * factor);   // 10 to mkae the line visible.
+             heigthStroke =  (height - strokeClone.getWidth()) / 2 ;
+             cloneStyle.setStroke(strokeClone);
+             stylelayerClone.push(cloneStyle);
+           }
+           feature = new Feature(new LineString([[10, heigthStroke], [ width - (width / 4), heigthStroke ]]));
+           console.log('height, width and feature', heigthStroke, strokeClone.getWidth(), feature.getProperties());
+           //render.drawFeature(feature, testStyle);
            break;
          }
          case 'Polygon': {
@@ -178,14 +186,40 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
            break;
          }
        }
-       // console.log('stylelayer', stylelayer);
-       for (let style of stylelayer) {
-         console.log('style', style );
-         render.drawFeature(feature, style);
+       // if stylelayerClone has something it will be drawn
+       if (stylelayerClone.length > 0 ){
+         for (let style of stylelayerClone) {
+           render.drawFeature(feature, style);
+         }
+       }
+       else
+       {
+         for (let style of stylelayer) {
+           // console.log('style', style );
+           render.drawFeature(feature, style);
+         }
        }
      }
     }
  }
+
+  updateActivesymbol(key:any, valueSymbol: any){
+    /**
+     * update the activeSymbol
+     * @param valueSymbol: array of styles
+     * @key: the key of the div
+     *
+     */
+    console.log('y ahora que sigue..key, value.', key, valueSymbol );
+    if (this.symbolActive == key) {
+      this.symbolActive = null;
+    }
+    else {
+      this.symbolActive = key;
+      let curDiv = document.getElementById('+' + key );
+      curDiv.className += " active";
+    }
+  }
 
   createSymbolPanel(layerGeom: string, styles: any){
     /** Creates a table with the styles given in an array
