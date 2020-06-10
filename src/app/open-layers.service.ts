@@ -16,6 +16,9 @@ export class OpenLayersService {
   shapeEditType$ = this.shapeEditTypeSource.asObservable();
   private showSymbolPanelSource = new Subject <boolean>();
   showSymbolPanel$ = this.showSymbolPanelSource.asObservable();
+  private currentSymbolSource = new Subject<any>();
+  currentSymbol$ = this.currentSymbolSource.asObservable();
+
 
   constructor() { }
 
@@ -53,4 +56,10 @@ export class OpenLayersService {
     this.showSymbolPanelSource.next(visible);
   }
 
+  updateCurrentSymbol(symbol: any) {
+    /** Updates the observable ShowSymbolPanel to the next value
+     * @param symbol: style to be used to draw current feature
+     */
+    this.currentSymbolSource.next(symbol);
+  }
 }

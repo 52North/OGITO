@@ -19,10 +19,10 @@ import {extend} from 'ol/extent';
 })
 export class SymbolListComponent implements OnInit, AfterViewInit {
   @ViewChild('symbolList', {static: false}) symbolList: ElementRef <HTMLCanvasElement>;   // to access the properties of canvas
-  //@ViewChildren('canvas') myCanvas: ElementRef<HTMLCanvasElement>;   // to access the properties of canvas
+  // @ViewChildren('canvas') myCanvas: ElementRef<HTMLCanvasElement>;   // to access the properties of canvas
   @ViewChildren('cmp') myCanvas: QueryList<ElementRef<HTMLCanvasElement>>; // it works
   variable = '';
-  symbolActive:any = null;
+  symbolActiveKey: any = null;
   x = 0;
   y = 0;
   startX = 0;
@@ -173,12 +173,12 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
              stylelayerClone.push(cloneStyle);
            }
            feature = new Feature(new LineString([[10, heigthStroke], [ width - (width / 4), heigthStroke ]]));
-           console.log('height, width and feature', heigthStroke, strokeClone.getWidth(), feature.getProperties());
+           // console.log('height, width and feature', heigthStroke, strokeClone.getWidth(), feature.getProperties());
            //render.drawFeature(feature, testStyle);
            break;
          }
          case 'Polygon': {
-           // en landuse 9 es muy interesante, pattern
+           // en landuse 9 es muy interesante, pattern is not visible
            render.lineWidth = 5;
            const wide = width - (width / 4);
            const high = height - (height / 4);
@@ -203,58 +203,19 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
     }
  }
 
-  updateActivesymbol(key:any, valueSymbol: any){
+  updateActivesymbol(symbol: any){
     /**
      * update the activeSymbol
-     * @param valueSymbol: array of styles
-     * @key: the key of the div
+     * @param symbol: array of styles
+     * @key: the key o the div
      *
      */
-    console.log('y ahora que sigue..key, value.', key, valueSymbol );
-    if (this.symbolActive == key) {
-      this.symbolActive = null;
-    }
-    else {
-      this.symbolActive = key;
-      let curDiv = document.getElementById('+' + key );
-      curDiv.className += " active";
-    }
+    console.log('y ahora que sigue..activeKey, key, value.', this.symbolActiveKey, symbol.key, symbol );
+    this.symbolActiveKey = symbol.key;
+    let curDiv = document.getElementById('+' + symbol.key );
+    curDiv.className += " active";
+    this.openLayersService.updateCurrentSymbol(symbol);
   }
 
-  createSymbolPanel(layerGeom: string, styles: any){
-    /** Creates a table with the styles given in an array
-     * @param styles: array;
-     * @param layerGeom: geometry of the layer as specified in the QGIS project ;
-     *  que comience la fiesta
-     */
-    console.log('que comience la fiesta en Canvas', layerGeom, styles);
-
-    let feature: any;
-    const context = this.symbolList.nativeElement.getContext('2d');
-    const render = toContext(context, { size: [this.symbolList.nativeElement.width, this.symbolList.nativeElement.height] });
-    switch (layerGeom) {
-      case 'Point':
-       {
-         feature = new Feature(new Point([10, 10]));
-         break;
-      }
-      case 'Line': {
-       // calculate the start and end point and draw as styles are defined in the array
-        feature = new Feature(new LineString([[10, 10], [80, 10]]));
-        break;
-
-      }
-      case 'Polygon': {
-        // en landuse 9 es muy interesante, pattern
-        feature = new Feature(new Polygon([[[0, 0], [100, 100], [100, 0], [0, 0]]]));
-        break;
-        }
-    }
-    for (const style of styles ){
-     for (const stylelayer of styles.style){
-       render.drawFeature(feature, stylelayer);   // styles[i].style[0],  styles[i].style[1].. and so on
-     }
-    }
-  }
 
 }

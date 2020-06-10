@@ -16,5 +16,6 @@ export class AppConfiguration{
   static mapZoom = 12;
   static maxZoom = 20 ;
   static minZoom = 10 ;
+  static threshold = 300; // Distance in meter to close a polygon being drawn with a line.
 }
 

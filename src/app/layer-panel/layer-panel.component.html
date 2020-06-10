@@ -11,7 +11,7 @@
   </mat-card-title-group>
   <mat-divider class = "toolbarDivider"></mat-divider>
    <div class="example-list-top" cdkDropList (cdkDropListDropped)="drop($event)">
-   <mat-selection-list #listElayer (selectionChange)="onEditListChange($event,listElayer.selectedOptions.selected,listElayer.selectedOptions)">
+   <mat-selection-list #listElayer>
       <mat-list-option class="example-box mat-primary" *ngFor= "let layer of editLayers" [value]="layer['layerName']"
                        (click)="onLayerVisClick($event,layer)" checkboxPosition="before" cdkDrag
                        [ngClass]="layerActive == layer['layerName']? 'active': 'normal'">
@@ -32,7 +32,7 @@
   <mat-divider class = "toolbarDivider"></mat-divider>
    <span>Background Layers</span>
 
-  <mat-selection-list   #sbLayers (selectionChange)="onBackListChange($event,sbLayers.selectedOptions.selected,sbLayers.selectedOptions)">
+  <mat-selection-list   #sbLayers >
    <!-- <span class = "title-layer">Citra satelit</span> -->
     <div cdkDropList (cdkDropListDropped)="dropBase($event)">
       <!--

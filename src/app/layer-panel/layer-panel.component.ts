@@ -52,7 +52,6 @@ constructor(private openLayersService: OpenLayersService){}
 
 ngOnInit(): void {
   this.showLayerPanel$ = observableOf(true);
- // this.initializeLayers();
   }
 
   onEditLayerClick($event: any, layer: any){
@@ -97,6 +96,11 @@ onPan(event: any): void {
   }
 
   onEditListChange($event, selectedList, options){
+    /**
+     * Updates layers order on the map. This is for editable layers
+     * @param $event: the event emitted
+     * @param selectedList: list of layers being selected to become visible
+     */
     this.selectedOptions = selectedList.map(s => s.value);
     console.log('sigo', this.selectedOptions);
     // Actualizando las lista de las capas
@@ -105,7 +109,12 @@ onPan(event: any): void {
     // #TODO uncomment this.openLayersService.updateVisLayers(this.selectedOptions);
     }
 
-  onBackListChange($event, selectedList, options){
+  onBackListChange($event, selectedList){
+    /**
+     * Updates layers visibility on the map. This is for background layers
+     * @param $event: the event emitted
+     * @param selectedList: list of layers being selected to become visible
+     */
     this.selectedOptions = selectedList.map(s => s.value);
     console.log('sigo', this.selectedOptions);
     // Actualizando las lista de las capas

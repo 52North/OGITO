@@ -16,9 +16,8 @@
   <!--<canvas id="symbolList" width="200" height="200"></canvas> -->
   <span>{{variable}}</span>
   <div class="symbol" *ngFor="let symbol of symbols$ | keyvalue">
-     <div id = "+{{symbol.key}}"  (click)="updateActivesymbol( symbol.key ,symbol.value)" >
-
-       Pending:   [ngClass]="symbolActive.key == symbol.key? 'active': 'normal'"
+     <div id = "+{{symbol.key}}"  (click)="updateActivesymbol(symbol)"
+      [ngClass]="symbolActiveKey == symbol.key? 'active': 'normal'" >
       <canvas id ={{symbol.key}} class="canvasSymbol" #cmp></canvas>
       <span> {{symbol.key}} </span>
      </div>

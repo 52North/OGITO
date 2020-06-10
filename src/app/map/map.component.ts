@@ -17,10 +17,9 @@ import {MapQgsStyleService} from '../map-qgs-style.service';
 // import {register} from 'ts-node';
 import {defaults as defaultInteractions, DragAndDrop, Draw, Modify, Select, Snap, DragBox} from 'ol/interaction';
 import {Translate, DragPan, DragRotate, DragZoom, PinchZoom, PinchRotate} from 'ol/interaction';
-import Style from 'ol/style/Style';
 import Point from 'ol/geom/Point';
-import Stroke from 'ol/style/Stroke';
-import Fill from 'ol/style/Fill';
+import MultiPoint from 'ol/geom/MultiPoint';
+import {Fill, Stroke, Style, RegularShape} from 'ol/style';
 import CircleStyle from 'ol/style/Circle';
 import {GeoJSON, KML} from 'ol/format';
 import ZoomSlider from 'ol/control/ZoomSlider';
@@ -67,8 +66,12 @@ export class MapComponent implements OnInit, OnDestroy {
   layersGeometryType = {};
   layersOrder = [];
   featId = 1000;   // to have an internal identifier for features when editing
+  private currentStyle: any;
   private currentClass: any;
+  measureTooltipElement:any;
+  measureTooltip:any;
   subsToShapeEdit: Subscription;
+  subsTocurrentSymbol: Subscription;
 
   constructor( private mapQgsStyleService: MapQgsStyleService,
                private  openLayersService: OpenLayersService) {
@@ -79,6 +82,18 @@ export class MapComponent implements OnInit, OnDestroy {
       },
       error => { console.log('Error in shapeEditType',error)}
     );
+    this.subsTocurrentSymbol = this.openLayersService.currentSymbol$.subscribe(
+      style => {
+        this.changeSymbol(style);
+      },
+      error => {
+        console.log('Error changing the style for drawing elements', error);
+        alert('Error changing the style, select a symbol');
+      }
+    );
+
+
+
   }
 
   ngOnInit(): void {
@@ -101,6 +116,12 @@ export class MapComponent implements OnInit, OnDestroy {
     );
   }
 
+
+  changeSymbol(style:any){
+    this.currentStyle = style['value'];
+    this.currentClass = style['key'];
+    console.log('current class and Style', style, this.currentClass, this.currentStyle );
+  }
   initializeMap(){
     // customized pinch interactions
     this.pinchZoom = new PinchZoom ({constrainResolution: true});
@@ -136,6 +157,19 @@ export class MapComponent implements OnInit, OnDestroy {
         stroke: new Stroke({color: '#EE266D', width: 2, lineDash: [8, 5]})
       })
     });
+  }
+  createMeasureTooltip() {
+    if (this.measureTooltipElement) {
+      this.measureTooltipElement.parentNode.removeChild(this.measureTooltipElement);
+    }
+    this.measureTooltipElement = document.createElement('div');
+    this.measureTooltipElement.className = 'tooltip tooltip-measure';
+    this.measureTooltip = new Overlay({
+      element: this.measureTooltipElement,
+      offset: [0, -15],
+      positioning: 'bottom-center'
+    });
+    this.map.addOverlay(this.measureTooltip);
   }
 
   updateMapView(){
@@ -351,6 +385,7 @@ export class MapComponent implements OnInit, OnDestroy {
      * @param shape: string, type of shape to add e.g., 'POINT', 'LINE', 'CIRCLE'
      */
       // previously addShapeToLayer check the API OL
+      console.log ('shape',shape);
     const self = this;
     if (!this.curEditingLayer) {
       alert('No layer selected to edit');
@@ -380,32 +415,125 @@ export class MapComponent implements OnInit, OnDestroy {
             stopClick: true,    // trying to stop moving the map when drawing points..
             style: this.getEditingStyle()
           });
-
-          this.removeDragPinchInteractions();   // a ver si el mapa deja de moverse cuando se dibuja
+          // this.removeDragPinchInteractions();  // a ver si el mapa deja de moverse cuando se dibuja
           break;
         }
-
+         case 'LineString': {
+           this.draw = new Draw({
+             source: tsource,
+             type: shape,
+             freehand: true,
+             stopClick: true,    // trying to stop moving the map when drawing points..
+             style: this.getEditingStyle(),
+             condition: olBrowserEvent =>  {
+               if (olBrowserEvent.originalEvent.touches) {
+                 return olBrowserEvent.originalEvent.touches.length < 2;
+               }   // dibuja si hay menos de undos dedos..--> mo working
+               return false;
+             }
+           });
+           break;
+         }
+         case 'Polygon': {
+           this.draw = new Draw({
+             source: tsource,
+             type: shape,
+             freehand: true,
+              stopClick: true,    // trying to stop moving the map when drawing points..
+             style: this.getEditingStyle(),
+             condition: olBrowserEvent =>  {
+               if (olBrowserEvent.originalEvent.touches) {
+                 return olBrowserEvent.originalEvent.touches.length < 2;
+               }   // dibuja si hay menos de undos dedos..--> mo working
+               return false;
+             }
+           });
+           break;
+         }
       }
       this.map.addInteraction(this.draw);
-      // the symbology is missing..  #TODO
+      // adding snap interaction always after th draw interaction
+      this.snap = new Snap({
+        source: tsource
+      });
+      this.map.addInteraction(this.snap);
+      let listener;
+      this.draw.on('drawstart',function(evt) {
+      let sketch = evt.feature;
+      let tooltipCoord = evt.coordinate;
+      listener = sketch.getGeometry().on('change', evt => {
+          const geom = evt.target;
+          let output;
+          // show the tooltip only when drawing polys
+          console.log('self.draw.getProperties', self.draw.getProperties);
+          if (self.draw.type_ === 'LineString' && self.curEditingLayer[2] === 'Polygon' ) {
+            //    let geom = e.feature.getProperties().geometry;
+            const last = geom.getLastCoordinate();
+            const first = geom.getFirstCoordinate();
+            const sourceProj = self.map.getView().getProjection();
+            // #TODO how to validate that coordinates are projected. Lines below are for projected coordinates
+            /*const tFirst = transform(first, sourceProj, 'EPSG:4326');
+            //const tLast = transform(last, sourceProj, 'EPSG:4326');
+            //let  distance = getDistance(tFirst,tLast); */
+
+            const distance = getDistance(transform(first, sourceProj, 'EPSG:4326'), transform(last, sourceProj, 'EPSG:4326') );
+            # TODO aqui revisar el buffer y lo demas.
+            if (distance < AppConfiguration.threshold) {
+              output = (Math.round(distance * 100) / 100) + ' ' + 'm';
+              tooltipCoord = geom.getFirstCoordinate();
+              self.measureTooltipElement.innerHTML = output;
+              self.measureTooltip.setPosition(tooltipCoord);
+
+            }
+            else {   //  no importa el threshold ... potentially typology problems
+              if (self.curEditingLayer[2] == 'Polygon'){
+                e.feature.setGeometry(null);
+                self.cacheFeatures.pop();
+                self.canBeUndo = false;
+                // console.log("entra aqui...",self.curEditingLayer);
+              }
+            }
+            self.measureTooltipElement.className = 'tooltip tooltip-static';
+            self.measureTooltip.setOffset([0, -7]);
+          }
+
+        });
+
+
+
+
       this.draw.on('drawend', (e: any) => {
         // the line below prevent to undo features after stopping editing. This can be changed, just avoiding cleaning the array
-
         // the feature does not have an ID yet
         e.feature.setId(this.curEditingLayer.layerName.concat('.', String(this.featId)));
         this.featId = this.featId + 1 ;
         // setting the class to set a style
         if (this.currentClass) {
           e.feature.set('class', this.currentClass);
-        } else {
-          e.feature.set('class', 'default');
+        }
+        else {
+          alert ('Select a symbol');
+          return;  // #TODO check this
         }
         console.log('feat', e.feature, e.feature.getStyle());
       });
+
+
+
+
+      if (self.draw.type_ === 'Point' || self.draw.type_ === 'Circle') {
+        setTimeout(function () {
+          //  console.log("kom binnen");
+          self.addDragPinchInteractions();
+        }, 1000);
+      }
     }
     catch (e) {
       console.log('Error adding draw interactions', e);
     }
+
+
+
   }
   removeDragPinchInteractions(){
     try {
@@ -603,7 +731,7 @@ export class MapComponent implements OnInit, OnDestroy {
     if (this.curEditingLayer) {
       // a layer was being edited - ask for saving changes
       this.stopEditing(this.curEditingLayer);  // test is changes are save to the rigth layer, otherwise it should go #
-      if (this.curEditingLayer == layer) {
+      if (this.curEditingLayer === layer) {
         this.curEditingLayer = null;
         return;
       }
@@ -634,6 +762,9 @@ export class MapComponent implements OnInit, OnDestroy {
       this.saveSketchLayer(editLayer);  // save the changes
       return;
     }
+    // clear current class and symbol;
+    this.currentClass = null;
+    this.currentStyle = null;
   }
   startEditing(layer: any) {
     /** Enables the interaction in the map to draw features
@@ -713,11 +844,27 @@ export class MapComponent implements OnInit, OnDestroy {
     //console.log('geometryType', layerName, geometryType);
     return (geometryType);
   }
+  addDragPinchInteractions(){
+    try {
+      this.map.addInteraction(new DragPan());
+      this.map.addInteraction(new DragRotate());
+      this.map.addInteraction(new DragZoom());
+      this.map.addInteraction(this.pinchZoom);
+      this.map.addInteraction(this.pinchRotate);
+      //  console.log("checking after readding", this.map.getInteractions());
+    }
+    catch(e) {
+      console.log ("Error readding Drag/Pinch interactions",e);
+    }
+  }
+
 
   ngOnDestroy() {
     // prevent memory leak when component destroyed
     // unsubscribe all the subscriptions
-     // this.subscription.unsubscribe();
+     const subscriptions = new Subscription();
+     subscriptions.add(this.subsTocurrentSymbol).add(this.subsToShapeEdit);
+     subscriptions.unsubscribe();
   }
 
 }
