@@ -18,7 +18,8 @@ export class OpenLayersService {
   showSymbolPanel$ = this.showSymbolPanelSource.asObservable();
   private currentSymbolSource = new Subject<any>();
   currentSymbol$ = this.currentSymbolSource.asObservable();
-
+  private saveCurrentLayerSource = new Subject<any>();
+  saveCurrentLayer$ = this.saveCurrentLayerSource.asObservable();
 
   constructor() { }
 
@@ -34,6 +35,12 @@ export class OpenLayersService {
     console.log("updating");
   }
 
+  updateSaveCurrentLayer(save: true){
+    /** Updates the observable to the next value
+     * visible: boolean; true or false to show/hide the editing toolbar
+     */
+    this.saveCurrentLayerSource.next(save);
+  }
 
   updateShowEditToolbar(visible: boolean) {
     /** Updates the observable to the next value

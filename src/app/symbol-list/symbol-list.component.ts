@@ -210,7 +210,7 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
      * @key: the key o the div
      *
      */
-    console.log('y ahora que sigue..activeKey, key, value.', this.symbolActiveKey, symbol.key, symbol );
+    //console.log('y ahora que sigue..activeKey, key, value.', this.symbolActiveKey, symbol.key, symbol );
     this.symbolActiveKey = symbol.key;
     let curDiv = document.getElementById('+' + symbol.key );
     curDiv.className += " active";

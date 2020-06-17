@@ -23,8 +23,8 @@ export class MapQgsStyleService {
      * @param { feature } the feature for which to find a rendering style  -- no needed apparently
      * @param { layerName } the name of a WFS layer to be rendered
      */
-    //console.log("layername in finding style", layerName) ;
-    const featType = feature.getGeometry().getType();
+    // console.log("layername in finding style", layerName) ;
+    // const featType = feature.getGeometry().getType();
     // here include a default value and styling for # resolution or just somethig reasonable
     const styleLyr = this.nodes[layerName];
     if (Object.keys(styleLyr).length > 0){
@@ -36,18 +36,8 @@ export class MapQgsStyleService {
          // console.log ("encontrado",styleLyr[key]['style']);
           return (styleLyr[key]['style']);    // and array of style is ok too
         }
-        //There is not style defined , we returned a providisional one.
-       //let defaultStyle = this.findDefaultStyleProvisional(feature.getGeometry().getType(),layername);
       }
     }
-  }
-
-    findDefaultStyleProvisional(geometry:any, layerName:any){
-    /** Retrieves a default style for a feature of the given geometry in the given layer
-     * @param {geometry} geomtry type
-     * @param {layerName} name of the layer
-     * @returns {Style} default style to render the feature
-     */
   }
 
   createLinePattern (fillColor:any, angle:number, spacing:number, line_width: number) {
@@ -361,6 +351,17 @@ export class MapQgsStyleService {
       }
       return newStyle;
   }
+
+
+  findDefaultStyleProvisional(geometry:any, layerName:any){
+    /** Retrieves a default style for a feature of the given geometry in the given layer
+     * This can be used to provide style for sketch layers..
+     * @param {geometry} geomtry type
+     * @param {layerName} name of the layer
+     * @returns {Style} default style to render the feature
+     */
+  }
+
 
   createLayerStyles(layerName: string, xmlRendererV2: any){
     /** Retrieves a default style for a feature of the given geometry in the given layer

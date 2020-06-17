@@ -128,7 +128,14 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
   deleteFeat(){
   }
   saveLayer(){
+    /** Enable user to save edit in the layer being Updates the observable to show the editing toolbar and
+     *  @param visible: boolean
+     */
+    if (confirm('Do you want to save edits in the current layer:?')){
+      this.openLayersService.updateSaveCurrentLayer(true);
+    }
   }
+
   undoEdit(data){
   }
 

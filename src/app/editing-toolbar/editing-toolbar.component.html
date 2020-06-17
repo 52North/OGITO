@@ -37,10 +37,13 @@
         <mat-icon>undo</mat-icon>
       </button>
 
-      <button mat-icon-button (click)="saveLayer()" matTooltip = "Save edits into the layer">
+      <button mat-icon-button (click)="saveLayer()" matTooltip = "Save all edits into the layers/disable pending #TODO">
         <mat-icon>save_alt</mat-icon>
       </button>
 
+      <button mat-icon-button (click)="saveLayer()" matTooltip = "Save all edits in all layers">
+        <mat-icon>save</mat-icon>
+      </button>
       <span class = "spacer"></span>
       <div class="divClosing">
         <button mat-mini-fab (click)="closeEditingToolbar()" class="matCloseWrapper" >
