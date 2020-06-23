@@ -214,6 +214,7 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
     this.symbolActiveKey = symbol.key;
     let curDiv = document.getElementById('+' + symbol.key );
     curDiv.className += " active";
+    console.log('symbol in symbollist',symbol);
     this.openLayersService.updateCurrentSymbol(symbol);
   }
 

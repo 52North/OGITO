@@ -66,6 +66,7 @@ ngOnInit(): void {
     // tslint:disable-next-line:triple-equals
   if (this.layerActive == layer.layerName) {
     this.layerActive = null;
+    this.openLayersService.updateShowEditToolbar(false);
   }
   else {
     this.layerActive = layer.layerName;

@@ -28,6 +28,7 @@ import {OpenLayersService} from '../open-layers.service';
 import {MapQgsStyleService} from '../map-qgs-style.service';
 import WFS from 'ol/format/WFS';
 import GML from 'ol/format/GML';
+import {click} from 'ol/events/condition.js';
 
 @Component({
   selector: 'app-map',
@@ -62,7 +63,7 @@ export class MapComponent implements OnInit, OnDestroy {
   dragAndDropInteraction: any;
   loadedWfsLayers = []; // [{layerName: 'uno', layerTitle: 'Layer 1'}, {layerName: 'dos', layerTitle: 'layer 2'}];
   curEditingLayer = null;
-  // cacheFeatures = [];
+  cacheFeatures = [];
   canBeUndo = false;
   editBuffer = [];   // Try one array for everything.
   // editSketchBuffer = []; // #TDOD remove?
@@ -109,6 +110,15 @@ export class MapComponent implements OnInit, OnDestroy {
      ,
        error => alert('Error saving layer ' + error)
      );
+    this.openLayersService.deleteFeats$.subscribe(
+      data => {
+        this.removeInteractions();
+        if (true === data) {
+          this.startDeleting();
+        }
+      },
+      error => alert('Error deleting features' + error)
+    );
   }
 
 
@@ -136,7 +146,7 @@ export class MapComponent implements OnInit, OnDestroy {
   changeSymbol(style: any){
     this.currentStyle = style.value;
     this.currentClass = style.key;
-   // console.log('current class and Style', style, this.currentClass, this.currentStyle );
+    console.log('current class and Style', style, this.currentClass, this.currentStyle );
   }
   initializeMap(){
     // customized pinch interactions
@@ -243,7 +253,8 @@ export class MapComponent implements OnInit, OnDestroy {
     const resultXml = fetch(urlWMS)
       .then(response => {
         return response.text();
-      }).then(text => {
+      })
+      .then(text => {
         const xmlWMS = parser.read(text);
         self.loadWMSlayers(xmlWMS);
         return (xmlWMS);
@@ -404,25 +415,26 @@ export class MapComponent implements OnInit, OnDestroy {
      */
       // previously addShapeToLayer check the API OL
       // console.log ('shape', shape, this.curEditingLayer);
-      const self = this;
-      if (!this.curEditingLayer) {
+    const self = this;
+    if (!this.curEditingLayer) {
       alert('No layer selected to edit');
       return;
     }
-      let tsource: any = null;
-
-      this.map.getLayers().forEach(
+    /*  commented on 23/06
+    let tsource: any = null;
+    this.map.getLayers().forEach(
       layer => {
-                if (layer.get('name') === self.curEditingLayer.layerName) {
-                  tsource = layer.getSource();
-                  // console.log('Finds the current layer to add shapes', tsource);
-                }
-    });
-      let type: any;
-      let geometryFunction: any;
+        if (layer.get('name') === self.curEditingLayer.layerName) {
+          tsource = layer.getSource();
+          // console.log('Finds the current layer to add shapes', tsource);
+        }
+      }); */
+    const tsource = this.curEditingLayer.source;
+    let type: any;
+    let geometryFunction: any;
     // deactivate tany interaction? or remove?
-      this.removeInteractions();  // remove select, modify, delete interactions
-      try {
+    this.removeInteractions();  // remove select, modify, delete interactions
+    try {
       // this.cacheFeatures = [];  // to remove whatever is there and only undo the last action
       switch (shape) {
         case 'Point': {
@@ -436,39 +448,40 @@ export class MapComponent implements OnInit, OnDestroy {
           this.removeDragPinchInteractions();  // a ver si el mapa deja de moverse cuando se dibuja
           break;
         }
-         case 'LineString': {
-           this.draw = new Draw({
-             source: tsource,
-             type: shape,
-             freehand: true,
-             stopClick: true,    // not clicks events will be fired when drawing points..
-             style: this.getEditingStyle(),
-             condition: olBrowserEvent =>  {
-               if (olBrowserEvent.originalEvent.touches) {
-                 return olBrowserEvent.originalEvent.touches.length < 2;
-               }   // dibuja si hay menos de undos dedos..--> mo working
-               return false;
-             }
-           });
-           this.removeDragPinchInteractions();  // to fix the zig zag lines #TODO test it
-           break;
-         }
-         case 'Polygon': {
-           this.draw = new Draw({
-             source: tsource,
-             type: shape,
-             freehand: true,
-              stopClick: true,    // not clicks events will be fired when drawing points..
-             style: this.getEditingStyle(),
-             condition: olBrowserEvent =>  {
-               if (olBrowserEvent.originalEvent.touches) {
-                 return olBrowserEvent.originalEvent.touches.length < 2;
-               }   // dibuja si hay menos de undos dedos..--> mo working
-               return false;
-             }
-           });
-           break;
-         }
+        case 'LineString': {
+          this.draw = new Draw({
+            source: tsource,
+            type: shape,
+            freehand: true,
+            stopClick: true,    // not clicks events will be fired when drawing points..
+            style: this.getEditingStyle(),
+            condition: olBrowserEvent => {
+              if (olBrowserEvent.originalEvent.touches) {
+                console.log('tocuhes legth', olBrowserEvent.originalEvent.touches.length);
+                return olBrowserEvent.originalEvent.touches.length < 2;
+              }   // dibuja si hay menos de undos dedos..--> mo working
+              return false;
+            }
+          });
+          this.removeDragPinchInteractions();  // to fix the zig zag lines #TODO test it
+          break;
+        }
+        case 'Polygon': {
+          this.draw = new Draw({
+            source: tsource,
+            type: shape,
+            freehand: true,
+            stopClick: true,    // not clicks events will be fired when drawing points..
+            style: this.getEditingStyle(),
+            condition: olBrowserEvent => {
+              if (olBrowserEvent.originalEvent.touches) {
+                return olBrowserEvent.originalEvent.touches.length < 2;
+              }   // dibuja si hay menos de undos dedos..--> mo working
+              return false;
+            }
+          });
+          break;
+        }
       }
       this.map.addInteraction(this.draw);
       // adding snap interaction always after th draw interaction
@@ -479,18 +492,18 @@ export class MapComponent implements OnInit, OnDestroy {
       this.createMeasureTooltip();
       let listener;
       this.draw.on('drawstart', function(evt) {
-      const sketch = evt.feature;
-      let tooltipCoord = evt.coordinate;
-      listener = sketch.getGeometry().on('change', evt => {
+        const sketch = evt.feature;
+        let tooltipCoord = evt.coordinate;
+        listener = sketch.getGeometry().on('change', evt => {
           const geom = evt.target;
           let output;
           // show the tooltip only when drawing polys
-          if (self.draw.type_ === 'LineString' &&  self.curEditingLayer.geometry === 'Polygon' ) {  // self.curEditingLayer[2]
+          if (self.draw.type_ === 'LineString' && self.curEditingLayer.geometry === 'Polygon') {  // self.curEditingLayer[2]
             //    let geom = e.feature.getProperties().geometry;
             const last = geom.getLastCoordinate();
             const first = geom.getFirstCoordinate();
             const sourceProj = self.map.getView().getProjection();
-            const distance = getDistance(transform(first, sourceProj, 'EPSG:4326'), transform(last, sourceProj, 'EPSG:4326') );
+            const distance = getDistance(transform(first, sourceProj, 'EPSG:4326'), transform(last, sourceProj, 'EPSG:4326'));
             // # TODO aqui revisar el buffer y lo demas.
             if (distance < AppConfiguration.threshold) {
               output = (Math.round(distance * 100) / 100) + ' ' + 'm';  // round to 2 decimal places
@@ -500,27 +513,27 @@ export class MapComponent implements OnInit, OnDestroy {
             }
           }
         });
-        });
+      });
 
       this.draw.on('drawend', (e: any) => {
         // adding an temporal ID, to handle undo
         e.feature.setId(this.curEditingLayer.layerName.concat('.', String(this.featId)));
-        this.featId = this.featId + 1 ;
+        this.featId = this.featId + 1;
         // setting the class to set a style
         if (this.currentClass) {
           e.feature.set('class', this.currentClass);
-        }
-        else {
-          alert ('Select a symbol');
+        } else {
+          alert('Select a symbol');
           return;  // #TODO check this
         }
-        // console.log('feat', e.feature, e.feature.getStyle());
+        console.log('feat', e.feature, e.feature.getStyle());
         // correct geometry when drawing circles
-        if (self.draw.type_ === 'Circle'  && e.feature.getGeometry().getType() !== 'Polygon') {
-            e.feature.setGeometry(new fromCircle(e.feature.getGeometry()));
-          }
+        if (self.draw.type_ === 'Circle' && e.feature.getGeometry().getType() !== 'Polygon') {
+          e.feature.setGeometry(new fromCircle(e.feature.getGeometry()));
+        }
         // automatic closing of lines to produce a polygon
-        if (self.draw.type_ === 'LineString' &&  self.curEditingLayer.geometry === 'Polygon' ) {
+        if (self.draw.type_ === 'LineString' && self.curEditingLayer.geometry === 'Polygon') {
+          console.log('cuando entra aqui');
           const geom = e.feature.getProperties().geometry;
           const threshold = AppConfiguration.threshold;
           const last = geom.getLastCoordinate();
@@ -553,7 +566,8 @@ export class MapComponent implements OnInit, OnDestroy {
           feats: e.feature,
           dirty: true,    // dirty is not in the WFS
           // 'layer': self.curEditingLayer[0],
-          source: tsource});
+          source: tsource
+        });
         // console.log('editbuffer', self.editBuffer);
         self.canBeUndo = true;
 
@@ -564,15 +578,76 @@ export class MapComponent implements OnInit, OnDestroy {
         self.createMeasureTooltip();
       });
 
-    }
-    catch (e) {
+    } catch (e) {
       console.log('Error adding draw interactions', e);
     }
-
-
-
+   }
+startDeleting(){
+  /** Creates a new select interaction that will be used to delete features
+   * in the current editing layer
+   */
+  this.select = new Select({
+    condition: click,  // check if this work on touch
+    layers : [this.curEditingLayer.layerName],
+    hitTolerance: 5  // check if this is enough
+  });
+  this.map.addInteraction(this.select);
+  const self = this;
+  // editLayer.source
+  // HERE add code to delete from the source and add to the buffer
+  this.select.on('select', function(e){
+    const  selectedFeatures = e.target.getFeatures();
+    const cacheFeatures = [];
+    if (selectedFeatures.getLength() <= 0) {
+      return;
+    }
+    if (this.editLayer.geometry === 'Point' || this.editLayer.geometry === 'Line' || this.editLayer.geometry === 'Polygon') {
+          selectedFeatures.forEach(f => {
+          const lastFeat = f.clone();
+          lastFeat.setId(f.getId()); // to enable adding the feat again?
+          const tempId = f.getId();
+          cacheFeatures.push(lastFeat);
+          if (self.editBuffer.find(x => x.feats.id_ === tempId && x.dirty === true)){
+            // it was a new feature not yet saved in the wfs service
+            // self.dirtyBuffer.push(self.editBuffer.find(x => x.feats.id_ === tempId));  // find the first, a insertion
+            self.editBuffer = self.editBuffer.filter(x => x.feats.id_ !== tempId);  // retorna los elementos que no tienen la feature
+          }
+          else if (self.editBuffer.findIndex(x => x.feats.id_ === tempId) > 0) {// && x.dirty !== true)) {
+          // it was an existing feature
+            self.editBuffer.push({
+              layerName: self.curEditingLayer.layerName,
+              transaction: 'delete',
+              feats: f,
+              dirty: false,
+              source: self.curEditingLayer.source
+            });
+          }
+          // remove feature from the source
+          self.curEditingLayer.source.removeFeature(f);
+        });
+        // clear the selection --> the style will also be clear
+          self.select.getFeatures().clear();
+        // update the possibility to undo and the cache for that
+          self.canBeUndo = true;
+          self.cacheFeatures.push(cacheFeatures); // this keep open the possibility to delete several an undo several actions
+          return;
+    }
+    // this.ediLayer.geometry is different .. so a sketch layer
+    selectedFeatures.forEach(f =>
+    {
+    cacheFeatures.push((f.clone()));
+    self.curEditingLayer.removeFeature(f);
+    });
+    // clear the selection --> the style will also be clear
+    self.select.getFeatures().clear();
+    self.curEditingLayer.source.refresh(); // #TODO is this needed?
+    // update the possibility to undo and the cache for that
+    self.cacheFeatures.push(cacheFeatures);
+    self.canBeUndo = true;
+    });
   }
-  removeDragPinchInteractions(){
+
+removeDragPinchInteractions(){
     try {
       const self = this;
       this.map.getInteractions().forEach(
@@ -732,10 +807,10 @@ export class MapComponent implements OnInit, OnDestroy {
     const qgsProj = fetch(projectFile, {
       method: 'GET',
     })
-      .then(function(response) {
+      .then(response => {
         return response.text();
       })
-      .then(function(text) {
+      .then(text => {
         // console.log(text);
         return (text);
       })
@@ -787,10 +862,9 @@ export class MapComponent implements OnInit, OnDestroy {
       // stop interactions
 
       // clear current class and symbol --> it is necessary? when stopping editing but not for saving;
-
       this.currentClass = null;
       this.currentStyle = null;
-
+      this.removeInteractions();
     }
 
     saveEdits(editLayer: any){
@@ -888,38 +962,34 @@ export class MapComponent implements OnInit, OnDestroy {
       featureType: editLayer.layerName
     });
     let node: any;
-    let xs = new XMLSerializer();
+    const xs = new XMLSerializer();
     let str: any;
     let res: any;
     // Edits should be done in chain... 1)insert, 2)updates, 3) deletes
     if (layerTrs[editLayer.layerName].insert.length > 0) {
       node = formatWFS.writeTransaction( layerTrs[editLayer.layerName].insert, null, null, formatGML);
       str = xs.serializeToString(node);
-      res = fetch(strUrl, {
+      return fetch(strUrl, {
         method: 'POST', body: str
       })
-        .then(respInsert => {
-          return respInsert.text();
-        })
-        .then(textInsert => {
-          console.log('text response insert WFS', textInsert);
+        .then((textInsert) => {
+          console.log('text response insert WFS', textInsert.text());
           layerTrs[editLayer.layerName].insert = [];
           if (layerTrs[editLayer.layerName].update.length > 0) {
+            // Edits should be done in chain... 1)insert, 2)updates, 3) deletes
             node.formatWFS.writeTransaction(null, layerTrs[editLayer.layerName].update, null, formatGML);
             str = xs.serializeToString(node);
-            res = fetch(strUrl, {
+            return fetch(strUrl, {
               method: 'POST', body: str
             })
               .then(respUpdate => {
-                return respUpdate.text();
-              })
-              .then(textUpdate => {
-                console.log('text response update WFS', textUpdate);
+                console.log('text response update WFS', respUpdate.text());
                 layerTrs[editLayer.layerName].update = [];
                 if (layerTrs[editLayer.layerName].delete.length > 0) {
+                  // Edits should be done in chain... 1)insert, 2)updates, 3) deletes // if enter here only deletes were done
                   node.formatWFS.writeTransaction(null, null, layerTrs[editLayer.layerName].delete, formatGML);
                   str = xs.serializeToString(node);
-                  res = fetch(strUrl, {
+                  return fetch(strUrl, {
                     method: 'POST', body: str
                   })
                     .then(respDelete => {
@@ -928,9 +998,11 @@ export class MapComponent implements OnInit, OnDestroy {
                     .then(textDelete => {
                       console.log('text response update WFS', textDelete);
                       layerTrs[editLayer.layerName].delete = [];
-                    });
+                    })
+                    .catch(error => console.error(error));
                 }
               });
+            // editLayer.layerName.update = [];
           }
         });
     }
@@ -938,19 +1010,17 @@ export class MapComponent implements OnInit, OnDestroy {
       // Edits should be done in chain... 1)insert, 2)updates, 3) deletes // if enter here no inserts were done
       node.formatWFS.writeTransaction(null, layerTrs[editLayer.layerName].update, null, formatGML);
       str = xs.serializeToString(node);
-      res = fetch(strUrl, {
+      return fetch(strUrl, {
         method: 'POST', body: str
       })
         .then(respUpdate => {
-          return respUpdate.text();
-        })
-        .then(textUpdate => {
-          console.log('text response update WFS', textUpdate);
+          console.log('text response update WFS', respUpdate.text());
           layerTrs[editLayer.layerName].update = [];
           if (layerTrs[editLayer.layerName].delete.length > 0) {
+            // Edits should be done in chain... 1)insert, 2)updates, 3) deletes // if enter here only deletes were done
             node.formatWFS.writeTransaction(null, null, layerTrs[editLayer.layerName].delete, formatGML);
             str = xs.serializeToString(node);
-            res = fetch(strUrl, {
+            return fetch(strUrl, {
               method: 'POST', body: str
             })
               .then(respDelete => {
@@ -962,13 +1032,13 @@ export class MapComponent implements OnInit, OnDestroy {
               });
           }
         });
-      editLayer.layerName.update = [];
+      // editLayer.layerName.update = [];
     }
     if (layerTrs[editLayer.layerName].delete.length > 0) {
       // Edits should be done in chain... 1)insert, 2)updates, 3) deletes // if enter here only deletes were done
       node.formatWFS.writeTransaction(null, null, layerTrs[editLayer.layerName].delete, formatGML);
       str = xs.serializeToString(node);
-      res = fetch(strUrl, {
+      return fetch(strUrl, {
         method: 'POST', body: str
       })
         .then(respDelete => {
@@ -983,7 +1053,7 @@ export class MapComponent implements OnInit, OnDestroy {
     // cleaning the Editbuffer
     // this.editBuffer[editLayer] = [];
     this.editBuffer = this.editBuffer.filter(obj => obj.layerName !== editLayer.layerName);
-    console.log('this.editBufferTemp',this.editBuffer);
+    console.log('this.editBufferTemp', this.editBuffer);
   }
 
   saveWFSAll(){

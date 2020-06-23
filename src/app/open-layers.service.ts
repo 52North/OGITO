@@ -20,6 +20,8 @@ export class OpenLayersService {
   currentSymbol$ = this.currentSymbolSource.asObservable();
   private saveCurrentLayerSource = new Subject<any>();
   saveCurrentLayer$ = this.saveCurrentLayerSource.asObservable();
+  private deleteFeatsSource = new Subject<any>();
+  deleteFeats$ = this.deleteFeatsSource.asObservable();
 
   constructor() { }
 
@@ -30,7 +32,7 @@ export class OpenLayersService {
     this.existingProject.next(projectOpened);
   }
 
-  updateShapeEditMode(shapeEdit: any){
+  updateShapeEditType(shapeEdit: any){
     this.shapeEditTypeSource.next(shapeEdit);
     console.log("updating");
   }

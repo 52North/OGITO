@@ -98,11 +98,11 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
       if (true == this.actionActive[shapeType] ) {
         // The layer was on editing
         // console.log ("stop interaction de dibujar", shapeType,"this.actionActive[shapeType]",this.actionActive[shapeType]);
-        this.openLayersService.updateShapeEditMode(null); // #TODO avoid this is not needed to reduce the number of petitions
+        this.openLayersService.updateShapeEditType(null); //
         this.showSymbolPanel(false);
       }
       else {
-        this.openLayersService.updateShapeEditMode(shapeType);
+        this.openLayersService.updateShapeEditType(shapeType);
         this.showSymbolPanel(true);
       }
       this.actionActive[shapeType] = !this.actionActive[shapeType];
@@ -110,7 +110,7 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
       // change the rest of interactions to false
       for (const key in this.actionActive ) {
         // console.log("otra...this.actionActive[key]",key,this.actionActive[key]);
-        if ((key != shapeType) && (true == this.actionActive[key]))
+        if ((key !== shapeType) && (true === this.actionActive[key]))
         {
           this.actionActive[key] = !this.actionActive[key];
         }
@@ -120,12 +120,15 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
   }
   showSymbolPanel(visible: boolean){
     /**
-     * Updates the obsrevable that allows to show/hode the symbolPanel
+     * Updates the observable that allows to show/hide the symbolPanel
      */
     // #TODO add a validation to know if is visible or not?
     this.openLayersService.updateShowSymbolPanel(visible);
    }
   deleteFeat(){
+    /**
+     * Updates the observable that allows to show/hide the symbolPanel
+     */
   }
   saveLayer(){
     /** Enable user to save edit in the layer being Updates the observable to show the editing toolbar and
@@ -149,5 +152,12 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
      */
   this.isVisible$ = observableOf(visible);
   // desactivar todas las actions??
+  for (let key in this.actionActive ) {
+      // console.log("showing fresh tool ]",key,this.actionActive[key]);
+      if (true === this.actionActive[key])
+      {
+        this.actionActive[key] = !this.actionActive[key];
+      }
+    }
   }
 }
