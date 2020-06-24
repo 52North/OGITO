@@ -59,6 +59,9 @@ export class MapComponent implements OnInit, OnDestroy {
   translate: any;
   pinchZoom: any;
   pinchRotate: any;
+  dragPan: any;
+  dragRotate: any;
+  dragZoom: any;
   dragBox: any;
   dragAndDropInteraction: any;
   loadedWfsLayers = []; // [{layerName: 'uno', layerTitle: 'Layer 1'}, {layerName: 'dos', layerTitle: 'layer 2'}];
@@ -66,6 +69,7 @@ export class MapComponent implements OnInit, OnDestroy {
   cacheFeatures = [];
   canBeUndo = false;
   editBuffer = [];   // Try one array for everything.
+  cacheBuffer = [];
   // editSketchBuffer = []; // #TDOD remove?
   layersGeometryType = {};
   layersOrder = [];
@@ -112,6 +116,7 @@ export class MapComponent implements OnInit, OnDestroy {
      );
     this.openLayersService.deleteFeats$.subscribe(
       data => {
+        console.log("que viene", data);
         this.removeInteractions();
         if (true === data) {
           this.startDeleting();
@@ -146,12 +151,16 @@ export class MapComponent implements OnInit, OnDestroy {
   changeSymbol(style: any){
     this.currentStyle = style.value;
     this.currentClass = style.key;
-    console.log('current class and Style', style, this.currentClass, this.currentStyle );
+   // console.log('current class and Style', style, this.currentClass, this.currentStyle );
   }
   initializeMap(){
     // customized pinch interactions
     this.pinchZoom = new PinchZoom ({constrainResolution: true});
     this.pinchRotate = new PinchRotate({constrainResolution: true});
+    this.dragPan = new DragPan();
+    this.dragRotate = new DragRotate();
+    this.dragZoom = new DragZoom();
+
     //
     this.dragAndDropInteraction = new DragAndDrop({
       formatConstructors: [
@@ -168,7 +177,7 @@ export class MapComponent implements OnInit, OnDestroy {
         }),
       ],
       interactions: defaultInteractions ({pinchZoom: false, pinchRotate: false})
-        .extend([this.dragAndDropInteraction, this.pinchRotate, this.pinchZoom]),
+        .extend([this.dragAndDropInteraction, this.pinchRotate, this.pinchZoom, this.dragRotate, this.dragZoom]),
       target: 'map',
       view: new View({
         projection: 'EPSG:3857',
@@ -430,6 +439,7 @@ export class MapComponent implements OnInit, OnDestroy {
         }
       }); */
     const tsource = this.curEditingLayer.source;
+    //console.log('Finds the current layer to add shapes', this.curEditingLayer, tsource);
     let type: any;
     let geometryFunction: any;
     // deactivate tany interaction? or remove?
@@ -482,6 +492,43 @@ export class MapComponent implements OnInit, OnDestroy {
           });
           break;
         }
+        case 'Square': {
+          this.draw = new Draw({  // #TODO change code
+            source: tsource,
+            type: shape,
+            freehand: true,
+            stopClick: true,    // not clicks events will be fired when drawing points..
+            style: this.getEditingStyle(),
+            condition: olBrowserEvent => {
+              if (olBrowserEvent.originalEvent.touches) {
+                return olBrowserEvent.originalEvent.touches.length < 2;
+              }   // dibuja si hay menos de undos dedos..--> mo working
+              return false;
+            }
+          });
+          break;
+        }
+        case 'Circle': {   // #TODO change code
+          this.draw = new Draw({
+            source: tsource,
+            type: shape,
+            freehand: true,
+            stopClick: true,    // not clicks events will be fired when drawing points..
+            style: this.getEditingStyle(),
+            condition: olBrowserEvent => {
+              if (olBrowserEvent.originalEvent.touches) {
+                return olBrowserEvent.originalEvent.touches.length < 2;
+              }   // dibuja si hay menos de undos dedos..--> mo working
+              return false;
+            }
+          });
+          break;
+        }
+
+
+
+
+
       }
       this.map.addInteraction(this.draw);
       // adding snap interaction always after th draw interaction
@@ -526,7 +573,7 @@ export class MapComponent implements OnInit, OnDestroy {
           alert('Select a symbol');
           return;  // #TODO check this
         }
-        console.log('feat', e.feature, e.feature.getStyle());
+        // console.log('feat', e.feature, e.feature.getStyle());
         // correct geometry when drawing circles
         if (self.draw.type_ === 'Circle' && e.feature.getGeometry().getType() !== 'Polygon') {
           e.feature.setGeometry(new fromCircle(e.feature.getGeometry()));
@@ -555,6 +602,7 @@ export class MapComponent implements OnInit, OnDestroy {
         }
         // adding the interactions that were stopped when drawing
         if (self.draw.type_ === 'Point' || self.draw.type_ === 'Circle') {
+          // console.log('interaction en el timeout', self.map.getInteractions());
           setTimeout(() => {
             self.addDragPinchInteractions();
           }, 1000);
@@ -570,7 +618,14 @@ export class MapComponent implements OnInit, OnDestroy {
         });
         // console.log('editbuffer', self.editBuffer);
         self.canBeUndo = true;
-
+        self.cacheBuffer.push({
+          layerName: self.curEditingLayer.layerName,
+          transaction: 'insert',
+          feats: e.feature,
+          dirty: true,    // dirty is not in the WFS
+          // 'layer': self.curEditingLayer[0],
+          source: tsource
+        });
         // unset tooltip so that a new one can be created
         self.measureTooltipElement.innerHTML = '';
         self.measureTooltipElement = null;
@@ -586,14 +641,26 @@ startDeleting(){
   /** Creates a new select interaction that will be used to delete features
    * in the current editing layer
    */
+  let tlayer: any;
+  try{
+  this.map.getLayers().forEach(layer => {
+      if (layer.get('name') === this.curEditingLayer.layerName) {
+        console.log ('layer.get(\'name\')',layer.get('name'),this.curEditingLayer.layerName === layer.get('name'));
+        tlayer = layer;
+        return;
+      }
+    });
+  }
+  catch (e) {
+    console.log('error getting the layer in deleting', e);
+  }
   this.select = new Select({
     condition: click,  // check if this work on touch
-    layers : [this.curEditingLayer.layerName],
-    hitTolerance: 5  // check if this is enough
+    layers : [tlayer],
+    hitTolerance: 7 // check if this is enough
   });
   this.map.addInteraction(this.select);
   const self = this;
-  // editLayer.source
   // HERE add code to delete from the source and add to the buffer
   this.select.on('select', function(e){
     const  selectedFeatures = e.target.getFeatures();
@@ -601,7 +668,8 @@ startDeleting(){
     if (selectedFeatures.getLength() <= 0) {
       return;
     }
-    if (this.editLayer.geometry === 'Point' || this.editLayer.geometry === 'Line' || this.editLayer.geometry === 'Polygon') {
+    if (self.curEditingLayer.geometry === 'Point' || self.curEditingLayer.geometry === 'Line'
+      || self.curEditingLayer.geometry === 'Polygon') {
           selectedFeatures.forEach(f => {
           const lastFeat = f.clone();
           lastFeat.setId(f.getId()); // to enable adding the feat again?
@@ -609,11 +677,13 @@ startDeleting(){
           cacheFeatures.push(lastFeat);
           if (self.editBuffer.find(x => x.feats.id_ === tempId && x.dirty === true)){
             // it was a new feature not yet saved in the wfs service
+            console.log('nueva a eliminar');
             // self.dirtyBuffer.push(self.editBuffer.find(x => x.feats.id_ === tempId));  // find the first, a insertion
             self.editBuffer = self.editBuffer.filter(x => x.feats.id_ !== tempId);  // retorna los elementos que no tienen la feature
           }
           else if (self.editBuffer.findIndex(x => x.feats.id_ === tempId) > 0) {// && x.dirty !== true)) {
           // it was an existing feature
+            console.log('it was an existing feature');
             self.editBuffer.push({
               layerName: self.curEditingLayer.layerName,
               transaction: 'delete',
@@ -630,20 +700,24 @@ startDeleting(){
         // update the possibility to undo and the cache for that
           self.canBeUndo = true;
           self.cacheFeatures.push(cacheFeatures); // this keep open the possibility to delete several an undo several actions
+          console.log ('cache', self.cacheFeatures );
+          console.log ('editBuffer', self.editBuffer );
           return;
     }
     // this.ediLayer.geometry is different .. so a sketch layer
-    selectedFeatures.forEach(f =>
-    {
-    cacheFeatures.push((f.clone()));
-    self.curEditingLayer.removeFeature(f);
-    });
-    // clear the selection --> the style will also be clear
-    self.select.getFeatures().clear();
-    self.curEditingLayer.source.refresh(); // #TODO is this needed?
-    // update the possibility to undo and the cache for that
-    self.cacheFeatures.push(cacheFeatures);
-    self.canBeUndo = true;
+    else {
+      selectedFeatures.forEach(f =>
+      {
+        cacheFeatures.push((f.clone()));
+        self.curEditingLayer.removeFeature(f);
+      });
+      // clear the selection --> the style will also be clear
+      self.select.getFeatures().clear();
+      // self.curEditingLayer.source.refresh(); // #TODO is this needed?
+      // update the possibility to undo and the cache for that
+      self.cacheFeatures.push(cacheFeatures);
+      self.canBeUndo = true;
+    }
     });
   }
 
@@ -655,7 +729,8 @@ removeDragPinchInteractions(){
               if (interaction instanceof DragPan || interaction instanceof DragZoom || interaction instanceof DragRotate
                 || interaction instanceof PinchZoom   || interaction instanceof PinchRotate)
               {
-                self.map.removeInteraction(interaction);
+                //self.map.removeInteraction(interaction);
+                interaction.setActive(false);
               }
              });
       console.log ('es posible que aun quede pinchzoom? o se puede incluir en el if de arriba', this.map.getInteractions() );
@@ -738,19 +813,6 @@ removeDragPinchInteractions(){
       if (layerName.length > 0) {
         // store layer properties to use later
         const geom = this.findGeometryType(layerName);
-        tnodes[layerName] = {
-          layerName, // equivalent to "layerName" : layerName --> k:v
-         // layerGeom,
-          layerTitle,
-          defaultSRS,
-          otherSrs: otherSrsLst,
-          lowCorner: [lowCorner.split(' ')[0], lowCorner.split(' ')[1]],
-          upperCorner: [upperCorner.split(' ')[0], upperCorner.split(' ')[1]],
-          operations: operationsLst,
-          geometry: geom // Dependent of QGIS project as the styles.
-          // dimensions: dimensions,
-          // bbox: bBox,
-        };
         // check editable fields
         // load the layer in the map
         const qGsProject = AppConfiguration.QgsFileProject;
@@ -784,6 +846,20 @@ removeDragPinchInteractions(){
               return(layerStyle);
             }
           });
+          tnodes[layerName] = {
+            layerName, // equivalent to "layerName" : layerName --> k:v
+            // layerGeom,
+            layerTitle,
+            defaultSRS,
+            otherSrs: otherSrsLst,
+            lowCorner: [lowCorner.split(' ')[0], lowCorner.split(' ')[1]],
+            upperCorner: [upperCorner.split(' ')[0], upperCorner.split(' ')[1]],
+            operations: operationsLst,
+            geometry: geom, // Dependent of QGIS project as the styles.
+            source: vectorSource
+            // dimensions: dimensions,
+            // bbox: bBox,
+          };
           this.map.addLayer(wfsVectorLayer);
           this.loadedWfsLayers.push(tnodes[layerName]);  // wfsVectorLayer
           // console.log(`Layer added ${ layerName }`);
@@ -868,7 +944,7 @@ removeDragPinchInteractions(){
     }
 
     saveEdits(editLayer: any){
-      // console.log('this.editBuffer.indexOf(editLayer.layerName ', editLayer.geometry, this.editBuffer.findIndex(x => x.layerName ===  editLayer.layerName) );
+      // console.log('editBuffer.indexOf(editLayer.layerName',this.editBuffer.findIndex(x => x.layerName ===  editLayer.layerName) );
       if (!(this.editBuffer.length > 0)) {  // nothing to save
         return;
       }
@@ -1085,6 +1161,11 @@ removeDragPinchInteractions(){
       this.map.removeInteraction(this.translate);
       this.map.removeInteraction(this.snap);
       this.map.removeInteraction(this.dragBox);
+     /* this.draw.setActive(false);
+      this.select.setActive(false);
+      this.translate.setActive(false);
+      this.snap.setActive(false);
+      this.dragBox.setActive(false); */
     }
     catch (e) {
       console.log ('Error removing interactions', e);
@@ -1102,18 +1183,30 @@ removeDragPinchInteractions(){
     return (geometryType);
   }
   addDragPinchInteractions(){
+    // console.log("aqui agregando dragpinch", this.map.getInteractions());
     try {
-      this.map.addInteraction(new DragPan());
-      this.map.addInteraction(new DragRotate());
-      this.map.addInteraction(new DragZoom());
-      this.map.addInteraction(this.pinchZoom);
-      this.map.addInteraction(this.pinchRotate);
-      //  console.log("checking after readding", this.map.getInteractions());
+      const self = this;
+      this.map.getInteractions().forEach(
+        interaction => {
+          if (interaction instanceof DragPan || interaction instanceof DragZoom || interaction instanceof DragRotate
+            || interaction instanceof PinchZoom   || interaction instanceof PinchRotate)
+          {
+            interaction.setActive(true);
+           // self.map.removeInteraction(interaction);
+          }
+        });
+      if (!(this.pinchZoom)){
+        this.map.addInteraction(this.pinchZoom); // check if is there
+      }
+      if (!(this.pinchRotate)){
+        this.map.addInteraction(this.pinchRotate);   // check if is there
+      }
     }
     catch (e) {
       console.log ('Error readding Drag/Pinch interactions', e);
     }
-  }
+
+}
 
 
   ngOnDestroy() {

@@ -34,9 +34,14 @@ export class OpenLayersService {
 
   updateShapeEditType(shapeEdit: any){
     this.shapeEditTypeSource.next(shapeEdit);
-    console.log("updating");
   }
 
+  updateDeleteFeats(active: boolean){
+    /** Updates the observable to the next value
+     * active: boolean; true or false to allow delete features
+     */
+    this.deleteFeatsSource.next(active);
+  }
   updateSaveCurrentLayer(save: true){
     /** Updates the observable to the next value
      * visible: boolean; true or false to show/hide the editing toolbar

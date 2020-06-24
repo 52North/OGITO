@@ -76,7 +76,7 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
 
   ngAfterViewInit(){
    this.myCanvas.changes.subscribe((r) => {
-      console.log('r', r);
+     // console.log('r', r);
       this.createSymbolsinCanvas();
     });
   }
@@ -85,13 +85,13 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
     /** Creates a dictionary with the styles per class when needed
      * @param styles: the array with the classes and styles
      */
-    console.log('que hay en styles', styles);
+    // console.log('que hay en styles', styles);
     let symbolDict = {};
     for (const key of Object.keys(styles)){
       // console.log(`${key} -> ${styles[key].value}`);
       symbolDict[styles[key].value] = styles[key].style;
     }
-    console.log('estilos en dict format', symbolDict);
+    // console.log('estilos en dict format', symbolDict);
     return symbolDict;
   }
 
@@ -214,7 +214,7 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
     this.symbolActiveKey = symbol.key;
     let curDiv = document.getElementById('+' + symbol.key );
     curDiv.className += " active";
-    console.log('symbol in symbollist',symbol);
+    // console.log('symbol in symbollist',symbol);
     this.openLayersService.updateCurrentSymbol(symbol);
   }
 

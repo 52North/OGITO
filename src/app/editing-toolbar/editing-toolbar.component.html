@@ -8,39 +8,57 @@
                 (click)="drawingShapes('Point')" matTooltip="Add point/marker" [ngClass]="actionActive['Point'] ? 'active': 'normal'">
         <mat-icon>add_location</mat-icon>
       </button>
-
       <button mat-icon-button *ngIf="(layerTypeEdit$ == 'Line' || layerTypeEdit$ =='Multi' || layerTypeEdit$ == 'Polygon') "
               (click)="drawingShapes('LineString')" matTooltip="Add line" [ngClass]="actionActive['LineString'] ? 'active': 'normal'">
         <mat-icon    svgIcon="add_line"></mat-icon>
       </button>
-
       <button *ngIf="(layerTypeEdit$ == 'Polygon' || layerTypeEdit$ == 'Multi') " mat-icon-button
               (click)="drawingShapes('Polygon')" matTooltip="Add polygon" [ngClass]="actionActive['Polygon'] ? 'active': 'normal'">
-        <mat-icon    svgIcon="add_poly"></mat-icon>
+        <mat-icon svgIcon="add_poly"></mat-icon>
+      </button>
+      <button *ngIf="(layerTypeEdit$ == 'Polygon' || layerTypeEdit$ == 'Multi') " mat-icon-button
+              (click)="drawingShapes('Square')" matTooltip="Add Square" [ngClass]="actionActive['Square'] ? 'active': 'normal'">
+        <mat-icon>crop_square</mat-icon>
+      </button>
+      <button *ngIf="(layerTypeEdit$ == 'Polygon' || layerTypeEdit$ == 'Multi') " mat-icon-button
+              (click)="drawingShapes('Circle')" matTooltip="Add Circle" [ngClass]="actionActive['Circle'] ? 'active': 'normal'">
+        <mat-icon>radio_button_unchecked</mat-icon>
       </button>
       <button mat-icon-button (click)="selectingBoxFeatures();showSymbolPanel(false)" matTooltip="Select element(s)"
-              [ngClass]="actionActive['modifyBox'] ? 'active': 'normal'" >
+              [ngClass]="actionActive['ModifyBox'] ? 'active': 'normal'" >
         <mat-icon svgIcon="selectBoxFeature"></mat-icon>
+      </button>
+      <button mat-icon-button (click)="copiarFeatures();showSymbolPanel(false)" matTooltip="Copiar element(s)"
+              [ngClass]="actionActive['Copiar'] ? 'active': 'normal'" >
+        <mat-icon>content_copy</mat-icon>
+      </button>
+      <button mat-icon-button (click)="rotateFeatures();showSymbolPanel(false)" matTooltip="Rotate element(s)"
+              [ngClass]="actionActive['Rotate'] ? 'active': 'normal'" >
+        <mat-icon>rotate_right</mat-icon>
+      </button>
+      <button mat-icon-button (click)="measureDistance();showSymbolPanel(false)" matTooltip="Measure Distance"
+              [ngClass]="actionActive['Measure'] ? 'active': 'normal'" >
+        <mat-icon>straighten</mat-icon>
       </button>
 
       <button mat-icon-button (click)="deleteFeat();showSymbolPanel(false)"  aria-label="delete" matTooltip="Delete element"
               [ngClass]="actionActive['delete'] ? 'active': 'normal'">
         <mat-icon>delete_forever</mat-icon>
       </button>
-
-      <button mat-icon-button (click)="showSymbolPanel(true)" matTooltip="Select/Change symbol"
-        [ngClass]="actionActive['showSymbols'] ? 'active': 'normal'">
-        <mat-icon   aria-label="">category</mat-icon>
+      <button mat-icon-button (click)="identifyFeatures();showSymbolPanel(false)"  aria-label="identify" matTooltip="Identify element"
+              [ngClass]="actionActive['Identify'] ? 'active': 'normal'">
+        <mat-icon>search</mat-icon>
       </button>
-
       <button mat-icon-button aria-label="UndoLastEdit" (click)="undoEdit(actionActive);" matTooltip="Undo">
         <mat-icon>undo</mat-icon>
       </button>
-
+      <button mat-icon-button (click)="showSymbolPanel(true)" matTooltip="Select/Change symbol"
+              [ngClass]="actionActive['showSymbols'] ? 'active': 'normal'">
+        <mat-icon   aria-label="">category</mat-icon>
+      </button>
       <button mat-icon-button (click)="saveLayer()" matTooltip = "Save all edits into the layers/disable pending #TODO">
         <mat-icon>save_alt</mat-icon>
       </button>
-
       <button mat-icon-button (click)="saveLayer()" matTooltip = "Save all edits in all layers">
         <mat-icon>save</mat-icon>
       </button>

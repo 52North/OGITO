@@ -31,9 +31,13 @@ actionActive = {
     Square: false,
     Box: false,
     Circle: false,
-    modify: false,   // it is translate only
-    modifyBox: false,
-    delete: false
+    Modify: false,   // it is translate only
+    ModifyBox: false,
+    Rotate: false,
+    Copiar: false,
+    Identify: false,
+    Delete: false,
+    Measure: false
   };
   onPanStart(event: any): void {
     this.startX = this.x;
@@ -69,7 +73,7 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
   );
   this.subsToGeomTypeEditing = this.openLayersService.layerEditing$.subscribe(
     (data: any) => {
-      console.log('data aqui', data);
+      // console.log('data aqui', data);
       this.updateLayerTypeEdit(data.layerGeom);
     },
     error => {
@@ -88,7 +92,7 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
      * @param geomType: string indicating the geometry type
      */
     this.layerTypeEdit$ = geomType;
-    console.log('this.layerTypeEdit$', this.layerTypeEdit$);
+    // console.log('this.layerTypeEdit$', this.layerTypeEdit$);
   }
 
 
@@ -117,18 +121,69 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
       }
   }
   selectingBoxFeatures(){
+    /**
+     * Select with a rectangle
+     */
+    alert("add Code to select with a rectangle");
   }
+
+  identifyFeatures(){
+    /**
+     * Identify Feautures, the user select element(s) and the information is retrieved
+     */
+    alert("add Code to identify Features");
+  }
+  copiarFeatures(){
+    /**
+     * Copiar Feautures, the user select element(s) and paste in the location when the click is released
+     */
+    alert("add Code to copiar Features");
+  }
+  rotateFeatures(){
+    /**
+     * Rotate
+     */
+    alert("add Code to rotate Features");
+  }
+  measureDistance(){
+    /**
+     * Measure Distance
+     */
+    alert("add Code to measure Distance");
+  }
+
   showSymbolPanel(visible: boolean){
     /**
      * Updates the observable that allows to show/hide the symbolPanel
      */
     // #TODO add a validation to know if is visible or not?
+
     this.openLayersService.updateShowSymbolPanel(visible);
    }
   deleteFeat(){
     /**
-     * Updates the observable that allows to show/hide the symbolPanel
+     * Updates the observable that allows to start deleting in the map,
+     * highlight the button and unselect the others
      */
+    if (true === this.actionActive.Delete ) {
+      // The deleting was active
+      // console.log ("stop interaction de delete", this.actionActive['delete']);
+      this.openLayersService.updateDeleteFeats(false); //
+    }
+    else {
+      this.openLayersService.updateDeleteFeats(true);
+      console.log('first time here');
+    }
+    this.actionActive.Delete = !this.actionActive.Delete;
+
+    // change the rest of interactions to false
+    for (const key in this.actionActive ) {
+      // console.log("otra...this.actionActive[key]",key,this.actionActive[key]);
+      if ((key !== 'Delete') && (true === this.actionActive[key]))
+      {
+        this.actionActive[key] = !this.actionActive[key];
+      }
+    }
   }
   saveLayer(){
     /** Enable user to save edit in the layer being Updates the observable to show the editing toolbar and
@@ -147,7 +202,7 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
   }
 
   showToolbar(visible: boolean){
-    /** Updates the observable to show the editing toolbar and
+    /** Updates the observable to show the editing toolbar
      *  @param visible: boolean
      */
   this.isVisible$ = observableOf(visible);
