@@ -3,7 +3,7 @@
 Compressed Imagery_Denai Lama/
 
 # compiled output
-/dist
+# commented to allow cloning from github to the linux server /dist
 /tmp
 /out-tsc
 # Only exists if Bazel was run
