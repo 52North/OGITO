@@ -137,7 +137,7 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
            });
            render.drawFeature(feature, tempStyle);
            feature = new Feature(new Point([cx + cx/3, cy]));  // only for testing
-           stylelayerClone.push(new Style({
+            stylelayerClone.push(new Style({
              image: new RegularShape({
                fill: new Fill({color: 'yellow'}),
                stroke: new Stroke({color: 'red'}),
@@ -146,7 +146,6 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
                rotation: Math.PI / 4,
                angle: 0 })
            }));
-
            /*  #TODO replace for the correct code
             if ( img && img.getSize() != null) {
                    // #TODO Temporal to replace

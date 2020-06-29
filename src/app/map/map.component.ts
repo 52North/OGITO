@@ -116,7 +116,7 @@ export class MapComponent implements OnInit, OnDestroy {
      );
     this.openLayersService.deleteFeats$.subscribe(
       data => {
-        console.log("que viene", data);
+        console.log('que viene', data);
         this.removeInteractions();
         if (true === data) {
           this.startDeleting();
@@ -124,8 +124,47 @@ export class MapComponent implements OnInit, OnDestroy {
       },
       error => alert('Error deleting features' + error)
     );
-  }
 
+    this.openLayersService.editAction$.subscribe(
+      // starts an action and stop the others..is this ready with stop interactions?
+    data => {
+    console.log('que viene', data);
+    this.removeInteractions();
+    switch (data){
+      case 'ModifyBox': {
+        this.startTranslating();
+        break;
+      }
+      case 'Rotate':
+        {
+          this.startRotating();
+          break;
+        }
+      case 'Copy':
+        {
+          this.startCopying();
+          break;
+        }
+      case 'Identify':
+        {
+          this.startIdentifying();
+          break;
+        }
+      case 'Delete':
+        {
+          this.startDeleting();
+          break;
+        }
+      case 'Measure':
+        {
+          this.startMeasuring();
+          break;
+        }
+      }
+  },
+  error => alert('Error implementing action on features' + error)
+  );
+  }
 
   ngOnInit(): void {
     // initialize the map
@@ -439,7 +478,7 @@ export class MapComponent implements OnInit, OnDestroy {
         }
       }); */
     const tsource = this.curEditingLayer.source;
-    //console.log('Finds the current layer to add shapes', this.curEditingLayer, tsource);
+    // console.log('Finds the current layer to add shapes', this.curEditingLayer, tsource);
     let type: any;
     let geometryFunction: any;
     // deactivate tany interaction? or remove?
@@ -524,11 +563,6 @@ export class MapComponent implements OnInit, OnDestroy {
           });
           break;
         }
-
-
-
-
-
       }
       this.map.addInteraction(this.draw);
       // adding snap interaction always after th draw interaction
@@ -645,7 +679,7 @@ startDeleting(){
   try{
   this.map.getLayers().forEach(layer => {
       if (layer.get('name') === this.curEditingLayer.layerName) {
-        console.log ('layer.get(\'name\')',layer.get('name'),this.curEditingLayer.layerName === layer.get('name'));
+        console.log ('layer.get(\'name\')', layer.get('name'), this.curEditingLayer.layerName === layer.get('name'));
         tlayer = layer;
         return;
       }
@@ -661,6 +695,7 @@ startDeleting(){
   });
   this.map.addInteraction(this.select);
   const self = this;
+  let dirty = true;
   // HERE add code to delete from the source and add to the buffer
   this.select.on('select', function(e){
     const  selectedFeatures = e.target.getFeatures();
@@ -678,44 +713,59 @@ startDeleting(){
           if (self.editBuffer.find(x => x.feats.id_ === tempId && x.dirty === true)){
             // it was a new feature not yet saved in the wfs service
             console.log('nueva a eliminar');
-            // self.dirtyBuffer.push(self.editBuffer.find(x => x.feats.id_ === tempId));  // find the first, a insertion
             self.editBuffer = self.editBuffer.filter(x => x.feats.id_ !== tempId);  // retorna los elementos que no tienen la feature
           }
-          else if (self.editBuffer.findIndex(x => x.feats.id_ === tempId) > 0) {// && x.dirty !== true)) {
+          else if (self.editBuffer.findIndex(x => x.feats.id_ === tempId) < 0) {// && x.dirty !== true)) {
           // it was an existing feature
             console.log('it was an existing feature');
+            dirty = false;
             self.editBuffer.push({
               layerName: self.curEditingLayer.layerName,
               transaction: 'delete',
               feats: f,
-              dirty: false,
+              dirty,
               source: self.curEditingLayer.source
             });
           }
           // remove feature from the source
           self.curEditingLayer.source.removeFeature(f);
+          // insert feature in a cache --> for undo
+          self.cacheFeatures.push({
+              layerName: self.curEditingLayer.layerName,
+              transaction: 'delete',  // would it be better to add the opposite operation already, e.g., insert?
+              feats: f,
+              dirty,
+              source: self.curEditingLayer.source
+            });
         });
         // clear the selection --> the style will also be clear
           self.select.getFeatures().clear();
         // update the possibility to undo and the cache for that
           self.canBeUndo = true;
-          self.cacheFeatures.push(cacheFeatures); // this keep open the possibility to delete several an undo several actions
+         // self.cacheFeatures.push(cacheFeatures); // this keep open the possibility to delete several an undo several actions
           console.log ('cache', self.cacheFeatures );
           console.log ('editBuffer', self.editBuffer );
           return;
     }
-    // this.ediLayer.geometry is different .. so a sketch layer
     else {
+      // this.ediLayer.geometry is different .. so a sketch layer
       selectedFeatures.forEach(f =>
       {
-        cacheFeatures.push((f.clone()));
+        // cacheFeatures.push(());
+        // insert feature in a cache --> for undo
+        self.cacheFeatures.push({
+          layerName: self.curEditingLayer.layerName,
+          transaction: 'delete',  // would it be better to add the opposite operation already, e.g., insert?
+          feats: f.clone(),
+          dirty: true,
+          source: self.curEditingLayer.source
+        });
         self.curEditingLayer.removeFeature(f);
       });
       // clear the selection --> the style will also be clear
       self.select.getFeatures().clear();
       // self.curEditingLayer.source.refresh(); // #TODO is this needed?
-      // update the possibility to undo and the cache for that
-      self.cacheFeatures.push(cacheFeatures);
+      // update the possibility to undo
       self.canBeUndo = true;
     }
     });
@@ -729,7 +779,7 @@ removeDragPinchInteractions(){
               if (interaction instanceof DragPan || interaction instanceof DragZoom || interaction instanceof DragRotate
                 || interaction instanceof PinchZoom   || interaction instanceof PinchRotate)
               {
-                //self.map.removeInteraction(interaction);
+                // self.map.removeInteraction(interaction);
                 interaction.setActive(false);
               }
              });
@@ -975,7 +1025,6 @@ removeDragPinchInteractions(){
     }
   }
 
-
   startEditing(layer: any) {
     /** Enables the interaction in the map to draw features
      * and update two observables in openLayerService:
@@ -997,7 +1046,6 @@ removeDragPinchInteractions(){
     alert('Error starting editing...');
     }
   }
-
 
   writeTransactWfs(editLayer: any) {
     /** saves changes on a wfs layer
@@ -1129,7 +1177,7 @@ removeDragPinchInteractions(){
     // cleaning the Editbuffer
     // this.editBuffer[editLayer] = [];
     this.editBuffer = this.editBuffer.filter(obj => obj.layerName !== editLayer.layerName);
-    console.log('this.editBufferTemp', this.editBuffer);
+    console.log('this.editBufferTemp after saving', this.editBuffer);
   }
 
   saveWFSAll(){
@@ -1138,6 +1186,66 @@ removeDragPinchInteractions(){
    * #TODO
    */
   }
+
+  findLayer(layername: string) {
+    /**
+     * find the object layer with the name @layername
+     * @param layername: string, the name of the layer to find
+     * @return tlayer: the object layer found
+     */
+    let tlayer: any = null;
+    try{
+      this.map.getLayers().forEach(layer => {
+        if (layer.get('name') === layername) {
+          console.log ('layer.get(\'name\')', layer.get('name'), this.curEditingLayer.layerName === layer.get('name'));
+          tlayer = layer;
+          return (tlayer);
+        }
+      });
+    }
+    catch (e) {
+      console.log('error getting the layer', e);
+    }
+  }
+
+  startTranslating()
+  {
+    /** enables to move (translate features selected with a rectangle
+     * The user first select the features and then click in the location where those features will be located
+     */
+
+   const lyr = this.findLayer(this.curEditingLayer.layerName);
+   if (lyr === null) {
+     alert('Error retrieving current layer');
+     return;
+   }
+   this.removeInteractions();
+   this.select = new Select({
+      layers: [lyr],   // avoid selecting in other layers..
+      condition: click,  // check if this work on touch
+      hitTolerance: 7,    // check if we should adjust for # types of geometries..
+      style: this.selectStyle,
+    });
+   this.map.addInteraction(this.select);
+   this.dragBox = new DragBox({className: 'boxSelect'});
+   this.map.addInteraction(this.dragBox);
+   // add #TODO here the rest of the code.
+
+
+  }
+
+  startRotating() {
+
+  }
+  startCopying()
+  {
+  }
+  startIdentifying()
+  {
+  }
+  startMeasuring() {
+  }
+
   updateOrderVisibleLayers(editLayers) {
     /** updates the order in which layers are rendered in the map
      * @param editLayers: the list of layers to arrange the order (emitted by the layerPanel component)
@@ -1154,7 +1262,9 @@ removeDragPinchInteractions(){
     }
    }
   removeInteractions(){
-
+    /**
+     * Remove the interactions to draw, select or move
+     */
     try {
       this.map.removeInteraction(this.draw);
       this.map.removeInteraction(this.select);

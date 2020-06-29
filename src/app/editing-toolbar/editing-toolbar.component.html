@@ -24,28 +24,28 @@
               (click)="drawingShapes('Circle')" matTooltip="Add Circle" [ngClass]="actionActive['Circle'] ? 'active': 'normal'">
         <mat-icon>radio_button_unchecked</mat-icon>
       </button>
-      <button mat-icon-button (click)="selectingBoxFeatures();showSymbolPanel(false)" matTooltip="Select element(s)"
+      <button mat-icon-button (click)="startEditAction('ModifyBox');showSymbolPanel(false);" matTooltip="Select element(s)"
               [ngClass]="actionActive['ModifyBox'] ? 'active': 'normal'" >
         <mat-icon svgIcon="selectBoxFeature"></mat-icon>
       </button>
-      <button mat-icon-button (click)="copiarFeatures();showSymbolPanel(false)" matTooltip="Copiar element(s)"
-              [ngClass]="actionActive['Copiar'] ? 'active': 'normal'" >
+      <button mat-icon-button (click)="startEditAction('Copy');showSymbolPanel(false)" matTooltip="Copiar element(s)"
+              [ngClass]="actionActive['Copy'] ? 'active': 'normal'" >
         <mat-icon>content_copy</mat-icon>
       </button>
-      <button mat-icon-button (click)="rotateFeatures();showSymbolPanel(false)" matTooltip="Rotate element(s)"
+      <button mat-icon-button (click)="startEditAction('Rotate');showSymbolPanel(false)" matTooltip="Rotate element(s)"
               [ngClass]="actionActive['Rotate'] ? 'active': 'normal'" >
         <mat-icon>rotate_right</mat-icon>
       </button>
-      <button mat-icon-button (click)="measureDistance();showSymbolPanel(false)" matTooltip="Measure Distance"
+      <button mat-icon-button (click)="startEditAction('Measure');showSymbolPanel(false)" matTooltip="Measure Distance"
               [ngClass]="actionActive['Measure'] ? 'active': 'normal'" >
         <mat-icon>straighten</mat-icon>
       </button>
 
-      <button mat-icon-button (click)="deleteFeat();showSymbolPanel(false)"  aria-label="delete" matTooltip="Delete element"
-              [ngClass]="actionActive['delete'] ? 'active': 'normal'">
+      <button mat-icon-button (click)="startEditAction('Delete'); showSymbolPanel(false)"  aria-label="delete" matTooltip="Delete element"
+              [ngClass]="actionActive['Delete'] ? 'active': 'normal'">
         <mat-icon>delete_forever</mat-icon>
       </button>
-      <button mat-icon-button (click)="identifyFeatures();showSymbolPanel(false)"  aria-label="identify" matTooltip="Identify element"
+      <button mat-icon-button (click)="startEditAction('Identify');showSymbolPanel(false)"  aria-label="identify" matTooltip="Identify element"
               [ngClass]="actionActive['Identify'] ? 'active': 'normal'">
         <mat-icon>search</mat-icon>
       </button>

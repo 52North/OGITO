@@ -31,10 +31,9 @@ actionActive = {
     Square: false,
     Box: false,
     Circle: false,
-    Modify: false,   // it is translate only
-    ModifyBox: false,
+    ModifyBox: false,  // it is translate with a box
     Rotate: false,
-    Copiar: false,
+    Copy: false,
     Identify: false,
     Delete: false,
     Measure: false
@@ -109,7 +108,8 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
         this.openLayersService.updateShapeEditType(shapeType);
         this.showSymbolPanel(true);
       }
-      this.actionActive[shapeType] = !this.actionActive[shapeType];
+      this.highlightAction(shapeType);
+     /* this.actionActive[shapeType] = !this.actionActive[shapeType];
 
       // change the rest of interactions to false
       for (const key in this.actionActive ) {
@@ -118,41 +118,57 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
         {
           this.actionActive[key] = !this.actionActive[key];
         }
-      }
+      } */
   }
-  selectingBoxFeatures(){
+
+  highlightAction(action: string) {
+    this.actionActive[action] = !this.actionActive[action];
+
+    // change the rest of interactions to false
+    for (const key in this.actionActive ) {
+      // console.log("otra...this.actionActive[key]",key,this.actionActive[key]);
+      if ((key !== action) && (true === this.actionActive[key]))
+      {
+        this.actionActive[key] = !this.actionActive[key];
+      }
+    }
+  }
+
+  startEditAction(action: string){
     /**
      * Select with a rectangle
      */
-    alert("add Code to select with a rectangle");
+    this.highlightAction(action);
+    this.openLayersService.updateEditAction(action);
+    alert('add Code to start the actions now adding for moving with a box');
   }
 
-  identifyFeatures(){
+  // identifyFeatures(){
     /**
      * Identify Feautures, the user select element(s) and the information is retrieved
      */
-    alert("add Code to identify Features");
-  }
+  /*  alert("add Code to identify Features");
+   }
   copiarFeatures(){
     /**
-     * Copiar Feautures, the user select element(s) and paste in the location when the click is released
+     * Copiar Features, the user select element(s) and paste in the location when the click is released
      */
-    alert("add Code to copiar Features");
-  }
+    //alert("add Code to copiar Features");
+  /*}
   rotateFeatures(){
     /**
      * Rotate
      */
-    alert("add Code to rotate Features");
-  }
+   // alert("add Code to rotate Features");
+  /*}
   measureDistance(){
     /**
      * Measure Distance
      */
-    alert("add Code to measure Distance");
-  }
+   /* alert("add Code to measure Distance");
+  } */
 
-  showSymbolPanel(visible: boolean){
+  showSymbolPanel(visible: boolean): void{
     /**
      * Updates the observable that allows to show/hide the symbolPanel
      */
@@ -160,7 +176,9 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
 
     this.openLayersService.updateShowSymbolPanel(visible);
    }
-  deleteFeat(){
+
+  deleteFeat(action: 'Delete'){
+    // #TODO remove the code was change to emit one event.
     /**
      * Updates the observable that allows to start deleting in the map,
      * highlight the button and unselect the others
@@ -174,17 +192,10 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
       this.openLayersService.updateDeleteFeats(true);
       console.log('first time here');
     }
-    this.actionActive.Delete = !this.actionActive.Delete;
-
-    // change the rest of interactions to false
-    for (const key in this.actionActive ) {
-      // console.log("otra...this.actionActive[key]",key,this.actionActive[key]);
-      if ((key !== 'Delete') && (true === this.actionActive[key]))
-      {
-        this.actionActive[key] = !this.actionActive[key];
-      }
+    this.highlightAction('Delete');
     }
-  }
+
+
   saveLayer(){
     /** Enable user to save edit in the layer being Updates the observable to show the editing toolbar and
      *  @param visible: boolean

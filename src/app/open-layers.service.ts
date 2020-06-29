@@ -22,6 +22,8 @@ export class OpenLayersService {
   saveCurrentLayer$ = this.saveCurrentLayerSource.asObservable();
   private deleteFeatsSource = new Subject<any>();
   deleteFeats$ = this.deleteFeatsSource.asObservable();
+  private editActionSource = new Subject<any>();
+  editAction$ = this.editActionSource.asObservable();
 
   constructor() { }
 
@@ -42,6 +44,14 @@ export class OpenLayersService {
      */
     this.deleteFeatsSource.next(active);
   }
+
+  updateEditAction(action: string){
+    /** Updates the observable to the next value
+     * @parama action: string indicating the action 'ModifyBox', 'Delete', 'Copy' , etc to perform in the map
+     */
+    this.editActionSource.next(action);
+  }
+
   updateSaveCurrentLayer(save: true){
     /** Updates the observable to the next value
      * visible: boolean; true or false to show/hide the editing toolbar
