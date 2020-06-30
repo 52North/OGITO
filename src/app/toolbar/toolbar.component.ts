@@ -30,6 +30,7 @@ export class ToolbarComponent implements OnInit {
   }
   zoomHome(){
     alert("add the code ZoomHome");
+    this.openLayersService.updateZoomHome(true);
   }
   layerEditingChange(){  //change name --> edit mode
     alert("add the code Start editing");

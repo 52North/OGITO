@@ -24,7 +24,8 @@ export class OpenLayersService {
   deleteFeats$ = this.deleteFeatsSource.asObservable();
   private editActionSource = new Subject<any>();
   editAction$ = this.editActionSource.asObservable();
-
+  private zoomHomeSource = new Subject<boolean>();
+  zoomHome$ = this.zoomHomeSource.asObservable();
   constructor() { }
 
   updateExistingProject(projectOpened: boolean){
@@ -32,6 +33,13 @@ export class OpenLayersService {
      * @param projectOpened: indicates if there is a project opened (not a default view)
      */
     this.existingProject.next(projectOpened);
+  }
+
+  updateZoomHome(value= true){
+    /**
+     * sends a request to the map component to go to the Home
+     */
+    this.zoomHomeSource.next(value);
   }
 
   updateShapeEditType(shapeEdit: any){

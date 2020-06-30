@@ -69,7 +69,7 @@ export class MapComponent implements OnInit, OnDestroy {
   cacheFeatures = [];
   canBeUndo = false;
   editBuffer = [];   // Try one array for everything.
-  cacheBuffer = [];
+  // cacheBuffer = [];
   // editSketchBuffer = []; // #TDOD remove?
   layersGeometryType = {};
   layersOrder = [];
@@ -81,6 +81,7 @@ export class MapComponent implements OnInit, OnDestroy {
   subsToShapeEdit: Subscription;
   subsTocurrentSymbol: Subscription;
   subsToSaveCurrentLayer: Subscription;
+  subsToZoomHome: Subscription;
 
   constructor( private mapQgsStyleService: MapQgsStyleService,
                private  openLayersService: OpenLayersService) {
@@ -108,13 +109,22 @@ export class MapComponent implements OnInit, OnDestroy {
     );
     this.subsToSaveCurrentLayer = this.openLayersService.saveCurrentLayer$.subscribe(
      data => {
-       if (data === true) {
+       console.log('que entra de la subscription...', data);
+       if (data) {                                    // (data) is equivalent to (data === true)
          this.saveEdits(this.curEditingLayer);
        }}
      ,
        error => alert('Error saving layer ' + error)
      );
-    this.openLayersService.deleteFeats$.subscribe(
+    this.subsToZoomHome = this.openLayersService.zoomHome$.subscribe(
+     data => {
+      if (data) {
+        this.zoomToHome();
+      }
+     },
+      error => alert ("Error starting zooming Home" + error)
+    );
+    /*this.openLayersService.deleteFeats$.subscribe(
       data => {
         console.log('que viene', data);
         this.removeInteractions();
@@ -123,7 +133,7 @@ export class MapComponent implements OnInit, OnDestroy {
         }
       },
       error => alert('Error deleting features' + error)
-    );
+    ); */
 
     this.openLayersService.editAction$.subscribe(
       // starts an action and stop the others..is this ready with stop interactions?
@@ -282,6 +292,12 @@ export class MapComponent implements OnInit, OnDestroy {
       console.log('length', e.touches.length);
     });
     // console.log('this.view.getCenter', this.view.getCenter(), this.view.getProjection(), this.view.calculateExtent());
+  }
+  zoomToHome() {
+   /**
+    * Centers the map canvas view to the center and zoom specified in this.view
+    */
+      this.map.setView(this.view);
   }
   workQgsProject() {
     /** Retrieves the capabilities WFS and WMS associated to the qgis project listed in AppConfiguration
@@ -652,7 +668,7 @@ export class MapComponent implements OnInit, OnDestroy {
         });
         // console.log('editbuffer', self.editBuffer);
         self.canBeUndo = true;
-        self.cacheBuffer.push({
+        self.cacheFeatures.push({
           layerName: self.curEditingLayer.layerName,
           transaction: 'insert',
           feats: e.feature,
@@ -699,7 +715,7 @@ startDeleting(){
   // HERE add code to delete from the source and add to the buffer
   this.select.on('select', function(e){
     const  selectedFeatures = e.target.getFeatures();
-    const cacheFeatures = [];
+    // const cacheFeatures = [];
     if (selectedFeatures.getLength() <= 0) {
       return;
     }
@@ -709,7 +725,7 @@ startDeleting(){
           const lastFeat = f.clone();
           lastFeat.setId(f.getId()); // to enable adding the feat again?
           const tempId = f.getId();
-          cacheFeatures.push(lastFeat);
+          // cacheFeatures.push(lastFeat);
           if (self.editBuffer.find(x => x.feats.id_ === tempId && x.dirty === true)){
             // it was a new feature not yet saved in the wfs service
             console.log('nueva a eliminar');
@@ -733,7 +749,7 @@ startDeleting(){
           self.cacheFeatures.push({
               layerName: self.curEditingLayer.layerName,
               transaction: 'delete',  // would it be better to add the opposite operation already, e.g., insert?
-              feats: f,
+              feats: lastFeat,
               dirty,
               source: self.curEditingLayer.source
             });
@@ -756,7 +772,7 @@ startDeleting(){
         self.cacheFeatures.push({
           layerName: self.curEditingLayer.layerName,
           transaction: 'delete',  // would it be better to add the opposite operation already, e.g., insert?
-          feats: f.clone(),
+          feats: f.clone(),   // #TODO check id
           dirty: true,
           source: self.curEditingLayer.source
         });
@@ -994,7 +1010,8 @@ removeDragPinchInteractions(){
     }
 
     saveEdits(editLayer: any){
-      // console.log('editBuffer.indexOf(editLayer.layerName',this.editBuffer.findIndex(x => x.layerName ===  editLayer.layerName) );
+      // console.log('editBuffer.indexOf(editLayer.layerName', this.editBuffer.findIndex(x => x.layerName ===  editLayer.layerName) );
+      console.log('en save', this.editBuffer);
       if (!(this.editBuffer.length > 0)) {  // nothing to save
         return;
       }
@@ -1048,6 +1065,7 @@ removeDragPinchInteractions(){
   }
 
   writeTransactWfs(editLayer: any) {
+    console.log ("entra a save...", this.editBuffer);
     /** saves changes on a wfs layer
      * @param editLayer: layer to save changes stored in the editBuffer
      */
@@ -1063,6 +1081,7 @@ removeDragPinchInteractions(){
       // create the node for CRU
       // console.log("la consigue o no", layer.get('name'));
       if (t.layerName === editLayer.layerName) {
+        // save edits in current edit layer
         switch (t.transaction) {
           case 'insert':
             layerTrs[editLayer.layerName].insert.push(t.feats);   // t.feats is an array with only one feat
@@ -1076,7 +1095,9 @@ removeDragPinchInteractions(){
         }
       }
     });
-    // console.log('array insert', layerTrs[editLayer.layerName].insert);
+    console.log('array insert', layerTrs[editLayer.layerName].insert);
+    console.log('array update', layerTrs[editLayer.layerName].update);
+    console.log('array delete', layerTrs[editLayer.layerName].delete);
     // configure nodes.
     const strService = 'SERVICE=WFS&VERSION=' + AppConfiguration.wfsVersion + '&REQUEST=DescribeFeatureType';
     const strUrl = AppConfiguration.qGsServerUrl + strService + '&map=' + AppConfiguration.QgsFileProject;
@@ -1101,7 +1122,7 @@ removeDragPinchInteractions(){
           layerTrs[editLayer.layerName].insert = [];
           if (layerTrs[editLayer.layerName].update.length > 0) {
             // Edits should be done in chain... 1)insert, 2)updates, 3) deletes
-            node.formatWFS.writeTransaction(null, layerTrs[editLayer.layerName].update, null, formatGML);
+            node = formatWFS.writeTransaction(null, layerTrs[editLayer.layerName].update, null, formatGML);
             str = xs.serializeToString(node);
             return fetch(strUrl, {
               method: 'POST', body: str
@@ -1111,7 +1132,7 @@ removeDragPinchInteractions(){
                 layerTrs[editLayer.layerName].update = [];
                 if (layerTrs[editLayer.layerName].delete.length > 0) {
                   // Edits should be done in chain... 1)insert, 2)updates, 3) deletes // if enter here only deletes were done
-                  node.formatWFS.writeTransaction(null, null, layerTrs[editLayer.layerName].delete, formatGML);
+                  node = formatWFS.writeTransaction(null, null, layerTrs[editLayer.layerName].delete, formatGML);
                   str = xs.serializeToString(node);
                   return fetch(strUrl, {
                     method: 'POST', body: str
@@ -1132,7 +1153,7 @@ removeDragPinchInteractions(){
     }
     if (layerTrs[editLayer.layerName].update.length > 0) {
       // Edits should be done in chain... 1)insert, 2)updates, 3) deletes // if enter here no inserts were done
-      node.formatWFS.writeTransaction(null, layerTrs[editLayer.layerName].update, null, formatGML);
+      node = formatWFS.writeTransaction(null, layerTrs[editLayer.layerName].update, null, formatGML);
       str = xs.serializeToString(node);
       return fetch(strUrl, {
         method: 'POST', body: str
@@ -1142,7 +1163,7 @@ removeDragPinchInteractions(){
           layerTrs[editLayer.layerName].update = [];
           if (layerTrs[editLayer.layerName].delete.length > 0) {
             // Edits should be done in chain... 1)insert, 2)updates, 3) deletes // if enter here only deletes were done
-            node.formatWFS.writeTransaction(null, null, layerTrs[editLayer.layerName].delete, formatGML);
+            node = formatWFS.writeTransaction(null, null, layerTrs[editLayer.layerName].delete, formatGML);
             str = xs.serializeToString(node);
             return fetch(strUrl, {
               method: 'POST', body: str
@@ -1153,14 +1174,16 @@ removeDragPinchInteractions(){
               .then(textDelete => {
                 console.log('text response update WFS', textDelete);
                 layerTrs[editLayer.layerName].delete = [];
+                console.log('edit array', layerTrs[editLayer.layerName].delete);
               });
           }
         });
       // editLayer.layerName.update = [];
     }
     if (layerTrs[editLayer.layerName].delete.length > 0) {
+      console.log ('entra aqui?.. mientras espera la subscription..');
       // Edits should be done in chain... 1)insert, 2)updates, 3) deletes // if enter here only deletes were done
-      node.formatWFS.writeTransaction(null, null, layerTrs[editLayer.layerName].delete, formatGML);
+      node = formatWFS.writeTransaction(null, null, layerTrs[editLayer.layerName].delete, formatGML);
       str = xs.serializeToString(node);
       return fetch(strUrl, {
         method: 'POST', body: str
@@ -1168,14 +1191,15 @@ removeDragPinchInteractions(){
         .then(respDelete => {
           return respDelete.text();
         })
-        .then(textDelete => {
-          console.log('text response update WFS', textDelete);
+        .then(respDelete => {
+          console.log('text response update WFS', respDelete);
           layerTrs[editLayer.layerName].delete = [];
         });
     }
 
     // cleaning the Editbuffer
     // this.editBuffer[editLayer] = [];
+    console.log('cuando llega aqui?');
     this.editBuffer = this.editBuffer.filter(obj => obj.layerName !== editLayer.layerName);
     console.log('this.editBufferTemp after saving', this.editBuffer);
   }
@@ -1212,8 +1236,8 @@ removeDragPinchInteractions(){
   {
     /** enables to move (translate features selected with a rectangle
      * The user first select the features and then click in the location where those features will be located
+     * so far no difference in the code for sketch and WFS layers..
      */
-
    const lyr = this.findLayer(this.curEditingLayer.layerName);
    if (lyr === null) {
      alert('Error retrieving current layer');
@@ -1229,10 +1253,60 @@ removeDragPinchInteractions(){
    this.map.addInteraction(this.select);
    this.dragBox = new DragBox({className: 'boxSelect'});
    this.map.addInteraction(this.dragBox);
+   const self = this;
+   const tsource = this.curEditingLayer.source;
    // add #TODO here the rest of the code.
+   // clear a previous selection
 
+   this.dragBox.on('boxend', () => {
+    if (this.dragBox.getGeometry() == null) {
+      return;
+    }
+    const extent = this.dragBox.getGeometry().getExtent();
+    tsource.forEachFeatureIntersectingExtent(extent, f => {
+            self.select.getFeatures().push(f);
+            const lastFeat = f.clone();
+            lastFeat.setId(f.getId());
+            self.cacheFeatures.push({
+              layerName: self.curEditingLayer.layerName,
+              transaction: 'translate',  // would it be better to add the opposite operation already, e.g., insert?
+              feats: lastFeat,
+              source: self.curEditingLayer.source
+            });
+          }
+        );
+     });
+    // Add the translation interaction to the selected features
+   const selectedFeatures = this.select.getFeatures();
+   this.translate = new Translate({
+      features: selectedFeatures
+    });
+   this.map.addInteraction(this.translate);
+   // insert features into the editBuffer and cacheFeatures
+   this.translate.on('translateend', () => {
+     selectedFeatures.forEach( f => {
+     // const tempId = f.getId();
+     // independently of old or new feat, just add the translation) #TODO check if the order is correct --> last position is saved
+     self.editBuffer.push({
+         layerName: self.curEditingLayer.layerName,
+         transaction: 'update',
+         feats: f,
+         source: tsource
+       });
+     });
+     // console.log('editBuffer in translating', self.editBuffer);
+     // clear the selection
+     this.select.getFeatures().clear();
+   });
+   // action can be undo
+   this.canBeUndo = true;
 
+   // each time of starting a box clear features
+   this.dragBox.on('boxstart', function() {
+      self.select.getFeatures().clear();
+   });
   }
+
 
   startRotating() {
 
