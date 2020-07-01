@@ -92,7 +92,7 @@ export class MapComponent implements OnInit, OnDestroy {
           this.enableAddShape(data);
         }
         else {
-         // que hacer aqui stop the drawing but not  this.stopEditing();
+         this.removeInteractions();   // remove drawingInteractions
         }
 
       },
@@ -140,6 +140,9 @@ export class MapComponent implements OnInit, OnDestroy {
     data => {
     console.log('que viene', data);
     this.removeInteractions();
+    if (data === null) {
+      return;
+    }
     switch (data){
       case 'ModifyBox': {
         this.startTranslating();
@@ -274,14 +277,13 @@ export class MapComponent implements OnInit, OnDestroy {
     const vDistance = getDistance(transform(leftMinCorner.getCoordinates(), this.srsID, this.wgs84ID),
                                   transform(leftMaxCorner.getCoordinates(), this.srsID, this.wgs84ID));
     this.mapCenterXY = [this.mapCanvasExtent[0] + hDistance / 2, this.mapCanvasExtent[2] + vDistance / 2];
-    // console.log (`the new center is ${ this.mapCenterXY }`);
+    // #TODO this works with projected coordinates --> check for others
     this.view = new View({
-      // fromLonLat([AppConfiguration.mapCenterLng,AppConfiguration.mapCenterLat],this.myProjection)
         center:  [this.mapCenterXY[0], this.mapCenterXY[1]],  // [-66,10] ,
         // extent: this.mapCanvasExtent, // not sure if this will prevent the draggig outside the extent.
-        zoom: 13, // this.mapZoom,
-        // minZoom: AppConfiguration.minZoom,
-        // maxZoom: AppConfiguration.maxZoom,
+        zoom: AppConfiguration.mapZoom, // this.mapZoom,
+        minZoom: AppConfiguration.minZoom,
+        maxZoom: AppConfiguration.maxZoom,
         projection: this.srsID // this.projectProjection // 'EPSG:4326'
       });
     this.map.setView(this.view);
@@ -295,9 +297,12 @@ export class MapComponent implements OnInit, OnDestroy {
   }
   zoomToHome() {
    /**
-    * Centers the map canvas view to the center and zoom specified in this.view
+    * Centers the map canvas view to the center and zoom specified in the Qgsprojec file extent and the appConfiguration
     */
-      this.map.setView(this.view);
+    console.log('que entra zoomtoHome', [this.mapCenterXY[0], this.mapCenterXY[1]]);
+    this.map.getView().setRotation(0);
+    this.map.getView().setZoom (AppConfiguration.mapZoom);
+    this.map.getView().setCenter([this.mapCenterXY[0], this.mapCenterXY[1]]);
   }
   workQgsProject() {
     /** Retrieves the capabilities WFS and WMS associated to the qgis project listed in AppConfiguration
@@ -1098,6 +1103,7 @@ removeDragPinchInteractions(){
     console.log('array insert', layerTrs[editLayer.layerName].insert);
     console.log('array update', layerTrs[editLayer.layerName].update);
     console.log('array delete', layerTrs[editLayer.layerName].delete);
+    // Another solution can be to empty the editBuffer here --> it could be some data loss if the insertion fails
     // configure nodes.
     const strService = 'SERVICE=WFS&VERSION=' + AppConfiguration.wfsVersion + '&REQUEST=DescribeFeatureType';
     const strUrl = AppConfiguration.qGsServerUrl + strService + '&map=' + AppConfiguration.QgsFileProject;
@@ -1147,8 +1153,12 @@ removeDragPinchInteractions(){
                     .catch(error => console.error(error));
                 }
               });
-            // editLayer.layerName.update = [];
           }
+        })
+        .then(() => {
+          // cleaning the editbuffer after inserting - updating and deleting
+          this.editBuffer = this.editBuffer.filter(obj => obj.layerName !== editLayer.layerName);
+          console.log('this.editBufferTemp after saving', this.editBuffer);
         });
     }
     if (layerTrs[editLayer.layerName].update.length > 0) {
@@ -1177,8 +1187,12 @@ removeDragPinchInteractions(){
                 console.log('edit array', layerTrs[editLayer.layerName].delete);
               });
           }
+        })
+        .then(() => {
+          // cleaning the editbuffer when only updates and deletes where done
+          this.editBuffer = this.editBuffer.filter(obj => obj.layerName !== editLayer.layerName);
+          console.log('this.editBufferTemp after saving', this.editBuffer);
         });
-      // editLayer.layerName.update = [];
     }
     if (layerTrs[editLayer.layerName].delete.length > 0) {
       console.log ('entra aqui?.. mientras espera la subscription..');
@@ -1194,14 +1208,11 @@ removeDragPinchInteractions(){
         .then(respDelete => {
           console.log('text response update WFS', respDelete);
           layerTrs[editLayer.layerName].delete = [];
-        });
+          // cleaning the editbuffer when only deletes were done
+          this.editBuffer = this.editBuffer.filter(obj => obj.layerName !== editLayer.layerName);
+          console.log('this.editBufferTemp after saving', this.editBuffer);
+          });
     }
-
-    // cleaning the Editbuffer
-    // this.editBuffer[editLayer] = [];
-    console.log('cuando llega aqui?');
-    this.editBuffer = this.editBuffer.filter(obj => obj.layerName !== editLayer.layerName);
-    console.log('this.editBufferTemp after saving', this.editBuffer);
   }
 
   saveWFSAll(){

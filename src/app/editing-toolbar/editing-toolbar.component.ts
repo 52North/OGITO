@@ -19,12 +19,14 @@ export class EditingToolbarComponent implements OnInit {
   y = 0;
   startX = 0;
   startY = 0;
-isVisible$: Observable<boolean>;
-layerTypeEdit$: string;  // type of geometry of the layer in editing
-styles: any;
-subsToShowEditToolbar: Subscription;
-subsToGeomTypeEditing: Subscription;
-actionActive = {
+  stopSave = false;
+  stopSaveAll = false;
+  isVisible$: Observable<boolean>;
+  layerTypeEdit$: string;  // type of geometry of the layer in editing
+  styles: any;
+  subsToShowEditToolbar: Subscription;
+  subsToGeomTypeEditing: Subscription;
+  actionActive = {
     Point: false,
     LineString: false,
     Polygon: false,
@@ -62,8 +64,6 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
     sanitizer.bypassSecurityTrustResourceUrl('assets/img/add-poly-layer24px.svg')
   );
 
-
-
   this.subsToShowEditToolbar = this.openLayersService.showEditToolbar$.subscribe(
     (data) => {
       this.showToolbar(data);
@@ -96,11 +96,11 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
 
 
    drawingShapes(shapeType: any){
-      // update the observable in services to remove the interaction
-     // tslint:disable-next-line:triple-equals
-      if (true == this.actionActive[shapeType] ) {
+     /**
+      *   Updates the observable in services to remove the interaction
+      */
+      if (true === this.actionActive[shapeType] ) {
         // The layer was on editing
-        // console.log ("stop interaction de dibujar", shapeType,"this.actionActive[shapeType]",this.actionActive[shapeType]);
         this.openLayersService.updateShapeEditType(null); //
         this.showSymbolPanel(false);
       }
@@ -109,21 +109,11 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
         this.showSymbolPanel(true);
       }
       this.highlightAction(shapeType);
-     /* this.actionActive[shapeType] = !this.actionActive[shapeType];
-
-      // change the rest of interactions to false
-      for (const key in this.actionActive ) {
-        // console.log("otra...this.actionActive[key]",key,this.actionActive[key]);
-        if ((key !== shapeType) && (true === this.actionActive[key]))
-        {
-          this.actionActive[key] = !this.actionActive[key];
-        }
-      } */
-  }
+   }
 
   highlightAction(action: string) {
+    // update the current action
     this.actionActive[action] = !this.actionActive[action];
-
     // change the rest of interactions to false
     for (const key in this.actionActive ) {
       // console.log("otra...this.actionActive[key]",key,this.actionActive[key]);
@@ -138,10 +128,16 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
     /**
      * Select with a rectangle
      */
+    if (true === this.actionActive[action]) {
+      // action was active --> it must be stopped
+      console.log('que entra.. action',action, this.actionActive[action],true === this.actionActive[action]);
+      this.openLayersService.updateEditAction(null);
+    }
+    else {
+      this.openLayersService.updateEditAction(action);
+    }
     this.highlightAction(action);
-    this.openLayersService.updateEditAction(action);
-    alert('add Code to start the actions now adding for moving with a box');
-  }
+   }
 
   // identifyFeatures(){
     /**
@@ -197,14 +193,32 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
 
 
   saveLayer(){
-    /** Enable user to save edit in the layer being Updates the observable to show the editing toolbar and
-     *  @param visible: boolean
+    /** Enable user to save edit in the layer being updated the observable to show the editing toolbar and
      */
     if (confirm('Do you want to save edits in the current layer:?')){
       this.openLayersService.updateSaveCurrentLayer(true);
+      // disable the button
+      this.stopSave = true;
+      // add a timeout to enable the button
+      setTimeout(() => {
+        this.stopSave = false;
+      }, 10000);
+   }
+  }
+  saveAllLayer(){
+    alert('Add here the code to save all edits in all layers');
+    /** Enable user to save edit in all the layers
+     */
+    if (confirm('Do you want to save all the edits in the all layers:?')){
+     // this.openLayersService.updateSaveCurrentLayer(true);
+      // disable the button
+      this.stopSaveAll = true;
+      // add a timeout to enable the button
+      setTimeout(() => {
+        this.stopSaveAll = false;
+      }, 10000);
     }
   }
-
   undoEdit(data){
   }
 

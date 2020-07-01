@@ -13,9 +13,9 @@ export class AppConfiguration{
   static qgsProjectFolder = 'D:/PhD/code/fromScratch/myOgito/src/assets/';
   // la ruta para accederlo desde Qgs Server
   static QgsFileProject = AppConfiguration.qgsProjectFolder + AppConfiguration.qgsProject; // to use with tqhe qgis server
-  static mapZoom = 12;
+  static mapZoom = 13;
   static maxZoom = 20 ;
-  static minZoom = 10 ;
+  static minZoom = 8 ;
   static threshold = 1000; // Distance in meter to close a polygon being drawn with a line.
 }
 

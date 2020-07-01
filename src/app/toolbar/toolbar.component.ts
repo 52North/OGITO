@@ -29,13 +29,9 @@ export class ToolbarComponent implements OnInit {
     this.y = this.startY + event.deltaY;
   }
   zoomHome(){
-    alert("add the code ZoomHome");
     this.openLayersService.updateZoomHome(true);
   }
-  layerEditingChange(){  //change name --> edit mode
-    alert("add the code Start editing");
-  }
-  constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private openLayersService: OpenLayersService) {
+   constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private openLayersService: OpenLayersService) {
 
     iconRegistry.addSvgIcon(
       'layerScratch',
