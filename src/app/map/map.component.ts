@@ -173,6 +173,11 @@ export class MapComponent implements OnInit, OnDestroy {
           this.startMeasuring();
           break;
         }
+      case 'Undo':
+      {
+        this.undoLastEdit();
+        break;
+      }
       }
   },
   error => alert('Error implementing action on features' + error)
@@ -734,6 +739,7 @@ startDeleting(){
           if (self.editBuffer.find(x => x.feats.id_ === tempId && x.dirty === true)){
             // it was a new feature not yet saved in the wfs service
             console.log('nueva a eliminar');
+            #TODO just add the operation otherwise it can not be undo
             self.editBuffer = self.editBuffer.filter(x => x.feats.id_ !== tempId);  // retorna los elementos que no tienen la feature
           }
           else if (self.editBuffer.findIndex(x => x.feats.id_ === tempId) < 0) {// && x.dirty !== true)) {
@@ -1068,6 +1074,64 @@ removeDragPinchInteractions(){
     alert('Error starting editing...');
     }
   }
+  removeFeatEditBuffer(feat: any) {
+    /**
+     * removes a feature from the editBuffer
+     * @param feat: the feat to be removed
+     */
+    this.editBuffer.forEach((item, index) => {
+      if (item.feats === feat) {
+        this.editBuffer.splice(index, 1);
+      }
+    });
+  }
+  undoLastEdit(){
+    /**
+     * Undo the last action (insert, update (move), delete)   #TODO update observable to disable button
+     * uses the this.editBuffer to do so and the cacheFeatures
+     */
+    // get only the records for the current layer
+    const curEdits = this.editBuffer.filter(obj => obj.layerName === this.curEditingLayer.layerName);
+    console.log('curEdits and this.editBuffer', curEdits, this.editBuffer);
+    if (!(curEdits.length > 0 )) {
+      // nothing to save in current layer
+      return;
+    }
+    const lastOperation = this.editBuffer.filter(obj => obj.layerName === this.curEditingLayer.layerName).pop(); // curEdits.pop();
+    console.log ('cureditingLayer', this.curEditingLayer.layerName, lastOperation);
+    switch (lastOperation.transaction)
+    // rotate and translate are treated as update #TODO change attributes
+    {
+      case 'insert': {
+        // remove from the source
+        console.log('feat', lastOperation.feats);
+        this.curEditingLayer.source.removeFeature(lastOperation.feats);
+        // remove from the edit Buffer
+        this.removeFeatEditBuffer(lastOperation.feats);
+        break;
+      }
+      case 'update': {
+        // change to the oldFeat
+        const oldFeat = lastOperation.feats.get('oldFeat');
+        oldFeat.getGeometry();
+        const curFeatGeomClone = lastOperation.feats.getGeometry().clone();
+        // set the geometry to the old one
+        lastOperation.feats.setGeometry(oldFeat.getGeometry());
+        // set the new old geometry to the current one
+        lastOperation.feats.oldFeat.setGeometry(curFeatGeomClone);
+        // Changes should be available in the buffer
+        break;
+      }
+       case 'delete': {
+         // insert back
+         console.log('feat', lastOperation.feats);
+         this.curEditingLayer.source.addFeature(lastOperation.feats);
+         this.removeFeatEditBuffer(lastOperation.feats);
+       }
+
+
+    }
+  }
 
   writeTransactWfs(editLayer: any) {
     console.log ("entra a save...", this.editBuffer);
@@ -1275,14 +1339,15 @@ removeDragPinchInteractions(){
     }
     const extent = this.dragBox.getGeometry().getExtent();
     tsource.forEachFeatureIntersectingExtent(extent, f => {
-            self.select.getFeatures().push(f);
             const lastFeat = f.clone();
             lastFeat.setId(f.getId());
+            f.set('oldFeat', lastFeat);
+            self.select.getFeatures().push(f);
             self.cacheFeatures.push({
-              layerName: self.curEditingLayer.layerName,
-              transaction: 'translate',  // would it be better to add the opposite operation already, e.g., insert?
-              feats: lastFeat,
-              source: self.curEditingLayer.source
+            layerName: self.curEditingLayer.layerName,
+            transaction: 'translate',  // would it be better to add the opposite operation already, e.g., insert?
+            feats: lastFeat,
+            source: self.curEditingLayer.source
             });
           }
         );
@@ -1305,7 +1370,7 @@ removeDragPinchInteractions(){
          source: tsource
        });
      });
-     // console.log('editBuffer in translating', self.editBuffer);
+     console.log('self.editBuffer', self.editBuffer);
      // clear the selection
      this.select.getFeatures().clear();
    });

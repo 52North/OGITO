@@ -49,7 +49,7 @@
               [ngClass]="actionActive['Identify'] ? 'active': 'normal'">
         <mat-icon>search</mat-icon>
       </button>
-      <button mat-icon-button aria-label="UndoLastEdit" (click)="undoEdit(actionActive);" matTooltip="Undo">
+      <button mat-icon-button aria-label="UndoLastEdit" (click)="startEditAction('Undo');" matTooltip="Undo">
         <mat-icon>undo</mat-icon>
       </button>
       <button mat-icon-button (click)="showSymbolPanel(true)" matTooltip="Select/Change symbol"
