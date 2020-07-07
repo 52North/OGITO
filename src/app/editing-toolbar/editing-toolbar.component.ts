@@ -63,7 +63,10 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
     'add_poly',
     sanitizer.bypassSecurityTrustResourceUrl('assets/img/add-poly-layer24px.svg')
   );
-
+  iconRegistry.addSvgIcon(
+    'identify',
+    sanitizer.bypassSecurityTrustResourceUrl('assets/img/identify-24px.svg')
+  );
   this.subsToShowEditToolbar = this.openLayersService.showEditToolbar$.subscribe(
     (data) => {
       this.showToolbar(data);

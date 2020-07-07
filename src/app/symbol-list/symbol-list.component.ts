@@ -127,7 +127,7 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
            feature = new Feature(new Point([cx, cy]));
            // possible solution or workaround for SVG
            // https://stackoverflow.com/questions/54696758/how-do-i-draw-a-javascript-modified-svg-object-on-a-html5-canvas
-           let tempStyle = new Style({
+           const tempStyle = new Style({
              image: new Icon({
                color: '#8959A8',
                crossOrigin: 'anonymous',
@@ -137,7 +137,7 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
            });
            render.drawFeature(feature, tempStyle);
            feature = new Feature(new Point([cx + cx/3, cy]));  // only for testing
-            stylelayerClone.push(new Style({
+           stylelayerClone.push(new Style({
              image: new RegularShape({
                fill: new Fill({color: 'yellow'}),
                stroke: new Stroke({color: 'red'}),

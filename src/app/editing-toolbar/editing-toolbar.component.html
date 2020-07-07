@@ -47,6 +47,10 @@
       </button>
       <button mat-icon-button (click)="startEditAction('Identify');showSymbolPanel(false)"  aria-label="identify" matTooltip="Identify element"
               [ngClass]="actionActive['Identify'] ? 'active': 'normal'">
+        <mat-icon svgIcon="identify"></mat-icon>
+      </button>
+      <button mat-icon-button (click)="startEditAction('Identify');showSymbolPanel(false)"  aria-label="identify" matTooltip="Search in map"
+              [ngClass]="actionActive['Search'] ? 'active': 'normal'">
         <mat-icon>search</mat-icon>
       </button>
       <button mat-icon-button aria-label="UndoLastEdit" (click)="startEditAction('Undo');" matTooltip="Undo">

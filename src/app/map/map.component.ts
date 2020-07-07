@@ -699,7 +699,7 @@ export class MapComponent implements OnInit, OnDestroy {
    }
 startDeleting(){
   /** Creates a new select interaction that will be used to delete features
-   * in the current editing layer
+   * in the current editing layer  #TODO: simplify if possible concerning wfs layers and sketch layers
    */
   let tlayer: any;
   try{
@@ -736,28 +736,10 @@ startDeleting(){
           lastFeat.setId(f.getId()); // to enable adding the feat again?
           const tempId = f.getId();
           // cacheFeatures.push(lastFeat);
-          if (self.editBuffer.find(x => x.feats.id_ === tempId && x.dirty === true)){
-            // it was a new feature not yet saved in the wfs service
-            console.log('nueva a eliminar');
-            #TODO just add the operation otherwise it can not be undo
-            self.editBuffer = self.editBuffer.filter(x => x.feats.id_ !== tempId);  // retorna los elementos que no tienen la feature
-          }
-          else if (self.editBuffer.findIndex(x => x.feats.id_ === tempId) < 0) {// && x.dirty !== true)) {
-          // it was an existing feature
-            console.log('it was an existing feature');
-            dirty = false;
-            self.editBuffer.push({
-              layerName: self.curEditingLayer.layerName,
-              transaction: 'delete',
-              feats: f,
-              dirty,
-              source: self.curEditingLayer.source
-            });
-          }
           // remove feature from the source
           self.curEditingLayer.source.removeFeature(f);
           // insert feature in a cache --> for undo
-          self.cacheFeatures.push({
+          self.editBuffer.push({
               layerName: self.curEditingLayer.layerName,
               transaction: 'delete',  // would it be better to add the opposite operation already, e.g., insert?
               feats: lastFeat,
@@ -780,7 +762,7 @@ startDeleting(){
       {
         // cacheFeatures.push(());
         // insert feature in a cache --> for undo
-        self.cacheFeatures.push({
+        self.editBuffer.push({
           layerName: self.curEditingLayer.layerName,
           transaction: 'delete',  // would it be better to add the opposite operation already, e.g., insert?
           feats: f.clone(),   // #TODO check id
@@ -914,7 +896,7 @@ removeDragPinchInteractions(){
             //  upperCorner.split(' ')[0], upperCorner.split(' ')[1]],
             visible: true,   // #TODO comment this line, by default layers are not visible
             zIndex: nLayers - i,   // highest zIndex for the first layer and so on.
-            style(feature){
+            style: function(feature) {    // this equiv to style: function(feature)
              // console.log(feature.getGeometry().getType(), name);
               let layerStyle = self.mapQgsStyleService.findStyle(feature, layerName);
               if (!layerStyle) {
@@ -1124,8 +1106,9 @@ removeDragPinchInteractions(){
       }
        case 'delete': {
          // insert back
-         console.log('feat', lastOperation.feats);
-         this.curEditingLayer.source.addFeature(lastOperation.feats);
+         // console.log('temp feat', lastOperation.feats.getProperties().class);
+         lastOperation.feats.setStyle(null);  // to allow the style function of the layer to render the feat properly
+         this.curEditingLayer.source.addFeature(lastOperation.feats);  // TODO styling  //lastOperation.feats
          this.removeFeatEditBuffer(lastOperation.feats);
        }
 

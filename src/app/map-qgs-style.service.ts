@@ -17,7 +17,7 @@ export class MapQgsStyleService {
   context = this.canvas.getContext('2d');
   constructor() { }
 
-  findStyle(feature:any,layerName: any) {
+  findStyle(feature:any, layerName: any) {
     /** Given a feature and the layerName it returns the corresponding style
      * it is used to get the styles for WFS layers in the Qgs project associated
      * @param { feature } the feature for which to find a rendering style  -- no needed apparently
@@ -40,7 +40,7 @@ export class MapQgsStyleService {
     }
   }
 
-  createLinePattern (fillColor:any, angle:number, spacing:number, line_width: number) {
+  createLinePattern(fillColor:any, angle:number, spacing:number, line_width: number) {
     const pixelRatio = DEVICE_PIXEL_RATIO;
     this.canvas.width = 8 * pixelRatio;
     this.canvas.height = 8 * pixelRatio;
@@ -232,7 +232,7 @@ export class MapQgsStyleService {
              scale: 0.03, // #TODO verificar size qgis/ol
              src: filename })
          });
-        //console.log('svgMarker in the case', newStyle);
+        // console.log('svgMarker in the case', newStyle);
         break;
         }
         case 'FontMarker':
@@ -259,7 +259,7 @@ export class MapQgsStyleService {
             offsetX: offset[0],
             offsetY: offsetY, //offset[1],
             textBaseline: textBaseline ,  // 'top' ,
-            //placement: ,   // lets keep the default that is point
+            // placement: ,   // lets keep the default that is point
             scale: 2, //symStyle["size"] ,
             text: symStyle['chr'],
             fill: new Fill({
@@ -447,7 +447,7 @@ export class MapQgsStyleService {
      * @param layername: string, the name of the layer
      */
     if (this.nodes[layerName]){
-      //console.log("consigue algo?",this.nodes[layerName] );
+      // console.log("consigue algo?",this.nodes[layerName] );
       return this.nodes[layerName];
     }
   }
