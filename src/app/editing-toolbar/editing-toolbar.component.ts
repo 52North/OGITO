@@ -131,16 +131,16 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
     /**
      * Select with a rectangle
      */
-    /*if (true === this.actionActive[action]) {
+    if (true === this.actionActive[action]) {
       // action was active --> it must be stopped
-      console.log('que entra.. action', action, this.actionActive[action],true === this.actionActive[action]);
+      // console.log('que entra.. action', action, this.actionActive[action],true === this.actionActive[action]);
       this.openLayersService.updateEditAction(null);
     }
     else {
       this.openLayersService.updateEditAction(action);
-    } */
+    }
     // add an observable to control enable
-    this.openLayersService.updateEditAction(action);
+    // this.openLayersService.updateEditAction(action);
     this.highlightAction(action);
    }
 

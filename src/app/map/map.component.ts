@@ -1074,13 +1074,13 @@ removeDragPinchInteractions(){
      */
     // get only the records for the current layer
     const curEdits = this.editBuffer.filter(obj => obj.layerName === this.curEditingLayer.layerName);
-    console.log('curEdits and this.editBuffer', curEdits, this.editBuffer);
+    // console.log('curEdits and this.editBuffer', curEdits, this.editBuffer);
     if (!(curEdits.length > 0 )) {
       // nothing to save in current layer
       return;
     }
     const lastOperation = this.editBuffer.filter(obj => obj.layerName === this.curEditingLayer.layerName).pop(); // curEdits.pop();
-    console.log ('cureditingLayer', this.curEditingLayer.layerName, lastOperation);
+    console.log ('lastOperatoion', lastOperation);
     switch (lastOperation.transaction)
     // rotate and translate are treated as update #TODO change attributes
     {
@@ -1088,20 +1088,20 @@ removeDragPinchInteractions(){
         // remove from the source
         console.log('feat', lastOperation.feats);
         this.curEditingLayer.source.removeFeature(lastOperation.feats);
-        // remove from the edit Buffer
-        this.removeFeatEditBuffer(lastOperation.feats);
         break;
       }
       case 'update': {
-        // change to the oldFeat
-        const oldFeat = lastOperation.feats.get('oldFeat');
-        oldFeat.getGeometry();
-        const curFeatGeomClone = lastOperation.feats.getGeometry().clone();
-        // set the geometry to the old one
-        lastOperation.feats.setGeometry(oldFeat.getGeometry());
-        // set the new old geometry to the current one
-        lastOperation.feats.oldFeat.setGeometry(curFeatGeomClone);
-        // Changes should be available in the buffer
+        // change to the oldFeat // there could be several features
+        lastOperation.feats.forEach( feat => {
+          const oldFeat = feat.get('oldFeat');
+          oldFeat.getGeometry();
+          const curFeatGeomClone = feat.getGeometry().clone();
+          // set the geometry to the old one
+          feat.setGeometry(oldFeat.getGeometry());
+          // set the new old geometry to the current one
+          feat.set('oldFeat', curFeatGeomClone);
+          // Changes should be available in the buffer
+        });
         break;
       }
        case 'delete': {
@@ -1109,11 +1109,12 @@ removeDragPinchInteractions(){
          // console.log('temp feat', lastOperation.feats.getProperties().class);
          lastOperation.feats.setStyle(null);  // to allow the style function of the layer to render the feat properly
          this.curEditingLayer.source.addFeature(lastOperation.feats);  // TODO styling  //lastOperation.feats
-         this.removeFeatEditBuffer(lastOperation.feats);
+        // this.removeFeatEditBuffer(lastOperation.feats);
        }
-
-
     }
+    // remove from the edit Buffer
+    this.removeFeatEditBuffer(lastOperation.feats);
+    console.log('this.editBuffer', this.editBuffer);
   }
 
   writeTransactWfs(editLayer: any) {
@@ -1136,13 +1137,15 @@ removeDragPinchInteractions(){
         // save edits in current edit layer
         switch (t.transaction) {
           case 'insert':
-            layerTrs[editLayer.layerName].insert.push(t.feats);   // t.feats is an array with only one feat
+            layerTrs[editLayer.layerName].insert.push(t.feats);   // t.feats is only one feat
             break;
           case 'delete':
-            layerTrs[editLayer.layerName].delete.push(t.feats); // t.feats is an array with one or several feats
+            layerTrs[editLayer.layerName].delete.push(t.feats); // t.feats is one feat #TODO next ver delete several
             break;
           case 'update':
-            layerTrs[editLayer.layerName].update.push(t.feats); // t.feats is an array with one or several feats
+            t.feats.forEach(f => {
+              layerTrs[editLayer.layerName].update.push(f); // t.feats is an array with one or several feats
+            });
             break;
         }
       }
@@ -1177,6 +1180,7 @@ removeDragPinchInteractions(){
             // Edits should be done in chain... 1)insert, 2)updates, 3) deletes
             node = formatWFS.writeTransaction(null, layerTrs[editLayer.layerName].update, null, formatGML);
             str = xs.serializeToString(node);
+            console.log('pasa x aqui?');
             return fetch(strUrl, {
               method: 'POST', body: str
             })
@@ -1297,6 +1301,7 @@ removeDragPinchInteractions(){
      * so far no difference in the code for sketch and WFS layers..
      */
    const lyr = this.findLayer(this.curEditingLayer.layerName);
+   const updateFeats = [];
    if (lyr === null) {
      alert('Error retrieving current layer');
      return;
@@ -1309,6 +1314,7 @@ removeDragPinchInteractions(){
       style: this.selectStyle,
     });
    this.map.addInteraction(this.select);
+   console.log('interactions in the map',this.map.getInteractions());
    this.dragBox = new DragBox({className: 'boxSelect'});
    this.map.addInteraction(this.dragBox);
    const self = this;
@@ -1343,20 +1349,25 @@ removeDragPinchInteractions(){
    this.map.addInteraction(this.translate);
    // insert features into the editBuffer and cacheFeatures
    this.translate.on('translateend', () => {
+     console.log('selected features', selectedFeatures);
      selectedFeatures.forEach( f => {
+       updateFeats.push(f);
+     });
+
      // const tempId = f.getId();
      // independently of old or new feat, just add the translation) #TODO check if the order is correct --> last position is saved
      self.editBuffer.push({
          layerName: self.curEditingLayer.layerName,
          transaction: 'update',
-         feats: f,
+         feats: updateFeats,    // add all the features moved in a unique transaction --> check in saving WFS
          source: tsource
        });
-     });
-     console.log('self.editBuffer', self.editBuffer);
-     // clear the selection
      this.select.getFeatures().clear();
-   });
+     });
+   console.log('self.editBuffer', self.editBuffer);
+     // clear the selection
+
+   //
    // action can be undo
    this.canBeUndo = true;
 
