@@ -1143,9 +1143,10 @@ removeDragPinchInteractions(){
             layerTrs[editLayer.layerName].delete.push(t.feats); // t.feats is one feat #TODO next ver delete several
             break;
           case 'update':
-            t.feats.forEach(f => {
+            /* t.feats.forEach(f => {
               layerTrs[editLayer.layerName].update.push(f); // t.feats is an array with one or several feats
-            });
+            }); */
+            layerTrs[editLayer.layerName].update.push(t.feats[0]); // t.feats is an array with one or several feats
             break;
         }
       }
