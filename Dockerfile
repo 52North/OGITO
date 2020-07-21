@@ -1,5 +1,5 @@
 FROM httpd:alpine
-MAINTAINER Rosa Aguilar <r.aguilar@utwente.nl>
+MAINTAINER Rosa Aguilar  r.aguilar@utwente.nl <r.aguilar@utwente.nl>
 # start shell as root
 RUN sudo -s 
 
