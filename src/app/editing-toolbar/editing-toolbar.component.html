@@ -5,7 +5,7 @@
    <mat-divider [vertical]="true"></mat-divider>
     <mat-toolbar>
       <button   *ngIf= " (layerTypeEdit$ == 'Point' || layerTypeEdit$ == 'Multi') " mat-icon-button
-                (click)="drawingShapes('Point')" matTooltip="Add point/marker" [ngClass]="actionActive['Point'] ? 'active': 'normal'">
+                (click)="drawingShapes('Point')" matTooltip="Add point/marker TEST GITHUB workflow" [ngClass]="actionActive['Point'] ? 'active': 'normal'">
         <mat-icon>add_location</mat-icon>
       </button>
       <button mat-icon-button *ngIf="(layerTypeEdit$ == 'Line' || layerTypeEdit$ =='Multi' || layerTypeEdit$ == 'Polygon') "
