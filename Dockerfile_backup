@@ -1,13 +1,5 @@
 FROM httpd:alpine
 MAINTAINER Rosa Aguilar <r.aguilar@utwente.nl>
-# start shell as root
-RUN sudo -s 
-
-# go to the app dir
-RUN cd /home/aguilardearchilarm/myogito
-
-# get the latest version of the app
-RUN git pull origin master
 
 # remove any files in htdocs directory
 RUN rm -r /usr/local/apache2/htdocs/*
