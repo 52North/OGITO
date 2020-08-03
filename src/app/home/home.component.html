@@ -24,6 +24,8 @@
      </mat-menu>
      <span class="title">&nbsp;OGITO </span>
      <span class="spacer"></span>
+     <button (click)="auth.login()" *ngIf="!auth.loggedIn">Log In</button>
+     <button (click)="auth.logout()" *ngIf="auth.loggedIn">Log Out</button>
      <button mat-icon-button (click)="exitToApp()">
         <mat-icon> exit_to_app</mat-icon>
      </button>
@@ -39,7 +41,8 @@
   </div>
 -->
 </div>
-<app-map></app-map>
-<app-toolbar></app-toolbar>
-<app-editing-toolbar></app-editing-toolbar>
-<app-symbol-list></app-symbol-list>
+<app-map *ngIf="auth.loggedIn"></app-map>   <!-- prueba -->
+<app-toolbar *ngIf="auth.loggedIn"></app-toolbar>
+<app-editing-toolbar *ngIf="auth.loggedIn"></app-editing-toolbar>
+<app-symbol-list *ngIf="auth.loggedIn"></app-symbol-list>
+<!-- colocar algo para cuando no este autenticado -->
