@@ -1,13 +1,17 @@
 FROM httpd:alpine
 MAINTAINER Rosa Aguilar  r.aguilar@utwente.nl <r.aguilar@utwente.nl>
-# start shell as root
-RUN sudo -s 
+# install git
+RUN apk update && apk upgrade && apk add --no-cache bash git openssh
 
-# go to the app dir
-RUN cd /home/aguilardearchilarm/myogito
+# to ask for username and password as arguments
+ARG username
+ARG password 
+
+WORKDIR /home/aguilardearchilarm/myogito
 
 # get the latest version of the app
-RUN git pull origin master
+#RUN git clone https://github.com/rosaguilar/myogito.git
+RUN git clone https://${username}:${password}@github.com/rosaguilar/myogito.git
 
 # remove any files in htdocs directory
 RUN rm -r /usr/local/apache2/htdocs/*
