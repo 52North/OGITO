@@ -12,7 +12,10 @@ import VectorSource from 'ol/source/Vector';
 import VectorLayer from 'ol/layer/Vector';
 import TileLayer from 'ol/layer/Tile';
 import OSM from 'ol/source/OSM';
+import WFS from 'ol/format/WFS';
+import GML from 'ol/format/GML';
 import WMSCapabilities from 'ol/format/WMScapabilities.js';
+import {click} from 'ol/events/condition.js';
 import Overlay from 'ol/Overlay';
 import {defaults as defaultInteractions, DragAndDrop, Draw, Modify, Select, Snap, DragBox} from 'ol/interaction';
 import {Translate, DragPan, DragRotate, DragZoom, PinchZoom, PinchRotate} from 'ol/interaction';
@@ -26,9 +29,8 @@ import {Polygon} from 'ol/geom';
 import {fromCircle} from 'ol/geom/Polygon';
 import {OpenLayersService} from '../open-layers.service';
 import {MapQgsStyleService} from '../map-qgs-style.service';
-import WFS from 'ol/format/WFS';
-import GML from 'ol/format/GML';
-import {click} from 'ol/events/condition.js';
+import {AuthService} from '../auth.service';
+
 
 @Component({
   selector: 'app-map',
@@ -84,7 +86,8 @@ export class MapComponent implements OnInit, OnDestroy {
   subsToZoomHome: Subscription;
 
   constructor( private mapQgsStyleService: MapQgsStyleService,
-               private  openLayersService: OpenLayersService) {
+               private  openLayersService: OpenLayersService,
+               public auth: AuthService) {
 
     this.subsToShapeEdit = this.openLayersService.shapeEditType$.subscribe(
       data => {
@@ -182,8 +185,23 @@ export class MapComponent implements OnInit, OnDestroy {
   },
   error => alert('Error implementing action on features' + error)
   );
+
+    this.auth.userProfile$.subscribe(
+  data => this.initializeUser(data),
+       error => {
+         console.log('Error retrieving user credentials', error);
+         alert('Error during authentication, try later');
+       });
   }
 
+  initializeUser(userProfile:any){
+    // testing user credentials
+    /**
+     * initialize user credential from the Auth0 service
+     * @params userProfile: profile of the user containing: nickname, name (email),picture, updated_at: date
+     */
+    console.log('user authorized', userProfile);   // how to  get the value?
+  }
   ngOnInit(): void {
     // initialize the map
     this.initializeMap();

@@ -24,8 +24,11 @@
      </mat-menu>
      <span class="title">&nbsp;OGITO </span>
      <span class="spacer"></span>
-     <button (click)="auth.login()" *ngIf="!auth.loggedIn">Log In</button>
-     <button (click)="auth.logout()" *ngIf="auth.loggedIn">Log Out</button>
+     <span class = "userNickName" *ngIf="auth.userProfile$ | async as profile">
+     <code>{{ profile["nickname"] }}</code>
+     </span> <pre>  </pre>
+     <button mat-button (click)="auth.login()" *ngIf="!auth.loggedIn"> Log In</button>
+     <button mat-button (click)="auth.logout()" *ngIf="auth.loggedIn"> Log Out</button>
      <button mat-icon-button (click)="exitToApp()">
         <mat-icon> exit_to_app</mat-icon>
      </button>
