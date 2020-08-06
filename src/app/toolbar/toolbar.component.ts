@@ -37,6 +37,10 @@ export class ToolbarComponent implements OnInit {
       'layerScratch',
       sanitizer.bypassSecurityTrustResourceUrl('assets/img/baseline-layers-new-24px.svg')
     );
+    iconRegistry.addSvgIcon(
+       'identify',
+       sanitizer.bypassSecurityTrustResourceUrl('assets/img/identify-24px.svg')
+     );
   }
   createScratchLayer(){
     /**
@@ -51,6 +55,12 @@ export class ToolbarComponent implements OnInit {
         alert('error retrieving existing project');
         console.log(error);
       });
+  }
+  startAction(action: string){
+    /**
+     *  Sends an action (not edit to the openlayersService)
+     */
+    // this.openLayersService.updateNoEditAction(action);
   }
 
 }

@@ -20,6 +20,9 @@
     <button mat-icon-button aria-labelledby="Add a scratch layer" matTooltip="Add a scratch layer" (click)="createScratchLayer()" >
     <mat-icon class="svgIconToolbar" svgIcon="layerScratch"></mat-icon>
     </button>
+    <button mat-icon-button (click)="startAction('Identify')"  aria-label="identify" matTooltip="Identify element">
+      <mat-icon svgIcon="identify"></mat-icon>
+    </button>
   </mat-toolbar>
 </mat-card>
  <!--  <div class="location">({{x}}, {{y}})</div> esto muestra las coordenas que se usan para la nueva pos-->

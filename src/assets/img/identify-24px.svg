@@ -22,7 +22,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -41,9 +41,9 @@
      inkscape:window-height="1001"
      id="namedview8"
      showgrid="false"
-     inkscape:zoom="6.9532167"
-     inkscape:cx="45.048345"
-     inkscape:cy="41.946962"
+     inkscape:zoom="27.812867"
+     inkscape:cx="9.7660649"
+     inkscape:cy="12.265719"
      inkscape:window-x="-9"
      inkscape:window-y="-9"
      inkscape:window-maximized="1"
@@ -76,10 +76,10 @@
      y="1.1688404"
      id="text930"><tspan
        sodipodi:role="line"
-       id="tspan932"></tspan></text>
+       id="tspan932" /></text>
   <text
      xml:space="preserve"
-     style="font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:18.70557213px;line-height:1.25;font-family:'Monotype Corsiva';-inkscape-font-specification:'Monotype Corsiva, Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.70145899"
+     style="font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:18.70557213px;line-height:1.25;font-family:'Monotype Corsiva';-inkscape-font-specification:'Monotype Corsiva, Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.70145899;"
      x="7.7980652"
      y="18.13002"
      id="text936"
@@ -88,5 +88,5 @@
        id="tspan934"
        x="7.7980652"
        y="18.13002"
-       style="stroke-width:0.70145899">i</tspan></text>
+       style="stroke-width:0.70145899;fill:#ffffff;fill-opacity:1;">i</tspan></text>
 </svg>

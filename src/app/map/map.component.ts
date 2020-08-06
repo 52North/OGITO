@@ -3,7 +3,7 @@ import {Subscription} from 'rxjs';
 import {AppConfiguration} from '../app-configuration';
 import 'ol/ol.css';
 import {Map, View} from 'ol';
-import {getDistance} from 'ol/sphere';
+import {getDistance, getArea, getLength} from 'ol/sphere';
 import {transform} from 'ol/proj';
 import proj4 from 'proj4';
 import {register} from 'ol/proj/proj4';
@@ -19,18 +19,17 @@ import {click} from 'ol/events/condition.js';
 import Overlay from 'ol/Overlay';
 import {defaults as defaultInteractions, DragAndDrop, Draw, Modify, Select, Snap, DragBox} from 'ol/interaction';
 import {Translate, DragPan, DragRotate, DragZoom, PinchZoom, PinchRotate} from 'ol/interaction';
-import Point from 'ol/geom/Point';
+import {LineString, Polygon, Point} from 'ol/geom';
 import {Fill, Stroke, Style} from 'ol/style';
 import CircleStyle from 'ol/style/Circle';
 import {GeoJSON, KML} from 'ol/format';
 import ZoomSlider from 'ol/control/ZoomSlider';
 import ScaleLine from 'ol/control/ScaleLine';
-import {Polygon} from 'ol/geom';
 import {fromCircle} from 'ol/geom/Polygon';
 import {OpenLayersService} from '../open-layers.service';
 import {MapQgsStyleService} from '../map-qgs-style.service';
 import {AuthService} from '../auth.service';
-
+import {unByKey} from 'ol/Observable';
 
 @Component({
   selector: 'app-map',
@@ -78,8 +77,11 @@ export class MapComponent implements OnInit, OnDestroy {
   featId = 1000;   // to have an internal identifier for features when editing
   private currentStyle: any;
   private currentClass: any;
-  measureTooltipElement: any;
-  measureTooltip: any;
+  measureTooltipElement: any;   // The measure tooltip element.  * @type {HTMLElement}
+  measureTooltip: any; /** Overlay to show the measurement. * @type {Overlay}  */
+  helpTooltip: any; // The measure tooltip element.  * @type {HTMLElement}*/
+  helpTooltipElement: any; // Overlay to show the measurement. * @type {Overlay}
+  popup: any;
   subsToShapeEdit: Subscription;
   subsTocurrentSymbol: Subscription;
   subsToSaveCurrentLayer: Subscription;
@@ -125,7 +127,7 @@ export class MapComponent implements OnInit, OnDestroy {
         this.zoomToHome();
       }
      },
-      error => alert ("Error starting zooming Home" + error)
+      error => alert ('Error starting zooming Home' + error)
     );
     /*this.openLayersService.deleteFeats$.subscribe(
       data => {
@@ -143,6 +145,13 @@ export class MapComponent implements OnInit, OnDestroy {
     data => {
     console.log('que viene', data);
     this.removeInteractions();
+    if (this.helpTooltip) {
+      console.log('entra aqui..');
+      this.map.removeOverlay(this.helpTooltip);
+      this.helpTooltipElement.innerHTML = '';
+      this.helpTooltip = null;
+
+    }
     if (data === null) {
       return;
     }
@@ -171,11 +180,16 @@ export class MapComponent implements OnInit, OnDestroy {
           this.startDeleting();
           break;
         }
-      case 'Measure':
+      case 'MeasureLine':
         {
-          this.startMeasuring();
+          this.startMeasuring('line');
           break;
         }
+      case 'MeasureArea':
+      {
+        this.startMeasuring('area');
+        break;
+      }
       case 'Undo':
       {
         this.undoLastEdit();
@@ -194,7 +208,7 @@ export class MapComponent implements OnInit, OnDestroy {
        });
   }
 
-  initializeUser(userProfile:any){
+  initializeUser(userProfile: any){
     // testing user credentials
     /**
      * initialize user credential from the Auth0 service
@@ -269,13 +283,40 @@ export class MapComponent implements OnInit, OnDestroy {
         stroke: new Stroke({color: '#EE266D', width: 2, lineDash: [8, 5]})
       })
     });
+
+    // listening for click
+
+
+
   }
-  createMeasureTooltip() {
+
+
+  createHelpTooltip() {
+    /**
+     * Creates a new help tooltip
+     */
+    if (this.helpTooltipElement) {
+      this.helpTooltipElement.parentNode.removeChild(this.helpTooltipElement);
+    }
+    this.helpTooltipElement = document.createElement('div');
+    this.helpTooltipElement.className = 'ol-tooltip hidden';
+    this.helpTooltip = new Overlay({
+      element: this.helpTooltipElement,
+      offset: [15, 0],
+      positioning: 'center-left',
+    });
+    this.map.addOverlay(this.helpTooltip);
+  }
+
+ createMeasureTooltip() {
+    /**
+     * Creates a new measure tooltip
+     */
     if (this.measureTooltipElement) {
       this.measureTooltipElement.parentNode.removeChild(this.measureTooltipElement);
     }
     this.measureTooltipElement = document.createElement('div');
-    this.measureTooltipElement.className = 'tooltip tooltip-measure';
+    this.measureTooltipElement.className = 'ol-tooltip ol-tooltip-measure';
     this.measureTooltip = new Overlay({
       element: this.measureTooltipElement,
       offset: [0, -15],
@@ -675,7 +716,7 @@ export class MapComponent implements OnInit, OnDestroy {
               e.feature.setGeometry(tgeometry);
             }
           }
-          self.measureTooltipElement.className = 'tooltip tooltip-static';  // #TODO styling is not working
+          self.measureTooltipElement.className = 'ol-tooltip ol-tooltip-static';  // #TODO styling is not working
           self.measureTooltip.setOffset([0, -7]);
         }
         // adding the interactions that were stopped when drawing
@@ -739,7 +780,7 @@ startDeleting(){
   });
   this.map.addInteraction(this.select);
   const self = this;
-  let dirty = true;
+  const dirty = true;
   // HERE add code to delete from the source and add to the buffer
   this.select.on('select', function(e){
     const  selectedFeatures = e.target.getFeatures();
@@ -914,7 +955,7 @@ removeDragPinchInteractions(){
             //  upperCorner.split(' ')[0], upperCorner.split(' ')[1]],
             visible: true,   // #TODO comment this line, by default layers are not visible
             zIndex: nLayers - i,   // highest zIndex for the first layer and so on.
-            style: function(feature) {    // this equiv to style: function(feature)
+            style(feature) {    // this equiv to style: function(feature)
              // console.log(feature.getGeometry().getType(), name);
               let layerStyle = self.mapQgsStyleService.findStyle(feature, layerName);
               if (!layerStyle) {
@@ -1136,7 +1177,7 @@ removeDragPinchInteractions(){
   }
 
   writeTransactWfs(editLayer: any) {
-    console.log ("entra a save...", this.editBuffer);
+    console.log ('entra a save...', this.editBuffer);
     /** saves changes on a wfs layer
      * @param editLayer: layer to save changes stored in the editBuffer
      */
@@ -1333,7 +1374,7 @@ removeDragPinchInteractions(){
       style: this.selectStyle,
     });
    this.map.addInteraction(this.select);
-   console.log('interactions in the map',this.map.getInteractions());
+   console.log('interactions in the map', this.map.getInteractions());
    this.dragBox = new DragBox({className: 'boxSelect'});
    this.map.addInteraction(this.dragBox);
    const self = this;
@@ -1405,9 +1446,216 @@ removeDragPinchInteractions(){
   }
   startIdentifying()
   {
+  const info = document.getElementById('info');
+  info.setAttribute('data-tooltip', 'prueba1');
+  const displayFeatureInfo = pixel => {
+    console.log(pixel);
+    // create the style
+    const style = document.createElement('style');
+    // style.type = 'text/css';
+    style.innerHTML = '.cssClass {color: #F00;' +
+                      'left:' + pixel[0].toString() + 'px;' +
+                      'top: ' + (pixel[1] - 15).toString()  + 'px; }';
+    console.log('style', style.innerHTML);
+    document.getElementsByTagName('head')[0].appendChild(style);
+
+    info.className = 'cssClass';
+
+    const feature = this.map.forEachFeatureAtPixel(pixel, function(feature) {
+        return feature;
+      });
+    if (feature) {
+        console.log('feature', feature);
+        info.setAttribute('data-tooltip', feature.get('class'));
+        // show the tooltip
+      } else {
+        // hide the tooltip
+        info.className = 'hide';
+      }
+  };
+  this.map.on('pointermove', evt => {
+      if (evt.dragging) {
+       // info.tooltip('hide');
+        return;
+      }
+      displayFeatureInfo(this.map.getEventPixel(evt.originalEvent));
+    });
   }
-  startMeasuring() {
-  }
+
+
+  startMeasuring(measureType = 'line'){
+  console.log('que comience la fiesta...', measureType);
+  let source = new VectorSource();
+  let vector = new VectorLayer({
+      source,
+      style: new Style({
+        fill: new Fill({
+          color: 'rgba(255, 255, 255, 0.2)',
+        }),
+        stroke: new Stroke({
+          color: '#ffcc33',
+          width: 2,
+        }),
+        image: new CircleStyle({
+          radius: 7,
+          fill: new Fill({
+            color: '#ffcc33',
+          }),
+        }),
+      }),
+    });
+
+    /**
+     * Currently drawn feature.
+     * @type {import("../src/ol/Feature.js").default}
+     */
+  let sketch;
+    /**
+     * Message to show when the user is drawing a polygon.
+     * @type {string}
+     */
+  const continuePolygonMsg = 'Click to continue drawing the polygon';
+    /**
+     * Message to show when the user is drawing a line.
+     * @type {string}
+     */
+  const continueLineMsg = 'Click to continue drawing the line';
+  this.createMeasureTooltip();
+  /* this.createHelpTooltip();
+  const pointerMoveHandler = evt => {
+      if (evt.dragging) {
+        return;
+      }
+
+     let helpMsg = 'Click to start drawing';
+
+      if (sketch) {
+        const geom = sketch.getGeometry();
+        if (geom instanceof Polygon) {
+          helpMsg = continuePolygonMsg;
+        } else if (geom instanceof LineString) {
+          helpMsg = continueLineMsg;
+        }
+      }
+
+      this.helpTooltipElement.innerHTML = helpMsg;
+      this.helpTooltip.setPosition(evt.coordinate);
+      this.helpTooltipElement.classList.remove('hidden');
+    };
+  this.map.on('pointermove', pointerMoveHandler);
+  this.map.getViewport().addEventListener('mouseout', () => {
+  this.helpTooltipElement.classList.add('hidden');
+});
+*/
+  // add the vector layer to the map
+  this.map.addLayer(vector);
+  // add the handler
+
+    /**
+     * Format length output.
+     * @param {LineString} line The line.
+     * @return {string} The formatted length.
+     */
+  const formatLength = (line) => {
+      const length = getLength(line);
+      let output;
+      if (length > 100) {
+        output = Math.round((length / 1000) * 100) / 100 + ' ' + 'km';
+      } else {
+        output = Math.round(length * 100) / 100 + ' ' + 'm';
+      }
+      return output;
+    };
+
+    /**
+     * Format area output.
+     * @param {Polygon} polygon The polygon.
+     * @return {string} Formatted area.
+     */
+  const formatArea = polygon => {
+      const area = getArea(polygon);
+      let output;
+      if (area > 10000) {
+        output = Math.round((area / 1000000) * 100) / 100 + ' ' + 'km<sup>2</sup>';
+      } else {
+        output = Math.round(area * 100) / 100 + ' ' + 'm<sup>2</sup>';
+      }
+      return output;
+    };
+
+  const type = measureType === 'line' ? 'LineString' : 'Polygon';
+  this.draw = new Draw({
+        source,
+        type,
+        style: new Style({
+          fill: new Fill({
+            color: 'rgba(255, 255, 255, 0.2)',
+          }),
+          stroke: new Stroke({
+            color: 'rgba(0, 0, 0, 0.5)',
+            lineDash: [10, 10],
+            width: 2,
+          }),
+          image: new CircleStyle({
+            radius: 5,
+            stroke: new Stroke({
+              color: 'rgba(0, 0, 0, 0.7)',
+            }),
+            fill: new Fill({
+              color: 'rgba(255, 255, 255, 0.2)',
+            }),
+          }),
+        }),
+      });
+  this.map.addInteraction(this.draw);
+
+
+  let listener;
+  let self = this;
+  this.draw.on('drawstart', function(evt) {
+        // set sketch
+        sketch = evt.feature;
+
+        /** @type {import("../src/ol/coordinate.js").Coordinate|undefined} */
+        let tooltipCoord = evt.coordinate;
+
+        listener = sketch.getGeometry().on('change', evt => {
+          const geom = evt.target;
+          let output;
+          if (geom instanceof Polygon) {
+            output = formatArea(geom);
+            tooltipCoord = geom.getInteriorPoint().getCoordinates();
+          } else if (geom instanceof LineString) {
+            output = formatLength(geom);
+            tooltipCoord = geom.getLastCoordinate();
+          }
+          self.measureTooltipElement.innerHTML = output;
+          self.measureTooltip.setPosition(tooltipCoord);
+        });
+      });
+
+  this.draw.on('drawend', e => {
+        self.measureTooltipElement.className = 'ol-tooltip ol-tooltip-static';
+        self.measureTooltip.setOffset([0, -7]);
+        setTimeout(() => {
+          vector.getSource().removeFeature(e.feature);
+          sketch = null;
+          // unset tooltip so that a new one can be created
+          self.measureTooltipElement.innerHTML = '';
+          self.measureTooltipElement = null;
+          self.map.removeOverlay(self.measureTooltip);
+          self.createMeasureTooltip();
+    }, 3000);
+
+        // unset tooltiphelo so that a new one can be created
+        // self.helpTooltipElement.innerHTML = '';
+
+
+
+        // unsubscribe from the event
+        unByKey(listener);
+      });
+   }
 
   updateOrderVisibleLayers(editLayers) {
     /** updates the order in which layers are rendered in the map

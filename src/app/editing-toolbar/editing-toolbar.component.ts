@@ -38,7 +38,8 @@ export class EditingToolbarComponent implements OnInit {
     Copy: false,
     Identify: false,
     Delete: false,
-    Measure: false
+    MeasureLine: false,
+    MeasureArea:false
   };
   onPanStart(event: any): void {
     this.startX = this.x;
@@ -67,6 +68,16 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
     'identify',
     sanitizer.bypassSecurityTrustResourceUrl('assets/img/identify-24px.svg')
   );
+  iconRegistry.addSvgIcon(
+    'measureLine',
+    sanitizer.bypassSecurityTrustResourceUrl('assets/img/measure-straighten-24px.svg')
+  );
+  iconRegistry.addSvgIcon(
+    'measureArea',
+    sanitizer.bypassSecurityTrustResourceUrl('assets/img/measure-area-24px.svg')
+  );
+
+
   this.subsToShowEditToolbar = this.openLayersService.showEditToolbar$.subscribe(
     (data) => {
       this.showToolbar(data);

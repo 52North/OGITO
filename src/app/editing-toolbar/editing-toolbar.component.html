@@ -36,9 +36,13 @@
               [ngClass]="actionActive['Rotate'] ? 'active': 'normal'" >
         <mat-icon>rotate_right</mat-icon>
       </button>
-      <button mat-icon-button (click)="startEditAction('Measure');showSymbolPanel(false)" matTooltip="Measure Distance"
-              [ngClass]="actionActive['Measure'] ? 'active': 'normal'" >
-        <mat-icon>straighten</mat-icon>
+      <button mat-icon-button (click)="startEditAction('MeasureLine');showSymbolPanel(false)" matTooltip="Measure Lineal Distance"
+              [ngClass]="actionActive['MeasureLine'] ? 'active': 'normal'" >
+        <mat-icon svgIcon="measureLine"></mat-icon>
+      </button>
+      <button mat-icon-button (click)="startEditAction('MeasureArea');showSymbolPanel(false)" matTooltip="Measure Areal Distance"
+              [ngClass]="actionActive['MeasureArea'] ? 'active': 'normal'" >
+        <mat-icon svgIcon="measureArea"></mat-icon>
       </button>
 
       <button mat-icon-button (click)="startEditAction('Delete'); showSymbolPanel(false)"  aria-label="delete" matTooltip="Delete element"
