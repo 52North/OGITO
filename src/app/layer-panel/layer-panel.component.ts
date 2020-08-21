@@ -1,4 +1,4 @@
-import {Component, OnInit, Input, Output, SimpleChange, OnChanges, EventEmitter} from '@angular/core';
+import {Component, OnInit, AfterViewInit, Input, Output, SimpleChange, OnChanges, EventEmitter, ViewChild, ElementRef} from '@angular/core';
 import {Observable, of as observableOf, Subject, Subscription} from 'rxjs';
 import {CdkDragDrop, moveItemInArray} from '@angular/cdk/drag-drop';
 import {OpenLayersService} from '../open-layers.service';
@@ -9,13 +9,17 @@ import {AppConfiguration} from '../app-configuration';
   templateUrl: './layer-panel.component.html',
   styleUrls: ['./layer-panel.component.scss']
 })
-export class LayerPanelComponent implements OnInit {
+export class LayerPanelComponent implements OnInit, AfterViewInit {
   @Input() editLayers: Array<any>;
+  @Input() groupLayers: any;
   @Output() layerVisClick = new EventEmitter<any>();   // emit an event when a layer is clicked in the list
+  @Output() groupLayerVisClick = new EventEmitter<any>();   // emit an event when a layer is clicked in the list
   @Output() editLayerClick = new EventEmitter<any>();   // emit an event when the edit button of a layer is clicked
   @Output() layersOrder = new EventEmitter<any>();   // emit an event when layers were reordered (drop)
   @Output() layersBackOrder = new EventEmitter<any>();  // emit an event when the order of base layers changes
   @Output() layerBackVisClick = new EventEmitter<any>(); // emit an event when the edit button of a layer is clicked
+  @ViewChild("groupedListDiv", {static: false}) groupedListDiv; //: ElementRef <HTMLDivElement>;
+  @ViewChild("groupedListDiv2", {read: ElementRef}) groupedListDiv2: ElementRef;
   x = 0;
   y = 0;
   startX = 0;
@@ -52,6 +56,21 @@ constructor(private openLayersService: OpenLayersService){}
 
 ngOnInit(): void {
   this.showLayerPanel$ = observableOf(true);
+  }
+
+
+  addingGroupsLayers(){
+  // console.log('primera', this.groupedListDiv.nativeElement.textContent);
+  console.log(this.groupLayers);
+  const  textgroup = document.createElement("P");                 // Create a <p> element
+  textgroup.innerHTML = "This is a paragraph.";
+    // Insert text
+  this.groupedListDiv.nativeElement.appendChild(textgroup);
+
+  }
+
+  ngAfterViewInit(){
+    this.addingGroupsLayers();
   }
 
   onEditLayerClick($event: any, layer: any){
@@ -123,22 +142,24 @@ onPan(event: any): void {
     // this.selectedOption =$event;
   }
 
-  onLayerVisClick(  $event: any, layer: any){
+  onLayerVisClick(  $event: any, layer: any, groupName: any){
     /** This function emit an event to allow the map component to know that a layer was clicked
      * @param $event: to stop event propagation
      * @param layer: the layer that the user clicked on to show/hide
      */
     $event.preventDefault();
     $event.stopImmediatePropagation();
-    this.layerVisClick.emit(layer);  // emit the change
-  }
-  onLayerBackVisClick(  $event: any, layer: any){
+    // console.log('layer visibility', layer, groupName);
+    this.layerVisClick.emit({layer, groupName});
+}
+  onGroupLayerVisClick(  $event: any, layer: any){
     /** This function emit an event to allow the map component to know that a layer was clicked
      * @param $event: to stop event propagation
      * @param layer: the layer that the user clicked on to show/hide
      */
     $event.preventDefault();
     $event.stopImmediatePropagation();
-    this.layerBackVisClick.emit(layer);  // emit the change
+    // console.log ('layer being emitted', layer);
+    this.groupLayerVisClick.emit(layer);  // emit the change
   }
 }

@@ -11,6 +11,9 @@ import Projection from 'ol/proj/Projection';
 import VectorSource from 'ol/source/Vector';
 import VectorLayer from 'ol/layer/Vector';
 import TileLayer from 'ol/layer/Tile';
+import ImageLayer from 'ol/layer/Image';
+import ImageWMS from 'ol/source/ImageWMS';
+import {Group as LayerGroup} from 'ol/layer';
 import OSM from 'ol/source/OSM';
 import WFS from 'ol/format/WFS';
 import GML from 'ol/format/GML';
@@ -66,6 +69,7 @@ export class MapComponent implements OnInit, OnDestroy {
   dragBox: any;
   dragAndDropInteraction: any;
   loadedWfsLayers = []; // [{layerName: 'uno', layerTitle: 'Layer 1'}, {layerName: 'dos', layerTitle: 'layer 2'}];
+  groupsLayers: any[] = [];
   curEditingLayer = null;
   cacheFeatures = [];
   canBeUndo = false;
@@ -262,7 +266,9 @@ export class MapComponent implements OnInit, OnDestroy {
         new TileLayer({
           source: new OSM({
             crossOrigin: null
-          })
+          }),
+          zIndex: -1,
+          name: 'OSM'
         }),
       ],
       interactions: defaultInteractions ({pinchZoom: false, pinchRotate: false})
@@ -283,13 +289,7 @@ export class MapComponent implements OnInit, OnDestroy {
         stroke: new Stroke({color: '#EE266D', width: 2, lineDash: [8, 5]})
       })
     });
-
-    // listening for click
-
-
-
   }
-
 
   createHelpTooltip() {
     /**
@@ -372,29 +372,10 @@ export class MapComponent implements OnInit, OnDestroy {
     /** Retrieves the capabilities WFS and WMS associated to the qgis project listed in AppConfiguration
      * it send these capabilities to other functions to load the WMS and WFS layers
      */
-    // request getCapabilities to load WMS images
+    // Load WFS layers
     const qGsProject = AppConfiguration.QgsFileProject;
     const qGsServerUrl = AppConfiguration.qGsServerUrl;
-    // console.log("qGsServerUrl",qGsServerUrl)
-    const wmsVersion = 'SERVICE=WMS&VERSION=' + AppConfiguration.wmsVersion;
     const capRequest = '&REQUEST=GetCapabilities&map=';
-    const urlWMS = qGsServerUrl + wmsVersion + capRequest + qGsProject;
-    let parser: any;
-    // console.log('urlWMS', urlWMS);
-    parser = new WMSCapabilities;
-    const self = this;
-    const resultXml = fetch(urlWMS)
-      .then(response => {
-        return response.text();
-      })
-      .then(text => {
-        const xmlWMS = parser.read(text);
-        self.loadWMSlayers(xmlWMS);
-        return (xmlWMS);
-      })
-      .catch(error => console.error(error));
-
-    // now go to the WFS
     const wfsVersion = 'SERVICE=WFS&VERSION=' + AppConfiguration.wfsVersion;
     const urlWFS = qGsServerUrl + wfsVersion + capRequest + qGsProject;
     // console.log('urlWFS', urlWFS);
@@ -402,13 +383,85 @@ export class MapComponent implements OnInit, OnDestroy {
       .then(response => response.text())
       .then(text => {
         // console.log('result WFS Cap para continuar', text);
-        self.loadWFSlayers(text);
+        this.loadWFSlayers(text);
         // self.layerPanel.updateLayerList(self.loadedWfsLayers);   // trying another approach with input
         return (text);
       })
       .catch(error => console.error(error));
 
+    // request getCapabilities to load WMS images
+    const wmsVersion = 'SERVICE=WMS&VERSION=' + AppConfiguration.wmsVersion;
+    const urlWMS = qGsServerUrl + wmsVersion + capRequest + qGsProject;
+    let parser: any;
+    // console.log('urlWMS', urlWMS);
+    parser = new WMSCapabilities();
+    // const self = this;
+    const resultXml = fetch(urlWMS)
+      .then(response => {
+        return response.text();
+      })
+      .then(text => {
+        const xmlWMS = parser.read(text);
+        this.loadWMSlayers(urlWMS, xmlWMS);
+        //this.updateOrderVisibleLayers(this.groupsLayers);
+        this.reorderingGroupsLayers2();
+        // this.reorderingGroupsLayers(this.groupsLayers);
+        return (xmlWMS);
+      })
+      .catch(error => console.error(error));
     }
+
+  reorderingGroupsLayers(grouplayers){
+    /**
+      *  Moves the groups and allocate layers on it according to the order in the project
+      * */
+    console.log ('groups to reorder', grouplayers);
+    const nLayers = this.map.getLayers().array_.length;
+    let tIndex = 0;
+    for (const lyr of grouplayers) {
+        this.map.getLayers().forEach(layer => {
+          if (layer.get('name') === lyr.name) {
+            layer.setZIndex((nLayers - tIndex) * 10);  // highest tIndex goes on top;
+            console.log('ordering layer with number', lyr.name, (nLayers - tIndex)*10);
+            tIndex = tIndex + 1;
+            /*let nlyrsinGrp = lyr.layers.length; // number of layers in a group
+            lyr.layers.forEach( lyringrp => {
+              lyringrp.setZIndex((nLayers - tIndex) * 10);
+          }); */
+          }
+        });
+
+      }
+    console.log('order after', this.map.getLayers());
+  }
+
+  reorderingGroupsLayers2() {
+    /**
+     *  Moves the groups and allocate layers on it according to the order in the project
+     * */
+    const nGroups = this.groupsLayers.length;
+    let nLysInGrp = 0;
+    this.groupsLayers.forEach(group => {
+      console.log('indexOf', this.groupsLayers.indexOf(group), group.layers);
+      this.map.getLayers().forEach(layer => {
+        if (layer.get('name') === group.name) {
+          let grpZIndex = (nGroups - this.groupsLayers.indexOf(group))*10;
+          layer.setZIndex(grpZIndex);
+          console.log('layer', layer.get('name'), layer.getLayers().array_.length);
+          // order layers inside the group
+          if (layer.getLayers().array_.length > 0){
+            console.log('tiene capas dentro', group.name);
+            nLysInGrp = layer.getLayers().array_.length;  // numbers of layers in the
+            layer.getLayers().forEach(lyrInGrp => {
+              console.log('indexOF inside', group.name, lyrInGrp.get('name'), group.layers.findIndex( x => x.name === lyrInGrp.get('name')));
+              lyrInGrp.setZIndex(grpZIndex - group.layers.findIndex( x => x.name === lyrInGrp.get('name')));  // will work until 10 layers/group
+            });
+          }
+
+        }
+      });
+    });
+  }
 
   parseProject(qgsfile: string) {
     /** uses the xml text of qgs project file listed in AppConfiguration to load
@@ -462,21 +515,57 @@ export class MapComponent implements OnInit, OnDestroy {
       const layerName = node.getAttribute('name');
       this.layersOrder.push(layerName); // #TODO evaluate if this is needed or worthy, it is not being used somewhere else
      }
-    // get the map layers and symbology
-    const legendGroups = {};
-    for (let i = 0; i < xmlText.getElementsByTagName('legendgroup').length; i++) {
-        const legendGroup =  xmlText.getElementsByTagName('legendgroup')[i];
+    // get the wfs map layers as stated in the proj file
+    const wfsLayersList = [];
+    const wfsLayers =  xmlText.getElementsByTagName('WFSLayers')[0];
+    const nlayerWFS = wfsLayers.getElementsByTagName('value').length;
+   // console.log('wfs layers in project file', wfsLayers, nlayerWFS);
+    for (let i = 0; i < nlayerWFS; i++) {
+      const layerName = wfsLayers.getElementsByTagName('value')[i].childNodes[0].nodeValue;
+      wfsLayersList.push(layerName.slice(0, layerName.length - 37)); // 36 is the number of chars added as id + 1 ('_')
+    }
+    // console.log ('wfsLayersList', wfsLayersList);
+    /* const nameWfsLayer = (layer => {
+      return layer.slice(0, layer.indexOf('_'));
+    }); */
+   // const listNames = wfsLayers.map(nameWfsLayer());
+    const legend = xmlText.getElementsByTagName('legend')[0];
+    // get the layers without groups
+    const layersWihoutGroup = [];
+    for (let i = 0; i < legend.getElementsByTagName('legendlayer').length; i++) {
+      const legendlayer =  legend.getElementsByTagName('legendlayer')[i];
+      const layerName = legendlayer.getAttribute('name');
+      if (legendlayer.parentNode.nodeName !== 'legendgroup'){
+        // layersWihoutGroup.push({name: layerName});  // let's try
+        if (wfsLayersList.find(element => element === layerName)){
+          layersWihoutGroup.push({name: layerName, wfs: true});
+        }
+        else {
+          layersWihoutGroup.push({name: layerName, wfs: false});
+        }
+      }
+    }
+    this.groupsLayers.push({name: 'others', layers: layersWihoutGroup});
+    for (let i = 0; i < legend.getElementsByTagName('legendgroup').length; i++) {
+        const legendGroup =  legend.getElementsByTagName('legendgroup')[i];
         const groupName = legendGroup.getAttribute('name');
-        // console.log('groupName', groupName);
+        //console.log('groupName', groupName);
         const layersinGroup = [];
         for (let j = 0; j < legendGroup.getElementsByTagName('legendlayer').length; j++)
         {
           const layerInGroup =  legendGroup.getElementsByTagName('legendlayer')[j].getAttribute('name');
           // console.log('layerInGroup', layerInGroup);
-          layersinGroup.push(layerInGroup);
+          if (wfsLayersList.find(element => element === layerInGroup)){
+            layersinGroup.push({name: layerInGroup, wfs: true});
+          }
+          else {
+            layersinGroup.push({name: layerInGroup, wfs: false});
+          }
         }
-        legendGroups[groupName] = layersinGroup;
+        this.groupsLayers.push({name: groupName, layers: layersinGroup});
+      //console.log('layers in group', legendGroup.getElementsByTagName('legendlayer').length);
     }
+    //console.log('groups', this.groupsLayers);
     // #TODO implement something with the groups in the legend
     const mapLayersLst = xmlText.getElementsByTagName('maplayer');
     for (let i = 0; i < mapLayersLst.length; i++) {
@@ -508,11 +597,198 @@ export class MapComponent implements OnInit, OnDestroy {
     this.layerStyles = this.mapQgsStyleService.getLayerStyles(); // need to check if this is working well;
     // console.log(this.layerStyles);
   }
-  loadWMSlayers(XmlCapText){
-    // This function load the layers in the QGS project from a OL xmlCapabilities file
-   // console.log('Entra WMS', XmlCapText);
+  loadWMSlayers(urlWMS: string, xmlCapabilities: WMSCapabilities){
+    /**
+     * Loads the layers in the QGS project from a OL xmlCapabilities file
+     * @param urlWMS the url address of the geo webserver and WMS service
+     * @param XmlCapText: OL WMSCapabilities
+     */
+    const layerList = xmlCapabilities.Capability.Layer.Layer;
+    /**
+     * Renders a progress bar.
+     * @param {HTMLElement} el The target element.
+     * @constructor
+     */
+    function Progress(el) {
+      this.el = el;
+      this.loading = 0;
+      this.loaded = 0;
+    }
+
+    /**
+     * Increment the count of loading tiles.
+     */
+    Progress.prototype.addLoading = function () {
+      if (this.loading === 0) {
+        this.show();
+      }
+      ++this.loading;
+      this.update();
+    };
+
+    /**
+     * Increment the count of loaded tiles.
+     */
+    Progress.prototype.addLoaded = function () {
+      var this_ = this;
+      setTimeout(function () {
+        ++this_.loaded;
+        this_.update();
+      }, 100);
+    };
+
+    /**
+     * Update the progress bar.
+     */
+    Progress.prototype.update = function () {
+      var width = ((this.loaded / this.loading) * 100).toFixed(1) + '%';
+      this.el.style.width = width;
+      if (this.loading === this.loaded) {
+        this.loading = 0;
+        this.loaded = 0;
+        var this_ = this;
+        setTimeout(function () {
+          this_.hide();
+        }, 500);
+      }
+    };
+
+    /**
+     * Show the progress bar.
+     */
+    Progress.prototype.show = function () {
+      this.el.style.visibility = 'visible';
+    };
+
+    /**
+     * Hide the progress bar.
+     */
+    Progress.prototype.hide = function () {
+      if (this.loading === this.loaded) {
+        this.el.style.visibility = 'hidden';
+        this.el.style.width = 0;
+      }
+    };
+    const progress = new Progress(document.getElementById('progress'));
+    console.log('Entra WMS', xmlCapabilities);
+
+    layerList.forEach(layer => {
+      if (!layer.hasOwnProperty('Layer')) {
+        // it is a simple WMS layer without a group
+        console.log('simple layer..', layer.Name);
+        const WMSSource = new ImageWMS({
+          url: urlWMS,
+          params: {LAYERS: layer.Name},
+          serverType: 'qgis',
+          crossOrigin: null
+        });
+        const WMSLayer = new ImageLayer({
+          source: WMSSource,
+          name: layer.Title
+        });
+        WMSSource.on('imageloadstart', function () {
+          progress.addLoading();
+        });
+
+        WMSSource.on('imageloadend', function () {
+          progress.addLoaded();
+        });
+        WMSSource.on('imageloaderror', function () {
+          progress.addLoaded();
+        });
+
+        this.addWebServLayer(layer.Title, WMSLayer);
+        return;
+      }
+      if (layer.Layer.length > 0 ) {
+        // layer is a group and has layers in an array
+        layer.Layer.forEach(lyr => {
+          // console.log('layer in a group..', lyr.Name);
+          const WMSLayer = new ImageLayer({
+            source: new ImageWMS({
+              url: urlWMS,
+              params: {LAYERS: lyr.Name},
+              serverType: 'qgis',
+              crossOrigin: null
+            }),
+            name: lyr.Title
+          });
+          this.addWebServLayer(lyr.Title, WMSLayer);
+        });
+        //  console.log('layers in ', layer.Name , layer.Layer);
+      }
+    });
   }
-  getEditingStyle(){
+
+
+  addWebServLayer(layerName: any,  webServlayer: any) {
+   // find the layer in a group
+    let groupName = '';
+    let groupLayer: any;
+    this.groupsLayers.forEach(group => {
+      if (group.layers.findIndex(lyr  => lyr.name === layerName) > -1)   // findIndex return -1 if not found
+      {
+        groupName = group.name;
+      }
+    });
+    //console.log('web layerName and group', layerName, groupName);
+    // the layer is not in a group, add it to the map and return
+    if (groupName === '') {
+      this.map.addLayer(webServlayer);
+      return;
+    }
+    // the layer was in a group and the group does exist
+    this.map.getLayers().forEach(lyr  => {
+      if (lyr.get('name') === groupName) {
+        groupLayer = lyr;
+        return;
+      }
+    });
+    if (groupLayer)   // Group exist
+    {
+     groupLayer.getLayers().push(webServlayer);
+     return;
+    }
+    // the layer was in a group and the group does not exist ==> lets create it
+    const newGroup = new LayerGroup({
+      name : groupName,
+      layers: [webServlayer]
+    });
+    this.map.addLayer(newGroup);
+  }
+  addWFSLayer(layerName, wfsVectorLayer){
+    // find the layer in a group
+    let groupName = '';
+    this.groupsLayers.forEach(group => {
+      if ( group.layers.findIndex(lyr  => lyr.name === layerName) > -1)   // findIndex return -1 if not found
+      {
+        groupName = group.name;
+      }
+      });
+    // console.log('wfs layerName and group', layerName, groupName);
+    // the layer is not in a group, add it to the map and return
+    if (groupName === '') {
+      this.map.addLayer(wfsVectorLayer);
+      return;
+    }
+    // the layer was in a group and the group does exist
+    this.map.getLayers().forEach(lyr  => {
+      if (lyr.get('name') === groupName) {
+        // console.log ('there is a group already', groupName);
+        lyr.getLayers().push(wfsVectorLayer);
+        return;
+      }
+    });
+    // the layer was in a group and the group does not exist ==> lets create it
+    const newGroup = new LayerGroup({
+        name : groupName,
+        layers: [wfsVectorLayer]
+      });
+    this.map.addLayer(newGroup);
+   // console.log('pasito a pasito layers in map', this.map.getLayers());
+}
+
+getEditingStyle() {
     const editingstyle = [
       new Style({
         fill: new Fill({
@@ -534,7 +810,7 @@ export class MapComponent implements OnInit, OnDestroy {
     ];
     return editingstyle;
   }
-  imageCircle(radius) {
+imageCircle(radius) {
     return new CircleStyle({
       stroke: new Stroke({
         color: 'red', width: 2
@@ -542,7 +818,7 @@ export class MapComponent implements OnInit, OnDestroy {
       radius  // equivale a radius: radius
     });
   }
-  enableAddShape(shape: string) {
+enableAddShape(shape: string) {
     /** enable the map to draw shape of the Shapetype
      * @param shape: string, type of shape to add e.g., 'POINT', 'LINE', 'CIRCLE'
      */
@@ -756,7 +1032,7 @@ export class MapComponent implements OnInit, OnDestroy {
       console.log('Error adding draw interactions', e);
     }
    }
-startDeleting(){
+startDeleting() {
   /** Creates a new select interaction that will be used to delete features
    * in the current editing layer  #TODO: simplify if possible concerning wfs layers and sketch layers
    */
@@ -839,7 +1115,7 @@ startDeleting(){
     });
   }
 
-removeDragPinchInteractions(){
+removeDragPinchInteractions() {
     try {
       const self = this;
       this.map.getInteractions().forEach(
@@ -865,15 +1141,16 @@ removeDragPinchInteractions(){
     }
   }
 
-  loadWFSlayers(XmlCapText) {
+loadWFSlayers(XmlCapText) {
     /** This function load in the map, the layers available in the QGS project via WFS
      * @param XmlCapText the xml text produced by the getCapabilities request
+     * ol groups are created if needed
      */
     const self = this;
     const xmlParser = new DOMParser();
     const xmlText = xmlParser.parseFromString(XmlCapText, 'text/xml');
     const featureTypeList = xmlText.getElementsByTagName('FeatureTypeList')[0];
-    // console.log('XmlCapText', XmlCapText);
+   // console.log('XmlCapText', XmlCapText);
     const tnodes = {};
     const otherSrsLst = [];
     const operationsLst = [];
@@ -946,6 +1223,7 @@ removeDragPinchInteractions(){
           format: new GeoJSON(),
           // the url can be setup to include extent, projection and resolution
           url: urlWFS,
+          crossOrigin: null
           });
           const wfsVectorLayer = new VectorLayer ({
             source: vectorSource,
@@ -978,7 +1256,11 @@ removeDragPinchInteractions(){
             // dimensions: dimensions,
             // bbox: bBox,
           };
-          this.map.addLayer(wfsVectorLayer);
+          // #TODO verify groups in OL and load in the proper group por defecto que se carguen encima de cualquier wms layer
+          // here.. #TODO agregar una function que lea los grupos y capas y lo coloque donde va..
+          // this.addWFSLayer(layerName, wfsVectorLayer);
+          this.addWebServLayer(layerName, wfsVectorLayer);
+         // this.map.addLayer(wfsVectorLayer);
           this.loadedWfsLayers.push(tnodes[layerName]);  // wfsVectorLayer
           // console.log(`Layer added ${ layerName }`);
 
@@ -993,11 +1275,11 @@ removeDragPinchInteractions(){
     return(this.loadedWfsLayers);
   }
 
-  loadDefaultMap(){
+loadDefaultMap() {
     // aqui uun default Map #TODO
   }
-  readProjectFile(projectFile): any
-  {
+readProjectFile(projectFile: any)
+{
     const qgsProj = fetch(projectFile, {
       method: 'GET',
     })
@@ -1015,20 +1297,45 @@ removeDragPinchInteractions(){
     return(qgsProj);
   }
 
-  updateMapVisibleLayer(selectedLayer){
-    /** update the visibility of a layer in the map
-     * @param selectedLayer the layer that was clicked to show/hide
+updateMapVisibleGroupLayer(selectedGroupLayer) {
+    /** updates the visibility of a group layer in the map
+     * @param selectedGroupLayer the layer that was clicked to show/hide
      */
-      // console.log('prueba event capture from child emitter', selectedLayer);
+      console.log('prueba event capture from child emitter', selectedGroupLayer.name);
       this.map.getLayers().forEach(layer => {
-        // tslint:disable-next-line:triple-equals
-        if (selectedLayer.layerName == layer.get('name')) {
+        // console.log('nombre grupos',layer.get('name'));
+        if (selectedGroupLayer.name === layer.get('name')) {
           layer.setVisible (!layer.getVisible());
+           console.log('cambia el grupo correcto?', layer.get('name'));
         }
-      });
+        });
   }
 
-  updateEditingLayer(layer) {
+  updateMapVisibleLayer(selectedLayer: any)
+  /**
+   * updates the visibility of a layer in the map
+   * @param selectedLayer is a dictionary layer that was clicked to show/hide
+   */
+  {
+    const layerName = selectedLayer.layer.name;
+    const groupName = selectedLayer.groupName;
+    console.log('prueba event capture from child emitter', selectedLayer);
+    this.map.getLayers().forEach(layer => {
+      if (groupName === layer.get('name')) {
+        layer.getLayers().forEach(lyrinGroup => {
+          if (layerName === lyrinGroup.get('name')) {
+            console.log('cambia la correcta antes?', lyrinGroup.get('name'), lyrinGroup.getVisible());
+            lyrinGroup.setVisible (!lyrinGroup.getVisible());
+
+            return;
+          }
+        });
+        return;
+      }
+    });
+  }
+
+updateEditingLayer(layer) {
   // console.log('evento emitido, que llega', layer);
     /**  starts or stops the editing mode for the layerName given
      * if there were some edits --> asks for saving changes
@@ -1048,7 +1355,7 @@ removeDragPinchInteractions(){
   this.startEditing(layer);
     }
 
-    stopEditing(editLayer) {
+stopEditing(editLayer) {
       /** Disables the interactions on the map to start moving/panning and stop drawing
        *  asks to save changes in the layer if any and call the function for it.
        *  @param editLayer, the layer that was edited / #TODO editLayer is not required
@@ -1061,7 +1368,7 @@ removeDragPinchInteractions(){
       this.removeInteractions();
     }
 
-    saveEdits(editLayer: any){
+saveEdits(editLayer: any) {
       // console.log('editBuffer.indexOf(editLayer.layerName', this.editBuffer.findIndex(x => x.layerName ===  editLayer.layerName) );
       console.log('en save', this.editBuffer);
       if (!(this.editBuffer.length > 0)) {  // nothing to save
@@ -1080,7 +1387,7 @@ removeDragPinchInteractions(){
         }
       }
 
-  saveSketchLayer(editLayer: any){
+saveSketchLayer(editLayer: any){
     // #TODO
     /** saves the changes in a sketch layer
      * @param editLayer: name of the layer to be saved.
@@ -1094,7 +1401,7 @@ removeDragPinchInteractions(){
     }
   }
 
-  startEditing(layer: any) {
+startEditing(layer: any) {
     /** Enables the interaction in the map to draw features
      * and update two observables in openLayerService:
      * the geometry type of the layer being edited, and
@@ -1115,7 +1422,7 @@ removeDragPinchInteractions(){
     alert('Error starting editing...');
     }
   }
-  removeFeatEditBuffer(feat: any) {
+removeFeatEditBuffer(feat: any) {
     /**
      * removes a feature from the editBuffer
      * @param feat: the feat to be removed
@@ -1126,7 +1433,7 @@ removeDragPinchInteractions(){
       }
     });
   }
-  undoLastEdit(){
+undoLastEdit() {
     /**
      * Undo the last action (insert, update (move), delete)   #TODO update observable to disable button
      * uses the this.editBuffer to do so and the cacheFeatures
@@ -1176,7 +1483,7 @@ removeDragPinchInteractions(){
     console.log('this.editBuffer', this.editBuffer);
   }
 
-  writeTransactWfs(editLayer: any) {
+writeTransactWfs(editLayer: any) {
     console.log ('entra a save...', this.editBuffer);
     /** saves changes on a wfs layer
      * @param editLayer: layer to save changes stored in the editBuffer
@@ -1326,14 +1633,14 @@ removeDragPinchInteractions(){
     }
   }
 
-  saveWFSAll(){
+saveWFSAll() {
   /** this saves all the changes accumulated in the editWFSbuffer
    * it helps to prevent any data loss
    * #TODO
    */
   }
 
-  findLayer(layername: string) {
+findLayer(layername: string) {
     /**
      * find the object layer with the name @layername
      * @param layername: string, the name of the layer to find
@@ -1354,8 +1661,8 @@ removeDragPinchInteractions(){
     }
   }
 
-  startTranslating()
-  {
+startTranslating()
+{
     /** enables to move (translate features selected with a rectangle
      * The user first select the features and then click in the location where those features will be located
      * so far no difference in the code for sketch and WFS layers..
@@ -1438,14 +1745,14 @@ removeDragPinchInteractions(){
   }
 
 
-  startRotating() {
+startRotating() {
 
   }
-  startCopying()
-  {
+startCopying()
+{
   }
-  startIdentifying()
-  {
+startIdentifying()
+{
   const info = document.getElementById('info');
   info.setAttribute('data-tooltip', 'prueba1');
   const displayFeatureInfo = pixel => {
@@ -1483,10 +1790,10 @@ removeDragPinchInteractions(){
   }
 
 
-  startMeasuring(measureType = 'line'){
+startMeasuring(measureType = 'line') {
   console.log('que comience la fiesta...', measureType);
-  let source = new VectorSource();
-  let vector = new VectorLayer({
+  const source = new VectorSource();
+  const vector = new VectorLayer({
       source,
       style: new Style({
         fill: new Fill({
@@ -1611,7 +1918,7 @@ removeDragPinchInteractions(){
 
 
   let listener;
-  let self = this;
+  const self = this;
   this.draw.on('drawstart', function(evt) {
         // set sketch
         sketch = evt.feature;
@@ -1657,7 +1964,7 @@ removeDragPinchInteractions(){
       });
    }
 
-  updateOrderVisibleLayers(editLayers) {
+updateOrderVisibleLayers(editLayers) {
     /** updates the order in which layers are rendered in the map
      * @param editLayers: the list of layers to arrange the order (emitted by the layerPanel component)
      */
@@ -1665,14 +1972,15 @@ removeDragPinchInteractions(){
     let tIndex = 1;
     for (const lyr of editLayers) {
       this.map.getLayers().forEach(layer => {
-        if (layer.get('name') == lyr.layerName) {
+        if (layer.get('name') === lyr.layerName) {
+          console.log('ordering', layer.get('name'), nLayers - tIndex);
           layer.setZIndex(nLayers - tIndex);
           tIndex = tIndex + 1;
         }
       });
     }
    }
-  removeInteractions(){
+removeInteractions() {
     /**
      * Remove the interactions to draw, select or move
      */
@@ -1692,7 +2000,7 @@ removeDragPinchInteractions(){
       console.log ('Error removing interactions', e);
     }
   }
-  findGeometryType(layerName){
+findGeometryType(layerName) {
      /** Finds the geometry type of the layerName by looking in the dictionary filled when parsing the QGS project
       * @oaram layerName: the name of the layer to look for the geometry type
       */
@@ -1703,7 +2011,7 @@ removeDragPinchInteractions(){
     // console.log('geometryType', layerName, geometryType);
     return (geometryType);
   }
-  addDragPinchInteractions(){
+addDragPinchInteractions() {
     // console.log("aqui agregando dragpinch", this.map.getInteractions());
     try {
       const self = this;
@@ -1730,7 +2038,7 @@ removeDragPinchInteractions(){
 }
 
 
-  ngOnDestroy() {
+ngOnDestroy() {
     // prevent memory leak when component destroyed
     // unsubscribe all the subscriptions
      const subscriptions = new Subscription();

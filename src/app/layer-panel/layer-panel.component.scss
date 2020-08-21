@@ -25,7 +25,7 @@
   padding-top: 5px !important;
 }
 .example-box {
-  border-bottom: solid 1px #ccc;
+ // border-bottom: solid 1px #ccc;
   color: rgba(0, 20, 0, 0.87);
   display: flex;
   flex-direction: column;
@@ -35,11 +35,28 @@
   width: 100%;
   //max-width: 20%;
   position: relative;
+  padding-left: 1.1vw !important;
+}
+.group {
+  color: rgba(0, 20, 0, 0.87);
+ // border-bottom: solid 1px #ccc;
+  // border-top: solid 1px #ccc;
+  display: flex;
+  flex-direction: column;
+  align-items: baseline;
+  background: white;
+  font-size: 0.8vw;
+  width: 100%;
+  //max-width: 20%;
+  position: relative;
+  padding-top: 0px !important;
+  padding-bottom: 0px !important;
+  height:1.2vw !important;
 }
 .selectList{
   display:flex;
   justify-content:space-between;
-  align-items:center;
+  align-items: left; //center;
 }
 
 
@@ -68,22 +85,33 @@
 }
 
 .mat-list-option {
-  height:2vw !important;
+  height:1.3vw !important;
   vertical-align:middle !important;
-  padding-top: 4px !important;  // #TODO hacerlo differente responsive design
+  padding-top: 1px !important;  // #TODO hacerlo differente responsive design
+ // border-bottom: solid 1px #ccc;
+}
+:host ::ng-deep  .mat-pseudo-checkbox {
+  border: solid 1px;
+  width: 14px;
+  height: 14px;
 }
 
 // to remove the padding in mat-list
 :host ::ng-deep .mat-list-item-content {
   //padding: 0 !important;
+  padding-left: 4px !important;
   height:1.2vw !important;
 }
 
 // to remove the padding on the text of the list
 :host ::ng-deep .mat-list-text {
-  padding-left: 5px !important;  // rigth left
-  //padding-top: 5px !important;  // rigth left
-//  height: 1vw !important;
+  padding-left: 4px !important;  // rigth left
+  padding-top: 0px !important;  // rigth left
+  //height: 2vw !important;
+}
+
+:host ::ng-deep .mat-list-base {
+  padding-top: 2px !important;
 }
 
 :host ::ng-deep .mat-pseudo-checkbox::after {

@@ -3,9 +3,9 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
-    "start noreload": "ng serve --live-reload=false",
-    "build": "ng build",
+    "start": "ng serve --proxy-config proxy.json",
+    "start noreload": "ng serve --live-reload false --proxy-config proxy.json",
+    "build": "ng build --proxy-config proxy.json",
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e"

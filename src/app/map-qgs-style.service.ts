@@ -23,12 +23,11 @@ export class MapQgsStyleService {
      * @param { feature } the feature for which to find a rendering style  -- no needed apparently
      * @param { layerName } the name of a WFS layer to be rendered
      */
-    // console.log("layername in finding style", layerName) ;
     // const featType = feature.getGeometry().getType();
     // here include a default value and styling for # resolution or just somethig reasonable
     const styleLyr = this.nodes[layerName];
     if (Object.keys(styleLyr).length > 0){
-      const attr = styleLyr[Object.keys(styleLyr)[0]]["attr"]; // Which is the attribute used in the simbology
+      const attr = styleLyr[Object.keys(styleLyr)[0]]['attr']; // Which is the attribute used in the simbology
       const featValue = feature.get(attr);
       for (let key of Object.getOwnPropertyNames(styleLyr))
       {

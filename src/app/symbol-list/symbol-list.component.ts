@@ -75,7 +75,7 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit(){
-   this.myCanvas.changes.subscribe((r) => {
+   this.myCanvas.changes.subscribe(() => {
      // console.log('r', r);
       this.createSymbolsinCanvas();
     });

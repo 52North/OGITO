@@ -10,10 +10,12 @@
       </button>
   </mat-card-title-group>
   <mat-divider class = "toolbarDivider"></mat-divider>
-   <div class="example-list-top" cdkDropList (cdkDropListDropped)="drop($event)">
+  <!--
+  <span>Editable Layers</span>
+   <div id='layers' class="example-list-top" cdkDropList (cdkDropListDropped)="drop($event)">
    <mat-selection-list #listElayer>
       <mat-list-option class="example-box mat-primary" *ngFor= "let layer of editLayers" [value]="layer['layerName']"
-                       (click)="onLayerVisClick($event,layer)" checkboxPosition="before" cdkDrag
+                       (click)="onLayerVisClick($event, layer, layer)" checkboxPosition="before" cdkDrag
                        [ngClass]="layerActive == layer['layerName']? 'active': 'normal'">
         <div class="selectList">
           <div style="display:flex;align-items:center">
@@ -28,14 +30,39 @@
       </mat-list-option>
   </mat-selection-list>
   </div>
-
   <mat-divider class = "toolbarDivider"></mat-divider>
-   <span>Background Layers</span>
+  <span>Test Group Layers</span> -->
+<!-- groups trying -->
+  <div #groupedListDiv class="example-list-top" cdkDropList (cdkDropListDropped)="drop($event)">
+    <mat-selection-list>
+    <ng-container  *ngFor= "let group of groupLayers">
+      <mat-list-option class = "group" checkboxPosition="before" (click)="onGroupLayerVisClick($event,group)" selected="true">
+        {{group.name}} </mat-list-option>
+        <mat-selection-list>
+            <mat-list-option class="example-box mat-primary" *ngFor="let layer of group.layers" [value]="layer.name"
+                             (click)="onLayerVisClick($event,layer,group.name)" checkboxPosition="before" cdkDrag
+                             [ngClass]="layerActive == layer.name? 'active': 'normal'" selected="true">
 
-  <mat-selection-list   #sbLayers >
-   <!-- <span class = "title-layer">Citra satelit</span> -->
+              <div class="selectList">
+                <div style="display:flex;align-items:center">
+                  {{layer.name}} <!-- {{layer['layerTitle']}} -->
+                </div>
+                <div *ngIf="layer.wfs">
+                  <button mat-icon-button (click)="onEditLayerClick($event, layer)">
+                    <mat-icon  class= "editIcon">edit</mat-icon>
+                  </button>
+                </div>
+              </div>
+            </mat-list-option>
+       </mat-selection-list>
+    </ng-container>
+    </mat-selection-list>
+  </div>
+
+  <!--  <mat-selection-list   #sbLayers >
+
     <div cdkDropList (cdkDropListDropped)="dropBase($event)">
-      <!--
+
      <ng-container   >
 
        <mat-list-option class="example-box" *ngFor= "let layer of baseLayers" [selected]="preSelection.indexOf(layer[0]) > -1"
@@ -43,8 +70,8 @@
                         checkboxPosition="before" cdkDrag>
          {{layer[1]}}
        </mat-list-option>
-     </ng-container>-->
+     </ng-container>
     </div>
-  </mat-selection-list>
+  </mat-selection-list>  -->
 </mat-card>
 </div>

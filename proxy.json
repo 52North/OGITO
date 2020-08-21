@@ -1,0 +1,20 @@
+{
+  "/upload/": {
+    "target": "http://localhost/upload/",
+    "secure": "false",
+    "logLevel": "debug",
+    "changeOrigin": true
+  },
+  "/tmpfiles/": {
+    "target": "http://localhost/tmpfiles/",
+    "secure": "false",
+    "logLevel": "debug",
+    "changeOrigin": true
+  },
+  "/qgis/*": {
+    "target": "http://localhost/qgis/",
+    "secure": false,
+    "logLevel": "debug",
+    "changeOrigin": true
+  }
+}

@@ -2,8 +2,11 @@
   <div data-tooltip="algo" id ='info'>  <!--class="tooltip" id="info" -->
     <span id=spanTool class = "tooltiptext"></span>
   </div>
+  <div id ="progress">
+  </div>
 </div>
-<app-layer-panel [editLayers]="loadedWfsLayers" (layerVisClick)="updateMapVisibleLayer($event)"
-(editLayerClick)="updateEditingLayer($event)"
+<app-layer-panel [editLayers]="loadedWfsLayers"  [groupLayers] = "groupsLayers"
+                 (layerVisClick)="updateMapVisibleLayer($event)"
+(editLayerClick)="updateEditingLayer($event)"  (groupLayerVisClick)="updateMapVisibleGroupLayer($event)"
 (layersOrder) = "updateOrderVisibleLayers($event)"></app-layer-panel>
 
