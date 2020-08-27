@@ -18,8 +18,8 @@ export class LayerPanelComponent implements OnInit, AfterViewInit {
   @Output() layersOrder = new EventEmitter<any>();   // emit an event when layers were reordered (drop)
   @Output() layersBackOrder = new EventEmitter<any>();  // emit an event when the order of base layers changes
   @Output() layerBackVisClick = new EventEmitter<any>(); // emit an event when the edit button of a layer is clicked
-  @ViewChild("groupedListDiv", {static: false}) groupedListDiv; //: ElementRef <HTMLDivElement>;
-  @ViewChild("groupedListDiv2", {read: ElementRef}) groupedListDiv2: ElementRef;
+  // @ViewChild("groupedListDiv", {static: false}) groupedListDiv;
+
   x = 0;
   y = 0;
   startX = 0;
@@ -56,28 +56,33 @@ constructor(private openLayersService: OpenLayersService){}
 
 ngOnInit(): void {
   this.showLayerPanel$ = observableOf(true);
+  this.openLayersService.showEditLayerPanel$.subscribe(data =>{
+    this.showLayerPanel$ = observableOf(data);
+  },
+    error => console.log('error showing layer panel'));
   }
 
 
   addingGroupsLayers(){
   // console.log('primera', this.groupedListDiv.nativeElement.textContent);
-  console.log(this.groupLayers);
-  const  textgroup = document.createElement("P");                 // Create a <p> element
-  textgroup.innerHTML = "This is a paragraph.";
-    // Insert text
-  this.groupedListDiv.nativeElement.appendChild(textgroup);
+    /*
+     console.log(this.groupLayers);
+     const  textgroup = document.createElement("P");                 // Create a <p> element
+     textgroup.innerHTML = "This is a paragraph.";
+       // Insert text
+     this.groupedListDiv.nativeElement.appendChild(textgroup);
+     */
+     }
 
-  }
+     ngAfterViewInit(){
+       this.addingGroupsLayers();
+     }
 
-  ngAfterViewInit(){
-    this.addingGroupsLayers();
-  }
-
-  onEditLayerClick($event: any, layer: any){
-  /** allows to start editing a particular layer in the layer panel
-   * @param $event for the future, doing nothing with it so far.
-   * @param item: item (layer) that was clicked on to start/stop editing
-   */
+     onEditLayerClick($event: any, layer: any){
+     /** allows to start editing a particular layer in the layer panel
+      * @param $event for the future, doing nothing with it so far.
+      * @param item: item (layer) that was clicked on to start/stop editing
+      */
   $event.preventDefault();
   $event.stopImmediatePropagation();
   console.log('que entra..getting better', $event, layer.layerName);
@@ -91,6 +96,29 @@ ngOnInit(): void {
     this.layerActive = layer.layerName;
   }
 }
+
+  onOpacityLayerClick($event: any, layer: any){
+  // TODO change opacity
+    /** shows a div below the layer with a slider to change the visibility of a layer
+     * @param $event for the future, doing nothing with it so far.
+     * @param item: item (layer) that was clicked on to change opacity
+     */
+    $event.preventDefault();
+    $event.stopImmediatePropagation();
+    console.log('que viene.getting better', $event, layer.layerName);
+    this.editLayerClick.emit(layer);  // with this the map should act accordingly to stop/start editing.
+    // tslint:disable-next-line:triple-equals
+    if (this.layerActive == layer.layerName) {
+      this.layerActive = null;
+      this.openLayersService.updateShowEditToolbar(false);
+    }
+    else {
+      this.layerActive = layer.layerName;
+    }
+  }
+
+
+
 closeLayerPanel(value: any) {
   /** Updates the value of the observable $showLayerPanel$ that controls the layer Panel visibility
    * @param value, type boolean

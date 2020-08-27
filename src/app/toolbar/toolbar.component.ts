@@ -47,6 +47,9 @@ export class ToolbarComponent implements OnInit {
      * #TODO  send a subscription? ...
      */
   }
+  openLayerPanel(){
+    this.openLayersService.updateShowLayerPanel(true);
+  }
 
   ngOnInit(): void {
     this.subscriptionExistingProject = this.openLayersService.existingProject$.subscribe(

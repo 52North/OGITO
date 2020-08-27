@@ -12,9 +12,7 @@ export class HomeComponent implements OnInit {
 
   ngOnInit(): void {
   }
-  openProject(){
-    console.log('add code to open a QGs Project');
-  }
+
   showInfo(){
     //alert("Aqui se muestra la info");
     alert("Your screen dimensions are: " + screen.width + "x" + screen.height);
