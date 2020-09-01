@@ -18,7 +18,7 @@ export class LayerPanelComponent implements OnInit, AfterViewInit {
   @Output() layersOrder = new EventEmitter<any>();   // emit an event when layers were reordered (drop)
   @Output() layersBackOrder = new EventEmitter<any>();  // emit an event when the order of base layers changes
   @Output() layerBackVisClick = new EventEmitter<any>(); // emit an event when the edit button of a layer is clicked
-  // @ViewChild("groupedListDiv", {static: false}) groupedListDiv;
+
 
   x = 0;
   y = 0;
@@ -53,6 +53,12 @@ constructor(private openLayersService: OpenLayersService){}
     moveItemInArray(this.baseLayers, event.previousIndex, event.currentIndex);
     this.layersBackOrder.emit(this.baseLayers);
   }
+  dropExpansion(event: CdkDragDrop<string[]>){
+   // console.log(this.layerAccordion.nativeElement.children);
+   moveItemInArray(this.groupLayers, event.previousIndex, event.currentIndex);
+   this.layersOrder.emit(this.groupLayers);
+   console.log(this.groupLayers);
+   }
 
 ngOnInit(): void {
   this.showLayerPanel$ = observableOf(true);

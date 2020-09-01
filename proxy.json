@@ -13,7 +13,7 @@
   },
   "/qgis/": {
     "target": "http://localhost/qgis/",
-    "secure":  "false",
+    "secure":  false,
     "logLevel": "debug",
     "changeOrigin": true
   }

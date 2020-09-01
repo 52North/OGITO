@@ -9,12 +9,12 @@
       </button>
   </mat-card-title-group>
   <mat-divider class = "toolbarDivider"></mat-divider>
-
+  <mat-accordion #layerAccordion cdkDropList (cdkDropListDropped)="dropExpansion($event)">
     <ng-container  *ngFor= "let group of groupLayers" >
-      <mat-expansion-panel > <!--togglePosition='before'-->
+      <mat-expansion-panel cdkDrag> <!--togglePosition='before'-->
         <mat-expansion-panel-header [collapsedHeight]="'2.1vw'" [expandedHeight]="'2.1vw'">
         <mat-panel-title>
-        <mat-selection-list>
+        <mat-selection-list [id]="group.name">
              <mat-list-option class = "group" checkboxPosition="before" (click)="onGroupLayerVisClick($event,group)"
                          selected="true" >
                 {{group.name}}
@@ -44,7 +44,7 @@
   </mat-expansion-panel>
 
   </ng-container>
-
+  </mat-accordion>
   <div #groupedListDiv class="example-list-top" cdkDropList (cdkDropListDropped)="drop($event)">
   </div>
   <!--

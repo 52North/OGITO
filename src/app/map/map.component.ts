@@ -35,7 +35,7 @@ import {OpenLayersService} from '../open-layers.service';
 import {MapQgsStyleService} from '../map-qgs-style.service';
 import {AuthService} from '../auth.service';
 import {unByKey} from 'ol/Observable';
-import {catchError} from 'rxjs/operators';
+import {bbox as bboxStrategy} from 'ol/loadingstrategy';
 
 @Component({
   selector: 'app-map',
@@ -266,13 +266,16 @@ export class MapComponent implements OnInit, OnDestroy {
     });
     this.map = new Map({
       layers: [
-        new TileLayer({
-          source: new OSM({
-            crossOrigin: null
-          }),
-          zIndex: -1,
-          name: 'OSM'
-        }),
+        new LayerGroup({
+          layers: [new TileLayer({
+            source: new OSM({
+              crossOrigin: null
+            }),
+            zIndex: 1,
+            name: 'OSM'
+          })],
+          name: 'OSM Background'
+        })
       ],
       interactions: defaultInteractions ({pinchZoom: false, pinchRotate: false})
         .extend([this.dragAndDropInteraction, this.pinchRotate, this.pinchZoom, this.dragRotate, this.dragZoom]),
@@ -334,16 +337,18 @@ export class MapComponent implements OnInit, OnDestroy {
      *  To do that creates to point and calculate the center.
      */
       // get a center for the map
+    // this.mapCanvasExtent = [xmin, xmax, ymin, ymax];
     const leftMinCorner = new Point([this.mapCanvasExtent[0], this.mapCanvasExtent[2]]);
-    const rightMinCorner = new Point([this.mapCanvasExtent[1], this.mapCanvasExtent[3]]);
+    const rightMinCorner = new Point([this.mapCanvasExtent[1], this.mapCanvasExtent[2]]);
     const leftMaxCorner = new Point([this.mapCanvasExtent[0], this.mapCanvasExtent[3]]);
-   // console.log ('extent and puntos', this.mapCanvasExtent, leftMinCorner.getCoordinates(),
-   //   rightMinCorner.getCoordinates(), leftMaxCorner.getCoordinates());
+    // console.log ('extent and puntos', this.mapCanvasExtent, leftMinCorner.getCoordinates(),
+     //  rightMinCorner.getCoordinates(), leftMaxCorner.getCoordinates());
     const hDistance = getDistance(transform(leftMinCorner.getCoordinates(), this.srsID, this.wgs84ID),
                                   transform(rightMinCorner.getCoordinates(), this.srsID, this.wgs84ID));
-    const vDistance = getDistance(transform(leftMinCorner.getCoordinates(), this.srsID, this.wgs84ID),
-                                  transform(leftMaxCorner.getCoordinates(), this.srsID, this.wgs84ID));
+    const vDistance = getDistance(transform(leftMaxCorner.getCoordinates(), this.srsID, this.wgs84ID),
+                                  transform(leftMinCorner.getCoordinates(), this.srsID, this.wgs84ID));
     this.mapCenterXY = [this.mapCanvasExtent[0] + hDistance / 2, this.mapCanvasExtent[2] + vDistance / 2];
+    // console.log('mapCenterXY',this.mapCenterXY);
     // #TODO this works with projected coordinates --> check for others
     this.view = new View({
         center:  [this.mapCenterXY[0], this.mapCenterXY[1]],  // [-66,10] ,
@@ -351,7 +356,7 @@ export class MapComponent implements OnInit, OnDestroy {
         zoom: AppConfiguration.mapZoom, // this.mapZoom,
         minZoom: AppConfiguration.minZoom,
         maxZoom: AppConfiguration.maxZoom,
-        projection: this.srsID // this.projectProjection // 'EPSG:4326'
+        projection: this.srsID
       });
     this.map.setView(this.view);
     // this.view.fit(this.mapCanvasExtent);
@@ -376,9 +381,10 @@ export class MapComponent implements OnInit, OnDestroy {
      * it send these capabilities to other functions to load the WMS and WFS layers
      */
       // Load WFS layers
-    const qGsProject = AppConfiguration.QgsFileProject;
+    console.log('groups', this.groupsLayers);
+    const qGsProject = '&map=' + AppConfiguration.QgsFileProject;
     const qGsServerUrl = AppConfiguration.qGsServerUrl;
-    const capRequest = '&REQUEST=GetCapabilities&map=';
+    const capRequest = '&REQUEST=GetCapabilities';
     const wfsVersion = 'SERVICE=WFS&VERSION=' + AppConfiguration.wfsVersion;
     const urlWFS = qGsServerUrl + wfsVersion + capRequest + qGsProject;
     // console.log('urlWFS', urlWFS);
@@ -407,30 +413,34 @@ export class MapComponent implements OnInit, OnDestroy {
         const xmlWMStext = parser.read(text);
         this.loadWMSlayers(qGsServerUrl + wmsVersion + qGsProject, xmlWMStext);
         //this.updateOrderVisibleLayers(this.groupsLayers);
-        this.reorderingGroupsLayers(this.groupsLayers);
+        this.reorderingGroupsLayers();
         // this.reorderingGroupsLayers(this.groupsLayers);
         return (xmlWMStext);
       })
       .catch(error => console.error(error));
 
-    // request getCapabilites to load WMTS layers
-    const wmtsVersion = 'SERVICE=WMTS&VERSION=' + AppConfiguration.wmtsVersion;
-    const urlWMTS = qGsServerUrl + wmtsVersion + capRequest + qGsProject;
-    // console.log('urlWMS', urlWMS);
-    const parserWMTS = new WMTSCapabilities();
-    const xmlWMTS = fetch(urlWMTS)
-      .then(response => {
-        return response.text();
-      })
-      .then(text => {
-        const xmlWMTS = parserWMTS.read(text);
-        this.loadWMTSlayers(xmlWMTS);
-      });
+    /* WMTS is not fully yet implemented in qGIS server (31/08/2020) lets skip it for now
+      // request getCapabilites to load WMTS layers
+      const wmtsVersion = 'SERVICE=WMTS&VERSION=' + AppConfiguration.wmtsVersion;
+      const urlWMTS = qGsServerUrl + wmtsVersion + capRequest + qGsProject;
+
+
+
+      const parserWMTS = new WMTSCapabilities();
+      const xmlWMTS = fetch(urlWMTS)
+        .then(response => {
+          return response.text();
+        })
+        .then(text => {
+          const xmlWMTS = parserWMTS.read(text);
+          this.loadWMTSlayers(xmlWMTS);
+        });
+      */
   }
 
 
 
-  reorderingGroupsLayers(groups) {
+  reorderingGroupsLayers() {
     /*
      *  Moves the groups and allocate layers on it according to the order in the project
      *  @param groups: contain the groups for which layers will be ordered
@@ -441,7 +451,7 @@ export class MapComponent implements OnInit, OnDestroy {
       //console.log('indexOf', this.groupsLayers.indexOf(group), group.layers);
       this.map.getLayers().forEach(layer => {
         if (layer.get('name') === group.name) {
-          let grpZIndex = (nGroups - this.groupsLayers.indexOf(group))*10;
+          let grpZIndex = (nGroups - this.groupsLayers.indexOf(group)) * 10;
           layer.setZIndex(grpZIndex);
          // console.log('layer', layer.get('name'), layer.getLayers().array_.length);
           // order layers inside the group
@@ -449,14 +459,14 @@ export class MapComponent implements OnInit, OnDestroy {
            // console.log('tiene capas dentro', group.name);
             nLysInGrp = layer.getLayers().array_.length;  // numbers of layers in the
             layer.getLayers().forEach(lyrInGrp => {
-             // console.log('indexOF inside', group.name, lyrInGrp.get('name'), group.layers.findIndex( x => x.name === lyrInGrp.get('name')));
-              lyrInGrp.setZIndex(grpZIndex - group.layers.findIndex( x => x.name === lyrInGrp.get('name')));  // will work until 10 layers/group
+              lyrInGrp.setZIndex(grpZIndex - (group.layers.findIndex( x => x.name === lyrInGrp.get('name')) + 1));  // will work until 10 layers/group
             });
           }
 
         }
       });
     });
+    console.log('loaded layers..', this.map.getLayers());
   }
   loadWMTSlayers(xmlWMTS: WMTSCapabilities) {
     /**
@@ -465,7 +475,7 @@ export class MapComponent implements OnInit, OnDestroy {
      */
     console.log(xmlWMTS);
     const layerList = xmlWMTS.Contents.Layer;
-    console.log(layerList);
+    console.log('layerList',layerList);
     layerList.forEach(layer => {
       const options = optionsFromCapabilities(xmlWMTS, {
         layer: layer.Identifier,
@@ -519,7 +529,7 @@ export class MapComponent implements OnInit, OnDestroy {
     const fieldLayers = {};
     const xmlParser = new DOMParser();
     const xmlText = xmlParser.parseFromString(qgsfile, 'text/xml');
-    // console.log ("xmlText", xmlText);
+    //console.log ("xmlText", xmlText);
     this.projectTitle = xmlText.getElementsByTagName('title')[0].childNodes[0].nodeValue;
     // register the project projection definion in proj4 format
     const projectionDef = xmlText.getElementsByTagName('proj4')[0].childNodes[0].nodeValue;
@@ -532,8 +542,8 @@ export class MapComponent implements OnInit, OnDestroy {
     const xmin = Number(extent.getElementsByTagName('xmin')[0].childNodes[0].nodeValue);
     const xmax = Number(extent.getElementsByTagName('xmax')[0].childNodes[0].nodeValue);
     const ymin = Number(extent.getElementsByTagName('ymin')[0].childNodes[0].nodeValue);
-    const ymax = Number(extent.getElementsByTagName('ymax')[0].childNodes[0].nodeValue);
-    // console.log(`xmin xmax ymin ymax ${ xmin } ${ xmax } ${ ymin } ${ ymax } `);
+    const ymax = Number(extent.getElementsByTagName('ymax')[0].childNodes[0].nodeValue)
+    console.log(`xmin xmax ymin ymax ${ xmin } ${ xmax } ${ ymin } ${ ymax } `);
     // extent [minx, miny, maxx, maxy].
     this.mapCanvasExtent = [xmin, xmax, ymin, ymax];
     const projectionWKT = xmlText.getElementsByTagName('wkt');
@@ -577,21 +587,21 @@ export class MapComponent implements OnInit, OnDestroy {
    // const listNames = wfsLayers.map(nameWfsLayer());
     const legend = xmlText.getElementsByTagName('legend')[0];
     // get the layers without groups
-    const layersWihoutGroup = [];
+    const layersWithoutGroup = [];
     for (let i = 0; i < legend.getElementsByTagName('legendlayer').length; i++) {
       const legendlayer =  legend.getElementsByTagName('legendlayer')[i];
       const layerName = legendlayer.getAttribute('name');
       if (legendlayer.parentNode.nodeName !== 'legendgroup'){
         // layersWihoutGroup.push({name: layerName});  // let's try
         if (wfsLayersList.find(element => element === layerName)){
-          layersWihoutGroup.push({name: layerName, wfs: true});
+          layersWithoutGroup.push({name: layerName, wfs: true});
         }
         else {
-          layersWihoutGroup.push({name: layerName, wfs: false});
+          layersWithoutGroup.push({name: layerName, wfs: false});
         }
       }
     }
-    this.groupsLayers.push({name: 'Others', layers: layersWihoutGroup});
+    this.groupsLayers.push({name: 'Others', layers: layersWithoutGroup});
     for (let i = 0; i < legend.getElementsByTagName('legendgroup').length; i++) {
         const legendGroup =  legend.getElementsByTagName('legendgroup')[i];
         const groupName = legendGroup.getAttribute('name');
@@ -716,13 +726,18 @@ export class MapComponent implements OnInit, OnDestroy {
       }
     };
     const progress = new Progress(document.getElementById('progress'));
+    console.log('urlWMS', urlWMS);
     console.log('Entra WMS', xmlCapabilities);
     try {
+      if (!xmlCapabilities.Capability.Layer.Layer) {
+        console.log('no layers in WMS');
+        return;
+      }
       const layerList = xmlCapabilities.Capability.Layer.Layer;
       layerList.forEach(layer => {
         if (!layer.hasOwnProperty('Layer')) {
           // it is a simple WMS layer without a group
-          console.log('simple layer..', layer.Name);
+          //console.log('simple layer..', layer.Name);
           const WMSSource = new ImageWMS({
             url: urlWMS,
             params: {LAYERS: layer.Name},
@@ -775,7 +790,6 @@ export class MapComponent implements OnInit, OnDestroy {
 
   addWebServLayer(layerName: any,  webServlayer: any) {
    // find the layer in a group
-    // console.log(this.groupsLayers);
     let groupName = '';
     let groupLayer: any;
     this.groupsLayers.forEach(group => {
@@ -784,7 +798,7 @@ export class MapComponent implements OnInit, OnDestroy {
         groupName = group.name;
       }
     });
-    // console.log('web layerName and group', layerName, groupName);
+    //console.log('web layerName and group', layerName, groupName);
     // the layer is the group (WMTS case), add it to the map and return
     if (this.groupsLayers.findIndex(x => x.name === layerName) > -1 && groupName === '') {
       console.log('entra aqui XXXX');
@@ -1284,10 +1298,22 @@ loadWFSlayers(XmlCapText) {
         try {
           const vectorSource = new VectorSource ({
           format: new GeoJSON(),
+          // getting WFS set to the view extent
+          url: extent => {
+            return (urlWFS + '&bbox=' + extent.join(',') + ',' + defaultSRS);
+          },
+          crossOrigin: null,   // gis.stackexchange.com/questions/71715/enabling-cors-in-openlayers
+          strategy: bboxStrategy
+          });
+          /*
+          old version
+          const vectorSource = new VectorSource ({
+          format: new GeoJSON(),
           // the url can be setup to include extent, projection and resolution
           url: urlWFS,
           crossOrigin: null
           });
+          */
           const wfsVectorLayer = new VectorLayer ({
             source: vectorSource,
             name: layerName,
@@ -1364,12 +1390,12 @@ updateMapVisibleGroupLayer(selectedGroupLayer) {
     /** updates the visibility of a group layer in the map
      * @param selectedGroupLayer the layer that was clicked to show/hide
      */
-      console.log('prueba event capture from child emitter', selectedGroupLayer.name);
+      //console.log('prueba event capture from child emitter', selectedGroupLayer.name);
       this.map.getLayers().forEach(layer => {
         // console.log('nombre grupos',layer.get('name'));
         if (selectedGroupLayer.name === layer.get('name')) {
           layer.setVisible (!layer.getVisible());
-           console.log('cambia el grupo correcto?', layer.get('name'));
+           //console.log('cambia el grupo correcto?', layer.get('name'));
         }
         });
   }
@@ -2027,22 +2053,36 @@ startMeasuring(measureType = 'line') {
       });
    }
 
-updateOrderVisibleLayers(editLayers) {
-    /** updates the order in which layers are rendered in the map
-     * @param editLayers: the list of layers to arrange the order (emitted by the layerPanel component)
+  updateOrderGroupsLayers(groupsLayers: any) {
+    /*
+     *  Moves the groups and allocate layers on it according to the order in the project
+     *  @param groups: contain the groups for which layers will be ordered
      */
-    const nLayers = editLayers.length;
-    let tIndex = 1;
-    for (const lyr of editLayers) {
+    console.log('lo que llega', groupsLayers);
+    const nGroups = groupsLayers.length;
+    let nLysInGrp = 0;
+    groupsLayers.forEach(group => {
+      //console.log('indexOf', this.groupsLayers.indexOf(group), group.layers);
       this.map.getLayers().forEach(layer => {
-        if (layer.get('name') === lyr.layerName) {
-          console.log('ordering', layer.get('name'), nLayers - tIndex);
-          layer.setZIndex(nLayers - tIndex);
-          tIndex = tIndex + 1;
+        if (layer.get('name') === group.name) {
+          let grpZIndex = (nGroups - groupsLayers.indexOf(group)) * 10;
+          layer.setZIndex(grpZIndex);
+          // console.log('layer', layer.get('name'), layer.getLayers().array_.length);
+          // order layers inside the group
+          if (layer.getLayers().array_.length > 0){
+            // console.log('tiene capas dentro', group.name);
+            nLysInGrp = layer.getLayers().array_.length;  // numbers of layers in the
+            layer.getLayers().forEach(lyrInGrp => {
+              lyrInGrp.setZIndex(grpZIndex - (group.layers.findIndex( x => x.name === lyrInGrp.get('name')) + 1));  // works up 9 layersx group
+            });
+          }
+
         }
       });
-    }
-   }
+    });
+    console.log('reordered layers..', this.map.getLayers());
+  }
+
 removeInteractions() {
     /**
      * Remove the interactions to draw, select or move
