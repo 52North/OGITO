@@ -56,9 +56,9 @@
 }
 ::ng-deep .ol-tooltip-measure:before,
 .ol-tooltip-static:before {
-  border-top: 6px solid rgba(0, 0, 0, 0.5);
-  border-right: 6px solid transparent;
-  border-left: 6px solid transparent;
+  border-top: 3px solid rgba(0, 0, 0, 0.5);
+  border-right: 3px solid transparent;
+  border-left: 3px solid transparent;
   border-top-color: #ffcc33;
   content: "";
   position: absolute;
@@ -80,9 +80,9 @@
   position : absolute;
   content : attr(data-tooltip);
   opacity : 0;
-  border-left: 10px solid transparent;
-  border-right: 10px solid transparent;
-  border-top: 10px solid #646464;
+  border-left: 1px solid transparent;
+  border-right: 1px solid transparent;
+  border-top: 1px solid #646464;
 }
 [data-tooltip]:hover:before {
   opacity : 1;
@@ -102,4 +102,7 @@
   background: rgba(0, 60, 136, 0.4);
   width: 0;
   transition: width 250ms;
+}
+.cdkDrag {
+  display: inline-block;
 }

@@ -12,6 +12,7 @@ export class AppConfiguration{
   // la ruta para accederlo dentro de la app
   static curProject =   'http://localhost/' + AppConfiguration.qgsProject;  // to fecth the xml project file
   static svgFolder = '../../assets/svg/';
+  static svgUrl =  'http://localhost/svg/';
   static qgsProjectFolder =  'D:/PhD/code/fromScratch/';  // 'D:/PhD/code/fromScratch/myOgito/src/assets/';
   // la ruta para accederlo desde Qgs Server
   static QgsFileProject = AppConfiguration.qgsProjectFolder + AppConfiguration.qgsProject; // to use with tqhe qgis server

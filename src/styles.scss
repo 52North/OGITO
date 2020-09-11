@@ -13,11 +13,13 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; overflow: h
   //background: darkred;
   border-radius: 4px;
   overflow: auto;
-  margin-left: 4%;
-  margin-top: 5%;
+  margin-left: 0;   // 4%
+  margin-top: 0;    // 5%
   z-index: 3;
   position: absolute;
-  opacity:0.9
+  opacity:0.95;
+  left: 4%;
+  top: 10%;
 }
 .example-list:hover{
   cursor:pointer;
@@ -25,6 +27,8 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; overflow: h
 }
 .panelTitle{
   font-size:1.2vw !important;  // responsive text 2% of the viewport width
+  padding-left: 1vw;
+  padding-top: 0.3vw;
 }
 
 .matCloseWrapper{

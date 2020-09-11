@@ -15,7 +15,14 @@
 .spacer {
   flex: 1 1 auto;
 }
+/*.mapBoundary{
+  width: 97%;
+  position: absolute;
+  left: 3%;
+  height: 93% ;
+  border-color: green;
 
+} */
 .toolbarDivider {
   padding-top: 5px !important;
 }
@@ -51,9 +58,8 @@
 .selectLayer{
   display:flex;
   justify-content:space-between;
-  align-items: left; //center;
+  // align-items: left; //center;
 }
-
 
 .cdk-drag-preview {
   box-sizing: border-box;
@@ -127,7 +133,7 @@
 }
 .panelTitle {
   padding-left: 1vw;
-  padding-top: 0.2vw;
+  padding-top: 0.3vw;
 }
 .active {
   background: #fff2e1;

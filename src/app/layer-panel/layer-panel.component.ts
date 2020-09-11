@@ -7,7 +7,7 @@ import {AppConfiguration} from '../app-configuration';
 @Component({
   selector: 'app-layer-panel',
   templateUrl: './layer-panel.component.html',
-  styleUrls: ['./layer-panel.component.scss']
+  styleUrls: ['./layer-panel.component.scss', '../map/map.component.scss']     // to access the .map css selector
 })
 export class LayerPanelComponent implements OnInit, AfterViewInit {
   @Input() editLayers: Array<any>;
@@ -91,7 +91,7 @@ ngOnInit(): void {
       */
   $event.preventDefault();
   $event.stopImmediatePropagation();
-  console.log('que entra..getting better', $event, layer.layerName);
+  console.log('que entra..getting better', layer);
   this.editLayerClick.emit(layer);  // with this the map should act accordingly to stop/start editing.
     // tslint:disable-next-line:triple-equals
   if (this.layerActive == layer.layerName) {

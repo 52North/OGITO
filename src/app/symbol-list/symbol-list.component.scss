@@ -8,8 +8,9 @@
   padding: 0 5px !important;
 }
 .example-list{
-  margin-left: 70% !important;
+  left: 70% !important;
   max-width: 20%;
+  top: 10% !important;
 }
 
 .toolbarDivider {
@@ -33,4 +34,9 @@
 }
 .active {
   background: #fff2e1;
+}
+:host ::ng-deep .mat-card {
+  //padding: 0 !important;
+  padding: 0 10px;
+  //height:1.2vw !important;
 }

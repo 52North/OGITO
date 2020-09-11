@@ -391,7 +391,6 @@ export class MapComponent implements OnInit, OnDestroy {
     const xmlWFS = fetch(urlWFS)
       .then(response => response.text())
       .then(text => {
-        // console.log('result WFS Cap para continuar', text);
         this.loadWFSlayers(text);
         // self.layerPanel.updateLayerList(self.loadedWfsLayers);   // trying another approach with input
         return (text);
@@ -412,20 +411,17 @@ export class MapComponent implements OnInit, OnDestroy {
       .then(text => {
         const xmlWMStext = parser.read(text);
         this.loadWMSlayers(qGsServerUrl + wmsVersion + qGsProject, xmlWMStext);
-        //this.updateOrderVisibleLayers(this.groupsLayers);
+
+        // this.reorderingGroupsLayers();
         this.reorderingGroupsLayers();
-        // this.reorderingGroupsLayers(this.groupsLayers);
         return (xmlWMStext);
       })
       .catch(error => console.error(error));
-
-    /* WMTS is not fully yet implemented in qGIS server (31/08/2020) lets skip it for now
+     /*
+     // WMTS is not fully yet implemented in qGIS server (31/08/2020) lets skip it for now
       // request getCapabilites to load WMTS layers
       const wmtsVersion = 'SERVICE=WMTS&VERSION=' + AppConfiguration.wmtsVersion;
       const urlWMTS = qGsServerUrl + wmtsVersion + capRequest + qGsProject;
-
-
-
       const parserWMTS = new WMTSCapabilities();
       const xmlWMTS = fetch(urlWMTS)
         .then(response => {
@@ -434,8 +430,11 @@ export class MapComponent implements OnInit, OnDestroy {
         .then(text => {
           const xmlWMTS = parserWMTS.read(text);
           this.loadWMTSlayers(xmlWMTS);
-        });
-      */
+          this.reorderingGroupsLayers();
+        }); */
+
+
+
   }
 
 
@@ -475,7 +474,7 @@ export class MapComponent implements OnInit, OnDestroy {
      */
     console.log(xmlWMTS);
     const layerList = xmlWMTS.Contents.Layer;
-    console.log('layerList',layerList);
+    console.log('layerList WMTS', layerList);
     layerList.forEach(layer => {
       const options = optionsFromCapabilities(xmlWMTS, {
         layer: layer.Identifier,
@@ -580,11 +579,6 @@ export class MapComponent implements OnInit, OnDestroy {
       const layerName = wfsLayers.getElementsByTagName('value')[i].childNodes[0].nodeValue;
       wfsLayersList.push(layerName.slice(0, layerName.length - 37)); // 36 is the number of chars added as id + 1 ('_')
     }
-    // console.log ('wfsLayersList', wfsLayersList);
-    /* const nameWfsLayer = (layer => {
-      return layer.slice(0, layer.indexOf('_'));
-    }); */
-   // const listNames = wfsLayers.map(nameWfsLayer());
     const legend = xmlText.getElementsByTagName('legend')[0];
     // get the layers without groups
     const layersWithoutGroup = [];
@@ -605,7 +599,7 @@ export class MapComponent implements OnInit, OnDestroy {
     for (let i = 0; i < legend.getElementsByTagName('legendgroup').length; i++) {
         const legendGroup =  legend.getElementsByTagName('legendgroup')[i];
         const groupName = legendGroup.getAttribute('name');
-        //console.log('groupName', groupName);
+        // console.log('groupName', groupName);
         const layersinGroup = [];
         for (let j = 0; j < legendGroup.getElementsByTagName('legendlayer').length; j++)
         {
@@ -619,9 +613,9 @@ export class MapComponent implements OnInit, OnDestroy {
           }
         }
         this.groupsLayers.push({name: groupName, layers: layersinGroup});
-      //console.log('layers in group', legendGroup.getElementsByTagName('legendlayer').length);
+      // console.log('layers in group', legendGroup.getElementsByTagName('legendlayer').length);
     }
-    //console.log('groups', this.groupsLayers);
+
     // #TODO implement something with the groups in the legend
     const mapLayersLst = xmlText.getElementsByTagName('maplayer');
     for (let i = 0; i < mapLayersLst.length; i++) {
@@ -1424,14 +1418,16 @@ updateMapVisibleGroupLayer(selectedGroupLayer) {
     });
   }
 
-updateEditingLayer(layer) {
-  // console.log('evento emitido, que llega', layer);
+updateEditingLayer(layerEditName) {
+   console.log('evento emitido, que llega', layerEditName);
     /**  starts or stops the editing mode for the layerName given
      * if there were some edits --> asks for saving changes
      * @param layerName: the layer that the user select to start/stop editing
+     * find the name selected in the layer panel to the layer loaded in this.wfsLoadedLayers
      */
-    // tslint:disable-next-line:triple-equals
-  if (this.curEditingLayer) {
+   const layer = this.loadedWfsLayers.find(x => x.layerName === layerEditName.name);
+   console.log('wfs layer with more description', layer);
+   if (this.curEditingLayer) {
       // a layer was being edited - ask for saving changes
       this.stopEditing(this.curEditingLayer);  // test is changes are save to the rigth layer, otherwise it should go #
       if (this.curEditingLayer === layer) {

@@ -1,6 +1,8 @@
 <!--suppress AngularUndefinedBinding -->  <!-- to fix a bug in webstorm -->
-<div class ="example-list"   *ngIf="showLayerPanel$ | async" [style.left.px]="x" [style.top.px]="y"
-     (panstart)="onPanStart($event)" (panmove)="onPan($event)">
+
+<div class ="example-list"   *ngIf="showLayerPanel$ | async"  cdkDragBoundary=".map" cdkDrag >
+ <!-- <div class ="example-list"   *ngIf="showLayerPanel$ | async" [style.left.px]="x" [style.top.px]="y"
+     (panstart)="onPanStart($event)" (panmove)="onPan($event)" cdkDragBoundary=".mapBoundary" cdkDrag >  -->
 <mat-card class = 'layerPanelCard'>
   <mat-card-title-group>
       <mat-card-title class ="panelTitle">Layers  </mat-card-title>
@@ -11,7 +13,8 @@
   <mat-divider class = "toolbarDivider"></mat-divider>
   <mat-accordion #layerAccordion cdkDropList (cdkDropListDropped)="dropExpansion($event)">
     <ng-container  *ngFor= "let group of groupLayers" >
-      <mat-expansion-panel cdkDrag> <!--togglePosition='before'-->
+      <mat-expansion-panel cdkDrag>
+        <!--togglePosition='before'-->
         <mat-expansion-panel-header [collapsedHeight]="'2.1vw'" [expandedHeight]="'2.1vw'">
         <mat-panel-title>
         <mat-selection-list [id]="group.name">
@@ -31,7 +34,7 @@
                 {{layer.name}} <!-- {{layer['layerTitle']}} -->
               </div>
               <div *ngIf="layer.wfs">
-                <button mat-icon-button (click)="onEditLayerClick($event, layer)">
+                <button mat-icon-button (click)="onEditLayerClick($event,layer)">
                   <mat-icon  class= "editIcon">edit</mat-icon>
                 </button>
               </div>
@@ -104,3 +107,4 @@
 
 </mat-card>
 </div>
+

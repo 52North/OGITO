@@ -24,7 +24,8 @@ export class MapQgsStyleService {
      * @param { layerName } the name of a WFS layer to be rendered
      */
     // const featType = feature.getGeometry().getType();
-    // here include a default value and styling for # resolution or just somethig reasonable
+    // here include a default value and styling for # resolution or just something reasonable
+
     const styleLyr = this.nodes[layerName];
     if (Object.keys(styleLyr).length > 0){
       const attr = styleLyr[Object.keys(styleLyr)[0]]['attr']; // Which is the attribute used in the simbology
@@ -219,16 +220,27 @@ export class MapQgsStyleService {
         {
         color = this.getRGBAcolor(symStyle['color']);   // this is symStyle["color"]
         outColor = this.getRGBAcolor(symStyle['outline_color']);
-        const filename = this.svgFolder.concat(symStyle['name']);
+        // console.log('symStyle[\'name\']', symStyle['name']);
+        let filename: string;
+        if (symStyle['name'].indexOf('svg/') > 0){
+         // filename = this.svgFolder.concat(symStyle['name'].substring(symStyle['name'].indexOf('svg/') + 4, symStyle['name'].len));
+          filename = AppConfiguration.svgUrl.concat(symStyle['name'].substring(symStyle['name'].indexOf('svg/') + 4, symStyle['name'].len));
+        }
+        else
+          {
+          // filename = this.svgFolder.concat(symStyle['name']);
+          filename = AppConfiguration.svgUrl.concat(symStyle['name']);
+          }
         const size = symStyle['size'] ;
         const  outlineWidth = +symStyle["outline_width"];
         const verticalAnchorPoint = symStyle['vertical_anchor_point'];
+        // console.log('filename', filename);
         newStyle = new Style({
            image: new Icon({
              color,
              crossOrigin: 'anonymous',
              // imgSize: [50, 50],   // it was 20 #TODO responsive to zoom scale
-             scale: 0.03, // #TODO verificar size qgis/ol
+             scale: 0.04, // #TODO verificar size qgis/ol
              src: filename })
          });
         // console.log('svgMarker in the case', newStyle);
@@ -431,15 +443,15 @@ export class MapQgsStyleService {
 
       this.nodes [layerName] = tnodes;
     }
-    else if (symbolType == "graduatedSymbol") {
+    else if (symbolType === "graduatedSymbol") {
       // For future versions  graduated color, this also includes
       // SVG icons
     }
-    else if (symbolType == "singleSymbol")  {
+    else if (symbolType === "singleSymbol")  {
       // For future versions  unique symbol, this also includes
       // SVG icons
       }
-
+  // console.log('symbol', this.nodes);
   }
   getLayerStyle(layerName: string){
     /** return the style for a layer
