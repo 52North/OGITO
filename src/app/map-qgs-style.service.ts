@@ -237,7 +237,7 @@ export class MapQgsStyleService {
         // console.log('filename', filename);
         newStyle = new Style({
            image: new Icon({
-             color,
+             color: color,
              crossOrigin: 'anonymous',
              // imgSize: [50, 50],   // it was 20 #TODO responsive to zoom scale
              scale: 0.04, // #TODO verificar size qgis/ol

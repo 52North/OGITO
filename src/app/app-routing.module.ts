@@ -7,7 +7,7 @@ import {MapComponent} from './map/map.component';
 const routes: Routes = [
   {path: '', component: HomeComponent},
   { path: 'map', component: MapComponent},
-  {path: '**', redirectTo: ''}
+//   {path: '**', redirectTo: ''}  test to enable qgis server do not be redirected
 
 ];
 

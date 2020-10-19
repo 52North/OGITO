@@ -120,9 +120,9 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
         // console.log('width and height', height, width, canvas.nativeElement.width , devicePixelRatio  );
         const render = toContext(canvas.nativeElement.getContext('2d'));
         let stylelayer = this.symbols$[key].style;
-        console.log('que hay en stylelayer', stylelayer);
+        // console.log('que hay en stylelayer', stylelayer);
         let stylelayerClone = [];   // clone the style hopefully deep copy
-        console.log('entra this.geometryTypeSymbols', this.geometryTypeSymbols, 'stylelayer.length', stylelayer.length);
+        // console.log('entra this.geometryTypeSymbols', this.geometryTypeSymbols, 'stylelayer.length', stylelayer.length);
         switch (this.geometryTypeSymbols) {
           case 'Point': {
             const cx = width / 2;
@@ -134,11 +134,13 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
               for (const style of stylelayer) {
                 // cloneStyle = style.clone();
                 imageClone = style.clone().getImage();
-                console.log('imageClone scale', imageClone.getScale());
+                // console.log('imageClone color and scale', imageClone.getColor, imageClone.getScale());
                 imageClone.setScale(imageClone.getScale() * 7);  // #TODO check this
-                cloneStyle = new Style({
+                // this is working
+                  cloneStyle = new Style({
                   image: imageClone
                 });
+
                 stylelayerClone.push(cloneStyle);
               }
             }
@@ -172,7 +174,7 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
           }
         }
         // if stylelayerClone has something it will be drawn
-        console.log('stylelayerClone', stylelayerClone);
+        // console.log('stylelayerClone', stylelayerClone);
         if (stylelayerClone.length > 0) {
           for (let style of stylelayerClone) {
             render.drawFeature(feature, style);
@@ -187,7 +189,7 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
     }
   }
   catch (e) {
-    console.log('Error creating symbol panel');
+    console.log('Error creating symbol panel',e);
   }
  }
 

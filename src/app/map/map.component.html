@@ -5,6 +5,10 @@
   <div id ="progress">
   </div>
 </div>
+<div id="popup" #popup class="ol-popup">
+  <a href="#" #closer class="ol-popup-closer"></a>
+  <div id="popup-content" #content></div>
+</div>
 <app-layer-panel [editLayers]="loadedWfsLayers"  [groupLayers] = "groupsLayers"
                  (layerVisClick)="updateMapVisibleLayer($event)"
 (editLayerClick)="updateEditingLayer($event)"  (groupLayerVisClick)="updateMapVisibleGroupLayer($event)"

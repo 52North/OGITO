@@ -39,7 +39,7 @@ export class EditingToolbarComponent implements OnInit {
     Identify: false,
     Delete: false,
     MeasureLine: false,
-    MeasureArea:false
+    MeasureArea: false
   };
   onPanStart(event: any): void {
     this.startX = this.x;
@@ -247,9 +247,10 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
      *  @param visible: boolean
      */
   this.isVisible$ = observableOf(visible);
+  console.log ('is visible', visible);
   // desactivar todas las actions??
   for (let key in this.actionActive ) {
-      // console.log("showing fresh tool ]",key,this.actionActive[key]);
+      console.log("showing fresh tool ]",key,this.actionActive[key]);
       if (true === this.actionActive[key])
       {
         this.actionActive[key] = !this.actionActive[key];

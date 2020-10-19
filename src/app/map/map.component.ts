@@ -1,4 +1,4 @@
-import {Component, OnDestroy, OnInit} from '@angular/core';
+import {AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import {Subscription} from 'rxjs';
 import {AppConfiguration} from '../app-configuration';
 import 'ol/ol.css';
@@ -36,6 +36,8 @@ import {MapQgsStyleService} from '../map-qgs-style.service';
 import {AuthService} from '../auth.service';
 import {unByKey} from 'ol/Observable';
 import {bbox as bboxStrategy} from 'ol/loadingstrategy';
+import {toStringHDMS} from 'ol/coordinate';
+import {createViewChild} from '@angular/compiler/src/core';
 
 @Component({
   selector: 'app-map',
@@ -43,7 +45,13 @@ import {bbox as bboxStrategy} from 'ol/loadingstrategy';
   styleUrls: ['./map.component.scss']
 })
 
-export class MapComponent implements OnInit, OnDestroy {
+export class MapComponent implements OnInit, AfterViewInit, OnDestroy  {
+  /**
+   * Elements that make up the popup.
+   */
+  @ViewChild('popup', {static: false}) container: ElementRef;  // the variable here is container, popup the html element
+  @ViewChild('content', {static: false}) content: ElementRef;
+  @ViewChild('closer', {static: false}) closer: ElementRef;
   public existingProject = true;
   map: Map;
   view: View;
@@ -88,7 +96,7 @@ export class MapComponent implements OnInit, OnDestroy {
   measureTooltip: any; /** Overlay to show the measurement. * @type {Overlay}  */
   helpTooltip: any; // The measure tooltip element.  * @type {HTMLElement}*/
   helpTooltipElement: any; // Overlay to show the measurement. * @type {Overlay}
-  popup: any;
+  overlay: any;
   subsToShapeEdit: Subscription;
   subsTocurrentSymbol: Subscription;
   subsToSaveCurrentLayer: Subscription;
@@ -366,6 +374,31 @@ export class MapComponent implements OnInit, OnDestroy {
       console.log('length', e.touches.length);
     });
     // console.log('this.view.getCenter', this.view.getCenter(), this.view.getProjection(), this.view.calculateExtent());
+  }
+
+  ngAfterViewInit()
+  {
+    /**
+     * Create an overlay to anchor the popup to the map.
+     */
+    this.overlay = new Overlay({
+      element: this.container.nativeElement,
+      autoPan: true,
+      autoPanAnimation: {
+        duration: 250,
+      },
+    });
+    this.map.addOverlay(this.overlay);
+    /**
+     * Add a click handler to hide the popup.
+     * @return { boolean } Don't follow the href.
+     */
+    console.log('this.closer', this.closer);
+    this.closer.nativeElement.onclick = () => {
+      this.overlay.setPosition(undefined);
+      this.closer.nativeElement.blur();
+      return false;
+    };
   }
   zoomToHome() {
    /**
@@ -1402,6 +1435,7 @@ updateMapVisibleGroupLayer(selectedGroupLayer) {
   {
     const layerName = selectedLayer.layer.name;
     const groupName = selectedLayer.groupName;
+
     console.log('prueba event capture from child emitter', selectedLayer);
     this.map.getLayers().forEach(layer => {
       if (groupName === layer.get('name')) {
@@ -1838,39 +1872,32 @@ startCopying()
   }
 startIdentifying()
 {
-  const info = document.getElementById('info');
-  info.setAttribute('data-tooltip', 'prueba1');
-  const displayFeatureInfo = pixel => {
-    console.log(pixel);
-    // create the style
-    const style = document.createElement('style');
-    // style.type = 'text/css';
-    style.innerHTML = '.cssClass {color: #F00;' +
-                      'left:' + pixel[0].toString() + 'px;' +
-                      'top: ' + (pixel[1] - 15).toString()  + 'px; }';
-    console.log('style', style.innerHTML);
-    document.getElementsByTagName('head')[0].appendChild(style);
+  // const info = document.getElementById('info');
+  // info.setAttribute('data-tooltip', 'prueba1');
+  const displayFeatureInfo = coordinate => {
+    console.log(coordinate);
+    const hdms = toStringHDMS(coordinate);
+    this.content.nativeElement.innerHTML = '<p>You clicked here:</p><code>' + hdms + '</code>';
+    console.log (this.map.getOverlays() );
+    this.overlay.setPosition(coordinate);
 
-    info.className = 'cssClass';
-
-    const feature = this.map.forEachFeatureAtPixel(pixel, function(feature) {
-        return feature;
-      });
+    const feature = this.map.forEachFeatureAtPixel(coordinate, feature => feature);
     if (feature) {
         console.log('feature', feature);
-        info.setAttribute('data-tooltip', feature.get('class'));
+        //TODO get all the information including a picture if any
+        //info.setAttribute('data-tooltip', feature.get('class'));
         // show the tooltip
       } else {
         // hide the tooltip
-        info.className = 'hide';
+        //info.className = 'hide';
       }
   };
-  this.map.on('pointermove', evt => {
+  this.map.on('click', evt => {
       if (evt.dragging) {
        // info.tooltip('hide');
         return;
       }
-      displayFeatureInfo(this.map.getEventPixel(evt.originalEvent));
+      displayFeatureInfo(evt.coordinate);
     });
   }
 

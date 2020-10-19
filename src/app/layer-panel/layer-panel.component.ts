@@ -89,19 +89,19 @@ ngOnInit(): void {
       * @param $event for the future, doing nothing with it so far.
       * @param item: item (layer) that was clicked on to start/stop editing
       */
-  $event.preventDefault();
-  $event.stopImmediatePropagation();
-  console.log('que entra..getting better', layer);
-  this.editLayerClick.emit(layer);  // with this the map should act accordingly to stop/start editing.
-    // tslint:disable-next-line:triple-equals
-  if (this.layerActive == layer.layerName) {
-    this.layerActive = null;
-    this.openLayersService.updateShowEditToolbar(false);
-  }
-  else {
-    this.layerActive = layer.layerName;
-  }
-}
+      $event.preventDefault();
+      $event.stopImmediatePropagation();
+      console.log('que entra..getting better', layer);
+      this.editLayerClick.emit(layer);  // with this the map should act accordingly to stop/start editing.
+      console.log('layer.layerName', layer.name);
+      if (this.layerActive === layer.name) {
+        this.layerActive = null;
+        this.openLayersService.updateShowEditToolbar(false);
+      }
+      else {
+        this.layerActive = layer.name;
+      }
+     }
 
   onOpacityLayerClick($event: any, layer: any){
   // TODO change opacity
@@ -111,16 +111,9 @@ ngOnInit(): void {
      */
     $event.preventDefault();
     $event.stopImmediatePropagation();
-    console.log('que viene.getting better', $event, layer.layerName);
-    this.editLayerClick.emit(layer);  // with this the map should act accordingly to stop/start editing.
-    // tslint:disable-next-line:triple-equals
-    if (this.layerActive == layer.layerName) {
-      this.layerActive = null;
-      this.openLayersService.updateShowEditToolbar(false);
-    }
-    else {
-      this.layerActive = layer.layerName;
-    }
+    console.log('colocar codigo aqui for opacity', $event, layer.layerName);
+    // this.editLayerClick.emit(layer);  // with this the map should act accordingly to stop/start editing.
+    // emit the event to chage opacity
   }
 
 
