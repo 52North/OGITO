@@ -1872,32 +1872,100 @@ startCopying()
   }
 startIdentifying()
 {
+  // for now identify everything in WMS and WFS
   // const info = document.getElementById('info');
   // info.setAttribute('data-tooltip', 'prueba1');
-  const displayFeatureInfo = coordinate => {
-    console.log(coordinate);
-    const hdms = toStringHDMS(coordinate);
+  const displayFeatureInfo = evt => {
+    console.log(evt.coordinate);
+    const hdms = toStringHDMS(evt.coordinate);
     this.content.nativeElement.innerHTML = '<p>You clicked here:</p><code>' + hdms + '</code>';
-    console.log (this.map.getOverlays() );
-    this.overlay.setPosition(coordinate);
-
-    const feature = this.map.forEachFeatureAtPixel(coordinate, feature => feature);
-    if (feature) {
-        console.log('feature', feature);
-        //TODO get all the information including a picture if any
-        //info.setAttribute('data-tooltip', feature.get('class'));
-        // show the tooltip
-      } else {
-        // hide the tooltip
-        //info.className = 'hide';
+    this.overlay.setPosition(evt.coordinate);
+    // #TODO code for getting features from WMS
+    // console.log("name", this.curEditingLayer.layerName, 'this.loadedWfsLayers', this.loadedWfsLayers);
+    // console.log('QUE', this.loadedWfsLayers.findIndex(x => x.layerName === this.curEditingLayer.layerName));
+    const viewResolution =  Number(this.view.getResolution());
+    // how to know if is a wms or wfs?
+    // filter by the current active layer being edited
+    if (this.loadedWfsLayers.findIndex(x => x.layerName === this.curEditingLayer.layerName) >= 0)
+    {
+      // console.log ('entra aqui WFS', this.fieldWFSLayers[this.curEditingLayer.layerName]);
+      const fieldsToShow = this.fieldWFSLayers[this.curEditingLayer.layerName];
+      // #TODO code for getting features from WFS
+      const featureValues = this.map.forEachFeatureAtPixel(evt.pixel, function (feature) {
+       // #TODO aqui -- chequear bounding box or margins..
+        let valuesToShow = {};
+        // console.log('feature', feature);
+        for (let key in fieldsToShow){
+           // console.log('feature.get(key);', feature.get(key));
+            valuesToShow [key] = feature.get(key);
+          }
+        return valuesToShow;   // here return all the values available
+      });
+      if (featureValues) {
+         console.log('featureValues', featureValues);
+        // Prepare html text with all the information
+        let text = '';
+        for (let key in featureValues){
+          if (key !== 'img'){
+          text = text.concat(key + ': ' + featureValues[key] + '<br>');
+        }
+        }
+      if (featureValues.img.length > 0) {
+          // visualize img if any  --> document somewhere that we will look for a field called 'img'
+        console.log('pasa X AQUI');
+        const folder = AppConfiguration.curProject.substring(0, AppConfiguration.curProject.lastIndexOf('/'));
+        text = text.concat(
+          '<img class=imgInfo src="' + folder + '/img/' + featureValues.img + '" alt="picture">');
       }
+      // this.content.nativeElement.innerHTML = 'Element:<br><code>' + text + '</code>';  // featureValues
+         this.content.nativeElement.innerHTML = '<div id="popupDiv">' + '<b> Element</b> </br>' + '<code>' + text + '</code>' + '</div>';
+
+        console.log('final text', this.content.nativeElement.innerHTML );
+      }
+    }
+    // get features from a WMS service
+    console.log ('entra aqui WMS');
+    const wmsSource = this.curEditingLayer.source;
+    const wmsUrl = wmsSource.getFeatureInfoUrl(
+      evt.coordinate,    // how to check this with EPSG # 4326 and 3857
+      viewResolution,
+      AppConfiguration.srsName,
+      {INFO_FORMAT: 'text/html'}
+    );
+    console.log('wmsUrl', wmsUrl);
+    if (wmsUrl) {
+      fetch(wmsUrl)
+        .then(response => response.text())
+        .then(html => this.content.nativeElement.innerHTML = html);
+    }
+    /*
+    map.on('singleclick', function (evt) {
+      document.getElementById('info').innerHTML = '';
+      var viewResolution = /** @type {number} */ //(view.getResolution());
+      /*var url = wmsSource.getFeatureInfoUrl(
+        evt.coordinate,
+        viewResolution,
+        'EPSG:3857',
+        {'INFO_FORMAT': 'text/html'}
+      );
+      if (url) {
+        fetch(url)
+          .then(function (response) { return response.text(); })
+          .then(function (html) {
+            document.getElementById('info').innerHTML = html;
+          });
+      }
+    }); */
+
+
+
   };
   this.map.on('click', evt => {
       if (evt.dragging) {
        // info.tooltip('hide');
         return;
       }
-      displayFeatureInfo(evt.coordinate);
+      displayFeatureInfo(evt); // evt.coordinate and evt.pixel are available
     });
   }
 
