@@ -621,10 +621,10 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy  {
       if (legendlayer.parentNode.nodeName !== 'legendgroup'){
         // layersWihoutGroup.push({name: layerName});  // let's try
         if (wfsLayersList.find(element => element === layerName)){
-          layersWithoutGroup.push({name: layerName, wfs: true});
+          layersWithoutGroup.push({name: layerName, wfs: true, onEdit: false});
         }
         else {
-          layersWithoutGroup.push({name: layerName, wfs: false});
+          layersWithoutGroup.push({name: layerName, wfs: false, onEdit: false});
         }
       }
     }
@@ -639,10 +639,10 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy  {
           const layerInGroup =  legendGroup.getElementsByTagName('legendlayer')[j].getAttribute('name');
           // console.log('layerInGroup', layerInGroup);
           if (wfsLayersList.find(element => element === layerInGroup)){
-            layersinGroup.push({name: layerInGroup, wfs: true});
+            layersinGroup.push({name: layerInGroup, wfs: true, onEdit: false});
           }
           else {
-            layersinGroup.push({name: layerInGroup, wfs: false});
+            layersinGroup.push({name: layerInGroup, wfs: false, onEdit: false});
           }
         }
         this.groupsLayers.push({name: groupName, layers: layersinGroup});
@@ -1451,6 +1451,16 @@ updateMapVisibleGroupLayer(selectedGroupLayer) {
       }
     });
   }
+findLayerinGroups(layerName: string): any {
+  for (const group of this.groupsLayers){
+    const lyr = group.layers.find(x => x.name === layerName);
+    if (lyr) {
+     // console.log ("la consigue en los grupos", lyr);
+      return (lyr);
+    }
+  }
+
+}
 
 updateEditingLayer(layerEditName) {
    console.log('evento emitido, que llega', layerEditName);
@@ -1458,21 +1468,27 @@ updateEditingLayer(layerEditName) {
      * if there were some edits --> asks for saving changes
      * @param layerName: the layer that the user select to start/stop editing
      * find the name selected in the layer panel to the layer loaded in this.wfsLoadedLayers
+     *  #TODO catch exceptions
      */
    const layer = this.loadedWfsLayers.find(x => x.layerName === layerEditName.name);
+   // find the layer in the groups to update the icon color
+   const lyr = this.findLayerinGroups(layerEditName.name);
    console.log('wfs layer with more description', layer);
    if (this.curEditingLayer) {
       // a layer was being edited - ask for saving changes
       this.stopEditing(this.curEditingLayer);  // test is changes are save to the rigth layer, otherwise it should go #
       if (this.curEditingLayer === layer) {
         this.curEditingLayer = null;
+        lyr.onEdit = false;
         return;
       }
     }
       // the user wants to switch to another layer, already the edit was stopped with the previous layer
-  this.curEditingLayer = layer;
-  this.startEditing(layer);
-    }
+   this.curEditingLayer = layer;
+   lyr.onEdit = true;
+   console.log ("la consigue y pone a editar?", lyr);
+   this.startEditing(layer);
+ }
 
 stopEditing(editLayer) {
       /** Disables the interactions on the map to start moving/panning and stop drawing

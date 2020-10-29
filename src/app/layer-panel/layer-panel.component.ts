@@ -3,6 +3,8 @@ import {Observable, of as observableOf, Subject, Subscription} from 'rxjs';
 import {CdkDragDrop, moveItemInArray} from '@angular/cdk/drag-drop';
 import {OpenLayersService} from '../open-layers.service';
 import {AppConfiguration} from '../app-configuration';
+import {MatIconRegistry} from '@angular/material/icon';
+import {DomSanitizer} from '@angular/platform-browser';
 
 @Component({
   selector: 'app-layer-panel',
@@ -18,14 +20,14 @@ export class LayerPanelComponent implements OnInit, AfterViewInit {
   @Output() layersOrder = new EventEmitter<any>();   // emit an event when layers were reordered (drop)
   @Output() layersBackOrder = new EventEmitter<any>();  // emit an event when the order of base layers changes
   @Output() layerBackVisClick = new EventEmitter<any>(); // emit an event when the edit button of a layer is clicked
-
+  @Output() identifyLayerClick = new EventEmitter<any>();  // #TODO link in maps
 
   x = 0;
   y = 0;
   startX = 0;
   startY = 0;
   selectedOptions = [];
-  layerActive:any;
+  layerActive: any;
  // preSelection = AppConfiguration.layerBaseList2.base_img.name; // ['name']];// 'OSM' The name
 //  editLayers = [['0'], ['1']];
   baseLayers = []; // WMS layers as background; layers; too ?
@@ -34,8 +36,13 @@ export class LayerPanelComponent implements OnInit, AfterViewInit {
 
 
 
-constructor(private openLayersService: OpenLayersService){}
+constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private openLayersService: OpenLayersService) {
 
+  iconRegistry.addSvgIcon(
+    'identify',
+    sanitizer.bypassSecurityTrustResourceUrl('assets/img/identify-24px2.svg')
+  );
+}
  drop(event: CdkDragDrop<string[]>) {
     /** Moves the layers in the panel after a drop gesture and emits a layersOrder event
      * that is capture by the map component that effectively reorder the layers in the map.
@@ -100,7 +107,15 @@ ngOnInit(): void {
       }
       else {
         this.layerActive = layer.name;
+        // change style of the edit button
+        /* const classList = $event.target.classList;
+        const classes = $event.target.className;
+        console.log('lista de clases del boton antes', classList);
+        classes.includes('clicked') ? classList.remove('clicked') : classList.add('clicked');
+        console.log('lista de clases del boton', classList);*/
       }
+      console.log('maybe change the edit icon.. to remind user that layer is being edited? or add another in front and make visible..')
+
      }
 
   onOpacityLayerClick($event: any, layer: any){
@@ -116,6 +131,19 @@ ngOnInit(): void {
     // emit the event to chage opacity
   }
 
+  onIdentifyLayerClick($event: any, layer: any) {
+    // TODO identify features
+    /** enables identifies features in a layer
+     * @param $event for the future, doing nothing with it so far.
+     * @param item: item (layer) that was clicked on to change opacity
+     */
+    $event.preventDefault();
+    $event.stopImmediatePropagation();
+    this.identifyLayerClick.emit(layer);  // with this the map should act accordingly to stop/start editing.
+    console.log('to start identify layer, check the layer active thing', layer.name);
+    this.layerActive = layer.name;
+
+  }
 
 
 closeLayerPanel(value: any) {

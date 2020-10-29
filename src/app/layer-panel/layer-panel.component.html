@@ -26,6 +26,7 @@
        </mat-panel-title>
         </mat-expansion-panel-header>
         <mat-selection-list>
+
           <mat-list-option class="example-box mat-primary" *ngFor="let layer of group.layers" [value]="layer.name"
                            (click)="onLayerVisClick($event,layer,group.name)" checkboxPosition="before"
                            [ngClass]="layerActive == layer.name? 'active': 'normal'" selected="true">
@@ -34,10 +35,14 @@
                 {{layer.name}} <!-- {{layer['layerTitle']}} -->
               </div>
               <div *ngIf="layer.wfs">
-                <button mat-icon-button (click)="onEditLayerClick($event,layer)">
+                <button mat-icon-button
+                        (click)="onEditLayerClick($event,layer)" [ngClass]="layer.onEdit ? 'onEdit': 'normal'">
                   <mat-icon  class= "editIcon">edit</mat-icon>
                 </button>
               </div>
+              <button mat-icon-button (click)="onIdentifyLayerClick($event, layer)">
+                <mat-icon  class= "infoIcon">identify</mat-icon>
+              </button>
               <button mat-icon-button (click)="onOpacityLayerClick($event, layer)">
                 <mat-icon  class= "editIcon">opacity</mat-icon>
               </button>

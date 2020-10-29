@@ -6,12 +6,10 @@
   text-align: center;
   padding-top: 0;
   padding-left: 0;
-  margin-top: 0;
+  margin-top: 5px;
   padding-right: 0;
 }
-.editIcon :hover {
-  background-color: #fff2e1 !important;
-}
+
 .spacer {
   flex: 1 1 auto;
 }
@@ -130,7 +128,19 @@
 
 :host ::ng-deep .mat-icon-button {
   width: 1.3vw !important;
+  height: 1.3vw !important;
+  top: 0.3vw !important;
 }
+:host ::ng-deep .mat-icon {
+  //top: 0.3vw !important;
+  margin-top: -1.3vw !important;
+}
+
+
+// mat-focus-indicator mat-icon-button mat-button-base
+
+// mat-focus-indicator mat-icon-button mat-button-base
+
 .panelTitle {
   padding-left: 1vw;
   padding-top: 0.3vw;
@@ -138,6 +148,12 @@
 .active {
   background: #fff2e1;
 }
+
+.onEdit{
+  background: #d6c0c8;
+  // padding-top: -0.3vw;
+}
+
 :host ::ng-deep .mat-expansion-panel-header {
   padding: 0 8px;
   border-bottom-width: 1px;
