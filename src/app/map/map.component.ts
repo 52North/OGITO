@@ -340,25 +340,31 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
           let layerName = layer.getElementsByTagName('Name')[0].childNodes[0].nodeValue;
           let layerTittle = layer.getElementsByTagName('Title')[0].childNodes[0].nodeValue;
           // const layerLegendUrl = layer.getAttribute('Tittle');
-          let layerLegendUrl = layer.getElementsByTagName('LegendURL')[0].childNodes[0].nodeValue;
-          console.log('checkpoint', j, layerName, layerTittle, layerLegendUrl, layerLegendUrl);
+          // let layerLegendUrl = layer.getElementsByTagName('LegendURL')[0].childNodes[0].nodeValue;
+          // let layerLegendUrl = layer.getElementsByTagName('LegendURL')[0];
+          let urlResource = layer.querySelector('OnlineResource').getAttribute('xlink:href');
+          console.log('urlResource', urlResource);
+          console.log('checkpoint', j, layerName, layerTittle, urlResource);
           if (wfsLayerList.find(element => element === layerName)) {
             layerIsWfs = true;
             }
           listLayersinGroup.push({
             'layerName': layerName,
             'layerTittle':layerTittle,
-            'layerLegendUrl':layerLegendUrl,
+            'layerLegendUrl':urlResource,
             'wfs':layerIsWfs
           });
         }
         // get url for wms, wfs, getLegend and getStyles
         groupList.push({
         'groupName': groupName,
-        'groupTittle':groupTittle
+        'groupTittle':groupTittle,
+        'layers':listLayersinGroup
         });
       }
+
     }
+    console.log('groupList', groupList);
     // get the order in which layers are rendered
    // this.layersOrder.push(layerName); // #TODO evaluate if this is needed or worthy, it is not being used somewhere else
     // register the project projection definion in proj4 format
