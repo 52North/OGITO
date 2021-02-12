@@ -12,5 +12,5 @@
 <app-layer-panel [editLayers]="loadedWfsLayers"  [groupLayers] = "groupsLayers"
                  (layerVisClick)="updateMapVisibleLayer($event)"
 (editLayerClick)="updateEditingLayer($event)"  (groupLayerVisClick)="updateMapVisibleGroupLayer($event)"
-(layersOrder) = "updateOrderGroupsLayers($event)"></app-layer-panel>
-
+(layersOrder) = "updateOrderGroupsLayers($event)"
+(identifyLayerClick)="startIdentifying($event)"></app-layer-panel>

@@ -1,8 +1,8 @@
-import {Component, OnInit, AfterViewInit, Input, Output, SimpleChange, OnChanges, EventEmitter, ViewChild, ElementRef} from '@angular/core';
-import {Observable, of as observableOf, Subject, Subscription} from 'rxjs';
+import {Component, OnInit, AfterViewInit, Input, Output, EventEmitter} from '@angular/core';
+import {Observable, of as observableOf} from 'rxjs';
 import {CdkDragDrop, moveItemInArray} from '@angular/cdk/drag-drop';
 import {OpenLayersService} from '../open-layers.service';
-import {AppConfiguration} from '../app-configuration';
+
 import {MatIconRegistry} from '@angular/material/icon';
 import {DomSanitizer} from '@angular/platform-browser';
 
@@ -39,7 +39,7 @@ export class LayerPanelComponent implements OnInit, AfterViewInit {
 constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private openLayersService: OpenLayersService) {
 
   iconRegistry.addSvgIcon(
-    'identify',
+    'getInfo',
     sanitizer.bypassSecurityTrustResourceUrl('assets/img/identify-24px2.svg')
   );
 }
@@ -91,31 +91,40 @@ ngOnInit(): void {
        this.addingGroupsLayers();
      }
 
-     onEditLayerClick($event: any, layer: any){
+     onEditLayerClick($event: any, layer: any, groupName:string){
      /** allows to start editing a particular layer in the layer panel
       * @param $event for the future, doing nothing with it so far.
-      * @param item: item (layer) that was clicked on to start/stop editing
+      * @param layer: layer that was clicked on to start/stop editing
       */
       $event.preventDefault();
       $event.stopImmediatePropagation();
       console.log('que entra..getting better', layer);
       this.editLayerClick.emit(layer);  // with this the map should act accordingly to stop/start editing.
-      console.log('layer.layerName', layer.name);
+      // console.log('layer.layerName', layer.name, 'layerActive?', this.layerActive);
       if (this.layerActive === layer.name) {
-        this.layerActive = null;
-        this.openLayersService.updateShowEditToolbar(false);
-      }
-      else {
+        if (layer.onEdit){
+          // the layer was on Editing mode, so the editing action must be stopped
+          this.layerActive = null;
+          layer.onEdit = false;
+          this.openLayersService.updateShowEditToolbar(false);
+          return;
+        }
+        // the layer was in identifying
         this.layerActive = layer.name;
+        layer.onEdit = true;
+        this.openLayersService.updateShowEditToolbar(true);
+        return;
+      }
+      this.layerActive = layer.name;
+      layer.onEdit = true;
+      this.openLayersService.updateShowEditToolbar(true);
         // change style of the edit button
         /* const classList = $event.target.classList;
         const classes = $event.target.className;
         console.log('lista de clases del boton antes', classList);
         classes.includes('clicked') ? classList.remove('clicked') : classList.add('clicked');
         console.log('lista de clases del boton', classList);*/
-      }
       console.log('maybe change the edit icon.. to remind user that layer is being edited? or add another in front and make visible..')
-
      }
 
   onOpacityLayerClick($event: any, layer: any){
@@ -131,7 +140,8 @@ ngOnInit(): void {
     // emit the event to chage opacity
   }
 
-  onIdentifyLayerClick($event: any, layer: any) {
+
+  onIdentifyLayerClick($event: any, layer: any, groupName: any) {
     // TODO identify features
     /** enables identifies features in a layer
      * @param $event for the future, doing nothing with it so far.
@@ -139,10 +149,18 @@ ngOnInit(): void {
      */
     $event.preventDefault();
     $event.stopImmediatePropagation();
-    this.identifyLayerClick.emit(layer);  // with this the map should act accordingly to stop/start editing.
-    console.log('to start identify layer, check the layer active thing', layer.name);
-    this.layerActive = layer.name;
-
+    this.identifyLayerClick.emit({layer, groupName});  // with this the map should act accordingly to stop/start editing.
+    console.log('to start identify layer, check the layer active thing', layer);
+    if (this.layerActive === layer.name) {
+      if (!layer.onEdit){
+        // the layer was not on Editing mode, so the identifying action must be stopped
+        this.layerActive = null;
+        this.identifyLayerClick.emit(null);
+      }
+    }
+    else {
+      this.layerActive = layer.name;
+    }
   }
 
 
@@ -150,7 +168,7 @@ closeLayerPanel(value: any) {
   /** Updates the value of the observable $showLayerPanel$ that controls the layer Panel visibility
    * @param value, type boolean
    */
-  console.log(value);
+  // console.log(value);
   this.showLayerPanel$ = observableOf(value);
   }
  onPanStart(event: any): void {
@@ -195,6 +213,14 @@ onPan(event: any): void {
     // Actualizando las lista de las capas
     this.layerBackVisClick.emit(this.selectedOptions);  // the order
     // this.selectedOption =$event;
+  }
+
+  onSelectedChanged($event: any){
+    console.log('probando esto a lo loco $event.option.value', $event.option.value, $event );
+    if ($event.option.value.isChecked) {
+        $event.option.selected = true;
+        $event.stopImmediatePropagation();
+      }
   }
 
   onLayerVisClick(  $event: any, layer: any, groupName: any){

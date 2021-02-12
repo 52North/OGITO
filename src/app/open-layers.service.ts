@@ -28,6 +28,8 @@ export class OpenLayersService {
   editAction$ = this.editActionSource.asObservable();
   private zoomHomeSource = new Subject<boolean>();
   zoomHome$ = this.zoomHomeSource.asObservable();
+  private qgsProjectUrlSource = new Subject<any>();
+  qgsProjectUrl$ = this.qgsProjectUrlSource.asObservable();
   constructor() { }
 
   updateExistingProject(projectOpened: boolean){
@@ -76,7 +78,10 @@ export class OpenLayersService {
     console.log('HERE all good');
     this.showEditToolbarSource.next(visible);
   }
-
+  updateQgsProjectUrl(url: any)
+  {
+    this.qgsProjectUrlSource.next(url);
+  }
 
   updateShowLayerPanel(visible: boolean) {
     /** Updates the observable to the next value

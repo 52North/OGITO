@@ -6,8 +6,8 @@
 <mat-card class = 'layerPanelCard'>
   <mat-card-title-group>
       <mat-card-title class ="panelTitle">Layers  </mat-card-title>
-      <button mat-mini-fab   (click)="closeLayerPanel(false)" class="matCloseWrapper" >
-        <mat-icon  class= "closeIcon">close</mat-icon>
+      <button mat-flat-button   (click)="closeLayerPanel(false)" class="matCloseWrapper" >
+        <mat-icon>close</mat-icon>
       </button>
   </mat-card-title-group>
   <mat-divider class = "toolbarDivider"></mat-divider>
@@ -25,7 +25,7 @@
         </mat-selection-list>
        </mat-panel-title>
         </mat-expansion-panel-header>
-        <mat-selection-list>
+        <mat-selection-list (selectionChange)="onSelectedChanged($event)">
 
           <mat-list-option class="example-box mat-primary" *ngFor="let layer of group.layers" [value]="layer.name"
                            (click)="onLayerVisClick($event,layer,group.name)" checkboxPosition="before"
@@ -36,16 +36,20 @@
               </div>
               <div *ngIf="layer.wfs">
                 <button mat-icon-button
-                        (click)="onEditLayerClick($event,layer)" [ngClass]="layer.onEdit ? 'onEdit': 'normal'">
+                        (click)="onEditLayerClick($event, layer, group.name)" >
                   <mat-icon  class= "editIcon">edit</mat-icon>
                 </button>
               </div>
-              <button mat-icon-button (click)="onIdentifyLayerClick($event, layer)">
-                <mat-icon  class= "infoIcon">identify</mat-icon>
+              <div>
+
+              <!-- try the identify button in the layer panel -->
+              <button mat-icon-button (click)="onIdentifyLayerClick($event, layer, group.name)">
+                <mat-icon class= "editIcon" >info_outline</mat-icon>
               </button>
-              <button mat-icon-button (click)="onOpacityLayerClick($event, layer)">
-                <mat-icon  class= "editIcon">opacity</mat-icon>
-              </button>
+                <button mat-icon-button (click)="onOpacityLayerClick($event, layer)">
+                  <mat-icon  class= "editIcon">opacity</mat-icon>
+                </button>
+              </div>
             </div>
           </mat-list-option>
         </mat-selection-list>

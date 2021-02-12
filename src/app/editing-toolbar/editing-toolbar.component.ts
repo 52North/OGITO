@@ -76,7 +76,10 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
     'measureArea',
     sanitizer.bypassSecurityTrustResourceUrl('assets/img/measure-area-24px.svg')
   );
-
+  iconRegistry.addSvgIcon(
+    'add_location_attr',
+    sanitizer.bypassSecurityTrustResourceUrl('assets/img/add_location_attr-24px.svg')
+  );
 
   this.subsToShowEditToolbar = this.openLayersService.showEditToolbar$.subscribe(
     (data) => {

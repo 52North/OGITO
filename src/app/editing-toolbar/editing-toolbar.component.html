@@ -8,6 +8,10 @@
                 (click)="drawingShapes('Point')" matTooltip="Add point/marker TEST GITHUB workflow" [ngClass]="actionActive['Point'] ? 'active': 'normal'">
         <mat-icon>add_location</mat-icon>
       </button>
+      <button   *ngIf= " (layerTypeEdit$ == 'Point' || layerTypeEdit$ == 'Multi') " mat-icon-button
+                (click)="drawingShapes('PointAttr')" matTooltip="Add point/marker + attribute TEST GITHUB workflow" [ngClass]="actionActive['Point'] ? 'active': 'normal'">
+        <mat-icon svgIcon="add_location_attr"></mat-icon>
+      </button>
       <button mat-icon-button *ngIf="(layerTypeEdit$ == 'Line' || layerTypeEdit$ =='Multi' || layerTypeEdit$ == 'Polygon') "
               (click)="drawingShapes('LineString')" matTooltip="Add line" [ngClass]="actionActive['LineString'] ? 'active': 'normal'">
         <mat-icon    svgIcon="add_line"></mat-icon>

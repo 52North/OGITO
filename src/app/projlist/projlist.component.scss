@@ -1,0 +1,21 @@
+.project-list {
+  // width: 13%;
+  max-width: 20%;
+  border: solid 1px #ccc;
+  min-height: 40px;
+  display: block; // este esta bien
+  //background: darkred;
+  border-radius: 4px;
+  overflow: auto;
+  margin-left: 0;   // 4%
+  margin-top: 0;    // 5%
+  z-index: 3;
+  position: absolute;
+  opacity:0.95;
+  left: 40%;
+  top: 30%;
+}
+.example-list:hover{
+  cursor:pointer;
+  //border-bottom-color: aqua;
+}

@@ -12,6 +12,7 @@ import { SymbolListComponent } from './symbol-list/symbol-list.component';
 import { ToolbarComponent } from './toolbar/toolbar.component';
 import {FormsModule} from '@angular/forms';
 import {HttpClientModule } from '@angular/common/http';
+import { ProjlistComponent } from './projlist/projlist.component';
 @NgModule({
   declarations: [
     AppComponent,
@@ -20,7 +21,8 @@ import {HttpClientModule } from '@angular/common/http';
     EditingToolbarComponent,
     LayerPanelComponent,
     SymbolListComponent,
-    ToolbarComponent
+    ToolbarComponent,
+    ProjlistComponent
   ],
   imports: [
     BrowserModule,

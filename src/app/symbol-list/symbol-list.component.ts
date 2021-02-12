@@ -44,9 +44,11 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
   );
   this.subscriptionToLayerEditing = this.openLayersService.layerEditing$.subscribe(
     data => {
+      console.log('que viene de ol service data:', data);
       this.styles = this.mapQgsStyleService.getLayerStyle(data.layerName);
       // console.log('styles in symbolList.. pasito a pasito', this.styles);
       this.symbols$ = this.getSymbolList (this.styles);
+      console.log('styles', this.styles);
       this.symbolsLength = Object.keys(this.symbols$).length;
       this.geometryTypeSymbols = data.layerGeom;
     },
@@ -85,7 +87,7 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
     /** Creates a dictionary with the styles per class when needed
      * @param styles: the array with the classes and styles
      */
-
+    console.log('styles', styles);
     let symbolDict = {};
     for (const key of Object.keys(styles)){
       // console.log(`${key} -> ${styles[key].value}`);
@@ -119,6 +121,7 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
         canvas.nativeElement.height = height;
         // console.log('width and height', height, width, canvas.nativeElement.width , devicePixelRatio  );
         const render = toContext(canvas.nativeElement.getContext('2d'));
+        console.log(' que llega a this.symbols$', this.symbols$);
         let stylelayer = this.symbols$[key].style;
         // console.log('que hay en stylelayer', stylelayer);
         let stylelayerClone = [];   // clone the style hopefully deep copy
@@ -177,11 +180,12 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
         // console.log('stylelayerClone', stylelayerClone);
         if (stylelayerClone.length > 0) {
           for (let style of stylelayerClone) {
+            console.log(' one style in several', style );
             render.drawFeature(feature, style);
           }
         } else {
           for (let style of stylelayer) {
-            // console.log('style', style );
+            console.log(' one style', style );
             render.drawFeature(feature, style);
           }
         }

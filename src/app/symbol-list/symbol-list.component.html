@@ -3,9 +3,10 @@
 <mat-card class="symbol-list"  #symListCard>
   <mat-card-title-group>
     <mat-card-title class="panelTitle">Symbols</mat-card-title>
-    <button mat-mini-fab (click)="closeListSymbols()" class="matCloseWrapper">
-      <mat-icon  class= "closeIcon">close</mat-icon>
+    <button mat-flat-button (click)="closeListSymbols()" class="matCloseWrapper">
+      <mat-icon >close</mat-icon>
     </button>
+
   </mat-card-title-group>
   <mat-divider class = "toolbarDivider"></mat-divider>
   <span *ngIf= "symbolsLength == 0"> ..creating List of Symbols</span>
