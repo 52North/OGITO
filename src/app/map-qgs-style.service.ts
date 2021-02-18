@@ -374,14 +374,22 @@ export class MapQgsStyleService {
      */
   }
 
-  createWFSlayerStyles(xmlStyle: String){
+  createWFSlayerStyles(xmlTextStyle: any){
     /**
      * Creates symbols
      */
-    console.log('xmlStyle', xmlStyle);
-    const parser = new Parser({trim: true});
-    parser.parseString(xmlStyle, (err, result) => {
-        console.dir(result);
+    // console.log('xmlStyle', xmlStyle);
+    /*const xmlParser = new DOMParser();
+    const xmlStyle= xmlParser.parseFromString(xmlTextStyle, 'text/xml');
+    console.log ('xmlStyle', xmlStyle);
+    let layers =  xmlStyle.getElementsByTagName('NamedLayer')[0];
+    console.log('layers', layers); */
+    const parser = new Parser();
+    parser.parseString(xmlTextStyle, (err, result) => {
+      let jsonStyle = result;
+      console.log( 'que sale', jsonStyle);
+      console.log(jsonStyle.StyledLayerDescriptor.NamedLayer);
+      // lets parse a JSON 
       });
 
 
