@@ -302,7 +302,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       wfsLayerList.push(WFSLayers.getElementsByTagName('WFSLayer')[k].getAttribute('name'));
     }
     // console.log('wfsLayerList', wfsLayerList);
-    let rootLayer = xmlText.getElementsByTagName('Layer')[0];
+    const rootLayer = xmlText.getElementsByTagName('Layer')[0];
     console.log('rootLayer', rootLayer);
     // get the CRS in EPSG format
     let crs: string;
@@ -310,12 +310,26 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       // the epsg code comes in the second place in the list
       crs = rootLayer.getElementsByTagName('CRS')[1].childNodes[0].nodeValue;
       console.log('crs', crs);
+      // Projected Bounding box
+      const projBBOX = rootLayer.getElementsByTagName('BoundingBox')[0];
+      this.mapCanvasExtent = [Number(projBBOX.getAttribute('minx')), Number(projBBOX.getAttribute('maxx')),
+        Number(projBBOX.getAttribute('miny') ), Number(projBBOX.getAttribute('maxy'))];
+      this.srsID = projBBOX.getAttribute('CRS');
+      console.log('CRS', this.srsID, AppConfiguration.projDefs[this.srsID.replace(/\D/g, '')]);
+      proj4.defs(this.srsID, AppConfiguration.projDefs[this.srsID.replace(/\D/g, '')]);
+      register(proj4);
     }
-    const BBOX = rootLayer.getElementsByTagName('EX_GeographicBoundingBox')[0];
-    const westBoundLongitude = BBOX.getElementsByTagName('westBoundLongitude')[0].childNodes[0].nodeValue;
-    const eastBoundLongitude = BBOX.getElementsByTagName('eastBoundLongitude')[0].childNodes[0].nodeValue;
-    const southBoundLatitude = BBOX.getElementsByTagName('southBoundLatitude')[0].childNodes[0].nodeValue;
-    const northBoundLatitude = BBOX.getElementsByTagName('northBoundLatitude')[0].childNodes[0].nodeValue;
+    else {
+      const BBOX = rootLayer.getElementsByTagName('EX_GeographicBoundingBox')[0];
+      const westBoundLongitude = Number(BBOX.getElementsByTagName('westBoundLongitude')[0].childNodes[0].nodeValue);
+      const eastBoundLongitude = Number(BBOX.getElementsByTagName('eastBoundLongitude')[0].childNodes[0].nodeValue);
+      const southBoundLatitude = Number(BBOX.getElementsByTagName('southBoundLatitude')[0].childNodes[0].nodeValue);
+      const northBoundLatitude = Number(BBOX.getElementsByTagName('northBoundLatitude')[0].childNodes[0].nodeValue);
+      this.srsID = 'EPSG:4326';
+      this.mapCanvasExtent = [westBoundLongitude, eastBoundLongitude, northBoundLatitude, southBoundLatitude];
+    }
+
+
     // console.log('BBOX', BBOX, westBoundLongitude, eastBoundLongitude, southBoundLatitude, northBoundLatitude);
     const nGroups = rootLayer.getElementsByTagName('Layer').length;
     const layerList = xmlText.querySelectorAll('Layer > Layer');
@@ -323,43 +337,43 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     console.log('another try', rootLayer.querySelectorAll('Layer') );
     // console.log('nGroups', nGroups, 'children', rootLayer.children);
     // console.log('children[0]', rootLayer.children[0]);
-    let groupList = [];
+    const groupList = [];
     for (let i = 0; i < rootLayer.getElementsByTagName('Layer').length; i++) {
-      let node = layerList[i];
+      const node = layerList[i];
       if (node.getElementsByTagName('Layer').length > 0) {
       // tiene layer dentro es un grupo...
-        let groupName = layerList[i].getElementsByTagName('Name')[0].childNodes[0].nodeValue;
-        let groupTittle = layerList[i].getElementsByTagName('Title')[0].childNodes[0].nodeValue;
-        console.log('group details', i, groupName, groupTittle);
-        let layersinGroup = layerList[i].querySelectorAll('Layer > Layer'); // devuelve in node
-        console.log('layers in Group', layersinGroup);
-        let listLayersinGroup = [];
+        const groupName = layerList[i].getElementsByTagName('Name')[0].childNodes[0].nodeValue;
+        const groupTittle = layerList[i].getElementsByTagName('Title')[0].childNodes[0].nodeValue;
+        // console.log('group details', i, groupName, groupTittle);
+        const layersinGroup = layerList[i].querySelectorAll('Layer > Layer'); // devuelve in node
+        // console.log('layers in Group', layersinGroup);
+        const listLayersinGroup = [];
         for (let j = 0; j < layersinGroup.length; j++) {
           let layerIsWfs = false;
-          let layer = layersinGroup.item(j);
-          let layerName = layer.getElementsByTagName('Name')[0].childNodes[0].nodeValue;
-          let layerTittle = layer.getElementsByTagName('Title')[0].childNodes[0].nodeValue;
+          const layer = layersinGroup.item(j);
+          const layerName = layer.getElementsByTagName('Name')[0].childNodes[0].nodeValue;
+          const layerTittle = layer.getElementsByTagName('Title')[0].childNodes[0].nodeValue;
           // const layerLegendUrl = layer.getAttribute('Tittle');
           // let layerLegendUrl = layer.getElementsByTagName('LegendURL')[0].childNodes[0].nodeValue;
           // let layerLegendUrl = layer.getElementsByTagName('LegendURL')[0];
-          let urlResource = layer.querySelector('OnlineResource').getAttribute('xlink:href');
-          console.log('urlResource', urlResource);
-          console.log('checkpoint', j, layerName, layerTittle, urlResource);
+          const urlResource = layer.querySelector('OnlineResource').getAttribute('xlink:href');
+          // console.log('urlResource', urlResource);
+          // console.log('checkpoint', j, layerName, layerTittle, urlResource);
           if (wfsLayerList.find(element => element === layerName)) {
             layerIsWfs = true;
             }
           listLayersinGroup.push({
-            'layerName': layerName,
-            'layerTittle':layerTittle,
-            'layerLegendUrl':urlResource,
-            'wfs':layerIsWfs
+            layerName: layerName,
+            layerTittle: layerTittle,
+            layerLegendUrl: urlResource,
+            wfs: layerIsWfs
           });
         }
         // get url for wms, wfs, getLegend and getStyles
         groupList.push({
-        'groupName': groupName,
-        'groupTittle':groupTittle,
-        'layers':listLayersinGroup
+        groupName: groupName,
+        groupTittle: groupTittle,
+        layers: listLayersinGroup
         });
       }
 
@@ -369,7 +383,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
    // this.layersOrder.push(layerName); // #TODO evaluate if this is needed or worthy, it is not being used somewhere else
     // register the project projection definion in proj4 format
    // const projectionDef = xmlText.getElementsByTagName('proj4')[0].childNodes[0].nodeValue;
-    // this.srsID = xmlText.getElementsByTagName('authid')[0].childNodes[0].nodeValue;
+   // this.srsID = xmlText.getElementsByTagName('authid')[0].childNodes[0].nodeValue;
 
     // get the url for wfs and wms
 
@@ -402,10 +416,10 @@ updateMapv0() {
     }
   );
 }
-ngOnInit() : void {
+ngOnInit(): void {
     // initialize the map
     this.initializeMap();
-  };
+  }
 
 setIdentifying() {
     console.log('this.curInfoLayer.source in setIdentifying', this.curInfoLayer);
@@ -530,8 +544,7 @@ updateMapView() {
     const leftMinCorner = new Point([this.mapCanvasExtent[0], this.mapCanvasExtent[2]]);
     const rightMinCorner = new Point([this.mapCanvasExtent[1], this.mapCanvasExtent[2]]);
     const leftMaxCorner = new Point([this.mapCanvasExtent[0], this.mapCanvasExtent[3]]);
-    // console.log ('extent and puntos', this.mapCanvasExtent, leftMinCorner.getCoordinates(),
-    //  rightMinCorner.getCoordinates(), leftMaxCorner.getCoordinates());
+    console.log ('extent and puntos',  rightMinCorner.getCoordinates(), leftMaxCorner.getCoordinates());
     const hDistance = getDistance(transform(leftMinCorner.getCoordinates(), this.srsID, this.wgs84ID),
       transform(rightMinCorner.getCoordinates(), this.srsID, this.wgs84ID));
     const vDistance = getDistance(transform(leftMaxCorner.getCoordinates(), this.srsID, this.wgs84ID),
@@ -2208,7 +2221,7 @@ startIdentifying(layerOnIdentifying: any)
   this.curInfoLayer = layer;   // this is a real OL layer
   }
 
-formatHtmlInfoResponse(json: string) : string {
+formatHtmlInfoResponse(json: string): string {
     /*
     Transform the text response from a WMS request into a more 'friendly' format
      */

@@ -18,12 +18,13 @@ export class ProjlistComponent implements OnInit {
     url: AppConfiguration.hostname + 'qgs_projects/noise2.qgs',
     file: this.projectFolder + 'noise2.qgs',
     img: AppConfiguration.hostname + 'qgs_projects/noise.png'
-  },
+  }/*,
     { name: 'Renewable Energy Twente',
   url: AppConfiguration.hostname + 'qgs_projects/losser.qgs',
   file: this.projectFolder + 'retwente.qgs',
   img: AppConfiguration.hostname + 'qgs_projects/retwente.png'
-  }];
+  }*/
+  ];
 
   constructor( private  openLayersService: OpenLayersService, private sanitizer: DomSanitizer) {
   }
