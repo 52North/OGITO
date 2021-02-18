@@ -285,6 +285,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
          // console.log('data', data);
          this.parseQgsProject(data);
          this.updateMapView();
+         // #TODO check if we should use a promise here, cretae styles then load wfs layers
+         this.workQgsProject();
        }
        )
      .catch(error => console.error(error));
@@ -293,6 +295,9 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   parseQgsProject(gqsProjectinfo: any){
+    /**
+     * The styles for WFS layers are called from here
+     */
     const xmlParser = new DOMParser();
     const xmlText = xmlParser.parseFromString(gqsProjectinfo, 'text/xml');
     console.log ('xmlText', xmlText);
@@ -385,7 +390,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
    // const projectionDef = xmlText.getElementsByTagName('proj4')[0].childNodes[0].nodeValue;
    // this.srsID = xmlText.getElementsByTagName('authid')[0].childNodes[0].nodeValue;
 
-    // get the url for wfs and wms
+    // get the styles for WFS layers
+    this.mapQgsStyleService.createAllLayerStyles(this.qgsProjectFile, wfsLayerList);
 
   }
 
@@ -609,13 +615,13 @@ workQgsProject() {
      * it send these capabilities to other functions to load the WMS and WFS layers
      */
     // Load WFS layers
-    console.log('groups', this.groupsLayers);
-    const qGsProject = '&map=' + AppConfiguration.QgsFileProject;
+    // console.log('groups', this.groupsLayers);
+    const qGsProject = '&map=' + this.qgsProjectFile;
     const qGsServerUrl = AppConfiguration.qGsServerUrl;
     const capRequest = '&REQUEST=GetCapabilities';
     const wfsVersion = 'SERVICE=WFS&VERSION=' + AppConfiguration.wfsVersion;
     const urlWFS = qGsServerUrl + wfsVersion + capRequest + qGsProject;
-    // console.log('urlWFS', urlWFS);
+    console.log('urlWFS', urlWFS);
     const xmlWFS = fetch(urlWFS)
       .then(response => response.text())
       .then(text => {
@@ -1502,27 +1508,27 @@ loadWFSlayers(XmlCapText) {
       const lowCorner = bBox.getElementsByTagName('ows:LowerCorner')[0].childNodes[0].nodeValue;   // x and y
       const upperCorner = bBox.getElementsByTagName('ows:UpperCorner')[0].childNodes[0].nodeValue; // x and y
       // adding a log message for a warning concerning the extension
-      // tslint:disable-next-line:triple-equals
-      if ((lowCorner.split(' ')[0] == '0' && lowCorner.split(' ')[1] == '0')
-        // tslint:disable-next-line:triple-equals
-        && (upperCorner.split(' ')[0] == '0' && upperCorner.split(' ')[1] == '0')) {
+
+      if ((lowCorner.split(' ')[0] === '0' && lowCorner.split(' ')[1] === '0')
+
+        && (upperCorner.split(' ')[0] === '0' && upperCorner.split(' ')[1] === '0')) {
         // #TODO uncomment alert (`The BBOX of ${ layerTitle } might be misConfigured, please check the WFS service`);
       }
       // #TODO: raise a warning if the operations excludes Query, Insert, Update or delete
-      // console.log("bBox", dimensions, [lowCorner.split(" ")[0], lowCorner.split(" ")[1]]);
+      console.log('layerName', layerName);
       if (layerName.length > 0) {
         // store layer properties to use later
         const geom = this.findGeometryType(layerName);
         // check editable fields
         // load the layer in the map
-        const qGsProject = AppConfiguration.QgsFileProject;
+
+        const qGsProject = '&map=' + this.qgsProjectFile;
         const qGsServerUrl = AppConfiguration.qGsServerUrl;
         const outputFormat = '&outputFormat=GeoJSON';
         const loadedLayers = [];
         const wfsVersion = 'SERVICE=WFS&VERSION=' + AppConfiguration.wfsVersion;
-        // console.log('layername', layerName, 'urlWFS', urlWFS);
         const urlWFS = qGsServerUrl + wfsVersion + '&request=GetFeature&typename=' + layerName +
-          outputFormat + '&srsname=' + defaultSRS + '&map=' + qGsProject;
+          outputFormat + '&srsname=' + defaultSRS + qGsProject;
         try {
           const vectorSource = new VectorSource({
             format: new GeoJSON(),

@@ -3,6 +3,7 @@ import CircleStyle from 'ol/style/Circle';
 import {Fill, RegularShape, Stroke, Style, Icon, Text, Circle} from 'ol/style';
 import {DEVICE_PIXEL_RATIO} from 'ol/has.js';
 import {AppConfiguration} from './app-configuration';
+import {Parser} from 'xml2js';
 
 @Injectable({
   providedIn: 'root'
@@ -372,6 +373,36 @@ export class MapQgsStyleService {
      * @returns {Style} default style to render the feature
      */
   }
+
+  createWFSlayerStyles(xmlStyle: String){
+    /**
+     * Creates symbols
+     */
+    console.log('xmlStyle', xmlStyle);
+    const parser = new Parser({trim: true});
+    parser.parseString(xmlStyle, (err, result) => {
+        console.dir(result);
+      });
+
+
+  }
+
+  createAllLayerStyles(qgsProjectFile: any, layerList: any){
+    const qGsProject = '&map=' + qgsProjectFile;
+    const capRequest = '&REQUEST=GetStyles';
+    const wmsVersion = 'SERVICE=WMS&VERSION=' + AppConfiguration.wmsVersion;
+    const urlStyle = AppConfiguration.qGsServerUrl + wmsVersion + capRequest + qGsProject + '&LAYERS=' + layerList;
+    console.log('urlStyle', urlStyle);
+    const xmlStyles = fetch(urlStyle)
+      .then(response => response.text())
+      .then(text => {
+        this.createWFSlayerStyles(text);
+        // self.layerPanel.updateLayerList(self.loadedWfsLayers);   // trying another approach with input
+      })
+      .catch(error => console.error(error));
+  }
+
+
 
 
   createLayerStyles(layerName: string, xmlRendererV2: any){
