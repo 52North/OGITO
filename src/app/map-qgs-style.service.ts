@@ -4,6 +4,7 @@ import {Fill, RegularShape, Stroke, Style, Icon, Text, Circle} from 'ol/style';
 import {DEVICE_PIXEL_RATIO} from 'ol/has.js';
 import {AppConfiguration} from './app-configuration';
 import {Parser} from 'xml2js';
+import {SwitchMarkerAnalyses} from '@angular/compiler-cli/ngcc/src/analysis/switch_marker_analyzer';
 
 @Injectable({
   providedIn: 'root'
@@ -14,9 +15,25 @@ export class MapQgsStyleService {
    */
   svgFolder = AppConfiguration.svgFolder;
   nodes = {};
+  layerStyles = {};
   canvas = document.createElement('canvas');
   context = this.canvas.getContext('2d');
   constructor() { }
+
+  findJsonStyle(feature: any, layerName: any): any {
+    /** Given a feature and the layerName it returns the corresponding style
+     * it is used to get the styles for WFS layers in the Qgs project associated
+     * @param { feature } the feature for which to find a rendering style  -- no needed apparently
+     * @param { layerName } the name of a WFS layer to be rendered
+     */
+      // como hacer para saber si es single symbol and so on...
+    const styleLyr = this.layerStyles[layerName];
+    if (styleLyr.symbolType === 'Single symbol'){
+      console.log('estilo conseguido', styleLyr.style);
+      return (styleLyr.style);
+    }
+  }
+
 
   findStyle(feature:any, layerName: any) {
     /** Given a feature and the layerName it returns the corresponding style
@@ -374,6 +391,35 @@ export class MapQgsStyleService {
      */
   }
 
+  mapQsJsonSymbol(format: any, onlineResource: string, mark: any, size: any) {
+    /**
+     * Maps the style returned via getStyle request into OL items
+     * @param format: the type of symbol
+     * @param onlineResource: url of the symbol if exist
+     */
+    let newStyle: any;
+    switch (format) {
+      case 'image/svg+xml': {
+        let svg = onlineResource['$']['xlink:href'];
+        svg = svg. substring(7, svg.length);
+        console.log('svg', onlineResource,svg);
+        newStyle = new Style({
+          image: new Icon({
+            opacity: 1,
+            crossOrigin: 'anonymous',
+            src: 'data:image/svg+xml;base64,' + svg,
+            scale: 0.3
+          })
+        });
+
+         console.log('svgMarker in newStyle',newStyle);
+        break;
+      }
+    }
+    return newStyle;
+  }
+
+
   createWFSlayerStyles(xmlTextStyle: any){
     /**
      * Creates symbols
@@ -385,11 +431,52 @@ export class MapQgsStyleService {
     let layers =  xmlStyle.getElementsByTagName('NamedLayer')[0];
     console.log('layers', layers); */
     const parser = new Parser();
+    // let layerStyles = [];
     parser.parseString(xmlTextStyle, (err, result) => {
       let jsonStyle = result;
       console.log( 'que sale', jsonStyle);
       console.log(jsonStyle.StyledLayerDescriptor.NamedLayer);
-      // lets parse a JSON 
+      console.log('lenght', jsonStyle.StyledLayerDescriptor.NamedLayer.length);
+      for (let i = 0; i < jsonStyle.StyledLayerDescriptor.NamedLayer.length ; i++){
+        let layerStyle = jsonStyle.StyledLayerDescriptor.NamedLayer[i];
+        let layerName = layerStyle['se:Name'][0];
+        for (let j = 0; j < layerStyle['UserStyle'][0]['se:FeatureTypeStyle'][0]['se:Rule'].length; j++){
+          let featureStyleRule = layerStyle['UserStyle'][0]['se:FeatureTypeStyle'][0]['se:Rule'][j];
+          // here to ask for name and if polygonSymbolizer or point Symbolizer
+          console.log('layerName,featureStyle', layerName, featureStyleRule);
+          let styleType = featureStyleRule['se:Name'][0];
+
+          if (styleType === 'Single symbol') {
+              if (featureStyleRule.hasOwnProperty('se:PointSymbolizer')){
+                // it is a point
+                let seGraphic = featureStyleRule['se:PointSymbolizer'][0]['se:Graphic'][0];
+                console.log('seGraphic',seGraphic);
+                if (seGraphic.hasOwnProperty('se:ExternalGraphic')) {
+                  // the online resource with PARAM is in the pos 1
+                  let format = seGraphic['se:ExternalGraphic'][1]['se:Format'][0];
+                  let onlineResource = seGraphic['se:ExternalGraphic'][1]['se:OnlineResource'][0];
+                  let mark = seGraphic['se:Mark'][0];
+                  let size = seGraphic['se:Size'][0];
+                  console.log('format pasa x aqui', onlineResource);
+                  const theStyle = this.mapQsJsonSymbol(format, onlineResource, mark, size);
+                  this.layerStyles[layerName] = { 'symbolType': styleType, 'style': theStyle};
+                }
+               }
+          }
+          else {
+            if (featureStyleRule['ogc:Filter'].length > 0){
+              // there are filter -- categorized symbology
+              console.log('TODO categorized symbol');
+            }
+        }
+
+
+
+
+            }
+      }
+      // lets parse a JSON
+      // #TODO create a default symbol for everything :)
       });
 
 

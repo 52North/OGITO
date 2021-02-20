@@ -308,19 +308,19 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     // console.log('wfsLayerList', wfsLayerList);
     const rootLayer = xmlText.getElementsByTagName('Layer')[0];
-    console.log('rootLayer', rootLayer);
+    // console.log('rootLayer', rootLayer);
     // get the CRS in EPSG format
     let crs: string;
     if (rootLayer.getElementsByTagName('CRS').length > 1) {
       // the epsg code comes in the second place in the list
       crs = rootLayer.getElementsByTagName('CRS')[1].childNodes[0].nodeValue;
-      console.log('crs', crs);
+      // console.log('crs', crs);
       // Projected Bounding box
       const projBBOX = rootLayer.getElementsByTagName('BoundingBox')[0];
       this.mapCanvasExtent = [Number(projBBOX.getAttribute('minx')), Number(projBBOX.getAttribute('maxx')),
         Number(projBBOX.getAttribute('miny') ), Number(projBBOX.getAttribute('maxy'))];
       this.srsID = projBBOX.getAttribute('CRS');
-      console.log('CRS', this.srsID, AppConfiguration.projDefs[this.srsID.replace(/\D/g, '')]);
+      // console.log('CRS', this.srsID, AppConfiguration.projDefs[this.srsID.replace(/\D/g, '')]);
       proj4.defs(this.srsID, AppConfiguration.projDefs[this.srsID.replace(/\D/g, '')]);
       register(proj4);
     }
@@ -338,8 +338,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     // console.log('BBOX', BBOX, westBoundLongitude, eastBoundLongitude, southBoundLatitude, northBoundLatitude);
     const nGroups = rootLayer.getElementsByTagName('Layer').length;
     const layerList = xmlText.querySelectorAll('Layer > Layer');
-    console.log('layerList', layerList);
-    console.log('another try', rootLayer.querySelectorAll('Layer') );
+    // console.log('layerList', layerList);
     // console.log('nGroups', nGroups, 'children', rootLayer.children);
     // console.log('children[0]', rootLayer.children[0]);
     const groupList = [];
