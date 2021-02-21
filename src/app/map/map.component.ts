@@ -1557,7 +1557,9 @@ loadWFSlayers(XmlCapText) {
             zIndex: nLayers - i,   // highest zIndex for the first layer and so on.
             style(feature) {    // this equiv to style: function(feature)
               // console.log(feature.getGeometry().getType(), name);
-              let layerStyle = self.mapQgsStyleService.findStyle(feature, layerName);
+              // 21/02/20212 migrating to xml styles let layerStyle = self.mapQgsStyleService.findStyle(feature, layerName);
+              // migration to jsonStyle
+              let layerStyle = self.mapQgsStyleService.findJsonStyle(feature, layerName);
               if (!layerStyle) {
                 layerStyle = self.mapQgsStyleService.findDefaultStyleProvisional(feature.getGeometry().getType(), layerName);
               }

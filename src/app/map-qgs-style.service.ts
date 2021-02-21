@@ -6,6 +6,7 @@ import {AppConfiguration} from './app-configuration';
 import {Parser} from 'xml2js';
 import {SwitchMarkerAnalyses} from '@angular/compiler-cli/ngcc/src/analysis/switch_marker_analyzer';
 
+
 @Injectable({
   providedIn: 'root'
 })
@@ -18,6 +19,13 @@ export class MapQgsStyleService {
   layerStyles = {};
   canvas = document.createElement('canvas');
   context = this.canvas.getContext('2d');
+  svgToOlParam = {
+    'fill': 'color',
+    'stroke':'color',
+    'stroke-width': 'width',
+    'stroke-linejoin':'lineJoin'
+  };
+
   constructor() { }
 
   findJsonStyle(feature: any, layerName: any): any {
@@ -29,7 +37,7 @@ export class MapQgsStyleService {
       // como hacer para saber si es single symbol and so on...
     const styleLyr = this.layerStyles[layerName];
     if (styleLyr.symbolType === 'Single symbol'){
-      console.log('estilo conseguido', styleLyr.style);
+     // console.log('estilo conseguido', styleLyr.style);
       return (styleLyr.style);
     }
   }
@@ -391,25 +399,47 @@ export class MapQgsStyleService {
      */
   }
 
-  mapQsJsonSymbol(format: any, onlineResource: string, mark: any, size: any) {
+  mapQsJsonPointSymbol(format: any, onlineResource: string, mark: any, size: any) {
     /**
      * Maps the style returned via getStyle request into OL items
      * @param format: the type of symbol
      * @param onlineResource: url of the symbol if exist
      */
+    /*
+    <se:Mark>
+<se:WellKnownName>square</se:WellKnownName>
+<se:Fill>
+<se:SvgParameter name="fill">#729b6f</se:SvgParameter>
+</se:Fill>
+<se:Stroke>
+<se:SvgParameter name="stroke">#232323</se:SvgParameter>
+<se:SvgParameter name="stroke-width">0.5</se:SvgParameter>
+</se:Stroke>
+</se:Mark>
+<se:Size>18</se:Size>
+    * */
+    let color = mark['se:Fill'][0]['se:SvgParameter'][0]['_'];
+    const fill = new Fill({
+      color
+    });
+    // #TODO change the above line and get all params of the fill
+    console.log('mark color', color );
     let newStyle: any;
     switch (format) {
       case 'image/svg+xml': {
         let svg = onlineResource['$']['xlink:href'];
         svg = svg. substring(7, svg.length);
-        console.log('svg', onlineResource,svg);
+        console.log('svg', onlineResource, svg);
         newStyle = new Style({
           image: new Icon({
             opacity: 1,
             crossOrigin: 'anonymous',
             src: 'data:image/svg+xml;base64,' + svg,
-            scale: 0.3
-          })
+            scale: 0.5,
+            // size: size,
+            color
+          }),
+          fill
         });
 
          console.log('svgMarker in newStyle',newStyle);
@@ -417,6 +447,32 @@ export class MapQgsStyleService {
       }
     }
     return newStyle;
+  }
+
+  mapQsJsonPolygonSymbol(svgParamFill: any, svgParamStroke: any) {
+    /**
+     * Creates a ol style from svg params fill and Stroke
+     * @aparam svgParamFill the fill color
+     * @param svgParamStroke the style for the stroke
+     */
+    let fillColor = svgParamFill['se:SvgParameter'][0]['_'];
+    console.log('fillColor', fillColor);
+    // #TODO Does the fill have more params?
+    let olStrokeParam = {}
+    for (let i = 0; i < svgParamStroke['se:SvgParameter'].length; i++) {
+      console.log(svgParamStroke['se:SvgParameter'][i]['$']['name'], svgParamStroke['se:SvgParameter'][i]['_']);
+      olStrokeParam[svgParamStroke['se:SvgParameter'][i]['$']['name']] = svgParamStroke['se:SvgParameter'][i]['_'];
+    }
+    console.log(olStrokeParam);
+    let fill = new Fill({
+      color: fillColor
+    });
+    let stroke = new Stroke(olStrokeParam);
+    let style = new Style({
+      fill: fill,
+      stroke: stroke
+    });
+    return style;
   }
 
 
@@ -458,10 +514,19 @@ export class MapQgsStyleService {
                   let mark = seGraphic['se:Mark'][0];
                   let size = seGraphic['se:Size'][0];
                   console.log('format pasa x aqui', onlineResource);
-                  const theStyle = this.mapQsJsonSymbol(format, onlineResource, mark, size);
+                  const theStyle = this.mapQsJsonPointSymbol(format, onlineResource, mark, size);
                   this.layerStyles[layerName] = { 'symbolType': styleType, 'style': theStyle};
                 }
                }
+              if (featureStyleRule.hasOwnProperty('se:PolygonSymbolizer')){
+                // it is a point
+                let seFill = featureStyleRule['se:PolygonSymbolizer'][0]['se:Fill'][0];
+                console.log('seFill', seFill);
+                let seStroke = featureStyleRule['se:PolygonSymbolizer'][0]['se:Stroke'][0];
+                console.log('seStroke', seStroke);
+                const theStyle = this.mapQsJsonPolygonSymbol(seFill, seStroke);
+                this.layerStyles[layerName] = { 'symbolType': styleType, 'style': theStyle};
+              }
           }
           else {
             if (featureStyleRule['ogc:Filter'].length > 0){
@@ -477,6 +542,7 @@ export class MapQgsStyleService {
       }
       // lets parse a JSON
       // #TODO create a default symbol for everything :)
+      console.log('this.layerStyles', this.layerStyles);
       });
 
 
