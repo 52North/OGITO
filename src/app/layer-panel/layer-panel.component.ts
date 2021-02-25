@@ -68,6 +68,7 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
    }
 
 ngOnInit(): void {
+  console.log('in layerPanel', this.groupLayers);
   this.showLayerPanel$ = observableOf(true);
   this.openLayersService.showEditLayerPanel$.subscribe(data =>{
     this.showLayerPanel$ = observableOf(data);

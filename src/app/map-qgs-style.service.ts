@@ -266,7 +266,7 @@ export class MapQgsStyleService {
              color: color,
              crossOrigin: 'anonymous',
              // imgSize: [50, 50],   // it was 20 #TODO responsive to zoom scale
-             scale: 0.04, // #TODO verificar size qgis/ol
+             scale: 0.05, // #TODO verificar size qgis/ol
              src: filename })
          });
         // console.log('svgMarker in the case', newStyle);
@@ -405,7 +405,7 @@ export class MapQgsStyleService {
      * @param format: the type of symbol
      * @param onlineResource: url of the symbol if exist
      */
-    /*
+    /* lo que viene
     <se:Mark>
 <se:WellKnownName>square</se:WellKnownName>
 <se:Fill>
@@ -423,19 +423,19 @@ export class MapQgsStyleService {
       color
     });
     // #TODO change the above line and get all params of the fill
-    console.log('mark color', color );
+    // console.log('mark color', color );
     let newStyle: any;
     switch (format) {
       case 'image/svg+xml': {
         let svg = onlineResource['$']['xlink:href'];
         svg = svg. substring(7, svg.length);
-        console.log('svg', onlineResource, svg);
+        // console.log('svg', onlineResource, svg);
         newStyle = new Style({
           image: new Icon({
             opacity: 1,
             crossOrigin: 'anonymous',
             src: 'data:image/svg+xml;base64,' + svg,
-            scale: 0.5,
+            scale: 0.9,
             // size: size,
             color
           }),
@@ -506,14 +506,14 @@ export class MapQgsStyleService {
               if (featureStyleRule.hasOwnProperty('se:PointSymbolizer')){
                 // it is a point
                 let seGraphic = featureStyleRule['se:PointSymbolizer'][0]['se:Graphic'][0];
-                console.log('seGraphic',seGraphic);
+                // console.log('seGraphic',seGraphic);
                 if (seGraphic.hasOwnProperty('se:ExternalGraphic')) {
                   // the online resource with PARAM is in the pos 1
                   let format = seGraphic['se:ExternalGraphic'][1]['se:Format'][0];
                   let onlineResource = seGraphic['se:ExternalGraphic'][1]['se:OnlineResource'][0];
                   let mark = seGraphic['se:Mark'][0];
                   let size = seGraphic['se:Size'][0];
-                  console.log('format pasa x aqui', onlineResource);
+                  // console.log('format pasa x aqui', seGraphic['se:ExternalGraphic'][1]['se:OnlineResource'][0]);
                   const theStyle = this.mapQsJsonPointSymbol(format, onlineResource, mark, size);
                   this.layerStyles[layerName] = { 'symbolType': styleType, 'style': theStyle};
                 }
@@ -521,9 +521,9 @@ export class MapQgsStyleService {
               if (featureStyleRule.hasOwnProperty('se:PolygonSymbolizer')){
                 // it is a point
                 let seFill = featureStyleRule['se:PolygonSymbolizer'][0]['se:Fill'][0];
-                console.log('seFill', seFill);
+                // console.log('seFill', seFill);
                 let seStroke = featureStyleRule['se:PolygonSymbolizer'][0]['se:Stroke'][0];
-                console.log('seStroke', seStroke);
+                // console.log('seStroke', seStroke);
                 const theStyle = this.mapQsJsonPolygonSymbol(seFill, seStroke);
                 this.layerStyles[layerName] = { 'symbolType': styleType, 'style': theStyle};
               }

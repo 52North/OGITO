@@ -264,7 +264,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
      * initialize user credential from the Auth0 service
      * @params userProfile: profile of the user containing: nickname, name (email),picture, updated_at: date
      */
-    console.log('user authorized', userProfile);   // how to  get the value?
+   // console.log('user authorized', userProfile);   // how to  get the value?
   }
   updateSelectedProject(qgsProject: any){
     // get the var from the selection List
@@ -341,7 +341,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     // console.log('layerList', layerList);
     // console.log('nGroups', nGroups, 'children', rootLayer.children);
     // console.log('children[0]', rootLayer.children[0]);
-    const groupList = [];
+    // const groupList = [];
     for (let i = 0; i < rootLayer.getElementsByTagName('Layer').length; i++) {
       const node = layerList[i];
       if (node.getElementsByTagName('Layer').length > 0) {
@@ -374,7 +374,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
           });
         }
         // get url for wms, wfs, getLegend and getStyles
-        groupList.push({
+        this.groupsLayers.push({
         groupName: groupName,
         groupTittle: groupTittle,
         layers: listLayersinGroup
@@ -382,7 +382,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       }
 
     }
-    console.log('groupList', groupList);
+    console.log('this.groupsLayers', this.groupsLayers);
     // get the order in which layers are rendered
    // this.layersOrder.push(layerName); // #TODO evaluate if this is needed or worthy, it is not being used somewhere else
     // register the project projection definion in proj4 format
@@ -613,8 +613,8 @@ workQgsProject() {
     /** Retrieves the capabilities WFS and WMS associated to the qgis project listed in AppConfiguration
      * it send these capabilities to other functions to load the WMS and WFS layers
      */
-    // Load WFS layers
-    // console.log('groups', this.groupsLayers);
+
+    console.log('groups', this.groupsLayers);
     const qGsProject = '&map=' + this.qgsProjectFile;
     const qGsServerUrl = AppConfiguration.qGsServerUrl;
     const capRequest = '&REQUEST=GetCapabilities';
@@ -634,9 +634,8 @@ workQgsProject() {
     const wmsVersion = 'SERVICE=WMS&VERSION=' + AppConfiguration.wmsVersion;
     const urlWMS = qGsServerUrl + wmsVersion + capRequest + qGsProject;
     let parser: any;
-    // console.log('urlWMS', urlWMS);
     parser = new WMSCapabilities();
-    // const self = this;
+    console.log('urlWMS', urlWMS);
     const xmlWMS = fetch(urlWMS)
       .then(response => {
         return response.text();
@@ -680,18 +679,18 @@ reorderingGroupsLayers() {
     const nGroups = this.groupsLayers.length;
     let nLysInGrp = 0;
     this.groupsLayers.forEach(group => {
-      // console.log('indexOf', this.groupsLayers.indexOf(group), group.layers);
+      console.log('indexOf', this.groupsLayers.indexOf(group), group.layers);
       this.map.getLayers().forEach(layer => {
-        if (layer.get('name') === group.name) {
+        if (layer.get('name') === group.groupName) {
           const grpZIndex = (nGroups - this.groupsLayers.indexOf(group)) * 10;
           layer.setZIndex(grpZIndex);
           // console.log('layer', layer.get('name'), layer.getLayers().array_.length);
           // order layers inside the group
           if (layer.getLayers().array_.length > 0) {
-            // console.log('tiene capas dentro', group.name);
+            console.log('tiene capas dentro', group.groupName);
             nLysInGrp = layer.getLayers().array_.length;  // numbers of layers in the
             layer.getLayers().forEach(lyrInGrp => {
-              lyrInGrp.setZIndex(grpZIndex - (group.layers.findIndex(x => x.name === lyrInGrp.get('name')) + 1));  // will work until 10 layers/group
+              lyrInGrp.setZIndex(grpZIndex - (group.layers.findIndex(x => x.layerName === lyrInGrp.get('name')) + 1));  // will work until 10 layers/group
             });
           }
 
@@ -958,61 +957,66 @@ loadWMSlayers(urlWMS: string, xmlCapabilities: WMSCapabilities) {
         console.log('no layers in WMS');
         return;
       }
+      console.log('xmlCapabilities',xmlCapabilities);
       const layerList = xmlCapabilities.Capability.Layer.Layer;
       layerList.forEach(layer => {
-        if (!layer.hasOwnProperty('Layer')) {
-          // it is a simple WMS layer without a group
-          // console.log('simple layer..', layer.Name);
-          const WMSSource = new ImageWMS({
-            url: urlWMS,
-            params: {LAYERS: layer.Name},
-            serverType: 'qgis',
-            crossOrigin: null
-          });
-          const WMSLayer = new ImageLayer({
-            source: WMSSource,
-            name: layer.Title
-          });
-          WMSSource.on('imageloadstart', function() {
-            progress.addLoading();
-          });
-
-          WMSSource.on('imageloadend', function() {
-            progress.addLoaded();
-          });
-          WMSSource.on('imageloaderror', function() {
-            progress.addLoaded();
-          });
-
-          this.addWebServLayer(layer.Title, WMSLayer);
-          this.loadedWmsLayers.push({
-            layerName: layer.Name,
-            layerTitle: layer.Title,
-            source: WMSSource
-          });
-          return;
-        }
-        if (layer.Layer.length > 0) {
-          // layer is a group and has layers in an array
-          layer.Layer.forEach(lyr => {
-            // console.log('layer in a group..', lyr.Name);
+        // console.log('this.loadedWfsLayers', this.loadedWfsLayers);
+        // console.log('layer', layer);
+        if (!this.loadedWfsLayers.find(x => x.layerName.toLowerCase() === layer.Name.toLowerCase())) {
+          if (!layer.hasOwnProperty('Layer')) {
+            // it is a simple WMS layer without a group
+            // console.log('simple layer..', layer.Name);
             const WMSSource = new ImageWMS({
               url: urlWMS,
-              params: {LAYERS: lyr.Name},
+              params: {LAYERS: layer.Name},
               serverType: 'qgis',
               crossOrigin: null
             });
             const WMSLayer = new ImageLayer({
               source: WMSSource,
-              name: lyr.Title
+              name: layer.Title
             });
-            this.addWebServLayer(lyr.Title, WMSLayer);
+            WMSSource.on('imageloadstart', function() {
+              progress.addLoading();
+            });
+
+            WMSSource.on('imageloadend', function() {
+              progress.addLoaded();
+            });
+            WMSSource.on('imageloaderror', function() {
+              progress.addLoaded();
+            });
+
+            this.addWebServLayer(layer.Title, WMSLayer);
             this.loadedWmsLayers.push({
-              layerName: lyr.Name,
-              layerTitle: lyr.Title,
+              layerName: layer.Name,
+              layerTitle: layer.Title,
               source: WMSSource
             });
-          });
+            return;
+          }
+          if (layer.Layer.length > 0) {
+            // layer is a group and has layers in an array
+            layer.Layer.forEach(lyr => {
+              // console.log('layer in a group..', lyr.Name);
+              const WMSSource = new ImageWMS({
+                url: urlWMS,
+                params: {LAYERS: lyr.Name},
+                serverType: 'qgis',
+                crossOrigin: null
+              });
+              const WMSLayer = new ImageLayer({
+                source: WMSSource,
+                name: lyr.Title
+              });
+              this.addWebServLayer(lyr.Title, WMSLayer);
+              this.loadedWmsLayers.push({
+                layerName: lyr.Name,
+                layerTitle: lyr.Title,
+                source: WMSSource
+              });
+            });
+          }
         }
       });
       console.log('this.loadedWmsLayers', this.loadedWmsLayers);
@@ -1022,19 +1026,20 @@ loadWMSlayers(urlWMS: string, xmlCapabilities: WMSCapabilities) {
     }
   }
 
+
 addWebServLayer(layerName: any, webServlayer: any) {
     // find the layer in a group
     let groupName = '';
     let groupLayer: any;
     this.groupsLayers.forEach(group => {
-      if (group.layers.findIndex(lyr => lyr.name === layerName) > -1)   // findIndex return -1 if not found
+      if (group.layers.findIndex(lyr => lyr.layerName === layerName) > -1)   // findIndex return -1 if not found
       {
-        groupName = group.name;
+        groupName = group.groupName;
       }
     });
     // console.log('web layerName and group', layerName, groupName);
     // the layer is the group (WMTS case), add it to the map and return
-    if (this.groupsLayers.findIndex(x => x.name === layerName) > -1 && groupName === '') {
+    if (this.groupsLayers.findIndex(x => x.layerName === layerName) > -1 && groupName === '') {
       // console.log('entra aqui XXXX');
       const newGroup = new LayerGroup({
         name: layerName,
@@ -1514,7 +1519,7 @@ loadWFSlayers(XmlCapText) {
         // #TODO uncomment alert (`The BBOX of ${ layerTitle } might be misConfigured, please check the WFS service`);
       }
       // #TODO: raise a warning if the operations excludes Query, Insert, Update or delete
-      console.log('layerName', layerName);
+      // console.log('layerName', layerName);
       if (layerName.length > 0) {
         // store layer properties to use later
         const geom = this.findGeometryType(layerName);

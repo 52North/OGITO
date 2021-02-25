@@ -17,22 +17,22 @@
         <!--togglePosition='before'-->
         <mat-expansion-panel-header [collapsedHeight]="'2.1vw'" [expandedHeight]="'2.1vw'">
         <mat-panel-title>
-        <mat-selection-list [id]="group.name">
+        <mat-selection-list [id]="group.groupName">
              <mat-list-option class = "group" checkboxPosition="before" (click)="onGroupLayerVisClick($event,group)"
                          selected="true" >
-                {{group.name}}
+                {{group.groupName}}
              </mat-list-option>
         </mat-selection-list>
        </mat-panel-title>
         </mat-expansion-panel-header>
         <mat-selection-list (selectionChange)="onSelectedChanged($event)">
 
-          <mat-list-option class="example-box mat-primary" *ngFor="let layer of group.layers" [value]="layer.name"
-                           (click)="onLayerVisClick($event,layer,group.name)" checkboxPosition="before"
-                           [ngClass]="layerActive == layer.name? 'active': 'normal'" selected="true">
+          <mat-list-option class="example-box mat-primary" *ngFor="let layer of group.layers" [value]="layer.layerName"
+                           (click)="onLayerVisClick($event,layer,group.groupName)" checkboxPosition="before"
+                           [ngClass]="layerActive == layer.layerName? 'active': 'normal'" selected="true">
             <div class="selectLayer" >
               <div style="display:flex;align-items:center">
-                {{layer.name}} <!-- {{layer['layerTitle']}} -->
+                {{layer.layerName}} <!-- {{layer['layerTitle']}} -->
               </div>
               <div *ngIf="layer.wfs">
                 <button mat-icon-button
@@ -43,7 +43,7 @@
               <div>
 
               <!-- try the identify button in the layer panel -->
-              <button mat-icon-button (click)="onIdentifyLayerClick($event, layer, group.name)">
+              <button mat-icon-button (click)="onIdentifyLayerClick($event, layer, group.groupName)">
                 <mat-icon class= "editIcon" >info_outline</mat-icon>
               </button>
                 <button mat-icon-button (click)="onOpacityLayerClick($event, layer)">
