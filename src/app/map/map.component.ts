@@ -1631,10 +1631,10 @@ updateMapVisibleGroupLayer(selectedGroupLayer) {
      */
     // console.log('prueba event capture from child emitter', selectedGroupLayer.name);
     this.map.getLayers().forEach(layer => {
-      // console.log('nombre grupos',layer.get('name'));
-      if (selectedGroupLayer.name === layer.get('name')) {
+      // console.log('nombre grupo selected', selectedGroupLayer.groupName);
+      if (selectedGroupLayer.groupName === layer.get('name')) {
         layer.setVisible(!layer.getVisible());
-        // console.log('cambia el grupo correcto?', layer.get('name'));
+        console.log('cambia el grupo correcto?', layer.get('name'));
       }
     });
   }
@@ -1644,7 +1644,8 @@ updateMapVisibleLayer(selectedLayer: any){
    * updates the visibility of a layer in the map
    * @param selectedLayer is a dictionary layer that was clicked to show/hide
    */
-    const layerName = selectedLayer.layer.name;
+    console.log('selectedLayer', selectedLayer);
+    const layerName = selectedLayer.layer.layerName;
     const groupName = selectedLayer.groupName;
 
     // console.log('prueba event capture from child emitter', selectedLayer);
@@ -2441,13 +2442,13 @@ updateOrderGroupsLayers(groupsLayers: any) {
      *  Moves the groups and allocate layers on it according to the order in the project
      *  @param groups: contain the groups for which layers will be ordered
      */
-    // ('lo que llega', groupsLayers);
+    console.log('lo que llega en updateOrderGroups', groupsLayers);
     const nGroups = groupsLayers.length;
     let nLysInGrp = 0;
     groupsLayers.forEach(group => {
       // console.log('indexOf', this.groupsLayers.indexOf(group), group.layers);
       this.map.getLayers().forEach(layer => {
-        if (layer.get('name') === group.name) {
+        if (layer.get('name') === group.groupName) {
           const grpZIndex = (nGroups - groupsLayers.indexOf(group)) * 10;
           layer.setZIndex(grpZIndex);
           // console.log('layer', layer.get('name'), layer.getLayers().array_.length);

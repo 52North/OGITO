@@ -231,7 +231,7 @@ onPan(event: any): void {
      */
     $event.preventDefault();
     $event.stopImmediatePropagation();
-    // console.log('layer visibility', layer, groupName);
+    console.log('layer visibility', layer, groupName);
     this.layerVisClick.emit({layer, groupName});
 }
   onGroupLayerVisClick(  $event: any, layer: any){
