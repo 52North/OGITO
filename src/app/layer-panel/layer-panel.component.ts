@@ -64,7 +64,7 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
    // console.log(this.layerAccordion.nativeElement.children);
    moveItemInArray(this.groupLayers, event.previousIndex, event.currentIndex);
    this.layersOrder.emit(this.groupLayers);
-   console.log(this.groupLayers);
+   // console.log(this.groupLayers);
    }
 
 ngOnInit(): void {
@@ -101,7 +101,7 @@ ngOnInit(): void {
       $event.stopImmediatePropagation();
       console.log('que entra..getting better', layer);
       this.editLayerClick.emit(layer);  // with this the map should act accordingly to stop/start editing.
-      // console.log('layer.layerName', layer.name, 'layerActive?', this.layerActive);
+      console.log('layer.layerName', layer.layerName, 'layerActive?', this.layerActive);
       if (this.layerActive === layer.name) {
         if (layer.onEdit){
           // the layer was on Editing mode, so the editing action must be stopped
@@ -217,7 +217,7 @@ onPan(event: any): void {
   }
 
   onSelectedChanged($event: any){
-    console.log('probando esto a lo loco $event.option.value', $event.option.value, $event );
+    // console.log('probando esto a lo loco $event.option.value', $event.option.value, $event );
     if ($event.option.value.isChecked) {
         $event.option.selected = true;
         $event.stopImmediatePropagation();
@@ -231,7 +231,7 @@ onPan(event: any): void {
      */
     $event.preventDefault();
     $event.stopImmediatePropagation();
-    console.log('layer visibility', layer, groupName);
+    // console.log('layer visibility', layer, groupName);
     this.layerVisClick.emit({layer, groupName});
 }
   onGroupLayerVisClick(  $event: any, layer: any){

@@ -300,7 +300,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
      */
     const xmlParser = new DOMParser();
     const xmlText = xmlParser.parseFromString(gqsProjectinfo, 'text/xml');
-    console.log ('xmlText', xmlText);
+    // console.log ('xmlText', xmlText);
     const WFSLayers = xmlText.getElementsByTagName('WFSLayers')[0];
     const wfsLayerList = [];
     for (let k = 0; k < WFSLayers.getElementsByTagName('WFSLayer').length; k++) {
@@ -350,11 +350,14 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         const groupTittle = layerList[i].getElementsByTagName('Title')[0].childNodes[0].nodeValue;
         // console.log('group details', i, groupName, groupTittle);
         const layersinGroup = layerList[i].querySelectorAll('Layer > Layer'); // devuelve in node
-        // console.log('layers in Group', layersinGroup);
+        console.log('layers in Group', layersinGroup);
         const listLayersinGroup = [];
         for (let j = 0; j < layersinGroup.length; j++) {
           let layerIsWfs = false;
           const layer = layersinGroup.item(j);
+
+          const geometryType = layer.getAttribute('geometryType');
+          console.log('geometryType', geometryType);
           const layerName = layer.getElementsByTagName('Name')[0].childNodes[0].nodeValue;
           const layerTittle = layer.getElementsByTagName('Title')[0].childNodes[0].nodeValue;
           // const layerLegendUrl = layer.getAttribute('Tittle');
@@ -370,7 +373,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
             layerName: layerName,
             layerTittle: layerTittle,
             layerLegendUrl: urlResource,
-            wfs: layerIsWfs
+            wfs: layerIsWfs,
+            geometryType
           });
         }
         // get url for wms, wfs, getLegend and getStyles
@@ -679,7 +683,7 @@ reorderingGroupsLayers() {
     const nGroups = this.groupsLayers.length;
     let nLysInGrp = 0;
     this.groupsLayers.forEach(group => {
-      console.log('indexOf', this.groupsLayers.indexOf(group), group.layers);
+      // console.log('indexOf', this.groupsLayers.indexOf(group), group.layers);
       this.map.getLayers().forEach(layer => {
         if (layer.get('name') === group.groupName) {
           const grpZIndex = (nGroups - this.groupsLayers.indexOf(group)) * 10;
@@ -687,7 +691,7 @@ reorderingGroupsLayers() {
           // console.log('layer', layer.get('name'), layer.getLayers().array_.length);
           // order layers inside the group
           if (layer.getLayers().array_.length > 0) {
-            console.log('tiene capas dentro', group.groupName);
+            // console.log('tiene capas dentro', group.groupName);
             nLysInGrp = layer.getLayers().array_.length;  // numbers of layers in the
             layer.getLayers().forEach(lyrInGrp => {
               lyrInGrp.setZIndex(grpZIndex - (group.layers.findIndex(x => x.layerName === lyrInGrp.get('name')) + 1));  // will work until 10 layers/group
@@ -957,7 +961,7 @@ loadWMSlayers(urlWMS: string, xmlCapabilities: WMSCapabilities) {
         console.log('no layers in WMS');
         return;
       }
-      console.log('xmlCapabilities',xmlCapabilities);
+      // console.log('xmlCapabilities', xmlCapabilities);
       const layerList = xmlCapabilities.Capability.Layer.Layer;
       layerList.forEach(layer => {
         // console.log('this.loadedWfsLayers', this.loadedWfsLayers);
@@ -1580,7 +1584,7 @@ loadWFSlayers(XmlCapText) {
             lowCorner: [lowCorner.split(' ')[0], lowCorner.split(' ')[1]],
             upperCorner: [upperCorner.split(' ')[0], upperCorner.split(' ')[1]],
             operations: operationsLst,
-            geometry: geom, // Dependent of QGIS project as the styles.
+            geometryType: geom, // Dependent of QGIS project as the styles.
             source: vectorSource
             // dimensions: dimensions,
             // bbox: bBox,
@@ -1634,7 +1638,7 @@ updateMapVisibleGroupLayer(selectedGroupLayer) {
       // console.log('nombre grupo selected', selectedGroupLayer.groupName);
       if (selectedGroupLayer.groupName === layer.get('name')) {
         layer.setVisible(!layer.getVisible());
-        console.log('cambia el grupo correcto?', layer.get('name'));
+        // console.log('cambia el grupo correcto?', layer.get('name'));
       }
     });
   }
@@ -1644,7 +1648,7 @@ updateMapVisibleLayer(selectedLayer: any){
    * updates the visibility of a layer in the map
    * @param selectedLayer is a dictionary layer that was clicked to show/hide
    */
-    console.log('selectedLayer', selectedLayer);
+    // console.log('selectedLayer', selectedLayer);
     const layerName = selectedLayer.layer.layerName;
     const groupName = selectedLayer.groupName;
 
@@ -1685,7 +1689,7 @@ updateEditingLayer(layerOnEdit: any) {
      *  #TODO catch exception
      */
    console.log('evento emitido, que llega', layerOnEdit);
-   const layer = this.loadedWfsLayers.find(x => x.layerName === layerOnEdit.name);
+   const layer = this.loadedWfsLayers.find(x => x.layerName === layerOnEdit.layerName);
    // layer contains the source.
    if (this.curEditingLayer) {
       // a layer was being edited - ask for saving changes
@@ -1754,13 +1758,13 @@ startEditing(layer: any) {
      * the geometry type of the layer being edited, and
      * the visibility of the editing toolbar
      */
-    // console.log ('entra a startEditing', layer );
+
     try {
       // this.removeInteractions();  //#TODO verify this is done in addShape
       // update the observables
       this.openLayersService.updateShowEditToolbar(true);
       console.log('que entra en startediting layer', layer);
-      this.openLayersService.updateLayerEditing(layer.layerName, layer.geometry);
+      this.openLayersService.updateLayerEditing(layer.layerName, layer.geometryType);
       // clear caches and styles  // #TODO best way to do...
       // this.cacheFeatures = [];
       this.currentClass = null;  // forcing the user to pick and style and cleaning previous style? check
@@ -2442,7 +2446,7 @@ updateOrderGroupsLayers(groupsLayers: any) {
      *  Moves the groups and allocate layers on it according to the order in the project
      *  @param groups: contain the groups for which layers will be ordered
      */
-    console.log('lo que llega en updateOrderGroups', groupsLayers);
+    // console.log('lo que llega en updateOrderGroups', groupsLayers);
     const nGroups = groupsLayers.length;
     let nLysInGrp = 0;
     groupsLayers.forEach(group => {
@@ -2492,9 +2496,17 @@ findGeometryType(layerName) {
       * @oaram layerName: the name of the layer to look for the geometry type
       */
     let geometryType = null;
-    if (this.layersGeometryType[layerName]){
+    /*if (this.layersGeometryType[layerName]){
       geometryType = this.layersGeometryType[layerName].layerGeom;
+    }*/
+    for (let group of this.groupsLayers) {
+    const lyr = group.layers.find(x => x.layerName === layerName);
+    if (lyr) {
+      geometryType = lyr.geometryType;
+      console.log("la consigue en los grupos", lyr.geometryType);
+      return (geometryType);
     }
+  }
     // console.log('geometryType', layerName, geometryType);
     return (geometryType);
   }
