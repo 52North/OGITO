@@ -4,27 +4,27 @@
 <mat-card>
    <mat-divider [vertical]="true"></mat-divider>
     <mat-toolbar>
-      <button   *ngIf= " (layerTypeEdit$ == 'Point' || layerTypeEdit$ == 'Multi') " mat-icon-button
+      <button   *ngIf= " (layerTypeEdit$ == 'Point' || layerTypeEdit$ == 'Multi'|| layerTypeEdit$ == 'MultiPoint') " mat-icon-button
                 (click)="drawingShapes('Point')" matTooltip="Add point/marker TEST GITHUB workflow" [ngClass]="actionActive['Point'] ? 'active': 'normal'">
         <mat-icon>add_location</mat-icon>
       </button>
-      <button   *ngIf= " (layerTypeEdit$ == 'Point' || layerTypeEdit$ == 'Multi') " mat-icon-button
+      <button   *ngIf= " (layerTypeEdit$ == 'Point' || layerTypeEdit$ == 'Multi' || layerTypeEdit$ == 'MultiPoint') " mat-icon-button
                 (click)="drawingShapes('PointAttr')" matTooltip="Add point/marker + attribute TEST GITHUB workflow" [ngClass]="actionActive['Point'] ? 'active': 'normal'">
         <mat-icon svgIcon="add_location_attr"></mat-icon>
       </button>
-      <button mat-icon-button *ngIf="(layerTypeEdit$ == 'Line' || layerTypeEdit$ =='Multi' || layerTypeEdit$ == 'Polygon') "
+      <button mat-icon-button *ngIf="(layerTypeEdit$ == 'Line' || layerTypeEdit$ =='Multi' || layerTypeEdit$ == 'Polygon'|| layerTypeEdit$ == 'MultiPolygon'|| layerTypeEdit$ == 'MultiPolygonz') "
               (click)="drawingShapes('LineString')" matTooltip="Add line" [ngClass]="actionActive['LineString'] ? 'active': 'normal'">
         <mat-icon    svgIcon="add_line"></mat-icon>
       </button>
-      <button *ngIf="(layerTypeEdit$ == 'Polygon' || layerTypeEdit$ == 'Multi') " mat-icon-button
+      <button *ngIf="(layerTypeEdit$ == 'Polygon' || layerTypeEdit$ == 'Multi'|| layerTypeEdit$ == 'MultiPolygon'|| layerTypeEdit$ == 'MultiPolygonz') " mat-icon-button
               (click)="drawingShapes('Polygon')" matTooltip="Add polygon" [ngClass]="actionActive['Polygon'] ? 'active': 'normal'">
         <mat-icon svgIcon="add_poly"></mat-icon>
       </button>
-      <button *ngIf="(layerTypeEdit$ == 'Polygon' || layerTypeEdit$ == 'Multi') " mat-icon-button
+      <button *ngIf="(layerTypeEdit$ == 'Polygon' || layerTypeEdit$ == 'Multi'|| layerTypeEdit$ == 'MultiPolygon'|| layerTypeEdit$ == 'MultiPolygonz') " mat-icon-button
               (click)="drawingShapes('Square')" matTooltip="Add Square" [ngClass]="actionActive['Square'] ? 'active': 'normal'">
         <mat-icon>crop_square</mat-icon>
       </button>
-      <button *ngIf="(layerTypeEdit$ == 'Polygon' || layerTypeEdit$ == 'Multi') " mat-icon-button
+      <button *ngIf="(layerTypeEdit$ == 'Polygon' || layerTypeEdit$ == 'Multi'|| layerTypeEdit$ == 'MultiPolygon'|| layerTypeEdit$ == 'MultiPolygonz') " mat-icon-button
               (click)="drawingShapes('Circle')" matTooltip="Add Circle" [ngClass]="actionActive['Circle'] ? 'active': 'normal'">
         <mat-icon>radio_button_unchecked</mat-icon>
       </button>

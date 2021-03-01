@@ -350,7 +350,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         const groupTittle = layerList[i].getElementsByTagName('Title')[0].childNodes[0].nodeValue;
         // console.log('group details', i, groupName, groupTittle);
         const layersinGroup = layerList[i].querySelectorAll('Layer > Layer'); // devuelve in node
-        console.log('layers in Group', layersinGroup);
+        // console.log('layers in Group', layersinGroup);
         const listLayersinGroup = [];
         for (let j = 0; j < layersinGroup.length; j++) {
           let layerIsWfs = false;
@@ -618,14 +618,14 @@ workQgsProject() {
      * it send these capabilities to other functions to load the WMS and WFS layers
      */
 
-    console.log('groups', this.groupsLayers);
+    // console.log('groups', this.groupsLayers);
     const qGsProject = '&map=' + this.qgsProjectFile;
     const qGsServerUrl = AppConfiguration.qGsServerUrl;
     const capRequest = '&REQUEST=GetCapabilities';
     const wfsVersion = 'SERVICE=WFS&VERSION=' + AppConfiguration.wfsVersion;
     const urlWFS = qGsServerUrl + wfsVersion + capRequest + qGsProject;
-    console.log('urlWFS', urlWFS);
-    const xmlWFS = fetch(urlWFS)
+    // console.log('urlWFS', urlWFS);
+    fetch(urlWFS)
       .then(response => response.text())
       .then(text => {
         this.loadWFSlayers(text);
@@ -640,7 +640,7 @@ workQgsProject() {
     let parser: any;
     parser = new WMSCapabilities();
     console.log('urlWMS', urlWMS);
-    const xmlWMS = fetch(urlWMS)
+    fetch(urlWMS)
       .then(response => {
         return response.text();
       })
@@ -730,7 +730,7 @@ reorderingGroups(groups) {
      *  Moves the groups and allocate layers on it according to the order in the project
      *  @param groups: contain the groups for which layers will be ordered
      *  try to make one function that receives the groups for which layers will be ordered.
-     **/
+     */
     const nGroups = this.groupsLayers.length;
     let nLysInGrp = 0;
     this.groupsLayers.forEach(group => {
@@ -1762,7 +1762,7 @@ startEditing(layer: any) {
     try {
       // this.removeInteractions();  //#TODO verify this is done in addShape
       // update the observables
-      this.openLayersService.updateShowEditToolbar(true);
+     // this is done from layerPanel commented 01032021 this.openLayersService.updateShowEditToolbar(true);
       console.log('que entra en startediting layer', layer);
       this.openLayersService.updateLayerEditing(layer.layerName, layer.geometryType);
       // clear caches and styles  // #TODO best way to do...
@@ -2503,7 +2503,7 @@ findGeometryType(layerName) {
     const lyr = group.layers.find(x => x.layerName === layerName);
     if (lyr) {
       geometryType = lyr.geometryType;
-      console.log("la consigue en los grupos", lyr.geometryType);
+      // console.log("la consigue en los grupos", lyr.geometryType);
       return (geometryType);
     }
   }

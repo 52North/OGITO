@@ -102,7 +102,7 @@ ngOnInit(): void {
       console.log('que entra..getting better', layer);
       this.editLayerClick.emit(layer);  // with this the map should act accordingly to stop/start editing.
       console.log('layer.layerName', layer.layerName, 'layerActive?', this.layerActive);
-      if (this.layerActive === layer.name) {
+      if (this.layerActive === layer.layerName) {
         if (layer.onEdit){
           // the layer was on Editing mode, so the editing action must be stopped
           this.layerActive = null;
@@ -111,12 +111,12 @@ ngOnInit(): void {
           return;
         }
         // the layer was in identifying
-        this.layerActive = layer.name;
+        this.layerActive = layer.layerName;
         layer.onEdit = true;
         this.openLayersService.updateShowEditToolbar(true);
         return;
       }
-      this.layerActive = layer.name;
+      this.layerActive = layer.layerName;
       layer.onEdit = true;
       this.openLayersService.updateShowEditToolbar(true);
         // change style of the edit button
