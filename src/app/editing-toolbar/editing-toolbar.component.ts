@@ -214,15 +214,17 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
   saveLayer(){
     /** Enable user to save edit in the layer being updated the observable to show the editing toolbar and
      */
-    if (confirm('Do you want to save edits in the current layer:?')){
+    // #TODO confirm dialog if (confirm('Do you want to save edits in the current layer:?')){
+      console.log('what is here RRR?');
       this.openLayersService.updateSaveCurrentLayer(true);
+
       // disable the button
       this.stopSave = true;
       // add a timeout to enable the button
       setTimeout(() => {
         this.stopSave = false;
       }, 10000);
-   }
+   // }
   }
   saveAllLayer(){
     alert('Add here the code to save all edits in all layers');
@@ -238,8 +240,7 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
       }, 10000);
     }
   }
-  undoEdit(data){
-  }
+
 
   ngOnInit(): void {
     this.isVisible$ = observableOf(false);

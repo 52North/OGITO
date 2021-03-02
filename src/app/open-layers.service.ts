@@ -20,7 +20,7 @@ export class OpenLayersService {
   showEditLayerPanel$ = this.showEditLayerPanelSource.asObservable();
   private currentSymbolSource = new Subject<any>();
   currentSymbol$ = this.currentSymbolSource.asObservable();
-  private saveCurrentLayerSource = new Subject<any>();
+  private saveCurrentLayerSource = new Subject<boolean>();
   saveCurrentLayer$ = this.saveCurrentLayerSource.asObservable();
   private deleteFeatsSource = new Subject<any>();
   deleteFeats$ = this.deleteFeatsSource.asObservable();
@@ -64,10 +64,11 @@ export class OpenLayersService {
     this.editActionSource.next(action);
   }
 
-  updateSaveCurrentLayer(save: true){
+  updateSaveCurrentLayer(save: boolean){
     /** Updates the observable to the next value
      * visible: boolean; true or false to show/hide the editing toolbar
      */
+    console.log('what...XXX');
     this.saveCurrentLayerSource.next(save);
   }
 

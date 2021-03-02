@@ -1282,12 +1282,13 @@ enableAddShape(shape: string) {
 
       this.draw.on('drawend', (e: any) => {
         // adding an temporal ID, to handle undo
-        console.log ('COUNTING FINGERS', e.getPointerCount());  // getPointer is associated to the event?.. #TODO
+        console.log ('COUNTING FINGERS in the draw interaction', this.draw.getPointerCount());  // getPointer is associated to the event?.. #TODO
         e.feature.setId(this.curEditingLayer.layerName.concat('.', String(this.featId)));
         this.featId = this.featId + 1;
         // setting the class to set a style
         if (this.currentClass) {
-          e.feature.set('class', this.currentClass);
+         // modified 02 03 2021 other atts will be required.
+          // e.feature.set('class', this.currentClass);
         } else {
           alert('Select a symbol');
           return;  // #TODO check this
@@ -1721,6 +1722,7 @@ stopEditing(editLayer) {
 saveEdits(editLayer: any) {
       // save edits in all layers
       // console.log('editBuffer.indexOf(editLayer.layerName', this.editBuffer.findIndex(x => x.layerName ===  editLayer.layerName) );
+      console.log('editlayer en save', editLayer);
       console.log('en save', this.editBuffer);
       if (!(this.editBuffer.length > 0)) {  // nothing to save
         return;
@@ -1729,8 +1731,11 @@ saveEdits(editLayer: any) {
       { // nothing to save in the editLayer
       return;
       }
-      if (editLayer.geometry === 'Point' || editLayer.geometry === 'Line' || editLayer.geometry === 'Polygon') {
+      if (editLayer.geometryType === 'Point' || editLayer.geometryType === 'Line' || editLayer.geometryType === 'Polygon'
+        || editLayer.geometryType === 'MultiPolygon' || editLayer.geometryType === 'MultiPolygonZ' || editLayer.geometryType === 'MultiPoint')
+      {
          this.writeTransactWfs(editLayer);
+
       }
       else {
           this.saveSketchLayer(editLayer);
@@ -1747,7 +1752,7 @@ saveSketchLayer(editLayer: any) {
       if (!confirm('Do you want to save changes?')) {//  do not want to save changes
         return;
       }
-      this.saveSketchLayer(editLayer);  // save the changes
+      console.log('write the code to save sketchLayer' + editLayer);  // save the changes
       return;
     }
   }
@@ -1875,11 +1880,14 @@ writeTransactWfs(editLayer: any) {
     // Another solution can be to empty the editBuffer here --> it could be some data loss if the insertion fails
     // configure nodes.
     const strService = 'SERVICE=WFS&VERSION=' + AppConfiguration.wfsVersion + '&REQUEST=DescribeFeatureType';
-    const strUrl = AppConfiguration.qGsServerUrl + strService + '&map=' + AppConfiguration.QgsFileProject;
+    const strUrl = AppConfiguration.qGsServerUrl + strService + '&map=' + this.qgsProjectFile;
+    console.log("strUrl", strUrl);
     const formatWFS = new WFS();
     const formatGML = new GML({
-      featureNS: 'http://localhost',
-      featureType: editLayer.layerName
+      featureNS: 'http://localhost:4200',
+      // featureNS: AppConfiguration.qGsServerUrl,
+      featureType: editLayer.layerName,
+      crossOrigin: null
     });
     let node: any;
     const xs = new XMLSerializer();
@@ -1889,8 +1897,9 @@ writeTransactWfs(editLayer: any) {
     if (layerTrs[editLayer.layerName].insert.length > 0) {
       node = formatWFS.writeTransaction( layerTrs[editLayer.layerName].insert, null, null, formatGML);
       str = xs.serializeToString(node);
+      console.log('str',str);
       return fetch(strUrl, {
-        method: 'POST', body: str
+        method: 'POST', mode: 'no-cors', body: str
       })
         .then((textInsert) => {
           console.log('text response insert WFS', textInsert.text());

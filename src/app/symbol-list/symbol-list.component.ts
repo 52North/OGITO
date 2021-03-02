@@ -239,9 +239,9 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
           canvas.nativeElement.height = height;
           // console.log('width and height', height, width, canvas.nativeElement.width , devicePixelRatio  );
           const render = toContext(canvas.nativeElement.getContext('2d'));
-          console.log(' que llega a this.symbols$', this.symbols$);
+          // console.log(' que llega a this.symbols$', this.symbols$);
           const stylelayer = this.symbols$[key];
-          console.log('que hay en stylelayer', stylelayer);
+          // console.log('que hay en stylelayer', stylelayer);
           const stylelayerClone = [];   // clone the style hopefully deep copy
           // console.log('entra this.geometryTypeSymbols', this.geometryTypeSymbols);
           const olStyle = stylelayer.style;
@@ -255,7 +255,7 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
               let imageClone: any;
               // cloneStyle = style.clone();
               imageClone = olStyle.clone().getImage();
-              console.log('imageClone color and scale', imageClone.getColor, imageClone.getScale());
+              // console.log('imageClone color and scale', imageClone.getColor, imageClone.getScale());
               imageClone.setScale(imageClone.getScale() * 7);  // #TODO check this
               // this is working
 
@@ -293,8 +293,8 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
             }
           }
           // if stylelayerClone has something it will be drawn
-          console.log('feature', feature);
-          console.log('cloneStyle', cloneStyle);
+          // console.log('feature', feature);
+          // console.log('cloneStyle', cloneStyle);
           render.drawFeature(feature, cloneStyle);
         }
       }
