@@ -50,6 +50,7 @@ import {unByKey} from 'ol/Observable';
 import {bbox as bboxStrategy} from 'ol/loadingstrategy';
 import {toStringHDMS} from 'ol/coordinate';
 import {Element} from '@angular/compiler';
+import {catchError} from 'rxjs/operators';
 
 
 @Component({
@@ -185,16 +186,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 
 
 
-    /*this.openLayersService.deleteFeats$.subscribe(
-      data => {
-        console.log('que viene', data);
-        this.removeInteractions();
-        if (true === data) {
-          this.startDeleting();
-        }
-      },
-      error => alert('Error deleting features' + error)
-    ); */
+
 
     this.openLayersService.editAction$.subscribe(
       // starts an action and stop the others..is this ready with stop interactions?
@@ -230,7 +222,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
             break;
           }
           case 'Delete': {
-            this.startDeleting();
+            this.startDeletingV0();
             break;
           }
           case 'MeasureLine': {
@@ -285,7 +277,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
          // console.log('data', data);
          this.parseQgsProject(data);
          this.updateMapView();
-         // #TODO check if we should use a promise here, cretae styles then load wfs layers
+         // #TODO check if we should use a promise here, create styles then load wfs layers
          this.workQgsProject();
        }
        )
@@ -357,24 +349,26 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
           const layer = layersinGroup.item(j);
 
           const geometryType = layer.getAttribute('geometryType');
-          console.log('geometryType', geometryType);
+          // console.log('geometryType', geometryType);
           const layerName = layer.getElementsByTagName('Name')[0].childNodes[0].nodeValue;
           const layerTittle = layer.getElementsByTagName('Title')[0].childNodes[0].nodeValue;
           // const layerLegendUrl = layer.getAttribute('Tittle');
           // let layerLegendUrl = layer.getElementsByTagName('LegendURL')[0].childNodes[0].nodeValue;
           // let layerLegendUrl = layer.getElementsByTagName('LegendURL')[0];
           const urlResource = layer.querySelector('OnlineResource').getAttribute('xlink:href');
-          // console.log('urlResource', urlResource);
           // console.log('checkpoint', j, layerName, layerTittle, urlResource);
+          let legendLayer = this.createLegendLayer(urlResource);
+         // console.log('legendLayer',legendLayer );
           if (wfsLayerList.find(element => element === layerName)) {
             layerIsWfs = true;
             }
           listLayersinGroup.push({
-            layerName: layerName,
-            layerTittle: layerTittle,
+            layerName,
+            layerTittle,
             layerLegendUrl: urlResource,
+            legendLayer,
             wfs: layerIsWfs,
-            geometryType
+            geometryType,
           });
         }
         // get url for wms, wfs, getLegend and getStyles
@@ -402,8 +396,48 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     this.requestProjectInfo(qgsfile);
     }
 
+  createIconSymbols(iconSymbols: any){
+    // aqui puede venir una lista
+    let symbolList = [];
+    iconSymbols.nodes.forEach(
+      icon => {
+        console.log('icon.title and type', icon.title, icon.type);
+        if (icon.hasOwnProperty('icon')){
+          // it has one element
+          symbolList.push({iconSrc: icon.icon, title: icon.title});
+        }
+        if (icon.hasOwnProperty('symbols')){
+          // it has an array of symbols
+          icon.symbols.forEach(symbol => {
+            if (symbol.title.length > 0 ) {
+              console.log('symbol.title', symbol.title);
+              symbolList.push({iconSrc: symbol.icon, title: symbol.title});
+            }
+            // here the code for raster #TODO
+          });
+        }
 
+      });
+    return(symbolList);
+  }
 
+  createLegendLayer(urlResource: any){
+    /**
+     * Creates the legend nodes for each layer
+     */
+     // expresion regular para cubrin png and jpg
+     const re = /([image/])*(?:jpeg|png)/g;
+     const url = urlResource.replace(re, 'application/json');
+     // console.log('urlegend replaced', url);
+     return fetch (url)
+           .then(response => response.json())
+           .then(json => {
+              console.log('lo que llego', json);
+              const symbols = this.createIconSymbols(json);
+              return (symbols);
+              })
+           .catch(error => console.log ('Error retrivieng symbology', error));
+  }
 
 
 updateMapv0() {
@@ -1152,20 +1186,10 @@ enableAddShape(shape: string) {
       alert('No layer selected to edit');
       return;
     }
-    /*  commented on 23/06
-    let tsource: any = null;
-    this.map.getLayers().forEach(
-      layer => {
-        if (layer.get('name') === self.curEditingLayer.layerName) {
-          tsource = layer.getSource();
-          // console.log('Finds the current layer to add shapes', tsource);
-        }
-      }); */
+    console.log('this.currentClass', !this.currentClass, this.currentClass);
     const tsource = this.curEditingLayer.source;
-    // console.log('Finds the current layer to add shapes', this.curEditingLayer, tsource);
     let type: any;
     let geometryFunction: any;
-    // deactivate tany interaction? or remove?
     this.removeInteractions();  // remove select, modify, delete interactions
     try {
       // this.cacheFeatures = [];  // to remove whatever is there and only undo the last action
@@ -1199,7 +1223,9 @@ enableAddShape(shape: string) {
           this.removeDragPinchInteractions();  // to fix the zig zag lines #TODO test it
           break;
         }
-        case 'Polygon': {
+        case 'Polygon':
+        case 'Multipoligon':
+        case 'MultipolygonZ': {
           this.draw = new Draw({
             source: tsource,
             type: shape,
@@ -1256,7 +1282,14 @@ enableAddShape(shape: string) {
       this.map.addInteraction(this.snap);
       this.createMeasureTooltip();
       let listener;
-      this.draw.on('drawstart', function(evt) {
+      this.draw.on('drawstart', evt => {
+        if (this.currentClass == null){
+          // modified 02 03 2021 other atts will be required.
+          // e.feature.set('class', this.currentClass);
+          alert('Select a symbol');
+          this.draw.abortDrawing();
+          return;  // #TODO check this
+        }
         const sketch = evt.feature;
         let tooltipCoord = evt.coordinate;
         listener = sketch.getGeometry().on('change', evt => {
@@ -1279,28 +1312,23 @@ enableAddShape(shape: string) {
           }
         });
       });
-
       this.draw.on('drawend', (e: any) => {
         // adding an temporal ID, to handle undo
-        console.log ('COUNTING FINGERS in the draw interaction', this.draw.getPointerCount());  // getPointer is associated to the event?.. #TODO
+        // getPointer is associated to the event?.. #TODO
+        console.log ('COUNTING FINGERS in the draw interaction', this.draw.getPointerCount());
         e.feature.setId(this.curEditingLayer.layerName.concat('.', String(this.featId)));
         this.featId = this.featId + 1;
         // setting the class to set a style
-        if (this.currentClass) {
-         // modified 02 03 2021 other atts will be required.
-          // e.feature.set('class', this.currentClass);
-        } else {
-          alert('Select a symbol');
-          return;  // #TODO check this
-        }
+
         // console.log('feat', e.feature, e.feature.getStyle());
         // correct geometry when drawing circles
         if (self.draw.type_ === 'Circle' && e.feature.getGeometry().getType() !== 'Polygon') {
           e.feature.setGeometry(new fromCircle(e.feature.getGeometry()));
         }
         // automatic closing of lines to produce a polygon
-        if (self.draw.type_ === 'LineString' && self.curEditingLayer.geometry === 'Polygon') {
-          console.log('cuando entra aqui');
+        // if (self.draw.type_ === 'LineString' && self.curEditingLayer.geometry === 'Polygon')  {
+        if (self.draw.type_ === 'LineString' && (self.curEditingLayer.geometry.indexOf('Polygon') > -1)){
+          // valid for multipolygon and multipolygonz
           const geom = e.feature.getProperties().geometry;
           const threshold = AppConfiguration.threshold;
           const last = geom.getLastCoordinate();
@@ -1321,13 +1349,16 @@ enableAddShape(shape: string) {
           self.measureTooltip.setOffset([0, -7]);
         }
         // adding the interactions that were stopped when drawing
-        if (self.draw.type_ === 'Point' || self.draw.type_ === 'Circle') {
+        if (self.draw.type_ === 'Point' || self.draw.type_ === 'MultiPoint' || self.draw.type_ === 'Circle') {
           // console.log('interaction en el timeout', self.map.getInteractions());
           setTimeout(() => {
             self.addDragPinchInteractions();
           }, 1000);
         }
+        // prompting for attributes
+
         // adding features to a buffer cache
+
         self.editBuffer.push({
           layerName: self.curEditingLayer.layerName,
           transaction: 'insert',
@@ -1362,6 +1393,7 @@ startDeleting() {
     /** Creates a new select interaction that will be used to delete features
      * in the current editing layer  #TODO: simplify if possible concerning wfs layers and sketch layers
      */
+    console.log('this.curEditingLayer.layerName in StartDeleting', this.curEditingLayer.layerName);
     let tlayer: any;
     try {
       this.map.getLayers().forEach(layer => {
@@ -1436,6 +1468,108 @@ startDeleting() {
         self.canBeUndo = true;
       }
     });
+  }
+
+  startDeletingV0(){
+    {
+      /** enables to delete features selected with a rectangle when point geomtries or click in other case
+       * The user first select the features and then click in the location where those features will be located
+       * so far no difference in the code for sketch and WFS layers..
+       */
+      const tlayer = this.findLayer(this.curEditingLayer.layerName);
+      console.log('this.curEditingLayer in DeletingV0', this.curEditingLayer);
+      if (tlayer === null) {
+        alert('Error retrieving current layer in deleting features');
+        return;
+      }
+      const self = this;
+      const tsource = this.curEditingLayer.source;
+      this.removeInteractions();
+      this.select = new Select({
+        condition: click,  // check if this work on touch
+        layers: [tlayer],
+        hitTolerance: 7, // check if this is enough
+        style: this.selectStyle,
+      });
+      this.select.getFeatures().clear();
+      this.map.addInteraction(this.select);
+      const dirty = true;
+      console.log('interactions in the map', this.map.getInteractions());
+      if (this.curEditingLayer.geometryType === 'Point' || this.curEditingLayer.geometryType === 'MultiPoint' ){
+        this.dragBox = new DragBox({className: 'boxSelect'});
+        this.map.addInteraction(this.dragBox);
+        this.dragBox.on('boxend', () => {
+          if (this.dragBox.getGeometry() == null) {
+            return;
+          }
+          const extent = this.dragBox.getGeometry().getExtent();
+          // select the features
+          tsource.forEachFeatureIntersectingExtent(extent, f => {
+              self.select.getFeatures().push(f);
+            });
+          this.select.dispatchEvent('select');
+        });
+        // each time of starting a box clear features
+        this.dragBox.on('boxstart', function() {
+          self.select.getFeatures().clear();
+        });
+      }
+      // HERE add code to delete from the source and add to the buffer
+      this.select.on('select', function(e) {
+        const selectedFeatures = e.target.getFeatures();
+        // const cacheFeatures = [];
+        if (selectedFeatures.getLength() <= 0) {
+          return;
+        }
+        if (self.curEditingLayer.geometryType === 'Point' || self.curEditingLayer.geometryType === 'Line'
+          || self.curEditingLayer.geometryType === 'MultiPoint' || self.curEditingLayer.geometryType === 'Polygon') {
+
+         console.log('Lllega aqui on select XXX');
+          selectedFeatures.forEach(f => {
+            const lastFeat = f.clone();
+            lastFeat.setId(f.getId()); // to enable adding the feat again?
+            const tempId = f.getId();
+            // remove feature from the source
+            self.curEditingLayer.source.removeFeature(f);
+            // insert feature in a cache --> for undo
+            self.editBuffer.push({
+              layerName: self.curEditingLayer.layerName,
+              transaction: 'delete',  // would it be better to add the opposite operation already, e.g., insert?
+              feats: lastFeat,
+              dirty,
+              source: self.curEditingLayer.source
+            });
+          });
+          // clear the selection --> the style will also be clear
+         self.select.getFeatures().clear();
+          // update the possibility to undo and the cache for that
+         self.canBeUndo = true;
+          // self.cacheFeatures.push(cacheFeatures); // this keep open the possibility to delete several an undo several actions
+        console.log('cache', self.cacheFeatures);
+        console.log('editBuffer', self.editBuffer);
+        return;
+        }
+        else {
+          // this.ediLayer.geometry is different .. so a sketch layer
+          selectedFeatures.forEach(f => {
+            // cacheFeatures.push(());
+            // insert feature in a cache --> for undo
+            self.editBuffer.push({
+              layerName: self.curEditingLayer.layerName,
+              transaction: 'delete',  // would it be better to add the opposite operation already, e.g., insert?
+              feats: f.clone(),   // #TODO check id
+              dirty: true,
+              source: self.curEditingLayer.source
+            });
+            self.curEditingLayer.removeFeature(f);
+          });
+        }
+      });
+      // clear the selection --> the style will also be clear
+      this.select.getFeatures().clear();
+      // to enable undo
+      this.canBeUndo = true;
+    }
   }
 
 removeDragPinchInteractions() {
@@ -1897,7 +2031,7 @@ writeTransactWfs(editLayer: any) {
     if (layerTrs[editLayer.layerName].insert.length > 0) {
       node = formatWFS.writeTransaction( layerTrs[editLayer.layerName].insert, null, null, formatGML);
       str = xs.serializeToString(node);
-      console.log('str',str);
+      console.log('str', str);
       return fetch(strUrl, {
         method: 'POST', mode: 'no-cors', body: str
       })

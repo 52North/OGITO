@@ -1,4 +1,4 @@
-import {Component, OnInit, AfterViewInit, Input, Output, EventEmitter} from '@angular/core';
+import {Component, OnInit, AfterViewInit, Input, Output, EventEmitter, OnChanges} from '@angular/core';
 import {Observable, of as observableOf} from 'rxjs';
 import {CdkDragDrop, moveItemInArray} from '@angular/cdk/drag-drop';
 import {OpenLayersService} from '../open-layers.service';
@@ -67,11 +67,12 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
    // console.log(this.groupLayers);
    }
 
-ngOnInit(): void {
-  console.log('in layerPanel', this.groupLayers);
+
+  ngOnInit(): void {
+  console.log('in Layer Panel con delay', this.groupLayers);
   this.showLayerPanel$ = observableOf(true);
   this.openLayersService.showEditLayerPanel$.subscribe(data =>{
-    this.showLayerPanel$ = observableOf(data);
+  this.showLayerPanel$ = observableOf(data);
   },
     error => console.log('error showing layer panel'));
   }
@@ -140,6 +141,21 @@ ngOnInit(): void {
     // this.editLayerClick.emit(layer);  // with this the map should act accordingly to stop/start editing.
     // emit the event to chage opacity
   }
+
+  onShowingLegendClick($event: any, layer: any){
+    // TODO showing legend
+    /** shows a div below the layer with a slider to change the visibility of a layer
+     * @param $event for the future, doing nothing with it so far.
+     * @param item: item (layer) that was clicked on to change opacity
+     */
+    $event.preventDefault();
+    $event.stopImmediatePropagation();
+    console.log('colocar codigo aqui for showing legend', $event, layer.layerName);
+    // this.editLayerClick.emit(layer);  // with this the map should act accordingly to stop/start editing.
+    // emit the event to chage opacity
+  }
+
+
 
 
   onIdentifyLayerClick($event: any, layer: any, groupName: any) {

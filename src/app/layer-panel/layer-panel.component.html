@@ -31,9 +31,11 @@
                            (click)="onLayerVisClick($event,layer,group.groupName)" checkboxPosition="before"
                            [ngClass]="layerActive == layer.layerName? 'active': 'normal'" selected="true">
             <div class="selectLayer" >
+
               <div style="display:flex;align-items:center">
                 {{layer.layerName}} <!-- {{layer['layerTitle']}} -->
               </div>
+
               <div *ngIf="layer.wfs">
                 <button mat-icon-button
                         (click)="onEditLayerClick($event, layer, group.groupName)" >
@@ -49,9 +51,19 @@
                 <button mat-icon-button (click)="onOpacityLayerClick($event, layer)">
                   <mat-icon  class= "editIcon">opacity</mat-icon>
                 </button>
+                <button mat-icon-button (click)="onShowingLegendClick($event, layer)">
+                  <mat-icon  class= "editIcon">expand_more</mat-icon>
+                </button>
+
+              </div>
+              <div class="selectLayer">
+                <img [src] = layer.layerLegendUrl alt="legend">
+                <img [src] = layer.layerLegendUrl alt="legend">
               </div>
             </div>
+
           </mat-list-option>
+
         </mat-selection-list>
   </mat-expansion-panel>
 
