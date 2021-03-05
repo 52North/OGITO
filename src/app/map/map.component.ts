@@ -51,6 +51,7 @@ import {bbox as bboxStrategy} from 'ol/loadingstrategy';
 import {toStringHDMS} from 'ol/coordinate';
 import {Element} from '@angular/compiler';
 import {catchError} from 'rxjs/operators';
+import {QuestionService} from '../question-service.service';
 
 
 @Component({
@@ -126,6 +127,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 
   constructor(private mapQgsStyleService: MapQgsStyleService,
               private  openLayersService: OpenLayersService,
+              private questionService: QuestionService,
               public auth: AuthService) {
 
     this.subsToShapeEdit = this.openLayersService.shapeEditType$.subscribe(
@@ -275,18 +277,18 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
      .then(response => response.text())
      .then (data => {
          // console.log('data', data);
-         this.parseQgsProject(data);
-         this.updateMapView();
-         // #TODO check if we should use a promise here, create styles then load wfs layers
-         this.workQgsProject();
-       }
+         this.parseQgsProject(data).then(() => {
+          this.updateMapView();
+          // #TODO check if we should use a promise here, create styles then load wfs layers
+          this.workQgsProject();        });
+     }
        )
      .catch(error => console.error(error));
 
 
   }
 
-  parseQgsProject(gqsProjectinfo: any){
+  async parseQgsProject(gqsProjectinfo: any){
     /**
      * The styles for WFS layers are called from here
      */
@@ -357,11 +359,29 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
           // let layerLegendUrl = layer.getElementsByTagName('LegendURL')[0];
           const urlResource = layer.querySelector('OnlineResource').getAttribute('xlink:href');
           // console.log('checkpoint', j, layerName, layerTittle, urlResource);
-          let legendLayer = this.createLegendLayer(urlResource);
-         // console.log('legendLayer',legendLayer );
+          let legendLayer = await this.createLegendLayer(urlResource, layerName);
+          // console.log('legendLayer',legendLayer );
+          const fields = [];
           if (wfsLayerList.find(element => element === layerName)) {
             layerIsWfs = true;
+            // get the editable attributes
+            let attrs = layer.getElementsByTagName('Attributes')[0];
+            console.log('attrs', attrs);
+            for (let k = 0; k < attrs.getElementsByTagName('Attribute').length; k++) {
+              let field = attrs.getElementsByTagName('Attribute')[k];
+              console.log('field', field);
+              fields.push({
+                typeName: field.getAttribute('typeName'),
+                editType: field.getAttribute('editType'),
+                precision: field.getAttribute('precision'),
+                type: field.getAttribute('type'),
+                length: field.getAttribute('length'),
+                name: field.getAttribute('name'),
+                comment: field.getAttribute('comment')
+              });
+
             }
+          }
           listLayersinGroup.push({
             layerName,
             layerTittle,
@@ -369,6 +389,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
             legendLayer,
             wfs: layerIsWfs,
             geometryType,
+            onEdit: false,
+            fields
           });
         }
         // get url for wms, wfs, getLegend and getStyles
@@ -389,29 +411,36 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // get the styles for WFS layers
     this.mapQgsStyleService.createAllLayerStyles(this.qgsProjectFile, wfsLayerList);
-
+    this.questionService.setQuestions(this.groupsLayers);
   }
 
     updateMap(qgsfile: string) {
     this.requestProjectInfo(qgsfile);
     }
 
-  createIconSymbols(iconSymbols: any){
+  createIconSymbols(iconSymbols: any, layerName: any): any{
+    // return something for raster
+    // console.log ('iconSymbols', iconSymbols);
+    if (iconSymbols.nodes.length === 0) {
+       // layer does not have symbols, raster
+      // return ([{iconSrc: rasterIcon, title: layerName}]);
+      return ([{iconSrc: AppConfiguration.rasterIcon, title: layerName}]);
+    }
     // aqui puede venir una lista
     let symbolList = [];
     iconSymbols.nodes.forEach(
       icon => {
-        console.log('icon.title and type', icon.title, icon.type);
+        // console.log('icon.title and type', icon.title, icon.type);
         if (icon.hasOwnProperty('icon')){
           // it has one element
-          symbolList.push({iconSrc: icon.icon, title: icon.title});
+          symbolList.push({iconSrc: 'data:image/png;base64,' + icon.icon, title: icon.title});
         }
         if (icon.hasOwnProperty('symbols')){
           // it has an array of symbols
           icon.symbols.forEach(symbol => {
             if (symbol.title.length > 0 ) {
-              console.log('symbol.title', symbol.title);
-              symbolList.push({iconSrc: symbol.icon, title: symbol.title});
+              // console.log('symbol.title', symbol.title);
+              symbolList.push({iconSrc: 'data:image/png;base64,' + symbol.icon, title: symbol.title});
             }
             // here the code for raster #TODO
           });
@@ -421,7 +450,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     return(symbolList);
   }
 
-  createLegendLayer(urlResource: any){
+  async createLegendLayer(urlResource: any, layerName: any){
     /**
      * Creates the legend nodes for each layer
      */
@@ -429,14 +458,17 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
      const re = /([image/])*(?:jpeg|png)/g;
      const url = urlResource.replace(re, 'application/json');
      // console.log('urlegend replaced', url);
-     return fetch (url)
-           .then(response => response.json())
+     const legend =  fetch (url)
+           .then(response => response.json())// the return is implicit
            .then(json => {
-              console.log('lo que llego', json);
-              const symbols = this.createIconSymbols(json);
+              // console.log('lo que llego', json);
+              const symbols = this.createIconSymbols(json, layerName);
               return (symbols);
               })
+           .then (symbols => symbols)
+
            .catch(error => console.log ('Error retrivieng symbology', error));
+     return legend;
   }
 
 
@@ -1175,6 +1207,25 @@ imageCircle(radius) {
     });
   }
 
+ popAttrForm(layerName: any){
+   /**
+    * Build and fire a form according to the editable attriibute of the layer
+    * it fires a virtual keyboard for text and slidebar for number
+    */
+
+   const layer = this.findLayerinGroups(layerName);
+   console.log('fire the form ... que comience la fiesta', layer);
+   let questions = this.questionService.getQuestions(layerName);
+   // layer.fields.forEach(field => {
+     // make the type of widget for editing
+
+     // add validation criteria
+
+     // return
+     // widgets.push({field, widgettype: widgetType, rules: rules});
+   //});
+ }
+
 enableAddShape(shape: string) {
     /** enable the map to draw shape of the Shapetype
      * @param shape: string, type of shape to add e.g., 'POINT', 'LINE', 'CIRCLE'
@@ -1356,7 +1407,7 @@ enableAddShape(shape: string) {
           }, 1000);
         }
         // prompting for attributes
-
+         this.popAttrForm(this.curEditingLayer.layerName);
         // adding features to a buffer cache
 
         self.editBuffer.push({
@@ -1805,9 +1856,9 @@ updateMapVisibleLayer(selectedLayer: any){
 
 findLayerinGroups(layerName: string): any {
     for (const group of this.groupsLayers) {
-      const lyr = group.layers.find(x => x.name === layerName);
+      const lyr = group.layers.find(x => x.layerName === layerName);
       if (lyr) {
-        // console.log ("la consigue en los grupos", lyr);
+        console.log ('la consigue en los grupos', lyr);
         return (lyr);
       }
     }
@@ -2373,7 +2424,7 @@ startIdentifying(layerOnIdentifying: any)
     return;
   }
   console.log('layerOnIdentifying  startIdentifying', layerOnIdentifying );
-  const layer = this.searchLayer(layerOnIdentifying.layer.name, layerOnIdentifying.groupName); // find the layer in its group
+  const layer = this.searchLayer(layerOnIdentifying.layer.layerName, layerOnIdentifying.groupName); // find the layer in its group
   console.log('layer  startIdentifying', layer );
   if (!layer){
     return;

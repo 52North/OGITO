@@ -166,6 +166,7 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
      */
     $event.preventDefault();
     $event.stopImmediatePropagation();
+    console.log('to start identify layer, check the layer active thing', layer);
     this.identifyLayerClick.emit({layer, groupName});  // with this the map should act accordingly to stop/start editing.
     console.log('to start identify layer, check the layer active thing', layer);
     if (this.layerActive === layer.name) {

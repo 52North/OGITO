@@ -254,7 +254,7 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
   console.log ('showing Toolbar', visible);
   // desactivar todas las actions??
   for (let key in this.actionActive ) {
-      console.log("showing fresh tool ]",key,this.actionActive[key]);
+      // console.log("showing fresh tool ]",key,this.actionActive[key]);
       if (true === this.actionActive[key])
       {
         this.actionActive[key] = !this.actionActive[key];
