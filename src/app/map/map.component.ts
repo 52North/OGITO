@@ -1,5 +1,5 @@
-import {AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild} from '@angular/core';
-import {Subscription} from 'rxjs';
+import {AfterViewInit, Component, ElementRef, EventEmitter, OnDestroy, OnInit, Output, ViewChild} from '@angular/core';
+import {Subject, Subscription} from 'rxjs';
 import {AppConfiguration} from '../app-configuration';
 import 'ol/ol.css';
 import {Map, View} from 'ol';
@@ -49,10 +49,8 @@ import {AuthService} from '../auth.service';
 import {unByKey} from 'ol/Observable';
 import {bbox as bboxStrategy} from 'ol/loadingstrategy';
 import {toStringHDMS} from 'ol/coordinate';
-import {Element} from '@angular/compiler';
-import {catchError} from 'rxjs/operators';
 import {QuestionService} from '../question-service.service';
-
+import {QuestionBase} from '../question-base';
 
 @Component({
   selector: 'app-map',
@@ -67,6 +65,10 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('popup', {static: false}) container: ElementRef;  // the variable here is container, popup the html element
   @ViewChild('content', {static: false}) content: ElementRef;
   @ViewChild('closer', {static: false}) closer: ElementRef;
+  // Management of reactive forms
+  questionsSubject: Subject<QuestionBase<string>[]> = new Subject<QuestionBase<string>[]>();
+  showFormSubject: Subject<boolean> = new Subject<boolean>();
+
   public existingProject = true;
   map: Map;
   view: View;
@@ -101,6 +103,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
   loadedWfsLayers = []; // [{layerName: 'uno', layerTitle: 'Layer 1'}, {layerName: 'dos', layerTitle: 'layer 2'}];
   groupsLayers: any[] = [];
   loadedWmsLayers = []; // [{layerName: 'uno', layerTitle: 'Layer 1'}, {layerName: 'dos', layerTitle: 'layer 2'}];
+  formQuestions = [];
   curEditingLayer = null;
   curInfoLayer = null;   // a real OL layer object
   cacheFeatures = [];
@@ -366,10 +369,10 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
             layerIsWfs = true;
             // get the editable attributes
             let attrs = layer.getElementsByTagName('Attributes')[0];
-            console.log('attrs', attrs);
+            // console.log('attrs', attrs);
             for (let k = 0; k < attrs.getElementsByTagName('Attribute').length; k++) {
               let field = attrs.getElementsByTagName('Attribute')[k];
-              console.log('field', field);
+              // console.log('field', field);
               fields.push({
                 typeName: field.getAttribute('typeName'),
                 editType: field.getAttribute('editType'),
@@ -705,7 +708,7 @@ workQgsProject() {
     const urlWMS = qGsServerUrl + wmsVersion + capRequest + qGsProject;
     let parser: any;
     parser = new WMSCapabilities();
-    console.log('urlWMS', urlWMS);
+    // console.log('urlWMS', urlWMS);
     fetch(urlWMS)
       .then(response => {
         return response.text();
@@ -1207,23 +1210,26 @@ imageCircle(radius) {
     });
   }
 
- popAttrForm(layerName: any){
+  updateFormQuestions(questionsData: any, showForm: boolean){
+  this.questionsSubject.next(questionsData);
+  this.showFormSubject.next(showForm);
+  }
+
+popAttrForm(layerName: any) {
    /**
     * Build and fire a form according to the editable attriibute of the layer
     * it fires a virtual keyboard for text and slidebar for number
     */
+   try {
+     const layer = this.findLayerinGroups(layerName);
+     console.log('fire the form ... que comience la fiesta', layerName, layer);
+     this.formQuestions = this.questionService.getQuestions(layerName);
+     console.log('this.formQuestions', this.formQuestions);
+     this.updateFormQuestions(this.formQuestions, true);
+     // this.questionService.updateShowEditForm(true);
 
-   const layer = this.findLayerinGroups(layerName);
-   console.log('fire the form ... que comience la fiesta', layer);
-   let questions = this.questionService.getQuestions(layerName);
-   // layer.fields.forEach(field => {
-     // make the type of widget for editing
-
-     // add validation criteria
-
-     // return
-     // widgets.push({field, widgettype: widgetType, rules: rules});
-   //});
+   }
+ catch (e) { alert('Error initiazing form' + e); }
  }
 
 enableAddShape(shape: string) {
@@ -1237,7 +1243,7 @@ enableAddShape(shape: string) {
       alert('No layer selected to edit');
       return;
     }
-    console.log('this.currentClass', !this.currentClass, this.currentClass);
+    // console.log('this.currentClass', !this.currentClass, this.currentClass);
     const tsource = this.curEditingLayer.source;
     let type: any;
     let geometryFunction: any;
@@ -1263,13 +1269,7 @@ enableAddShape(shape: string) {
             freehand: true,
             stopClick: true,    // not clicks events will be fired when drawing points..
             style: this.getEditingStyle(),
-            condition: olBrowserEvent => {
-              if (olBrowserEvent.originalEvent.touches) {
-                console.log('tocuhes legth', olBrowserEvent.originalEvent.touches.length);
-                return olBrowserEvent.originalEvent.touches.length < 2;
-              }   // dibuja si hay menos de undos dedos..--> mo working
-              return false;
-            }
+            condition: (this.draw.getPointerCount() < 2)  // #TODO check
           });
           this.removeDragPinchInteractions();  // to fix the zig zag lines #TODO test it
           break;

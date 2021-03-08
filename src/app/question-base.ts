@@ -4,6 +4,8 @@ export class QuestionBase<T> {
   label: string;
   required: boolean;
   order: number;
+  min: number;
+  max: number;
   controlType: string;
   type: string;
   options: {key: string, value: string}[];
@@ -14,6 +16,8 @@ export class QuestionBase<T> {
     label?: string;
     required?: boolean;
     order?: number;
+    min?: number;
+    max?: number;
     controlType?: string;
     type?: string;
     options?: {key: string, value: string}[];
@@ -23,6 +27,8 @@ export class QuestionBase<T> {
     this.label = options.label || '';
     this.required = !!options.required;
     this.order = options.order === undefined ? 1 : options.order;
+    this.min = options.min === undefined ? 1 : options.min;
+    this.max = options.max === undefined ? 10 : options.max;
     this.controlType = options.controlType || '';
     this.type = options.type || '';
     this.options = options.options || [];

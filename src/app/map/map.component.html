@@ -14,3 +14,6 @@
 (editLayerClick)="updateEditingLayer($event)"  (groupLayerVisClick)="updateMapVisibleGroupLayer($event)"
 (layersOrder) = "updateOrderGroupsLayers($event)"
 (identifyLayerClick)="startIdentifying($event)"></app-layer-panel>
+<app-dynamic-form   [questions]="questionsSubject.asObservable()"
+                   [showForm]="showFormSubject.asObservable()"     > <!--[questions]="formQuestions" -->  <!-- from parent to Child) -->
+</app-dynamic-form>

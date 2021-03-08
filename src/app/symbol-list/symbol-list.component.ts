@@ -89,13 +89,13 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
     /** Creates a dictionary with the styles per class when needed
      * @param styles: the array with the classes and styles
      */
-    console.log('styles', styles);
+    // console.log('styles', styles);
     const symbolDict = {};
     for (const key of Object.keys(styles)){
       // console.log(`${key} -> ${styles[key].value}`);
       symbolDict[styles[key].value] = {style: styles[key].style, label: styles[key].label};             // styles[key].style;
     }
-    console.log('estilos en dict format', symbolDict);
+    // console.log('estilos en dict format', symbolDict);
     return symbolDict;
   }
 
@@ -111,7 +111,7 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
       console.log(`${key} -> ${styles[key].value}`);
       symbolDict[styles[key].value] = {style: styles[key].style, label: styles[key].label};             // styles[key].style;
     }
-    console.log('estilos en dict format', symbolDict);
+    // console.log('estilos en dict format', symbolDict);
     return symbolDict;
   }
 
@@ -141,11 +141,11 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
         canvas.nativeElement.height = height;
         // console.log('width and height', height, width, canvas.nativeElement.width , devicePixelRatio  );
         const render = toContext(canvas.nativeElement.getContext('2d'));
-        console.log(' que llega a this.symbols$', this.symbols$);
+        // console.log(' que llega a this.symbols$', this.symbols$);
         const stylelayer = this.symbols$[key];
-        console.log('que hay en stylelayer', stylelayer);
+        // console.log('que hay en stylelayer', stylelayer);
         const stylelayerClone = [];   // clone the style hopefully deep copy
-        console.log('entra this.geometryTypeSymbols', this.geometryTypeSymbols);
+        // console.log('entra this.geometryTypeSymbols', this.geometryTypeSymbols);
         switch (this.geometryTypeSymbols) {
           case 'Point': {
             const cx = width / 2;
@@ -200,12 +200,12 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
         // console.log('stylelayerClone', stylelayerClone);
         if (stylelayerClone.length > 0) {
           for (const style of stylelayerClone) {
-            console.log(' one style in several', style );
+            // console.log(' one style in several', style );
             render.drawFeature(feature, style);
           }
         } else {
           for (const style of stylelayer) {
-            console.log(' one style', style );
+            // console.log(' one style', style );
             render.drawFeature(feature, style);
           }
         }

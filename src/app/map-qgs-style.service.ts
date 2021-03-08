@@ -448,7 +448,7 @@ export class MapQgsStyleService {
           fill
         });
 
-        console.log('svgMarker in newStyle', newStyle);
+        // console.log('svgMarker in newStyle', newStyle);
         break;
       }
     }
@@ -496,16 +496,16 @@ export class MapQgsStyleService {
     // let layerStyles = [];
     parser.parseString(xmlTextStyle, (err, result) => {
       const jsonStyle = result;
-      console.log('que sale', jsonStyle);
-      console.log(jsonStyle.StyledLayerDescriptor.NamedLayer);
-      console.log('lenght', jsonStyle.StyledLayerDescriptor.NamedLayer.length);
+      // console.log('que sale', jsonStyle);
+      // console.log(jsonStyle.StyledLayerDescriptor.NamedLayer);
+      //  console.log('lenght', jsonStyle.StyledLayerDescriptor.NamedLayer.length);
       for (let i = 0; i < jsonStyle.StyledLayerDescriptor.NamedLayer.length; i++) {
         const layerStyle = jsonStyle.StyledLayerDescriptor.NamedLayer[i];
         const layerName = layerStyle['se:Name'][0];
         for (let j = 0; j < layerStyle.UserStyle[0]['se:FeatureTypeStyle'][0]['se:Rule'].length; j++) {
           const featureStyleRule = layerStyle.UserStyle[0]['se:FeatureTypeStyle'][0]['se:Rule'][j];
           // here to ask for name and if polygonSymbolizer or point Symbolizer
-          console.log('layerName,featureStyle', layerName, featureStyleRule);
+          // console.log('layerName,featureStyle', layerName, featureStyleRule);
           const styleType = featureStyleRule['se:Name'][0];
           if (styleType === 'Single symbol') {
             if (featureStyleRule.hasOwnProperty('se:PointSymbolizer')) {
@@ -576,7 +576,7 @@ export class MapQgsStyleService {
     const capRequest = '&REQUEST=GetStyles';
     const wmsVersion = 'SERVICE=WMS&VERSION=' + AppConfiguration.wmsVersion;
     const urlStyle = AppConfiguration.qGsServerUrl + wmsVersion + capRequest + qGsProject + '&LAYERS=' + layerList;
-    console.log('urlStyle', urlStyle);
+    // ('urlStyle', urlStyle);
     const xmlStyles = fetch(urlStyle)
       .then(response => response.text())
       .then(text => {

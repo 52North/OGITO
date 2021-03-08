@@ -35,5 +35,18 @@ export class AppConfiguration{
     'y0WaVDqGnLG29hAuFWlqaiNocYQrf2XsoOzLWE0tPejGqfSPNNkmfh9nMvlbkeh50UajRr+1tIoa/ybmizRDhpZWrDxCVybUxut9naCiouIQ2DuJn8B' +
     'HDGZy2rgVhLdZcRC68EG+xGzgZsn03ot38j8La7gRhAV+ncR7YvFYyQHOI2csEvUnkpEiwc+GnDOGsxguWO+pqQ1jgX+9JR0GR99YLC5tumVNPJGUas' +
     'qaeCTal2b38gdhJQh3/bice9lIpU+LNho3vtzSuof+TGi9Q0fZ9L6EB4q/yldlpit+x3fslpvzPO+TtwAAAABJRU5ErkJggg==';
-}
 
+  // Values for range in slider
+  static range = { min: 1, max: 10};
+  static ranges = {
+     'intensity_auto': {min: 1, max: 10},
+     'intensity_schiene': {min: 1, max: 10},
+     'intensity_kinder': {min: 1, max: 10},
+     'intensity_sonstiges': {min: 1, max: 10},
+     'intensity_arbeit': {min: 1, max: 10},
+     'intensity_bus': {min: 1, max: 10},
+  }
+
+
+
+}

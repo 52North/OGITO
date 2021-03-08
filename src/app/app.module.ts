@@ -10,9 +10,11 @@ import { EditingToolbarComponent } from './editing-toolbar/editing-toolbar.compo
 import { LayerPanelComponent } from './layer-panel/layer-panel.component';
 import { SymbolListComponent } from './symbol-list/symbol-list.component';
 import { ToolbarComponent } from './toolbar/toolbar.component';
-import {FormsModule} from '@angular/forms';
+import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {HttpClientModule } from '@angular/common/http';
 import { ProjlistComponent } from './projlist/projlist.component';
+import { DynamicFormComponent } from './dynamic-form/dynamic-form.component';
+import { DynamicFormQuestionComponent } from './dynamic-form-question/dynamic-form-question.component';
 @NgModule({
   declarations: [
     AppComponent,
@@ -22,7 +24,9 @@ import { ProjlistComponent } from './projlist/projlist.component';
     LayerPanelComponent,
     SymbolListComponent,
     ToolbarComponent,
-    ProjlistComponent
+    ProjlistComponent,
+    DynamicFormComponent,
+    DynamicFormQuestionComponent
   ],
   imports: [
     BrowserModule,
@@ -31,7 +35,8 @@ import { ProjlistComponent } from './projlist/projlist.component';
     DemoMaterialModule,
     FormsModule,
     HammerModule,
-    HttpClientModule
+    HttpClientModule,
+    ReactiveFormsModule
   ],
   providers: [LayerPanelComponent],
   bootstrap: [AppComponent]

@@ -1,0 +1,36 @@
+<div class ="example-list"  *ngIf="showForm$ | async"  cdkDragBoundary=".map" cdkDrag >
+<p>dynamic-form works!</p>
+  <form (ngSubmit)="onSubmit()" [formGroup]="form">
+
+    <div *ngFor="let question of sQuestions" class="form-row">
+     <!-- <app-question [question]="question" [form]="form"></app-question> -->
+      <div [formGroup]="form">
+        <label [attr.for]="question.key">{{question.label}}</label>
+
+        <div [ngSwitch]="question.controlType">
+
+          <input *ngSwitchCase="'textbox'" [formControlName]="question.key"
+                 [id]="question.key" [type]="question.type">
+
+          <select [id]="question.key" *ngSwitchCase="'dropdown'" [formControlName]="question.key">
+            <option *ngFor="let opt of question.options" [value]="opt.key">{{opt.value}}</option>
+          </select>
+
+        </div>
+
+       <!-- <div class="errorMessage" *ngIf="!isValid">{{question.label}} is required</div>  -->
+      </div>
+
+
+    </div>
+
+    <div class="form-row">
+      <button type="submit" [disabled]="!form.valid">Save</button>
+    </div>
+  </form>
+
+  <div *ngIf="payLoad" class="form-row">
+    <strong>Saved the following values</strong><br>{{payLoad}}
+  </div>
+</div>
+
