@@ -51,6 +51,8 @@ import {bbox as bboxStrategy} from 'ol/loadingstrategy';
 import {toStringHDMS} from 'ol/coordinate';
 import {QuestionService} from '../question-service.service';
 import {QuestionBase} from '../question-base';
+import {catchError} from 'rxjs/operators';
+import {DynamicFormComponent} from '../dynamic-form/dynamic-form.component';
 
 @Component({
   selector: 'app-map',
@@ -65,9 +67,16 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('popup', {static: false}) container: ElementRef;  // the variable here is container, popup the html element
   @ViewChild('content', {static: false}) content: ElementRef;
   @ViewChild('closer', {static: false}) closer: ElementRef;
+
   // Management of reactive forms
+  @ViewChild(DynamicFormComponent)
+  private dynamicFormComponent: DynamicFormComponent;
+
   questionsSubject: Subject<QuestionBase<string>[]> = new Subject<QuestionBase<string>[]>();
   showFormSubject: Subject<boolean> = new Subject<boolean>();
+  payload: any;
+  dataForm = new Subject <any>();
+  dataForm$ = this.dataForm.asObservable();
 
   public existingProject = true;
   map: Map;
@@ -187,7 +196,10 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     );
 
 
-
+    this.dataForm$.subscribe(
+      (data) => {
+        console.log('data in constructorXXXXXXXXXXXXXXX', data);
+      });
 
 
 
@@ -545,6 +557,7 @@ initializeMap() {
       ]
     });
     this.map = new Map({
+      /* test to add an empty map no layers
       layers: [
         new LayerGroup({
           layers: [new TileLayer({
@@ -556,7 +569,7 @@ initializeMap() {
           })],
           name: 'OSM Background'
         })
-      ],
+      ], */
       interactions: defaultInteractions({pinchZoom: false, pinchRotate: false})
         .extend([this.dragAndDropInteraction, this.pinchRotate, this.pinchZoom, this.dragRotate, this.dragZoom]),
       target: 'map',
@@ -670,6 +683,7 @@ ngAfterViewInit() {
       this.closer.nativeElement.blur();
       return false;
     };
+
   }
 
 zoomToHome() {
@@ -1210,27 +1224,61 @@ imageCircle(radius) {
     });
   }
 
-  updateFormQuestions(questionsData: any, showForm: boolean){
+  updateFormQuestions(questionsData: any){
   this.questionsSubject.next(questionsData);
-  this.showFormSubject.next(showForm);
   }
 
-popAttrForm(layerName: any) {
-   /**
-    * Build and fire a form according to the editable attriibute of the layer
-    * it fires a virtual keyboard for text and slidebar for number
-    */
-   try {
-     const layer = this.findLayerinGroups(layerName);
-     console.log('fire the form ... que comience la fiesta', layerName, layer);
-     this.formQuestions = this.questionService.getQuestions(layerName);
-     console.log('this.formQuestions', this.formQuestions);
-     this.updateFormQuestions(this.formQuestions, true);
-     // this.questionService.updateShowEditForm(true);
+popAttrForm(layerName: any, e: any) {
+  /**
+   * Build and fire a form according to the editable attriibute of the layer
+   * it fires a virtual keyboard for text and slidebar for number
+   */
+  try {
+    const layer = this.findLayerinGroups(layerName);
+    console.log('fire the form ... que comience la fiesta', layerName, layer);
+    this.formQuestions = this.questionService.getQuestions(layerName);
+    console.log('this.formQuestions', this.formQuestions);
 
-   }
- catch (e) { alert('Error initiazing form' + e); }
- }
+    this.updateFormQuestions(this.formQuestions);
+    this.updateShowForm(true);
+    this.dynamicFormComponent.payLoad$.subscribe(
+      data => {console.log('data in popAttrForm', data);
+                    this.addingAttrFeature(e, data);},
+      error => {console.log('error in subs ', error);}
+    );
+    console.log('this.dynamicFormComponent.payLoad', this.dynamicFormComponent.payLoad);
+  }
+  catch
+    (e) { alert('Error initializing form' + e);  }
+  }
+
+
+updateShowForm(showForm: boolean) {
+  this.showFormSubject.next(showForm);
+}
+
+getFormData(payload: any) {
+  console.log('llega payload?', payload);
+  // this.payload = payload;
+  // this.payloadSource.next(payload);
+  this.updateShowForm(false);
+  console.log('this.dynamicFormComponent.payLoad inset getFormData', this.dynamicFormComponent.payLoad);
+}
+
+gettingDataForm(data: any){
+  //
+  console.log('data in gettingDataForm', data);
+  data.then((data) => {
+    console.log('data dentro del then', data);
+  });
+  }
+
+
+addingAttrFeature(attr:any, e:any){
+  console.log('do something', e, attr);
+  // continue the saving part here;
+}
+
 
 enableAddShape(shape: string) {
     /** enable the map to draw shape of the Shapetype
@@ -1363,7 +1411,7 @@ enableAddShape(shape: string) {
           }
         });
       });
-      this.draw.on('drawend', (e: any) => {
+      this.draw.on('drawend', async (e: any) => {
         // adding an temporal ID, to handle undo
         // getPointer is associated to the event?.. #TODO
         console.log ('COUNTING FINGERS in the draw interaction', this.draw.getPointerCount());
@@ -1406,10 +1454,15 @@ enableAddShape(shape: string) {
             self.addDragPinchInteractions();
           }, 1000);
         }
-        // prompting for attributes
-         this.popAttrForm(this.curEditingLayer.layerName);
+        // prompting for attributes and finishing that
+        this.popAttrForm(this.curEditingLayer.layerName, e.feature);
         // adding features to a buffer cache
-
+        this.dynamicFormComponent.payLoad$.subscribe(
+          (data) => { console.log('inside drawend', data);
+                      this.addingAttrFeature(data, e); },
+          (error) => {console.log('ya no estoy estancada', error);}
+        );
+        console.log ("PASA X AQUI?????...........")
         self.editBuffer.push({
           layerName: self.curEditingLayer.layerName,
           transaction: 'insert',
@@ -1834,11 +1887,11 @@ updateMapVisibleLayer(selectedLayer: any){
    * updates the visibility of a layer in the map
    * @param selectedLayer is a dictionary layer that was clicked to show/hide
    */
-    // console.log('selectedLayer', selectedLayer);
+    console.log('selectedLayer', selectedLayer);
     const layerName = selectedLayer.layer.layerName;
     const groupName = selectedLayer.groupName;
 
-    // console.log('prueba event capture from child emitter', selectedLayer);
+    console.log('Map groups', this.map.getLayers());
     this.map.getLayers().forEach(layer => {
       if (groupName === layer.get('name')) {
         layer.getLayers().forEach(lyrinGroup => {

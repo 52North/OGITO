@@ -9,11 +9,16 @@
   <a href="#" #closer class="ol-popup-closer"></a>
   <div id="popup-content" #content></div>
 </div>
+<div *ngIf="loadedWfsLayers">
 <app-layer-panel [editLayers]="loadedWfsLayers" [groupLayers] = "groupsLayers"
                  (layerVisClick)="updateMapVisibleLayer($event)"
 (editLayerClick)="updateEditingLayer($event)"  (groupLayerVisClick)="updateMapVisibleGroupLayer($event)"
 (layersOrder) = "updateOrderGroupsLayers($event)"
 (identifyLayerClick)="startIdentifying($event)"></app-layer-panel>
-<app-dynamic-form   [questions]="questionsSubject.asObservable()"
-                   [showForm]="showFormSubject.asObservable()"     > <!--[questions]="formQuestions" -->  <!-- from parent to Child) -->
+</div>
+<app-dynamic-form #dynamicForm  [questions]="questionsSubject.asObservable()"
+                   [showForm]="showFormSubject.asObservable()"
+                  [dataForm] = "dataForm"
+                    (formSubmitted) = "getFormData($event)"
+                    > <!--[questions]="formQuestions" -->  <!-- from parent to Child) -->
 </app-dynamic-form>

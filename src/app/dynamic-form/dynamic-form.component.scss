@@ -1,5 +1,27 @@
 .example-list{
   left: 60% !important;
-  max-width: 8%;
+  max-width: 12%;
   top: 40% !important;
+}
+.label{
+  padding-left: 5px;
+  display:inline-block;
+  max-width: 80%;
+}
+.inputField{
+  padding-left: 5px;
+  display:inline-block;
+  max-width: 80%;
+  line-height: 50px;
+}
+.tittle{
+  // padding-left: 5px;
+  text-align: center;
+}
+.form-row {
+  padding-top: 15px;
+}
+.inputField
+{ padding: 20px 10px;
+  line-height: 28px !important;
 }

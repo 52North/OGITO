@@ -1,5 +1,5 @@
-import {Component, Input, OnInit} from '@angular/core';
-import {Observable, of as observableOf, Subscription} from 'rxjs';
+import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
+import {Observable, of, of as observableOf, Subject, Subscription} from 'rxjs';
 import {QuestionService} from '../question-service.service';
 import { FormGroup } from '@angular/forms';
 import { QuestionBase } from '../question-base';
@@ -15,9 +15,15 @@ export class DynamicFormComponent implements OnInit {
   // new approach
   @Input() questions: Observable<QuestionBase<string>[]>;
   @Input() showForm: Observable<boolean>;
+  @Output() formSubmitted = new EventEmitter<any>();
+  @Input() dataForm: any;
+
   sQuestions: QuestionBase<string>[];
   form: FormGroup;
   payLoad = '';
+  payLoadSource = new Subject <any>();
+  payLoad$ = this.payLoadSource.asObservable();
+  // public dataForm: Promise<any>;
   private questionsSubscription: Subscription;
   private showFormSubscription: Subscription;
 
@@ -37,17 +43,29 @@ export class DynamicFormComponent implements OnInit {
       data => {
         this.showForm$ = observableOf(data);
       },
-      error => console.log('error showing layer panel')
+      error => console.log('error showing form', error)
       );
-    /*this.questionService.showEditForm$.subscribe(data => {
-        this.showForm$ = observableOf(data);
-      },
-      error => console.log('error showing layer panel'));*/
+
   }
 
+  async returnPromise(){
+    /* const promise = new Promise((resolve, reject) => {
+      setTimeout(() => {
+        console.log('Async Work Complete');
+        resolve(this.payLoad);
+      }, 1000);
+    }); */
+    return this.payLoad;
+  }
 
   onSubmit() {
     this.payLoad = JSON.stringify(this.form.getRawValue());
+    console.log('it was submited', this.payLoad);
+    this.dataForm = this.payLoad;
+    this.payLoadSource.next(this.payLoad);
+    this.formSubmitted.emit(this.payLoad);
+    // this.dataForm.resolve(this.payLoad));
+   // this.dataForm = of(this.payLoad);
   }
 
 
