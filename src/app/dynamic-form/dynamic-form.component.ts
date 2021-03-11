@@ -15,6 +15,7 @@ export class DynamicFormComponent implements OnInit {
   // new approach
   @Input() questions: Observable<QuestionBase<string>[]>;
   @Input() showForm: Observable<boolean>;
+  @Input() featureLayer: any;
   @Output() formSubmitted = new EventEmitter<any>();
   @Input() dataForm: any;
 
@@ -36,7 +37,7 @@ export class DynamicFormComponent implements OnInit {
       data => {
         this.sQuestions = data;
         this.form = this.questionService.toFormGroup(data);
-        console.log ('que hace despues de formar grupos', this.form);
+        console.log ('que tiene this.featureLayer en questionSubscription', data , this.featureLayer );
       },
       error => console.log ('Error in subscription to questions ', error)    );
     this.showFormSubscription = this.showForm.subscribe(
@@ -59,11 +60,12 @@ export class DynamicFormComponent implements OnInit {
   }
 
   onSubmit() {
-    this.payLoad = JSON.stringify(this.form.getRawValue());
-    console.log('it was submited', this.payLoad);
+    // this.payLoad = JSON.stringify(this.form.getRawValue());
+    this.payLoad = this.form.getRawValue(); // get the values in JSON
+    console.log('it was submited', this.payLoad, this.featureLayer);
     this.dataForm = this.payLoad;
     this.payLoadSource.next(this.payLoad);
-    this.formSubmitted.emit(this.payLoad);
+    this.formSubmitted.emit({payload: this.payLoad, feature: this.featureLayer.feature, layerName: this.featureLayer.layerName});
     // this.dataForm.resolve(this.payLoad));
    // this.dataForm = of(this.payLoad);
   }

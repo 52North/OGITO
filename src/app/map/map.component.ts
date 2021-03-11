@@ -74,6 +74,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 
   questionsSubject: Subject<QuestionBase<string>[]> = new Subject<QuestionBase<string>[]>();
   showFormSubject: Subject<boolean> = new Subject<boolean>();
+  featureLayerForm: {};
   payload: any;
   dataForm = new Subject <any>();
   dataForm$ = this.dataForm.asObservable();
@@ -1224,29 +1225,32 @@ imageCircle(radius) {
     });
   }
 
-  updateFormQuestions(questionsData: any){
+  updateFormQuestions(questionsData: any, layerName: any, feature: any){
+  this.featureLayerForm = { layerName, feature };
   this.questionsSubject.next(questionsData);
   }
 
-popAttrForm(layerName: any, e: any) {
+
+popAttrForm(layerName: any, feature: any) {
   /**
    * Build and fire a form according to the editable attriibute of the layer
    * it fires a virtual keyboard for text and slidebar for number
    */
   try {
-    const layer = this.findLayerinGroups(layerName);
-    console.log('fire the form ... que comience la fiesta', layerName, layer);
     this.formQuestions = this.questionService.getQuestions(layerName);
     console.log('this.formQuestions', this.formQuestions);
-
-    this.updateFormQuestions(this.formQuestions);
+    this.updateFormQuestions(this.formQuestions, layerName, feature);
     this.updateShowForm(true);
-    this.dynamicFormComponent.payLoad$.subscribe(
-      data => {console.log('data in popAttrForm', data);
-                    this.addingAttrFeature(e, data);},
-      error => {console.log('error in subs ', error);}
-    );
-    console.log('this.dynamicFormComponent.payLoad', this.dynamicFormComponent.payLoad);
+    // adding features to a buffer cache
+    /*this.dynamicFormComponent.payLoad$.subscribe(
+      (data) => {
+                  // assign attributes
+                  const newFeature = this.addingAttrFeature(feature, data);
+                  // save in the buffer
+                  this.saveFeatinBuffer(layerName, layerSource, feature);
+        },
+      (error) => {console.log('ya no estoy estancada', error); }
+    );*/
   }
   catch
     (e) { alert('Error initializing form' + e);  }
@@ -1257,26 +1261,62 @@ updateShowForm(showForm: boolean) {
   this.showFormSubject.next(showForm);
 }
 
-getFormData(payload: any) {
-  console.log('llega payload?', payload);
+getFormData(data: any) {
+  console.log('llega payload? in getFormData', data);
   // this.payload = payload;
   // this.payloadSource.next(payload);
   this.updateShowForm(false);
-  console.log('this.dynamicFormComponent.payLoad inset getFormData', this.dynamicFormComponent.payLoad);
+  // assign attributes
+  this.addingAttrFeature(data.feature, data.payload);
+    // save in the buffer
+  this.saveFeatinBuffer(data.layerName, data.feature);
 }
 
-gettingDataForm(data: any){
+/*gettingDataForm(data: any){
   //
   console.log('data in gettingDataForm', data);
   data.then((data) => {
     console.log('data dentro del then', data);
   });
+  } */
+
+
+addingAttrFeature(feature: any,  attr: any){
+  // console.log('do something', feature.getId(), attr);
+  if (attr !== 'undefined') {
+    for (const key in attr) {
+      feature.set(key, attr[key]);
+    }
   }
+  return (feature);
+}
 
-
-addingAttrFeature(attr:any, e:any){
-  console.log('do something', e, attr);
-  // continue the saving part here;
+saveFeatinBuffer(layerName: string, feature: any){
+  // find layer
+  let tlayer: any;
+  tlayer = this.findWfsLayer(layerName);
+  console.log('layerSource in saveFeatinBuffer', tlayer.source);
+  // get data source
+  const layerSource = tlayer.source;
+  this.editBuffer.push({
+    layerName,
+    transaction: 'insert',
+    feats: feature,
+    dirty: true,    // dirty is not in the WFS
+    // 'layer': self.curEditingLayer[0],
+    source: layerSource
+  });
+  // console.log('editbuffer', self.editBuffer);
+  this.canBeUndo = true;
+  this.cacheFeatures.push({
+    layerName,
+    transaction: 'insert',
+    feats: feature,
+    dirty: true,    // dirty is not in the WFS
+    // 'layer': self.curEditingLayer[0],
+    source: layerSource
+  });
+  console.log('this.editBuffer', this.editBuffer);
 }
 
 
@@ -1417,9 +1457,6 @@ enableAddShape(shape: string) {
         console.log ('COUNTING FINGERS in the draw interaction', this.draw.getPointerCount());
         e.feature.setId(this.curEditingLayer.layerName.concat('.', String(this.featId)));
         this.featId = this.featId + 1;
-        // setting the class to set a style
-
-        // console.log('feat', e.feature, e.feature.getStyle());
         // correct geometry when drawing circles
         if (self.draw.type_ === 'Circle' && e.feature.getGeometry().getType() !== 'Polygon') {
           e.feature.setGeometry(new fromCircle(e.feature.getGeometry()));
@@ -1456,42 +1493,22 @@ enableAddShape(shape: string) {
         }
         // prompting for attributes and finishing that
         this.popAttrForm(this.curEditingLayer.layerName, e.feature);
-        // adding features to a buffer cache
-        this.dynamicFormComponent.payLoad$.subscribe(
-          (data) => { console.log('inside drawend', data);
-                      this.addingAttrFeature(data, e); },
-          (error) => {console.log('ya no estoy estancada', error);}
-        );
-        console.log ("PASA X AQUI?????...........")
-        self.editBuffer.push({
-          layerName: self.curEditingLayer.layerName,
-          transaction: 'insert',
-          feats: e.feature,
-          dirty: true,    // dirty is not in the WFS
-          // 'layer': self.curEditingLayer[0],
-          source: tsource
-        });
-        // console.log('editbuffer', self.editBuffer);
-        self.canBeUndo = true;
-        self.cacheFeatures.push({
-          layerName: self.curEditingLayer.layerName,
-          transaction: 'insert',
-          feats: e.feature,
-          dirty: true,    // dirty is not in the WFS
-          // 'layer': self.curEditingLayer[0],
-          source: tsource
-        });
         // unset tooltip so that a new one can be created
-        self.measureTooltipElement.innerHTML = '';
-        self.measureTooltipElement = null;
-        self.map.removeOverlay(self.measureTooltip);
-        self.createMeasureTooltip();
+        this.unsetMeasureToolTip();
       });
 
     } catch (e) {
       console.log('Error adding draw interactions', e);
     }
   }
+
+  unsetMeasureToolTip(){
+    this.measureTooltipElement.innerHTML = '';
+    this.measureTooltipElement = null;
+    this.map.removeOverlay(this.measureTooltip);
+    this.createMeasureTooltip();
+  }
+
 
 startDeleting() {
     /** Creates a new select interaction that will be used to delete features
@@ -1909,7 +1926,7 @@ updateMapVisibleLayer(selectedLayer: any){
 
 findLayerinGroups(layerName: string): any {
     for (const group of this.groupsLayers) {
-      const lyr = group.layers.find(x => x.layerName === layerName);
+      const lyr = group.layers.find(x => x.layerName.toLowerCase() === layerName.toLowerCase());
       if (lyr) {
         console.log ('la consigue en los grupos', lyr);
         return (lyr);
@@ -2239,25 +2256,35 @@ saveWFSAll() {
    */
   }
 
-findLayer(layername: string){
-    /**
-     * find the object layer with the name @layername
-     * @param layername: string, the name of the layer to find
-     * @return tlayer: the object layer found
-     */
-    let tlayer: any = null;
-    try{
-      this.map.getLayers().forEach(layer => {
-        if (layer.get('name') === layername) {
-          console.log ('layer.get(\'name\')', layer.get('name'), this.curEditingLayer.layerName === layer.get('name'));
-          tlayer = layer;
-          return (tlayer);
-        }
-      });
-    }
-    catch (e) {
-      console.log('error getting the layer', e);
-    }
+findWfsLayer(layerName: string) {
+  /**
+   * find the object layer with the name @layername
+   * @param layername: string, the name of the layer to find
+   * @return tlayer: the object layer found
+   */
+  let tlayer: any = null;
+  // const groupName = this.findLayerinGroups(layerName);
+  // console.log('this.map.getLayers() in findlayer', this.map.getLayers());
+  tlayer = this.loadedWfsLayers.find(x => x.layerName.toLowerCase() === layerName.toLowerCase());
+  console.log('tlayer in findLyer', tlayer);
+  return (tlayer);
+}
+
+findLayer(layerName: string) {
+  let tlayer: any = null;
+  const groupName = this.findLayerinGroups(layerName);
+  this.map.getLayers().forEach(layer => {
+      if (groupName.toLowerCase() === layer.get('name').toLowerCase()) {
+        layer.getLayers().forEach(lyrinGroup => {
+          console.log('lyrinGroup.get(\'name\')', lyrinGroup.get('name'));
+          if (layerName.toLowerCase() === lyrinGroup.get('name').toLowerCase()) {
+            tlayer = lyrinGroup;
+          }
+        });
+        return;
+      }
+    });
+  return tlayer;
   }
 
 startTranslating()
