@@ -1267,7 +1267,7 @@ getFormData(data: any) {
   // this.payloadSource.next(payload);
   this.updateShowForm(false);
   // assign attributes
-  this.addingAttrFeature(data.feature, data.payload);
+  this.addingAttrFeature(data.layerName, data.feature, data.payload);
     // save in the buffer
   this.saveFeatinBuffer(data.layerName, data.feature);
 }
@@ -1281,15 +1281,49 @@ getFormData(data: any) {
   } */
 
 
-addingAttrFeature(feature: any,  attr: any){
-  // console.log('do something', feature.getId(), attr);
+addingAttrFeature(layerName: string, feature: any,  attr: any){
+
+  // find the layer in groups to get the editable fields
+  const tlayer = this.findLayerinGroups(layerName);
+  const fields = tlayer.fields;
+  console.log('fields in addingAttFeature', fields);
   if (attr !== 'undefined') {
     for (const key in attr) {
-      feature.set(key, attr[key]);
+      let type = fields.find(x => x.name === key).type;
+      console.log ('Name and type of field', key, type);
+      feature.set(key, this.mapAttribute(type, attr[key]));
     }
   }
   return (feature);
 }
+
+mapAttribute(type: string, value: string){
+  /**
+   * Maps the string vlaues from the form to values in their type to insert into a table;
+   */
+  let tvalue = null;
+  switch (type) {
+    case 'bool': {
+      tvalue = (/true/i).test(value); // returns true, I gues that false in any other case
+      break;
+    }
+    case 'QString': {
+      tvalue = value.trim().toLowerCase();
+      break;
+    }
+    case 'int': {
+     tvalue = + value; // parse to int https://stackoverflow.com/questions/14667713/how-to-convert-a-string-to-number-in-typescript
+     break;
+    }
+    case 'double':{
+     tvalue = + value;  // parse to int https://stackoverflow.com/questions/14667713/how-to-convert-a-string-to-number-in-typescript
+     break;
+    }
+  }
+  return tvalue;
+  }
+
+
 
 saveFeatinBuffer(layerName: string, feature: any){
   // find layer

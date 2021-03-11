@@ -43,9 +43,10 @@ export class QuestionService {
         question = new CheckBoxQuestion({
           key: attr.name,
           label,
-          value: '',
+          value: 'true',  // if checked then it will get the true value
           required,
-          order
+          order,
+          type: 'checkbox'
         });
         break;
       }
@@ -85,6 +86,8 @@ export class QuestionService {
     }
 
      // id are reserved to be serial and PK in the DB
+     // console.log('question in setLayerQuestions', question);
+
      layerQuestions.push(question);
    }
   });

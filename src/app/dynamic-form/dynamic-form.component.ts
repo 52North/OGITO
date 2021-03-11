@@ -49,15 +49,7 @@ export class DynamicFormComponent implements OnInit {
 
   }
 
-  async returnPromise(){
-    /* const promise = new Promise((resolve, reject) => {
-      setTimeout(() => {
-        console.log('Async Work Complete');
-        resolve(this.payLoad);
-      }, 1000);
-    }); */
-    return this.payLoad;
-  }
+
 
   onSubmit() {
     // this.payLoad = JSON.stringify(this.form.getRawValue());

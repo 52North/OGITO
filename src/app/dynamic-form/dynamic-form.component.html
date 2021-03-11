@@ -6,10 +6,11 @@
      <!-- <app-question [question]="question" [form]="form"></app-question> -->
       <div [formGroup]="form">
         <label class="label" [attr.for]="question.key">{{question.label}}: </label>
-
         <div class="inputField" [ngSwitch]="question.controlType">
-
           <input class="inputText" *ngSwitchCase="'textbox'" [formControlName]="question.key"
+                 [id]="question.key" [type]="question.type">
+
+          <input class="inputText" *ngSwitchCase="'checkbox'" [formControlName]="question.key"
                  [id]="question.key" [type]="question.type">
 
           <select [id]="question.key" *ngSwitchCase="'dropdown'" [formControlName]="question.key">
