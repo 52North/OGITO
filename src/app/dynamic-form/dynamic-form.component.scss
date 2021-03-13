@@ -1,6 +1,6 @@
 .example-list{
   left: 60% !important;
-  max-width: 15%;
+  max-width: 20%;
   top: 40% !important;
 }
 .label{
@@ -24,4 +24,7 @@
 .inputField
 { padding: 0 10px;
   line-height: 14px !important;
+}
+input[type="range"] {
+  width: 4vw;
 }

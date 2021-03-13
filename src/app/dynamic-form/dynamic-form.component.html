@@ -12,10 +12,24 @@
 
           <input class="inputText" *ngSwitchCase="'checkbox'" [formControlName]="question.key"
                  [id]="question.key" [type]="question.type">
+        <div *ngSwitchCase="'slider'">
+         <span>{{question.min}} </span>
+          <input  [id]="question.key" type="range"  [min]="question.min" [max]="question.max" step="1"
+                  [formControlName]="question.key" >
+         <span>{{question.max}} </span>
+          <span></span>
+        </div>
 
+          <!--
+          // https://stackoverflow.com/questions/58970793/get-value-of-slider-in-typescript
+
+          get the value of the slider
+          https://stackoverflow.com/questions/46959135/how-to-get-current-value-of-angular-material-slider/46961922 -->
           <select [id]="question.key" *ngSwitchCase="'dropdown'" [formControlName]="question.key">
             <option *ngFor="let opt of question.options" [value]="opt.key">{{opt.value}}</option>
           </select>
+
+
 
         </div>
 
