@@ -8,11 +8,9 @@ export class AppConfiguration{
   static wmsVersion  = '1.3.0' ;
   static wfsVersion = '1.1.0';
   static wmtsVersion = '1.0.0';
-  //static qgsProject = 'qgs_projects/DenaiLama/mappingDenaiLama.qgs';
-  // static qgsProject = 'retwente/retwente.qgs';
-  static qgsProject = 'energyLosser/losser.qgs';  // shapefiles
+  static qgsProject = 'checking.qgs';  // shapefiles
   //static srsName = 'EPSG:32647'   // tomarlo de aqui o del projecto?
-  static srsName = 'EPSG:28992';
+  static srsName = 'EPSG:25832';
   // la ruta para accederlo dentro de la app
   static curProject =  AppConfiguration.hostname + 'qgs_projects/' + AppConfiguration.qgsProject;  // to fecth the xml project file
   static svgFolder = '../../assets/svg/';

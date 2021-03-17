@@ -2,6 +2,8 @@
   left: 60% !important;
   max-width: 20%;
   top: 40% !important;
+  opacity:0.9;
+  background-color: white;
 }
 .label{
   padding-left: 5px;
@@ -9,10 +11,11 @@
   max-width: 80%;
 }
 .inputField{
-  padding-left: 5px;
+  // padding-left: 5px;
+  padding: 0 10px;
   display:inline-block;
   max-width: 80%;
-  line-height: 12px;
+ // line-height: 14px !important;;   // scale with the exten view
 }
 .tittle{
   // padding-left: 5px;
@@ -21,10 +24,15 @@
 .form-row {
   padding-top: 15px;
 }
-.inputField
-{ padding: 0 10px;
-  line-height: 14px !important;
-}
+
 input[type="range"] {
   width: 4vw;
 }
+input[type=text] {
+ // width: 5vw;
+ // height: 2vw ;
+  padding: 40px 10px !important;
+  border: 2px solid red;
+}
+
+

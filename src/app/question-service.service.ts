@@ -105,11 +105,11 @@ export class QuestionService {
   }
 
   findMaxRange(attrName: any){
-    let min = AppConfiguration.range.min;
+    let max = AppConfiguration.range.max;
     if (typeof (AppConfiguration.ranges[attrName])!== 'undefined') {
-      min = AppConfiguration.ranges[attrName].max;
+      max = AppConfiguration.ranges[attrName].max;
     }
-    return min;
+    return max;
   }
 
   setQuestions(layerGroups){

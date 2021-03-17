@@ -2,7 +2,9 @@
 <div class="editToolbar"   *ngIf="isVisible$ | async"  [style.left.px]="x" [style.top.px]="y"
      (panstart)="onPanStart($event)" (panmove)="onPan($event)">
 <mat-card>
-   <mat-divider [vertical]="true"></mat-divider>
+ <!--  <mat-divider [vertical]="true"></mat-divider> -->
+  <div class="container">
+ <div>
     <mat-toolbar>
       <button   *ngIf= " (layerTypeEdit$ == 'Point' || layerTypeEdit$ == 'Multi'|| layerTypeEdit$ == 'MultiPoint') " mat-icon-button
                 (click)="drawingShapes('Point')" matTooltip="Add point/marker TEST GITHUB workflow" [ngClass]="actionActive['Point'] ? 'active': 'normal'">
@@ -12,26 +14,27 @@
                 (click)="drawingShapes('PointAttr')" matTooltip="Add point/marker + attribute TEST GITHUB workflow" [ngClass]="actionActive['Point'] ? 'active': 'normal'">
         <mat-icon svgIcon="add_location_attr"></mat-icon>
       </button> -->
-      <button mat-icon-button *ngIf="(layerTypeEdit$ == 'Line' || layerTypeEdit$ =='Multi' || layerTypeEdit$ == 'Polygon'|| layerTypeEdit$ == 'MultiPolygon'|| layerTypeEdit$ == 'MultiPolygonz') "
+      <button mat-icon-button *ngIf="(layerTypeEdit$ == 'Line' || layerTypeEdit$ =='Multi' || layerTypeEdit$ == 'Polygon'|| layerTypeEdit$ == 'MultiPolygon'|| layerTypeEdit$ == 'MultiPolygonZ') "
               (click)="drawingShapes('LineString')" matTooltip="Add line" [ngClass]="actionActive['LineString'] ? 'active': 'normal'">
         <mat-icon    svgIcon="add_line"></mat-icon>
       </button>
-      <button *ngIf="(layerTypeEdit$ == 'Polygon' || layerTypeEdit$ == 'Multi'|| layerTypeEdit$ == 'MultiPolygon'|| layerTypeEdit$ == 'MultiPolygonz') " mat-icon-button
+      <button *ngIf="(layerTypeEdit$ == 'Polygon' || layerTypeEdit$ == 'Multi'|| layerTypeEdit$ == 'MultiPolygon'|| layerTypeEdit$ == 'MultiPolygonZ') " mat-icon-button
               (click)="drawingShapes('Polygon')" matTooltip="Add polygon" [ngClass]="actionActive['Polygon'] ? 'active': 'normal'">
         <mat-icon svgIcon="add_poly"></mat-icon>
       </button>
-      <button *ngIf="(layerTypeEdit$ == 'Polygon' || layerTypeEdit$ == 'Multi'|| layerTypeEdit$ == 'MultiPolygon'|| layerTypeEdit$ == 'MultiPolygonz') " mat-icon-button
+      <button *ngIf="(layerTypeEdit$ == 'Polygon' || layerTypeEdit$ == 'Multi'|| layerTypeEdit$ == 'MultiPolygon'|| layerTypeEdit$ == 'MultiPolygonZ') " mat-icon-button
               (click)="drawingShapes('Square')" matTooltip="Add Square" [ngClass]="actionActive['Square'] ? 'active': 'normal'">
         <mat-icon>crop_square</mat-icon>
       </button>
-      <button *ngIf="(layerTypeEdit$ == 'Polygon' || layerTypeEdit$ == 'Multi'|| layerTypeEdit$ == 'MultiPolygon'|| layerTypeEdit$ == 'MultiPolygonz') " mat-icon-button
+      <button *ngIf="(layerTypeEdit$ == 'Polygon' || layerTypeEdit$ == 'Multi'|| layerTypeEdit$ == 'MultiPolygon'|| layerTypeEdit$ == 'MultiPolygonZ') " mat-icon-button
               (click)="drawingShapes('Circle')" matTooltip="Add Circle" [ngClass]="actionActive['Circle'] ? 'active': 'normal'">
         <mat-icon>radio_button_unchecked</mat-icon>
       </button>
-      <button mat-icon-button (click)="startEditAction('ModifyBox');showSymbolPanel(false);" matTooltip="Select element(s)"
+      <button mat-icon-button (click)="startEditAction('ModifyBox');showSymbolPanel(false);" matTooltip="Select element(s) to move"
               [ngClass]="actionActive['ModifyBox'] ? 'active': 'normal'" >
         <mat-icon svgIcon="selectBoxFeature"></mat-icon>
       </button>
+      <!--
       <button mat-icon-button (click)="startEditAction('Copy');showSymbolPanel(false)" matTooltip="Copiar element(s)"
               [ngClass]="actionActive['Copy'] ? 'active': 'normal'" >
         <mat-icon>content_copy</mat-icon>
@@ -39,7 +42,7 @@
       <button mat-icon-button (click)="startEditAction('Rotate');showSymbolPanel(false)" matTooltip="Rotate element(s)"
               [ngClass]="actionActive['Rotate'] ? 'active': 'normal'" >
         <mat-icon>rotate_right</mat-icon>
-      </button>
+      </button> -->
       <button mat-icon-button (click)="startEditAction('MeasureLine');showSymbolPanel(false)" matTooltip="Measure Lineal Distance"
               [ngClass]="actionActive['MeasureLine'] ? 'active': 'normal'" >
         <mat-icon svgIcon="measureLine"></mat-icon>
@@ -57,10 +60,10 @@
               [ngClass]="actionActive['Identify'] ? 'active': 'normal'">
         <mat-icon svgIcon="identify"></mat-icon>
       </button>
-      <button mat-icon-button (click)="startEditAction('Identify');showSymbolPanel(false)"  aria-label="identify" matTooltip="Search in map"
+      <!--<button mat-icon-button (click)="startEditAction('Search');showSymbolPanel(false)"  aria-label="identify" matTooltip="Search in map"
               [ngClass]="actionActive['Search'] ? 'active': 'normal'">
         <mat-icon>search</mat-icon>
-      </button>
+      </button> -->
       <button mat-icon-button aria-label="UndoLastEdit" (click)="startEditAction('Undo');" matTooltip="Undo">
         <mat-icon>undo</mat-icon>
       </button>
@@ -74,15 +77,17 @@
       <button  [disabled]="stopSaveAll" mat-icon-button (click)="saveAllLayer()" matTooltip = "Save all edits in all layers">
         <mat-icon>save</mat-icon>
       </button>
-      <span class = "spacer"></span>
-      <div class="divClosing">
-        <button mat-flat-button (click)="closeEditingToolbar()"  >
-          <mat-icon class="closeIcon">close</mat-icon>
-        </button>
-      </div>
+
+
      </mat-toolbar>
+   </div>
 
-
-
+    <div class="divClosing">
+      <span class = "spacer"></span>
+      <button class="closeIcon" mat-flat-button (click)="closeEditingToolbar()"  >
+        <mat-icon >close</mat-icon>
+      </button>
+    </div>
+  </div>
 </mat-card>
 </div>

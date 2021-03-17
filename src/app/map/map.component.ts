@@ -13,6 +13,7 @@ import VectorLayer from 'ol/layer/Vector';
 import ImageLayer from 'ol/layer/Image';
 import ImageWMS from 'ol/source/ImageWMS';
 import {Group as LayerGroup} from 'ol/layer';
+import {platformModifierKeyOnly} from 'ol/events/condition';
 import OSM from 'ol/source/OSM';
 import WFS from 'ol/format/WFS';
 import GML from 'ol/format/GML';
@@ -43,6 +44,7 @@ import {GeoJSON, KML} from 'ol/format';
 import ZoomSlider from 'ol/control/ZoomSlider';
 import ScaleLine from 'ol/control/ScaleLine';
 import {fromCircle} from 'ol/geom/Polygon';
+import {touchOnly} from 'ol/events/condition';
 import {OpenLayersService} from '../open-layers.service';
 import {MapQgsStyleService} from '../map-qgs-style.service';
 import {AuthService} from '../auth.service';
@@ -296,7 +298,9 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
          this.parseQgsProject(data).then(() => {
           this.updateMapView();
           // #TODO check if we should use a promise here, create styles then load wfs layers
-          this.workQgsProject();        });
+          this.workQgsProject();
+          this.setIdentifying();
+         });
      }
        )
      .catch(error => console.error(error));
@@ -515,7 +519,6 @@ ngOnInit(): void {
 setIdentifying() {
     console.log('this.curInfoLayer.source in setIdentifying', this.curInfoLayer);
     this.map.on('singleclick', (evt) => {         // this was click, still needs to be tested in a touch
-      console.log('this.curInfoLayer.source in setIdentifying', this.curInfoLayer);
       if (evt.dragging) {
         // info.tooltip('hide');
         return;
@@ -572,7 +575,7 @@ initializeMap() {
         })
       ], */
       interactions: defaultInteractions({pinchZoom: false, pinchRotate: false})
-        .extend([this.dragAndDropInteraction, this.pinchRotate, this.pinchZoom, this.dragRotate, this.dragZoom]),
+        .extend([ this.pinchRotate, this.pinchZoom]),  // removed 17-03 this.dragAndDropInteraction,this.dragRotate, this.dragZoom
       target: 'map',
       view: new View({
         projection: 'EPSG:3857',
@@ -1640,6 +1643,7 @@ startDeleting() {
       const self = this;
       const tsource = this.curEditingLayer.source;
       this.removeInteractions();
+      this.removeDragPinchInteractions();
       this.select = new Select({
         condition: click,  // check if this work on touch
         layers: [tlayer],
@@ -1651,7 +1655,10 @@ startDeleting() {
       const dirty = true;
       console.log('interactions in the map', this.map.getInteractions());
       if (this.curEditingLayer.geometryType === 'Point' || this.curEditingLayer.geometryType === 'MultiPoint' ){
-        this.dragBox = new DragBox({className: 'boxSelect'});
+        this.dragBox = new DragBox({
+          className: 'boxSelect',
+          condition: touchOnly,
+        });
         this.map.addInteraction(this.dragBox);
         this.dragBox.on('boxend', () => {
           if (this.dragBox.getGeometry() == null) {
@@ -2307,8 +2314,9 @@ findWfsLayer(layerName: string) {
 findLayer(layerName: string) {
   let tlayer: any = null;
   const groupName = this.findLayerinGroups(layerName);
+  // console.log('groupName', groupName)
   this.map.getLayers().forEach(layer => {
-      if (groupName.toLowerCase() === layer.get('name').toLowerCase()) {
+      if (groupName.layerName.toLowerCase() === layer.get('name').toLowerCase()) {
         layer.getLayers().forEach(lyrinGroup => {
           console.log('lyrinGroup.get(\'name\')', lyrinGroup.get('name'));
           if (layerName.toLowerCase() === lyrinGroup.get('name').toLowerCase()) {
@@ -2334,6 +2342,7 @@ startTranslating()
      return;
    }
    this.removeInteractions();
+   this.removeDragPinchInteractions();
    this.select = new Select({
       layers: [lyr],   // avoid selecting in other layers..
       condition: click,  // check if this work on touch
@@ -2341,8 +2350,11 @@ startTranslating()
       style: this.selectStyle,
     });
    this.map.addInteraction(this.select);
-   console.log('interactions in the map', this.map.getInteractions());
-   this.dragBox = new DragBox({className: 'boxSelect'});
+   console.log('interactions in the map in startTranslating', this.map.getInteractions());
+   this.dragBox = new DragBox({
+     className: 'boxSelect',
+      condition: touchOnly // platformModifierKeyOnly  // before it did not have any condition
+   });
    this.map.addInteraction(this.dragBox);
    const self = this;
    const tsource = this.curEditingLayer.source;
@@ -2413,21 +2425,26 @@ startCopying()
   }
 
 displayFeatureInfoWFS(evt) {
-    // console.log ('entra aqui WFS', this.fieldWFSLayers[this.curEditingLayer.layerName]);
+    const hdms = toStringHDMS(evt.coordinate);
+    this.content.nativeElement.innerHTML = '<p>Searching at:</p><code>' + hdms + '</code>';
+    this.overlay.setPosition(evt.coordinate);
     const  layerOnIdentifyingName = this.curInfoLayer.get('name');  // this.curInfoLayer is an OL layer object
-    const fieldsToShow = this.fieldWFSLayers[layerOnIdentifyingName];
+    const tlayer = this.findLayerinGroups(layerOnIdentifyingName);
+    const fieldsToShow = tlayer.fields;
+    console.log('layerOnIdentifyingName in displayFeatureInfoWFS', layerOnIdentifyingName);
     // #TODO code for getting features from WFS
     const featureValues = this.map.forEachFeatureAtPixel(evt.pixel, feature => {
         // #TODO aqui -- chequear bounding box or margins..
         const valuesToShow = {};
         console.log('feature', feature);
-        for (const key in fieldsToShow){
+        for (const field of fieldsToShow){
           // console.log('feature.get(key);', feature.get(key));
-          valuesToShow [key] = feature.get(key);
+          valuesToShow [field.name] = feature.get(field.name);
         }
         return valuesToShow;   // here return all the values available
       }, {
-        function(layer) {
+      layerFilter(layer) {
+          console.log('layer.get(\'name\') inside wfs foreachpixel', layer.get('name'));
           return layer.get('name') === layerOnIdentifyingName;  // to search only in the active layer
         }
       }
@@ -2466,6 +2483,7 @@ displayFeatureInfoWMS(evt)  {
      */
     // display a msg
     const  layerOnIdentifying = this.curInfoLayer;
+    console.log('this.curInfoLayer in displayFeatureInfoWMS', layerOnIdentifying);
     const hdms = toStringHDMS(evt.coordinate);
     this.content.nativeElement.innerHTML = '<p>Searching at:</p><code>' + hdms + '</code>';
     this.overlay.setPosition(evt.coordinate);
@@ -2477,7 +2495,7 @@ displayFeatureInfoWMS(evt)  {
         AppConfiguration.srsName,
         {INFO_FORMAT: 'application/json' }    // //'text/html'
       );
-     // console.log('wmsUrl', wmsUrl);
+    console.log('wmsUrl', wmsUrl);
     if (wmsUrl) {
         fetch(wmsUrl)
           .then(response => response.text())

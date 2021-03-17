@@ -17,15 +17,19 @@
   height: 100%; //100% of the parent (div)
   // the primary color of the theme
 }
+.container{
+  display: flex;
+}
 .mat-toolbar :hover {
   background-color: #e35183;  //to focus the icons
 }
 .closeIcon {
   font-size: 0.8vw;
   text-align: center;
-  vertical-align: top !important;
-  width: 1.5vw !important;
-  height:  1.5vw !important;
+  vertical-align: middle !important;
+  min-width: 32px !important;
+  max-width: 32px !important;
+ // height:  1.5vw !important;
   padding-top: 0;
   margin-top: 0;
   padding-right: 0;
@@ -39,12 +43,23 @@
   height: 1.7vw !important;
   // line-height: 18px !important;
 }
+
+.matCloseWrapper:hover{
+  background-color: transparent ;  //to focus the icons
+}
 .mat-card{
   padding:1px 1px;
 }
 .divClosing{
   float: right;
   height: 100%;
+  max-width:  1.5vw;
+}
+.divClosing :hover {
+  background-color: transparent ;  //to avoid the pinky color
+}
+.mat-flat-button{
+  padding: 0 1px !important;
 }
 .editingTools{
   float:left;

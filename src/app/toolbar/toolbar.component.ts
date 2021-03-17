@@ -51,6 +51,10 @@ export class ToolbarComponent implements OnInit {
     this.openLayersService.updateShowLayerPanel(true);
   }
 
+  searchOnMap(){
+    alert('Search elements in a OSM layer #TODO');
+  }
+
   ngOnInit(): void {
     this.subscriptionExistingProject = this.openLayersService.existingProject$.subscribe(
       (data: any) => this.existingProject = true,

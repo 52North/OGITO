@@ -169,7 +169,7 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
     console.log('to start identify layer, check the layer active thing', layer);
     this.identifyLayerClick.emit({layer, groupName});  // with this the map should act accordingly to stop/start editing.
     console.log('to start identify layer, check the layer active thing', layer);
-    if (this.layerActive === layer.name) {
+    if (this.layerActive === layer.layerName) {
       if (!layer.onEdit){
         // the layer was not on Editing mode, so the identifying action must be stopped
         this.layerActive = null;
@@ -177,7 +177,7 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
       }
     }
     else {
-      this.layerActive = layer.name;
+      this.layerActive = layer.layerName;
     }
   }
 
