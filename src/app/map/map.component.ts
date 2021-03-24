@@ -95,7 +95,6 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
   fieldWFSLayers = {};
   layerStyles = {};
   selectStyle: any;
-  qgsProjectUrl = AppConfiguration.curProject;
   qgsProjectFile: string;
   // map interactions
   draw: any;
@@ -410,6 +409,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
             wfs: layerIsWfs,
             geometryType,
             onEdit: false,
+            visible: false,
             fields
           });
         }
@@ -417,6 +417,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         this.groupsLayers.push({
         groupName: groupName,
         groupTittle: groupTittle,
+        visible: false,
         layers: listLayersinGroup
         });
       }
@@ -493,6 +494,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 
 ngOnInit(): void {
     // initialize the map
+    console.log('check if here you have the input proyect and load everything then');
     this.initializeMap();
   }
 
@@ -516,7 +518,7 @@ setIdentifying() {
         console.log('ENTRA AQUI WFS...');
         this.displayFeatureInfoWFS(evt);
       }
-    }); // it was ,this
+    }); //  search around 10 css pixels
   }
 
 changeSymbol(style: any) {
@@ -946,72 +948,7 @@ loadWMSlayers(urlWMS: string, xmlCapabilities: WMSCapabilities) {
      * @param XmlCapText: OL WMSCapabilities
      */
 
-    /**
-     * Renders a progress bar.
-     * @param {HTMLElement} el The target element.
-     * @constructor
-     */
-    function Progress(el) {
-      this.el = el;
-      this.loading = 0;
-      this.loaded = 0;
-    }
 
-    /**
-     * Increment the count of loading tiles.
-     */
-    Progress.prototype.addLoading = function() {
-      if (this.loading === 0) {
-        this.show();
-      }
-      ++this.loading;
-      this.update();
-    };
-
-    /**
-     * Increment the count of loaded tiles.
-     */
-    Progress.prototype.addLoaded = function() {
-      const this_ = this;
-      setTimeout(function() {
-        ++this_.loaded;
-        this_.update();
-      }, 100);
-    };
-
-    /**
-     * Update the progress bar.
-     */
-    Progress.prototype.update = function() {
-      const width = ((this.loaded / this.loading) * 100).toFixed(1) + '%';
-      this.el.style.width = width;
-      if (this.loading === this.loaded) {
-        this.loading = 0;
-        this.loaded = 0;
-        const this_ = this;
-        setTimeout(function() {
-          this_.hide();
-        }, 500);
-      }
-    };
-
-    /**
-     * Show the progress bar.
-     */
-    Progress.prototype.show = function() {
-      this.el.style.visibility = 'visible';
-    };
-
-    /**
-     * Hide the progress bar.
-     */
-    Progress.prototype.hide = function() {
-      if (this.loading === this.loaded) {
-        this.el.style.visibility = 'hidden';
-        this.el.style.width = 0;
-      }
-    };
-    const progress = new Progress(document.getElementById('progress'));
     try {
       if (!xmlCapabilities.Capability.Layer.Layer) {
         console.log('no layers in WMS');
@@ -1036,16 +973,6 @@ loadWMSlayers(urlWMS: string, xmlCapabilities: WMSCapabilities) {
               source: WMSSource,
               name: layer.Title
             });
-            WMSSource.on('imageloadstart', function() {
-              progress.addLoading();
-            });
-
-            WMSSource.on('imageloadend', function() {
-              progress.addLoaded();
-            });
-            WMSSource.on('imageloaderror', function() {
-              progress.addLoaded();
-            });
 
             this.addWebServLayer(layer.Title, WMSLayer);
             this.loadedWmsLayers.push({
@@ -1067,7 +994,8 @@ loadWMSlayers(urlWMS: string, xmlCapabilities: WMSCapabilities) {
               });
               const WMSLayer = new ImageLayer({
                 source: WMSSource,
-                name: lyr.Title
+                name: lyr.Title,
+                visible: false
               });
               this.addWebServLayer(lyr.Title, WMSLayer);
               this.loadedWmsLayers.push({
@@ -1100,10 +1028,11 @@ addWebServLayer(layerName: any, webServlayer: any) {
     // console.log('web layerName and group', layerName, groupName);
     // the layer is the group (WMTS case), add it to the map and return
     if (this.groupsLayers.findIndex(x => x.layerName === layerName) > -1 && groupName === '') {
-      // console.log('entra aqui XXXX');
+      // the layer is a group and i does not exist
       const newGroup = new LayerGroup({
         name: layerName,
-        layers: []
+        layers: [],
+        visible: false,
       });
       this.map.addLayer(newGroup);
       return;
@@ -1128,7 +1057,8 @@ addWebServLayer(layerName: any, webServlayer: any) {
     // the layer was in a group and the group does not exist ==> lets create it
     const newGroup = new LayerGroup({
       name: groupName,
-      layers: [webServlayer]
+      layers: [webServlayer],
+      visible: false,
     });
     this.map.addLayer(newGroup);
   }
@@ -1829,7 +1759,7 @@ loadWFSlayers(XmlCapText) {
             // extent [minx, miny, maxx, maxy].
             // extent: [lowCorner.split(' ')[0], lowCorner.split(' ')[1],
             //  upperCorner.split(' ')[0], upperCorner.split(' ')[1]],
-            visible: true,   // #TODO comment this line, by default layers are not visible
+            visible: false,   // #TODO comment this line, by default layers are not visible
             zIndex: nLayers - i,   // highest zIndex for the first layer and so on.
             style(feature) {    // this equiv to style: function(feature)
               // console.log(feature.getGeometry().getType(), name);
@@ -2416,7 +2346,8 @@ displayFeatureInfoWFS(evt) {
       layerFilter(layer) {
           console.log('layer.get(\'name\') inside wfs foreachpixel', layer.get('name'));
           return layer.get('name') === layerOnIdentifyingName;  // to search only in the active layer
-        }
+        },
+      hitTolerance: 10
       }
     );
     if (featureValues) {
@@ -2556,7 +2487,7 @@ formatHtmlInfoResponse(json: string): string {
       text = text.concat(
         '<tr><img class=imgInfo src="' + folder + '/img/' + properties.img + '" alt="picture"></tr>');
     }
-    text =  '<table border=0 width=100%>' + '<tr><th>Attribute</th><th>Value</th></tr>' +
+    text =  '<table border=0 width=92%>' + '<tr><th>Attribute</th><th>Value</th></tr>' +
       text + '</table>' + '</div>';
     // console.log('text in WMS info', text);
     }

@@ -34,7 +34,9 @@ export class LayerPanelComponent implements OnInit, AfterViewInit {
   showLayerPanel$: Observable<boolean>;
   selectedLayersOptions$: Observable<any>;   // to keep the status of the layers in the layer panel
 
-
+  actionActiveLayer = {
+    Identify: false,
+    Edit: false};
 
 constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private openLayersService: OpenLayersService) {
 
@@ -226,6 +228,19 @@ onPan(event: any): void {
       }
   }
 
+
+  findLayerinGroups(layerName: string): any {
+    for (const group of this.groupLayers) {
+      const lyr = group.layers.find(x => x.layerName.toLowerCase() === layerName.toLowerCase());
+      if (lyr) {
+        console.log ('la consigue en los grupos', lyr);
+        return (lyr);
+      }
+    }
+
+  }
+
+
   onLayerVisClick(  $event: any, layer: any, groupName: any){
     /** This function emit an event to allow the map component to know that a layer was clicked
      * @param $event: to stop event propagation
@@ -233,17 +248,27 @@ onPan(event: any): void {
      */
     $event.preventDefault();
     $event.stopImmediatePropagation();
-    // console.log('layer visibility', layer, groupName);
+    // update visible of the layer in the variable
+    const tlayer = this.findLayerinGroups(layer.layerName);
+    tlayer.visible = true;
+    console.log('layer visibility updated', layer, groupName, this.groupLayers);
     this.layerVisClick.emit({layer, groupName});
 }
-  onGroupLayerVisClick(  $event: any, layer: any){
+
+onGroupLayerVisClick(  $event: any, layer: any){
     /** This function emit an event to allow the map component to know that a layer was clicked
      * @param $event: to stop event propagation
-     * @param layer: the layer that the user clicked on to show/hide
+     * @param layer: the layer that the user clicked on to show/hide --> in this case layer is a group
      */
     $event.preventDefault();
     $event.stopImmediatePropagation();
-    // console.log ('layer being emitted', layer);
+    console.log ('layergroup being emitted', layer, this.groupLayers);
+    // update visible of the group in the global variable groupLayers
+    const tgroup = this.groupLayers.find(x => x.groupName === layer.groupName);
+    tgroup.visible = true;
+    console.log('layerGroup visibility updated', layer, this.groupLayers);
+
+    // emit the event to update the group visibility in the map
     this.groupLayerVisClick.emit(layer);  // emit the change
   }
 }

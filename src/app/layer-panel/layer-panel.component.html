@@ -92,7 +92,7 @@
             <mat-panel-title>
               <mat-selection-list [id]="group.groupName">
                 <mat-list-option class = "group" checkboxPosition="before" (click)="onGroupLayerVisClick($event,group)"
-                                 selected="true" >
+                                 [selected]="group.visible" >
                   {{group.groupName}}
                 </mat-list-option>
               </mat-selection-list>
@@ -107,21 +107,26 @@
                 <mat-selection-list (selectionChange)="onSelectedChanged($event)">
                 <mat-list-option class="example-box mat-primary" [value]="layer.layerName"
                                 (click)="onLayerVisClick($event,layer,group.groupName)" checkboxPosition="before"
-                                [ngClass]="layerActive == layer.layerName? 'active': 'normal'" selected="true">
+                                [ngClass]="layerActive == layer.layerName? 'active': 'normal'"  [selected]="layer.visible">
                  <div class="selectLayer" >
                   <div style="display:flex;align-items:center">
                      {{layer.layerName}} <!-- {{layer['layerTitle']}} -->
                    </div>
+                   <span class="spacer"></span>
                    <div *ngIf="layer.wfs">
                      <button mat-icon-button
-                             (click)="onEditLayerClick($event, layer, group.groupName)" >
+                             (click)="onEditLayerClick($event, layer, group.groupName)"
+                             [ngClass]="actionActiveLayer['Identify'] ? 'active': 'normal'">
                        <mat-icon  class= "editIcon">edit</mat-icon>
+
                      </button>
                    </div>
+                   <span class="spacer"></span>
                    <div>
 
                      <!-- the identify button to the layer panel neede for WMS layers -->
-                     <button mat-icon-button (click)="onIdentifyLayerClick($event, layer, group.groupName)">
+                     <button mat-icon-button (click)="onIdentifyLayerClick($event, layer, group.groupName)"
+                             [ngClass]="actionActiveLayer['Identify'] ? 'active': 'normal'">
                        <mat-icon class= "editIcon" >info_outline</mat-icon>
                      </button>
                     <!-- <button mat-icon-button (click)="onOpacityLayerClick($event, layer)">
