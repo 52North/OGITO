@@ -15,8 +15,8 @@ export class ProjlistComponent implements OnInit {
   projectFolder = '/home/qgis/projects/';
   projects = [{
     name: 'Noise Action Plan Bochum',
-    url: AppConfiguration.hostname + 'qgs_projects/checking.qgs',
-    file: this.projectFolder + 'checking.qgs',
+    url: AppConfiguration.hostname + 'qgs_projects/checking2.qgs',
+    file: this.projectFolder + 'checking2.qgs',
     img: AppConfiguration.hostname + 'qgs_projects/noise.png'
   }/*,
     { name: 'Renewable Energy Twente',

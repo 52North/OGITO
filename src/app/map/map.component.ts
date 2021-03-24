@@ -491,26 +491,6 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
      return legend;
   }
 
-
-updateMapv0() {
-  //  old version
-  // read the project
-  const qgsProject = this.readProjectFile(this.qgsProjectUrl);
-  qgsProject.then(
-    data => {
-      this.parseProject(data);
-      this.updateMapView();  // uses the projection of the project file and extent to get a center
-      this.workQgsProject();
-      this.existingProject = true;
-      this.openLayersService.updateExistingProject(this.existingProject);
-      this.setIdentifying();
-    },
-    error => {
-      this.loadDefaultMap();
-      console.log('There is an error retrieving the qGis project of the application, please check the configuration');
-    }
-  );
-}
 ngOnInit(): void {
     // initialize the map
     this.initializeMap();
@@ -552,7 +532,8 @@ initializeMap() {
     this.dragPan = new DragPan();
     this.dragRotate = new DragRotate();
     this.dragZoom = new DragZoom();
-
+    // DragRotate, DoubleClickZoom, DragPan, PinchRotate, PinchZoom, KeyboardPan,
+    // KeyboardZoom, MouseWheelZoom, DragZoom, Select, DragBox
     //
     this.dragAndDropInteraction = new DragAndDrop({
       formatConstructors: [
@@ -561,21 +542,8 @@ initializeMap() {
       ]
     });
     this.map = new Map({
-      /* test to add an empty map no layers
-      layers: [
-        new LayerGroup({
-          layers: [new TileLayer({
-            source: new OSM({
-              crossOrigin: null
-            }),
-            zIndex: 1,
-            name: 'OSM'
-          })],
-          name: 'OSM Background'
-        })
-      ], */
-      interactions: defaultInteractions({pinchZoom: false, pinchRotate: false})
-        .extend([ this.pinchRotate, this.pinchZoom]),  // removed 17-03 this.dragAndDropInteraction,this.dragRotate, this.dragZoom
+       interactions: defaultInteractions({constrainResolution: true}),  //, pinchZoom: false, pinchRotate: false})
+       // .extend([ this.pinchRotate, this.pinchZoom]),  // removed 17-03 this.dragAndDropInteraction,this.dragRotate, this.dragZoom
       target: 'map',
       view: new View({
         projection: 'EPSG:3857',
@@ -593,6 +561,7 @@ initializeMap() {
         stroke: new Stroke({color: '#EE266D', width: 2, lineDash: [8, 5]})
       })
     });
+    console.log('Interactions onInit', this.map.getInteractions());
   }
 
 createHelpTooltip(){
@@ -1384,6 +1353,7 @@ enableAddShape(shape: string) {
             stopClick: true,    // not clicks events will be fired when drawing points..
             style: this.getEditingStyle()
           });
+          console.log('TRY WITHOUT REMOVING INTERACTIONS');
           this.removeDragPinchInteractions();  // a ver si el mapa deja de moverse cuando se dibuja
           break;
         }
@@ -1409,7 +1379,7 @@ enableAddShape(shape: string) {
             stopClick: true,    // not clicks events will be fired when drawing points..
             style: this.getEditingStyle(),
             condition: olBrowserEvent => {
-              if (olBrowserEvent.originalEvent.touches) {
+              if (olBrowserEvent.originalEvent.touches) {   //#T
                 return olBrowserEvent.originalEvent.touches.length < 2;
               }   // dibuja si hay menos de undos dedos..--> mo working
               return false;
@@ -2787,15 +2757,29 @@ updateOrderGroupsLayers(groupsLayers: any) {
             // console.log('tiene capas dentro', group.name);
             nLysInGrp = layer.getLayers().array_.length;  // numbers of layers in the
             layer.getLayers().forEach(lyrInGrp => {
-              lyrInGrp.setZIndex(grpZIndex - (group.layers.findIndex( x => x.name === lyrInGrp.get('name')) + 1));  // works up 9 layersx group
+              lyrInGrp.setZIndex(grpZIndex - (group.layers.findIndex( x => x.layerName === lyrInGrp.get('name')) + 1));  // works up 9 layersx group
             });
           }
 
         }
       });
     });
-    console.log('reordered layers..', this.map.getLayers());
+    // console.log('reordered layers..', this.map.getLayers());
+  console.log('reordered layers......');
+  this.printLayerOrder();
   }
+
+  printLayerOrder(){
+    this.map.getLayers().forEach(layer => {
+      console.log('group index', layer.get('name') + ': ' + layer.getZIndex());
+      if (layer.getLayers().array_.length > 0) {
+        layer.getLayers().forEach(lyrInGrp => {
+          console.log('layer index', lyrInGrp.get('name')  + ': ' +  lyrInGrp.getZIndex());
+        });
+      }
+    });
+  }
+
 
 removeInteractions() {
     /**

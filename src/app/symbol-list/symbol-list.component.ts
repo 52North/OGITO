@@ -256,12 +256,12 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
               // cloneStyle = style.clone();
               imageClone = olStyle.clone().getImage();
               // console.log('imageClone color and scale', imageClone.getColor, imageClone.getScale());
-              imageClone.setScale(imageClone.getScale() * 7);  // #TODO check this
+              imageClone.setScale(imageClone.getScale() * 5);  // #TODO check this
               // this is working
 
               cloneStyle = new Style({
                 image: imageClone,
-                fill:olStyle.getFill()
+                fill: olStyle.getFill()
               });
               break;
             }
