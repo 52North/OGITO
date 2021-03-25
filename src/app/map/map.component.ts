@@ -409,6 +409,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
             wfs: layerIsWfs,
             geometryType,
             onEdit: false,
+            onIdentify: false,
             visible: false,
             fields
           });

@@ -43,8 +43,20 @@ export class AppConfiguration{
      'intensity_sonstiges': {min: 1, max: 10},
      'intensity_arbeit': {min: 1, max: 10},
      'intensity_bus': {min: 1, max: 10},
-  }
-
-
-
+  };
+  static fieldsOrder = {
+    'laute_orte': {
+       'place_name': 1,
+       'source_auto': 2,
+       'intensity_auto': 3,
+       'source_schiene': 4,
+       'intensity_schiene': 5,
+       'source_sonstiges': 6,
+       'intensity_sonstiges': 7,
+       'noise_morgens': 8,
+       'noise_tagsuber': 9,
+       'noise_abends': 10,
+       'noise_nachts': 11
+    }
+    };
 }

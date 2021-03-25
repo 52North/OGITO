@@ -24,13 +24,19 @@ export class QuestionService {
   updateShowEditForm(showForm: boolean){
     this.showEditFormSource.next(showForm);
   }
- setLayerQuestions(qgisFieldList:any) {
+ setLayerQuestions(layerName: string, qgisFieldList:any) {
     /**
      * forms the question from a list of fields;
      */
   let order = 0;
   let layerQuestions: QuestionBase<any>[]=[];
   let question = null;
+  let orderInLayer = false;
+  // check if there is an specific order
+  if (typeof(AppConfiguration.fieldsOrder[layerName]) !== 'undefined'){
+     orderInLayer = true;
+   }
+
   qgisFieldList.forEach(attr => {
    if (!(attr.name === 'id' || attr.name === 'fid' || attr.name === 'picfilepath' || attr.name === 'linkqrfile')){
      // #TODO add the code for the QR thing
@@ -45,7 +51,7 @@ export class QuestionService {
           label,
           value: 'true',  // if checked then it will get the true value
           required,
-          order,
+          order: orderInLayer ? this.findOrder(layerName, attr.name) : order,
           type: 'checkbox'
         });
         break;
@@ -56,7 +62,7 @@ export class QuestionService {
           label,
           value: '',
           required,
-          order
+          order: orderInLayer ? this.findOrder(layerName, attr.name) : order,
         });
         break;
       }
@@ -66,7 +72,7 @@ export class QuestionService {
           label,
           value: 0,
           required,
-          order,
+          order: orderInLayer ? this.findOrder(layerName, attr.name) : order,
           min: this.findMinRange(attr.name),
           max: this.findMaxRange(attr.name),
         });
@@ -79,7 +85,7 @@ export class QuestionService {
           label,
           value: '',
           required,
-          order,
+          order: orderInLayer ? this.findOrder(layerName, attr.name) : order,
         });
         break;
       }
@@ -94,11 +100,23 @@ export class QuestionService {
   return layerQuestions;
  }
 
+  findOrder(layerName: string, attrName: any){
+    // console.log('attrName',attrName);
+    let order = 0;
+    if (typeof (AppConfiguration.fieldsOrder[layerName]) !== 'undefined'){
+      // console.log('AppConfiguration.fieldsOrder[layerName][attrName]', AppConfiguration.fieldsOrder[layerName][attrName]);
+      if (typeof(AppConfiguration.fieldsOrder[layerName][attrName]) !== 'undefined'){
+         return(AppConfiguration.fieldsOrder[layerName][attrName]);
+       }
+    }
+    return null;
+  }
+
 
   findMinRange(attrName: any){
     // console.log('attrName',attrName);
   let min = AppConfiguration.range.min;
-    if (typeof (AppConfiguration.ranges[attrName])!== 'undefined') {
+  if (typeof (AppConfiguration.ranges[attrName]) !== 'undefined') {
       min = AppConfiguration.ranges[attrName].min;
   }
   return min;
@@ -120,7 +138,7 @@ export class QuestionService {
     layerGroups.forEach( group =>{
       group.layers.forEach(layer =>{
         if (layer.wfs) {
-         const questions = this.setLayerQuestions(layer.fields);
+         const questions = this.setLayerQuestions(layer.layerName, layer.fields);
          this.questions[layer.layerName] = questions; // no estoy segura de esto, es un dic...
          // console.log('this.questions[\'layer.layerName\'] in QG service', layer.layerName, this.questions['layer.layerName']);
         }

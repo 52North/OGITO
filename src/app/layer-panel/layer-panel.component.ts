@@ -12,7 +12,7 @@ import {DomSanitizer} from '@angular/platform-browser';
   styleUrls: ['./layer-panel.component.scss', '../map/map.component.scss']     // to access the .map css selector
 })
 export class LayerPanelComponent implements OnInit, AfterViewInit {
-  @Input() editLayers: Array<any>;
+  // @Input() editLayers: Array<any>;
   @Input() groupLayers: any;
   @Output() layerVisClick = new EventEmitter<any>();   // emit an event when a layer is clicked in the list
   @Output() groupLayerVisClick = new EventEmitter<any>();   // emit an event when a layer is clicked in the list
@@ -34,9 +34,9 @@ export class LayerPanelComponent implements OnInit, AfterViewInit {
   showLayerPanel$: Observable<boolean>;
   selectedLayersOptions$: Observable<any>;   // to keep the status of the layers in the layer panel
 
-  actionActiveLayer = {
+ /* actionActiveLayer = {
     Identify: false,
-    Edit: false};
+    Edit: false};*/
 
 constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private openLayersService: OpenLayersService) {
 
@@ -45,23 +45,15 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
     sanitizer.bypassSecurityTrustResourceUrl('assets/img/identify-24px2.svg')
   );
 }
- drop(event: CdkDragDrop<string[]>) {
+ /*drop(event: CdkDragDrop<string[]>) {
     /** Moves the layers in the panel after a drop gesture and emits a layersOrder event
      * that is capture by the map component that effectively reorder the layers in the map.
      * @param event --> cdkDragDrop event
      */
-    moveItemInArray(this.editLayers, event.previousIndex, event.currentIndex);
-    this.layersOrder.emit(this.editLayers);
-   /* #TODO remove, this was changed because I used a child component.
-   this.openLayersService.updateOrderEditLayers(this.editLayers);
-    this.openLayersService.updateEditingLayer(this.editLayers[0]);  // debria ser true or false
-    this.openLayersService.updateShowEditTools(this.editLayers[0][2]); // pos 2 tiene el tipo
-    */
-  }
-  dropBase(event: CdkDragDrop<string[]>) {
-    moveItemInArray(this.baseLayers, event.previousIndex, event.currentIndex);
-    this.layersBackOrder.emit(this.baseLayers);
-  }
+    // moveItemInArray(this.editLayers, event.previousIndex, event.currentIndex);
+    // this.layersOrder.emit(this.editLayers);
+  // } */
+
   dropExpansion(event: CdkDragDrop<string[]>){
    // console.log(this.layerAccordion.nativeElement.children);
    moveItemInArray(this.groupLayers, event.previousIndex, event.currentIndex);
@@ -95,6 +87,43 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
        this.addingGroupsLayers();
      }
 
+  updateIdentifyActionInLayers(layerName: string){
+    /**
+     * updates the status of the action @action in all the layers except in layerName
+     * @param layerName: layerName for exception
+     * #TODO declarar layer as a class and use setters and getters
+     */
+    console.log('layerName in updateEditActioninLayers', layerName);
+    for (const group of this.groupLayers) {
+      group.layers.forEach(layer => {
+          if (layer.layerName.toLowerCase() !== layerName.toLowerCase()) {
+            layer.onIdentify = false;
+            // console.log('cambiando actiones', layer.layerName, layer.onEdit);
+          }
+      });
+    }
+  }
+    updateEditActionInLayers(layerName: string){
+      /**
+       * updates the status of the action @action in all the layers except in layerName
+       * @param layerName: layerName for exception
+       * #TODO declarar layer as a class and use setters and getters
+       */
+      console.log('layerName in updateEditActioninLayers', layerName);
+      for (const group of this.groupLayers) {
+        group.layers.forEach(layer => {
+
+          if (layer.wfs) {
+            console.log('layer', layer);
+            if (layer.layerName.toLowerCase() !== layerName.toLowerCase()) {
+              layer.onEdit = false;
+              // console.log('cambiando actiones', layer.layerName, layer.onEdit);
+            }
+          }
+        });
+       }
+      }
+
      onEditLayerClick($event: any, layer: any, groupName:string){
      /** allows to start editing a particular layer in the layer panel
       * @param $event for the future, doing nothing with it so far.
@@ -113,21 +142,20 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
           this.openLayersService.updateShowEditToolbar(false);
           return;
         }
-        // the layer was in identifying
+        // the layer was not in editing mode
         this.layerActive = layer.layerName;
         layer.onEdit = true;
+        layer.onIdentify = false;  // unselect the button
+        this.updateEditActionInLayers(layer.layerName);
         this.openLayersService.updateShowEditToolbar(true);
+        // this.actionActiveLayer.Edit = true; // highlight the icon
         return;
       }
       this.layerActive = layer.layerName;
       layer.onEdit = true;
+      layer.onIdentify = false; // uselect the button
+      this.updateEditActionInLayers(layer.layerName);
       this.openLayersService.updateShowEditToolbar(true);
-        // change style of the edit button
-        /* const classList = $event.target.classList;
-        const classes = $event.target.className;
-        console.log('lista de clases del boton antes', classList);
-        classes.includes('clicked') ? classList.remove('clicked') : classList.add('clicked');
-        console.log('lista de clases del boton', classList);*/
       console.log('maybe change the edit icon.. to remind user that layer is being edited? or add another in front and make visible..')
      }
 
@@ -154,20 +182,25 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
     $event.preventDefault();
     $event.stopImmediatePropagation();
     console.log('to start identify layer, check the layer active thing', layer);
-    this.identifyLayerClick.emit({layer, groupName});  // with this the map should act accordingly to stop/start editing.
-    console.log('to start identify layer, check the layer active thing', layer);
+    // with this the map should act accordingly to stop/start editing.
     if (this.layerActive === layer.layerName) {
-      if (!layer.onEdit){
-        // the layer was not on Editing mode, so the identifying action must be stopped
+      if (layer.onIdentify){
+        // the layer was in identifying, so the identify action must be stopped
         this.layerActive = null;
+        layer.onIdentify = false;
+        this.updateIdentifyActionInLayers(layer.layerName);
         this.identifyLayerClick.emit(null);
       }
+      return;
     }
-    else {
-      this.layerActive = layer.layerName;
-    }
-  }
+    // the layer is not active: no on edit and not on identify
+    // if the layer is not in editing, the identify action from here can be fired
+    this.layerActive = layer.layerName;
+    layer.onIdentify = true;
+    this.updateIdentifyActionInLayers(layer.layerName);
+    this.identifyLayerClick.emit({layer, groupName});
 
+  }
 
 closeLayerPanel(value: any) {
   /** Updates the value of the observable $showLayerPanel$ that controls the layer Panel visibility

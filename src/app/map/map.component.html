@@ -10,7 +10,7 @@
   <div id="popup-content" #content></div>
 </div>
 <div *ngIf="loadedWfsLayers">
-<app-layer-panel [editLayers]="loadedWfsLayers" [groupLayers] = "groupsLayers"
+<app-layer-panel  [groupLayers] = "groupsLayers"
                  (layerVisClick)="updateMapVisibleLayer($event)"
 (editLayerClick)="updateEditingLayer($event)"  (groupLayerVisClick)="updateMapVisibleGroupLayer($event)"
 (layersOrder) = "updateOrderGroupsLayers($event)"
