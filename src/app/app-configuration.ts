@@ -4,7 +4,7 @@ export class AppConfiguration{
   // static qGsServerUrl = 'http://localhost/qgis/qgis_mapserv.fcgi.exe?';
   // static hostname =  'http://localhost/';
   static hostname = 'https://ogito.itc.utwente.nl/';
-  static qGsServerUrl = 'https://ogito.itc.utwente.nl/cgi-bin/qgis_mapserv.fcgi?';
+  // static qGsServerUrl = 'https://ogito.itc.utwente.nl/cgi-bin/qgis_mapserv.fcgi?';
   static wmsVersion  = '1.3.0' ;
   static wfsVersion = '1.1.0';
   static wmtsVersion = '1.0.0';
@@ -23,8 +23,8 @@ export class AppConfiguration{
   static minZoom = 8 ;
   static threshold = 1000; // Distance in meter to close a polygon being drawn with a line.
   static projDefs = {
-    '25832':'+proj=utm +zone=32 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs'
-  }
+    25832: '+proj=utm +zone=32 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs',
+  };
   static rasterIcon =  'data:image/png;base64,' + 'iVBORw0KGgoAAAANSUhEUgAAACYAAAAmCAYAAACoPemuAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAXE' +
     'gAAFxIBZ5/SUgAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAIJSURBVFiF7dfNSxVhFMfxz71zkd40X1KzrZgmQRQF/Qkt2oSLWvive' +
     'HkIyoyyPyhKsqjoDSK5ILbIlXsX6tUZp0UpNi+kBGkx39XwnPN75vfAM+fMoeI/obbzEIRjmMNAJqeNySB8yoqDcArP0ZcJbdTV7zQ1vxRouvEM3Zn' +

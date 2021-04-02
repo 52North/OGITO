@@ -107,14 +107,14 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
       /**
        * updates the status of the action @action in all the layers except in layerName
        * @param layerName: layerName for exception
-       * #TODO declarar layer as a class and use setters and getters
+       * #TODO declare layer as a class and use setters and getters
        */
-      console.log('layerName in updateEditActioninLayers', layerName);
+      // console.log('layerName in updateEditActioninLayers', layerName);
       for (const group of this.groupLayers) {
         group.layers.forEach(layer => {
 
           if (layer.wfs) {
-            console.log('layer', layer);
+            // console.log('layer', layer);
             if (layer.layerName.toLowerCase() !== layerName.toLowerCase()) {
               layer.onEdit = false;
               // console.log('cambiando actiones', layer.layerName, layer.onEdit);
@@ -133,7 +133,7 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
       $event.stopImmediatePropagation();
       console.log('que entra..getting better', layer);
       this.editLayerClick.emit(layer);  // with this the map should act accordingly to stop/start editing.
-      console.log('layer.layerName', layer.layerName, 'layerActive?', this.layerActive);
+      // console.log('layer.layerName', layer.layerName, 'layerActive?', this.layerActive);
       if (this.layerActive === layer.layerName) {
         if (layer.onEdit){
           // the layer was on Editing mode, so the editing action must be stopped
@@ -156,7 +156,7 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
       layer.onIdentify = false; // uselect the button
       this.updateEditActionInLayers(layer.layerName);
       this.openLayersService.updateShowEditToolbar(true);
-      console.log('maybe change the edit icon.. to remind user that layer is being edited? or add another in front and make visible..')
+      // console.log('maybe change the edit icon.. to remind user that layer is being edited? or add another in front and make visible..')
      }
 
   onOpacityLayerClick($event: any, layer: any){

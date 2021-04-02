@@ -96,6 +96,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
   layerStyles = {};
   selectStyle: any;
   qgsProjectFile: string;
+  qGsServerUrl: string;
   // map interactions
   draw: any;
   snap: any;
@@ -281,7 +282,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     // get the var from the selection List
     if (qgsProject.file.length > 0) {
       this.qgsProjectFile = qgsProject.file;
-
+      this.qGsServerUrl = qgsProject.qGsServerUrl;
+      this.srsID = qgsProject.srsID;
       this.updateMap(this.qgsProjectFile);
       return;
     }
@@ -289,7 +291,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
  requestProjectInfo(qgsfile: string){
-    const strRequest = AppConfiguration.qGsServerUrl + 'service=WMS&request=GetProjectSettings&MAP=' + qgsfile;
+    const strRequest = this.qGsServerUrl + 'service=WMS&request=GetProjectSettings&MAP=' + qgsfile;
+    console.log('strRequest', strRequest);
     const projectSettings = fetch(strRequest)
      .then(response => response.text())
      .then (data => {
@@ -315,40 +318,47 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     const xmlText = xmlParser.parseFromString(gqsProjectinfo, 'text/xml');
     // console.log ('xmlText', xmlText);
     const WFSLayers = xmlText.getElementsByTagName('WFSLayers')[0];
+    console.log ('WFSLayers', WFSLayers);
     const wfsLayerList = [];
-    for (let k = 0; k < WFSLayers.getElementsByTagName('WFSLayer').length; k++) {
-      wfsLayerList.push(WFSLayers.getElementsByTagName('WFSLayer')[k].getAttribute('name'));
+    if (WFSLayers !== undefined) {
+      for (let k = 0; k < WFSLayers.getElementsByTagName('WFSLayer').length; k++) {
+        wfsLayerList.push(WFSLayers.getElementsByTagName('WFSLayer')[k].getAttribute('name'));
+      }
     }
+
     // console.log('wfsLayerList', wfsLayerList);
     const rootLayer = xmlText.getElementsByTagName('Layer')[0];
-    // console.log('rootLayer', rootLayer);
+    console.log('rootLayer', rootLayer);
     // get the CRS in EPSG format
     let crs: string;
+    // there are might be varios CRS, we should look for the BBOX defined for the prefered EPSG define in the projlist
+    // Projected Bounding box
+
     if (rootLayer.getElementsByTagName('CRS').length > 1) {
       // the epsg code comes in the second place in the list
       crs = rootLayer.getElementsByTagName('CRS')[1].childNodes[0].nodeValue;
-      // console.log('crs', crs);
+      console.log('crs', crs);
       // Projected Bounding box
       const projBBOX = rootLayer.getElementsByTagName('BoundingBox')[0];
       this.mapCanvasExtent = [Number(projBBOX.getAttribute('minx')), Number(projBBOX.getAttribute('maxx')),
         Number(projBBOX.getAttribute('miny') ), Number(projBBOX.getAttribute('maxy'))];
       this.srsID = projBBOX.getAttribute('CRS');
-      // console.log('CRS', this.srsID, AppConfiguration.projDefs[this.srsID.replace(/\D/g, '')]);
+      console.log('CRS', this.srsID, AppConfiguration.projDefs[this.srsID.replace(/\D/g, '')]);
       proj4.defs(this.srsID, AppConfiguration.projDefs[this.srsID.replace(/\D/g, '')]);
       register(proj4);
     }
     else {
-      const BBOX = rootLayer.getElementsByTagName('EX_GeographicBoundingBox')[0];
-      const westBoundLongitude = Number(BBOX.getElementsByTagName('westBoundLongitude')[0].childNodes[0].nodeValue);
-      const eastBoundLongitude = Number(BBOX.getElementsByTagName('eastBoundLongitude')[0].childNodes[0].nodeValue);
-      const southBoundLatitude = Number(BBOX.getElementsByTagName('southBoundLatitude')[0].childNodes[0].nodeValue);
-      const northBoundLatitude = Number(BBOX.getElementsByTagName('northBoundLatitude')[0].childNodes[0].nodeValue);
-      this.srsID = 'EPSG:4326';
-      this.mapCanvasExtent = [westBoundLongitude, eastBoundLongitude, northBoundLatitude, southBoundLatitude];
-    }
+       const BBOX = rootLayer.getElementsByTagName('EX_GeographicBoundingBox')[0];
+       const westBoundLongitude = Number(BBOX.getElementsByTagName('westBoundLongitude')[0].childNodes[0].nodeValue);
+       const eastBoundLongitude = Number(BBOX.getElementsByTagName('eastBoundLongitude')[0].childNodes[0].nodeValue);
+       const southBoundLatitude = Number(BBOX.getElementsByTagName('southBoundLatitude')[0].childNodes[0].nodeValue);
+       const northBoundLatitude = Number(BBOX.getElementsByTagName('northBoundLatitude')[0].childNodes[0].nodeValue);
+       this.srsID = 'EPSG:4326';
+       this.mapCanvasExtent = [westBoundLongitude, eastBoundLongitude, northBoundLatitude, southBoundLatitude];
+       // console.log('BBOX', BBOX, westBoundLongitude, eastBoundLongitude, southBoundLatitude, northBoundLatitude);
+     }
+    console.log('this.mapCanvasExtent', this.mapCanvasExtent, 'this.srsID', this.srsID);
 
-
-    // console.log('BBOX', BBOX, westBoundLongitude, eastBoundLongitude, southBoundLatitude, northBoundLatitude);
     const nGroups = rootLayer.getElementsByTagName('Layer').length;
     const layerList = xmlText.querySelectorAll('Layer > Layer');
     // console.log('layerList', layerList);
@@ -432,7 +442,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
    // this.srsID = xmlText.getElementsByTagName('authid')[0].childNodes[0].nodeValue;
 
     // get the styles for WFS layers
-    this.mapQgsStyleService.createAllLayerStyles(this.qgsProjectFile, wfsLayerList);
+    this.mapQgsStyleService.createAllLayerStyles(this.qGsServerUrl, this.qgsProjectFile, wfsLayerList);
     this.questionService.setQuestions(this.groupsLayers);
   }
 
@@ -617,7 +627,7 @@ updateMapView() {
     const vDistance = getDistance(transform(leftMaxCorner.getCoordinates(), this.srsID, this.wgs84ID),
       transform(leftMinCorner.getCoordinates(), this.srsID, this.wgs84ID));
     this.mapCenterXY = [this.mapCanvasExtent[0] + hDistance / 2, this.mapCanvasExtent[2] + vDistance / 2];
-    // console.log('mapCenterXY',this.mapCenterXY);
+    console.log('mapCenterXY',this.mapCenterXY);
     // #TODO this works with projected coordinates --> check for others
     this.view = new View({
       center: [this.mapCenterXY[0], this.mapCenterXY[1]],  // [-66,10] ,
@@ -679,7 +689,7 @@ workQgsProject() {
 
     // console.log('groups', this.groupsLayers);
     const qGsProject = '&map=' + this.qgsProjectFile;
-    const qGsServerUrl = AppConfiguration.qGsServerUrl;
+    const qGsServerUrl = this.qGsServerUrl;
     const capRequest = '&REQUEST=GetCapabilities';
     const wfsVersion = 'SERVICE=WFS&VERSION=' + AppConfiguration.wfsVersion;
     const urlWFS = qGsServerUrl + wfsVersion + capRequest + qGsProject;
@@ -955,7 +965,7 @@ loadWMSlayers(urlWMS: string, xmlCapabilities: WMSCapabilities) {
         console.log('no layers in WMS');
         return;
       }
-      // console.log('xmlCapabilities', xmlCapabilities);
+      console.log('xmlCapabilities', xmlCapabilities);
       const layerList = xmlCapabilities.Capability.Layer.Layer;
       layerList.forEach(layer => {
         // console.log('this.loadedWfsLayers', this.loadedWfsLayers);
@@ -1588,7 +1598,7 @@ startDeleting() {
           || self.curEditingLayer.geometryType === 'MultiPoint' || self.curEditingLayer.geometryType === 'Polygon') {
 
          console.log('Lllega aqui on select XXX');
-          selectedFeatures.forEach(f => {
+         selectedFeatures.forEach(f => {
             const lastFeat = f.clone();
             lastFeat.setId(f.getId()); // to enable adding the feat again?
             const tempId = f.getId();
@@ -1608,7 +1618,7 @@ startDeleting() {
           // update the possibility to undo and the cache for that
          self.canBeUndo = true;
           // self.cacheFeatures.push(cacheFeatures); // this keep open the possibility to delete several an undo several actions
-        console.log('cache', self.cacheFeatures);
+        // console.log('cache', self.cacheFeatures);
         console.log('editBuffer', self.editBuffer);
         return;
         }
@@ -1667,7 +1677,7 @@ loadWFSlayers(XmlCapText) {
     const xmlParser = new DOMParser();
     const xmlText = xmlParser.parseFromString(XmlCapText, 'text/xml');
     const featureTypeList = xmlText.getElementsByTagName('FeatureTypeList')[0];
-    // console.log('XmlCapText', XmlCapText);
+    //    console.log('XmlCapText', XmlCapText);
     const tnodes = {};
     const otherSrsLst = [];
     const operationsLst = [];
@@ -1683,10 +1693,9 @@ loadWFSlayers(XmlCapText) {
       const layerTitle = node.getElementsByTagName('Title')[0].childNodes[0].nodeValue;
       const defaultSRS = node.getElementsByTagName('DefaultSRS')[0].childNodes[0].nodeValue;
       // validation or warning
-      // tslint:disable-next-line:triple-equals
-      if (defaultSRS != AppConfiguration.srsName) {
+      if (defaultSRS !== AppConfiguration.srsName) {
         // #TODO uncomment the following line
-        // alert(`The layer ${ layerName }has a different default SRS than the SRS of the project`);
+         alert(`The layer ${ layerName }has a different default SRS than the SRS of the project`);
       }
       const otherSrs = node.getElementsByTagName('OtherSRS');
       // this will get a list
@@ -1729,7 +1738,7 @@ loadWFSlayers(XmlCapText) {
         // load the layer in the map
 
         const qGsProject = '&map=' + this.qgsProjectFile;
-        const qGsServerUrl = AppConfiguration.qGsServerUrl;
+        const qGsServerUrl = this.qGsServerUrl;
         const outputFormat = '&outputFormat=GeoJSON';
         const loadedLayers = [];
         const wfsVersion = 'SERVICE=WFS&VERSION=' + AppConfiguration.wfsVersion;
@@ -1886,7 +1895,7 @@ updateEditingLayer(layerOnEdit: any) {
      * and the group name of the layer
      *  #TODO catch exception
      */
-   console.log('evento emitido, que llega', layerOnEdit);
+   // console.log('evento emitido, que llega', layerOnEdit);
    const layer = this.loadedWfsLayers.find(x => x.layerName === layerOnEdit.layerName);
    // layer contains the source.
    if (this.curEditingLayer) {
@@ -2077,7 +2086,7 @@ writeTransactWfs(editLayer: any) {
     // Another solution can be to empty the editBuffer here --> it could be some data loss if the insertion fails
     // configure nodes.
     const strService = 'SERVICE=WFS&VERSION=' + AppConfiguration.wfsVersion + '&REQUEST=DescribeFeatureType';
-    const strUrl = AppConfiguration.qGsServerUrl + strService + '&map=' + this.qgsProjectFile;
+    const strUrl = this.qGsServerUrl + strService + '&map=' + this.qgsProjectFile;
     console.log("strUrl", strUrl);
     const formatWFS = new WFS();
     const formatGML = new GML({
@@ -2459,7 +2468,6 @@ startIdentifying(layerOnIdentifying: any)
   }
   console.log('layerOnIdentifying  startIdentifying', layerOnIdentifying );
   const layer = this.searchLayer(layerOnIdentifying.layer.layerName, layerOnIdentifying.groupName); // find the layer in its group
-  console.log('layer  startIdentifying', layer );
   if (!layer){
     return;
   }

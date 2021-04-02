@@ -566,16 +566,16 @@ export class MapQgsStyleService {
         }
 
     });
-      // lets parse a JSON
-      // #TODO create a default symbol for everything :)
+    // lets parse a JSON
+    // #TODO create a default symbol for everything :)
     console.log('this.layerStyles', this.layerStyles);
   }
 
-  createAllLayerStyles(qgsProjectFile: any, layerList: any){
+  createAllLayerStyles(qGsServerUrl: any, qgsProjectFile: any, layerList: any){
     const qGsProject = '&map=' + qgsProjectFile;
     const capRequest = '&REQUEST=GetStyles';
     const wmsVersion = 'SERVICE=WMS&VERSION=' + AppConfiguration.wmsVersion;
-    const urlStyle = AppConfiguration.qGsServerUrl + wmsVersion + capRequest + qGsProject + '&LAYERS=' + layerList;
+    const urlStyle = qGsServerUrl + wmsVersion + capRequest + qGsProject + '&LAYERS=' + layerList;
     // ('urlStyle', urlStyle);
     const xmlStyles = fetch(urlStyle)
       .then(response => response.text())
@@ -586,9 +586,6 @@ export class MapQgsStyleService {
       .catch(error => console.error(error));
   }
 
-
-
-
   createLayerStyles(layerName: any, xmlRendererV2: any){
     // old version using the QGS file.
     /** Retrieves a default style for a feature of the given geometry in the given layer
@@ -598,7 +595,6 @@ export class MapQgsStyleService {
      * @returns {layerName} the name of the layerNames as keys and styles (symbology) as values
      */
     // console.log(`layerName ${ layerName }`);
-
    /*
     const renderer = xmlRendererV2;
     const symbolType = renderer.getAttribute('type');
@@ -633,8 +629,7 @@ export class MapQgsStyleService {
         const symType = symNode.getAttribute('type');
         if (tnodes.hasOwnProperty(symName))
         {
-
-          const layers = symNode.getElementsByTagName('layer');
+         const layers = symNode.getElementsByTagName('layer');
           const olStyleLst = [];
           for (let l = 0; l < layers.length; l++) {
             const symLyrCls = symNode.getElementsByTagName('layer')[l].getAttribute('class');
@@ -643,7 +638,6 @@ export class MapQgsStyleService {
             if (olStyle) {
               olStyleLst.push(olStyle);
               tnodes[symName].symLyrCls = symLyrCls;
-
             }
           }
           if (olStyleLst.length > 1){
@@ -658,7 +652,6 @@ export class MapQgsStyleService {
           tnodes[symName].type = symType;
         }
       }
-
       this.nodes [layerName] = tnodes;
     }
     else if (symbolType === 'graduatedSymbol') {
@@ -679,7 +672,7 @@ export class MapQgsStyleService {
     console.log('this.layerStyles', this.layerStyles);
     // 01-03 this. nodes  --> this.layerStyles
     if (this.layerStyles[layerName]){
-       console.log('consigue algo?', this.nodes[layerName] );
+      // console.log('consigue algo?', this.layerStyles[layerName] );
        return this.layerStyles[layerName];
     }
   }

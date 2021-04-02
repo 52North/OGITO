@@ -17,8 +17,20 @@ export class ProjlistComponent implements OnInit {
     name: 'Noise Action Plan Bochum',
     url: AppConfiguration.hostname + 'qgs_projects/checking2.qgs',
     file: this.projectFolder + 'checking2.qgs',
-    img: AppConfiguration.hostname + 'qgs_projects/noise.png'
-  }/*,
+    img: AppConfiguration.hostname + 'qgs_projects/noise.png',
+    qGsServerUrl: 'https://ogito.itc.utwente.nl/cgi-bin/qgis_mapserv.fcgi?',
+    srsID: 'EPSG:3857'   //EPSG CODE
+  },
+    { name: 'GECCO Noise Munster',
+      url: AppConfiguration.hostname + 'qgs_projects/munsternoise.qgs',
+      file: this.projectFolder + 'munsternoise.qgs',
+      img: AppConfiguration.hostname + 'qgs_projects/imgMunster.png',
+      qGsServerUrl: 'https://ogito.itc.utwente.nl/cgi-bin/qgis_mapserv.fcgi?',
+      srsID: 'EPSG:25832'  //EPSG CODE
+    }
+
+
+  /*,
     { name: 'Renewable Energy Twente',
   url: AppConfiguration.hostname + 'qgs_projects/losser.qgs',
   file: this.projectFolder + 'retwente.qgs',
@@ -40,7 +52,7 @@ export class ProjlistComponent implements OnInit {
   }
   setProject(project: any) {
     console.log(project);
-    this.selectProject.emit(project);
+    // test 30-03 this.selectProject.emit(project);
     this.openLayersService.updateQgsProjectUrl(project);
     this.updateShowProjectList(false);
   }

@@ -74,13 +74,11 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit(): void {
-    this.displaySymbolList$ = observableOf(true);  // #Only for development purposes, #TODO put in fs
+    this.displaySymbolList$ = observableOf(false);  // #Only for development purposes, #TODO put in fs
   }
 
   ngAfterViewInit(){
    this.myCanvas.changes.subscribe(() => {
-     // console.log('r', r);
-      // 01032021 this.createSymbolsinCanvas();
       this.createJsonSymbolsinCanvas();
     });
   }
@@ -294,7 +292,8 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
           }
           // if stylelayerClone has something it will be drawn
           // console.log('feature', feature);
-          // console.log('cloneStyle', cloneStyle);
+          console.log('cloneStyle and feature', feature, cloneStyle);
+          console.log('what is in render', render);
           render.drawFeature(feature, cloneStyle);
         }
       }
