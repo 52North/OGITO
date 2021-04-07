@@ -517,16 +517,19 @@ setIdentifying() {
         return;
       }
       if (!this.curInfoLayer){    // undefined or null?
+        console.log ('cuando pasa por AQUI....');
         return;
       }
       console.log('this.curInfoLayer.getSource() instanceof ImageWMS', (this.curInfoLayer.getSource() instanceof ImageWMS));
+      this.container.nativeElement.style.display = 'block';
       if (this.curInfoLayer.getSource() instanceof ImageWMS ) {
-        console.log('ENTRA AQUI.WMS..');
+        // console.log('ENTRA AQUI.WMS..');
+
         this.displayFeatureInfoWMS(evt);
         return;
       }
       if (this.curInfoLayer.getSource() instanceof VectorSource) {
-        console.log('ENTRA AQUI WFS...');
+        // console.log('ENTRA AQUI WFS...');
         this.displayFeatureInfoWFS(evt);
       }
     }); //  search around 10 css pixels
@@ -2464,6 +2467,7 @@ startIdentifying(layerOnIdentifying: any)
   if (layerOnIdentifying === null){
     this.map.getTargetElement().style.cursor = '';
     this.curInfoLayer = null;
+    this.container.nativeElement.style.display = 'none';
     return;
   }
   console.log('layerOnIdentifying  startIdentifying', layerOnIdentifying );
@@ -2711,7 +2715,7 @@ updateOrderGroupsLayers(groupsLayers: any) {
 
   printLayerOrder(){
     this.map.getLayers().forEach(layer => {
-      console.log('group index', layer.get('name') + ': ' + layer.getZIndex());
+      console.log('group index', layer, layer.get('name') + ': ' + layer.getZIndex());
       if (layer.getLayers().array_.length > 0) {
         layer.getLayers().forEach(lyrInGrp => {
           console.log('layer index', lyrInGrp.get('name')  + ': ' +  lyrInGrp.getZIndex());

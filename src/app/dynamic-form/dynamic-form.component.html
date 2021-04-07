@@ -14,7 +14,7 @@
                  [id]="question.key" [type]="question.type">
         <div *ngSwitchCase="'slider'">
          <span>{{question.min}} </span>
-          <input  [id]="question.key" type="range"  [min]="question.min" [max]="question.max" step="1"
+          <input  [id]="question.key" type="range"  [min]="question.min" value="question.min" [max]="question.max" step="1"
                   [formControlName]="question.key" >
          <span>{{question.max}} </span>
           <span></span>

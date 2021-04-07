@@ -27,7 +27,7 @@ export class LayerPanelComponent implements OnInit, AfterViewInit {
   startX = 0;
   startY = 0;
   selectedOptions = [];
-  layerActive: any;
+  layerActive: any = null;
  // preSelection = AppConfiguration.layerBaseList2.base_img.name; // ['name']];// 'OSM' The name
 //  editLayers = [['0'], ['1']];
   baseLayers = []; // WMS layers as background; layers; too ?
@@ -96,14 +96,14 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
     console.log('layerName in updateEditActioninLayers', layerName);
     for (const group of this.groupLayers) {
       group.layers.forEach(layer => {
-          if (layer.layerName.toLowerCase() !== layerName.toLowerCase()) {
+          if (layer.layerName.toLowerCase() === layerName.toLowerCase() && layer.onIdentify) {
             layer.onIdentify = false;
-            // console.log('cambiando actiones', layer.layerName, layer.onEdit);
+            this.identifyLayerClick.emit(null);
           }
       });
     }
   }
-    updateEditActionInLayers(layerName: string){
+  updateEditActionInLayers(layerName: string){
       /**
        * updates the status of the action @action in all the layers except in layerName
        * @param layerName: layerName for exception
@@ -115,9 +115,9 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
 
           if (layer.wfs) {
             // console.log('layer', layer);
-            if (layer.layerName.toLowerCase() !== layerName.toLowerCase()) {
+            if (layer.layerName.toLowerCase() === layerName.toLowerCase() && layer.onEdit) {
               layer.onEdit = false;
-              // console.log('cambiando actiones', layer.layerName, layer.onEdit);
+              console.log('cambiando action Edit in', layer.layerName, layer.onEdit);
             }
           }
         });
@@ -131,33 +131,47 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
       */
       $event.preventDefault();
       $event.stopImmediatePropagation();
-      console.log('que entra..getting better', layer);
-      this.editLayerClick.emit(layer);  // with this the map should act accordingly to stop/start editing.
-      // console.log('layer.layerName', layer.layerName, 'layerActive?', this.layerActive);
+      // console.log('que entra..getting better', layer);
+      // not layer active
+      if (this.layerActive === null){
+        // set the clicked layer as active
+        this.layerActive = layer.layerName;
+        // update the onEdit layer property
+        layer.onEdit = true;
+        // show the editing toolbar
+        this.openLayersService.updateShowEditToolbar(true);
+        // emit the event
+        this.editLayerClick.emit(layer);
+        return;
+      }
+      // there is an active layer and its the same than the selected layer
       if (this.layerActive === layer.layerName) {
-        if (layer.onEdit){
-          // the layer was on Editing mode, so the editing action must be stopped
-          this.layerActive = null;
+        // layer active was in editing
+        if (layer.onEdit) {
+          // stop editing
           layer.onEdit = false;
+          this.layerActive = null;
           this.openLayersService.updateShowEditToolbar(false);
           return;
         }
-        // the layer was not in editing mode
-        this.layerActive = layer.layerName;
+       // layer was in identifying // stop this action
+        layer.onIdentify = false;
         layer.onEdit = true;
-        layer.onIdentify = false;  // unselect the button
-        this.updateEditActionInLayers(layer.layerName);
         this.openLayersService.updateShowEditToolbar(true);
-        // this.actionActiveLayer.Edit = true; // highlight the icon
+        this.identifyLayerClick.emit(null);
+        this.editLayerClick.emit(layer);
         return;
       }
+      // there is an active layer and its not the same than the selected layer
+      this.updateEditActionInLayers(this.layerActive); // code was changed to update only one layer, the previous one
+      this.updateIdentifyActionInLayers(this.layerActive);
       this.layerActive = layer.layerName;
       layer.onEdit = true;
-      layer.onIdentify = false; // uselect the button
-      this.updateEditActionInLayers(layer.layerName);
       this.openLayersService.updateShowEditToolbar(true);
-      // console.log('maybe change the edit icon.. to remind user that layer is being edited? or add another in front and make visible..')
-     }
+      this.editLayerClick.emit(layer);
+      }
+
+
 
   onOpacityLayerClick($event: any, layer: any){
   // TODO change opacity
@@ -182,24 +196,45 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
     $event.preventDefault();
     $event.stopImmediatePropagation();
     console.log('to start identify layer, check the layer active thing', layer);
-    // with this the map should act accordingly to stop/start editing.
-    if (this.layerActive === layer.layerName) {
-      if (layer.onIdentify){
-        // the layer was in identifying, so the identify action must be stopped
-        this.layerActive = null;
-        layer.onIdentify = false;
-        this.updateIdentifyActionInLayers(layer.layerName);
-        this.identifyLayerClick.emit(null);
-      }
+    // with this the map should act accordingly to stop/start identifying.
+    // there is not layerActive
+    if (this.layerActive === null) {
+      this.layerActive = layer.layerName;
+      layer.onIdentify = true;
+      this.identifyLayerClick.emit({layer, groupName});
       return;
     }
-    // the layer is not active: no on edit and not on identify
-    // if the layer is not in editing, the identify action from here can be fired
+    // there is layer Active and its the same
+    console.log ('this.layerActive y layer.layerName iguales?', this.layerActive, layer.layerName, this.layerActive === layer.layerName);
+    if (this.layerActive === layer.layerName){
+      // the layer was in identifying
+      if (layer.onIdentify) {
+        // unset the layer active
+        this.layerActive = null;
+        // update the property in the layer object
+        layer.onIdentify = false;
+        // stop the action in the map
+        this.identifyLayerClick.emit(null);
+        return;
+      }
+      // the layer was active in editing
+      layer.onEdit = false;
+      layer.onIdentify = true;
+      this.openLayersService.updateShowEditToolbar(false);
+      this.identifyLayerClick.emit({layer, groupName});
+      return;
+    }
+    // A layer active its different to the selected layer
+    // stops identifying in the layer if so
+    this.updateIdentifyActionInLayers(this.layerActive);
+    // stop editing if so
+    this.updateEditActionInLayers(this.layerActive);
+    // workaroeund..
+    this.openLayersService.updateShowEditToolbar(false);
+    // set the selected layer as active
     this.layerActive = layer.layerName;
     layer.onIdentify = true;
-    this.updateIdentifyActionInLayers(layer.layerName);
     this.identifyLayerClick.emit({layer, groupName});
-
   }
 
 closeLayerPanel(value: any) {
