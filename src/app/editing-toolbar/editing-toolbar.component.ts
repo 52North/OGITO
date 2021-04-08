@@ -100,6 +100,7 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
 
   closeEditingToolbar(){
     this.isVisible$ = observableOf(false);
+    this.showSymbolPanel(false);
   }
 
   updateLayerTypeEdit(geomType){
@@ -252,6 +253,10 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
      */
   this.isVisible$ = observableOf(visible);
   console.log ('showing Toolbar', visible);
+  // hide the symboloanel
+  if (!visible){
+   this.showSymbolPanel(false);
+  }
   // desactivar todas las actions??
   for (let key in this.actionActive ) {
       // console.log("showing fresh tool ]",key,this.actionActive[key]);

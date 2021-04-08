@@ -337,13 +337,13 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     if (rootLayer.getElementsByTagName('CRS').length > 1) {
       // the epsg code comes in the second place in the list
       crs = rootLayer.getElementsByTagName('CRS')[1].childNodes[0].nodeValue;
-      console.log('crs', crs);
+      // console.log('crs', crs);
       // Projected Bounding box
       const projBBOX = rootLayer.getElementsByTagName('BoundingBox')[0];
       this.mapCanvasExtent = [Number(projBBOX.getAttribute('minx')), Number(projBBOX.getAttribute('maxx')),
         Number(projBBOX.getAttribute('miny') ), Number(projBBOX.getAttribute('maxy'))];
       this.srsID = projBBOX.getAttribute('CRS');
-      console.log('CRS', this.srsID, AppConfiguration.projDefs[this.srsID.replace(/\D/g, '')]);
+      // console.log('CRS', this.srsID, AppConfiguration.projDefs[this.srsID.replace(/\D/g, '')]);
       proj4.defs(this.srsID, AppConfiguration.projDefs[this.srsID.replace(/\D/g, '')]);
       register(proj4);
     }
@@ -388,16 +388,16 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
           // let layerLegendUrl = layer.getElementsByTagName('LegendURL')[0];
           const urlResource = layer.querySelector('OnlineResource').getAttribute('xlink:href');
           // console.log('checkpoint', j, layerName, layerTittle, urlResource);
-          let legendLayer = await this.createLegendLayer(urlResource, layerName);
+          const legendLayer = await this.createLegendLayer(urlResource, layerName);
           // console.log('legendLayer',legendLayer );
           const fields = [];
           if (wfsLayerList.find(element => element === layerName)) {
             layerIsWfs = true;
             // get the editable attributes
-            let attrs = layer.getElementsByTagName('Attributes')[0];
+            const attrs = layer.getElementsByTagName('Attributes')[0];
             // console.log('attrs', attrs);
             for (let k = 0; k < attrs.getElementsByTagName('Attribute').length; k++) {
-              let field = attrs.getElementsByTagName('Attribute')[k];
+              const field = attrs.getElementsByTagName('Attribute')[k];
               // console.log('field', field);
               fields.push({
                 typeName: field.getAttribute('typeName'),
@@ -426,15 +426,15 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         }
         // get url for wms, wfs, getLegend and getStyles
         this.groupsLayers.push({
-        groupName: groupName,
-        groupTittle: groupTittle,
+        groupName,
+        groupTittle,
         visible: false,
         layers: listLayersinGroup
         });
       }
 
     }
-    console.log('this.groupsLayers', this.groupsLayers);
+    // console.log('this.groupsLayers', this.groupsLayers);
     // get the order in which layers are rendered
    // this.layersOrder.push(layerName); // #TODO evaluate if this is needed or worthy, it is not being used somewhere else
     // register the project projection definion in proj4 format
@@ -459,7 +459,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       return ([{iconSrc: AppConfiguration.rasterIcon, title: layerName}]);
     }
     // aqui puede venir una lista
-    let symbolList = [];
+    const symbolList = [];
     iconSymbols.nodes.forEach(
       icon => {
         // console.log('icon.title and type', icon.title, icon.type);
@@ -536,6 +536,17 @@ setIdentifying() {
   }
 
 changeSymbol(style: any) {
+    /**
+     *  updates the class style and class (not being use now for the element being edited)
+     *  @param style: the symbol (value) in OL style format and the key (class - not being used now?)
+     *
+     */
+    if (style === null){
+      this.currentStyle = null;
+      this.currentClass = null;
+      return;
+    }
+
     this.currentStyle = style.value;
     this.currentClass = style.key;
     // console.log('current class and Style', style, this.currentClass, this.currentStyle );
@@ -558,7 +569,7 @@ initializeMap() {
       ]
     });
     this.map = new Map({
-       interactions: defaultInteractions({constrainResolution: true}),  //, pinchZoom: false, pinchRotate: false})
+       interactions: defaultInteractions({constrainResolution: true}),  // , pinchZoom: false, pinchRotate: false})
        // .extend([ this.pinchRotate, this.pinchZoom]),  // removed 17-03 this.dragAndDropInteraction,this.dragRotate, this.dragZoom
       target: 'map',
       view: new View({
@@ -624,13 +635,13 @@ updateMapView() {
     const leftMinCorner = new Point([this.mapCanvasExtent[0], this.mapCanvasExtent[2]]);
     const rightMinCorner = new Point([this.mapCanvasExtent[1], this.mapCanvasExtent[2]]);
     const leftMaxCorner = new Point([this.mapCanvasExtent[0], this.mapCanvasExtent[3]]);
-    console.log ('extent and puntos',  rightMinCorner.getCoordinates(), leftMaxCorner.getCoordinates());
+    // console.log ('extent and puntos',  rightMinCorner.getCoordinates(), leftMaxCorner.getCoordinates());
     const hDistance = getDistance(transform(leftMinCorner.getCoordinates(), this.srsID, this.wgs84ID),
       transform(rightMinCorner.getCoordinates(), this.srsID, this.wgs84ID));
     const vDistance = getDistance(transform(leftMaxCorner.getCoordinates(), this.srsID, this.wgs84ID),
       transform(leftMinCorner.getCoordinates(), this.srsID, this.wgs84ID));
     this.mapCenterXY = [this.mapCanvasExtent[0] + hDistance / 2, this.mapCanvasExtent[2] + vDistance / 2];
-    console.log('mapCenterXY',this.mapCenterXY);
+    // console.log('mapCenterXY', this.mapCenterXY);
     // #TODO this works with projected coordinates --> check for others
     this.view = new View({
       center: [this.mapCenterXY[0], this.mapCenterXY[1]],  // [-66,10] ,
@@ -1205,7 +1216,7 @@ addingAttrFeature(layerName: string, feature: any,  attr: any){
   console.log('fields in addingAttFeature', fields);
   if (attr !== 'undefined') {
     for (const key in attr) {
-      let type = fields.find(x => x.name === key).type;
+      const type = fields.find(x => x.name === key).type;
       console.log ('Name and type of field', key, type);
       feature.set(key, this.mapAttribute(type, attr[key]));
     }
@@ -1231,7 +1242,7 @@ mapAttribute(type: string, value: string){
      tvalue = + value; // parse to int https://stackoverflow.com/questions/14667713/how-to-convert-a-string-to-number-in-typescript
      break;
     }
-    case 'double':{
+    case 'double': {
      tvalue = + value;  // parse to int https://stackoverflow.com/questions/14667713/how-to-convert-a-string-to-number-in-typescript
      break;
     }
@@ -1275,13 +1286,14 @@ enableAddShape(shape: string) {
      * @param shape: string, type of shape to add e.g., 'POINT', 'LINE', 'CIRCLE'
      */
       // previously addShapeToLayer check the API OL
-      // console.log ('shape', shape, this.curEditingLayer);
-    const self = this;
-    if (!this.curEditingLayer) {
+    console.log ('shape', shape, this.curEditingLayer);
+
+    if (!this.curEditingLayer) {   // velid for null and undefined
       alert('No layer selected to edit');
       return;
     }
     // console.log('this.currentClass', !this.currentClass, this.currentClass);
+    const self = this;
     const tsource = this.curEditingLayer.source;
     let type: any;
     let geometryFunction: any;
@@ -1308,7 +1320,7 @@ enableAddShape(shape: string) {
             freehand: true,
             stopClick: true,    // not clicks events will be fired when drawing points..
             style: this.getEditingStyle(),
-            condition: (this.draw.getPointerCount() < 2)  // #TODO check
+            // condition: (this.draw.getPointerCount() < 2)  // #TODO check
           });
           this.removeDragPinchInteractions();  // to fix the zig zag lines #TODO test it
           break;
@@ -1323,7 +1335,7 @@ enableAddShape(shape: string) {
             stopClick: true,    // not clicks events will be fired when drawing points..
             style: this.getEditingStyle(),
             condition: olBrowserEvent => {
-              if (olBrowserEvent.originalEvent.touches) {   //#T
+              if (olBrowserEvent.originalEvent.touches) {   // #T
                 return olBrowserEvent.originalEvent.touches.length < 2;
               }   // dibuja si hay menos de undos dedos..--> mo working
               return false;
@@ -1413,8 +1425,8 @@ enableAddShape(shape: string) {
           e.feature.setGeometry(new fromCircle(e.feature.getGeometry()));
         }
         // automatic closing of lines to produce a polygon
-        // if (self.draw.type_ === 'LineString' && self.curEditingLayer.geometry === 'Polygon')  {
-        if (self.draw.type_ === 'LineString' && (self.curEditingLayer.geometry.indexOf('Polygon') > -1)){
+        console.log('self.curEditingLayer && self.draw.type_', self.curEditingLayer, self.draw.type_);
+        if (self.draw.type_ === 'LineString' && (self.curEditingLayer.geometryType.indexOf('Polygon') > -1)){
           // valid for multipolygon and multipolygonz
           const geom = e.feature.getProperties().geometry;
           const threshold = AppConfiguration.threshold;
@@ -1426,14 +1438,16 @@ enableAddShape(shape: string) {
           if (distance < threshold) {
             const newCoordinates = e.feature.getProperties().geometry.getCoordinates();
             newCoordinates.push(first);
-            // console.log("la crea o no antes ?", newCoordinates[newCoordinates.length -1]);
+            console.log("la crea o no antes ?", newCoordinates[newCoordinates.length -1]);
             const tgeometry = new Polygon([newCoordinates]);
             if (tgeometry) {
               e.feature.setGeometry(tgeometry);
             }
           }
+          self.measureTooltipElement.innerHTML = distance;
           self.measureTooltipElement.className = 'ol-tooltip ol-tooltip-static';  // #TODO styling is not working
           self.measureTooltip.setOffset([0, -7]);
+          console.log('distance', distance, ' self.measureTooltipElement.innerHTML', self.measureTooltipElement.innerHTML);
         }
         // adding the interactions that were stopped when drawing
         if (self.draw.type_ === 'Point' || self.draw.type_ === 'MultiPoint' || self.draw.type_ === 'Circle') {
@@ -1622,8 +1636,8 @@ startDeleting() {
          self.canBeUndo = true;
           // self.cacheFeatures.push(cacheFeatures); // this keep open the possibility to delete several an undo several actions
         // console.log('cache', self.cacheFeatures);
-        console.log('editBuffer', self.editBuffer);
-        return;
+         console.log('editBuffer', self.editBuffer);
+         return;
         }
         else {
           // this.ediLayer.geometry is different .. so a sketch layer
@@ -1898,24 +1912,31 @@ updateEditingLayer(layerOnEdit: any) {
      * and the group name of the layer
      *  #TODO catch exception
      */
-   // console.log('evento emitido, que llega', layerOnEdit);
-   const layer = this.loadedWfsLayers.find(x => x.layerName === layerOnEdit.layerName);
-   // layer contains the source.
+   let layer: any;
+   console.log('what is inside updateEditingLayer', layerOnEdit);
    if (this.curEditingLayer) {
       // a layer was being edited - ask for saving changes
-      this.stopEditing(this.curEditingLayer);  // test is changes are save to the right layer, otherwise it should go #
+      this.stopEditing();  // test is changes are save to the right layer, otherwise it should go #
+      if (layerOnEdit === null) {
+       this.curEditingLayer = null;
+       return;
+     }
+      layer = this.loadedWfsLayers.find(x => x.layerName === layerOnEdit.layerName);
+     // layer contains the source.
       if (this.curEditingLayer === layer) {
         this.curEditingLayer = null;
+        this.stopEditing(); // maybe is not needed this should be controlled since the layer panel
         return;
-      }
-    }
+     }
+   }
     // the user wants to switch to another layer, already the edit was stopped with the previous layer
+   layer = this.loadedWfsLayers.find(x => x.layerName === layerOnEdit.layerName);
    this.curEditingLayer = layer;
    this.startEditing(layer);
  }
 
 
-stopEditing(editLayer) {
+stopEditing() {
       /** Disables the interactions on the map to start moving/panning and stop drawing
        *  asks to save changes in the layer if any and call the function for it.
        *  @param editLayer, the layer that was edited / #TODO editLayer is not required
@@ -2090,7 +2111,7 @@ writeTransactWfs(editLayer: any) {
     // configure nodes.
     const strService = 'SERVICE=WFS&VERSION=' + AppConfiguration.wfsVersion + '&REQUEST=DescribeFeatureType';
     const strUrl = this.qGsServerUrl + strService + '&map=' + this.qgsProjectFile;
-    console.log("strUrl", strUrl);
+    console.log('strUrl', strUrl);
     const formatWFS = new WFS();
     const formatGML = new GML({
       featureNS: 'http://localhost:4200',
@@ -2709,8 +2730,8 @@ updateOrderGroupsLayers(groupsLayers: any) {
       });
     });
     // console.log('reordered layers..', this.map.getLayers());
-  console.log('reordered layers......');
-  this.printLayerOrder();
+    console.log('reordered layers......');
+    this.printLayerOrder();
   }
 
   printLayerOrder(){
@@ -2753,7 +2774,7 @@ findGeometryType(layerName) {
     /*if (this.layersGeometryType[layerName]){
       geometryType = this.layersGeometryType[layerName].layerGeom;
     }*/
-    for (let group of this.groupsLayers) {
+    for (const group of this.groupsLayers) {
     const lyr = group.layers.find(x => x.layerName === layerName);
     if (lyr) {
       geometryType = lyr.geometryType;

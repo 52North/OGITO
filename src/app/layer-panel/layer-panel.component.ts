@@ -64,6 +64,7 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
 
   ngOnInit(): void {
   console.log('in Layer Panel con delay', this.groupLayers);
+  this.layerActive = null;
   this.showLayerPanel$ = observableOf(true);
   this.openLayersService.showEditLayerPanel$.subscribe(data =>{
   this.showLayerPanel$ = observableOf(data);
@@ -131,7 +132,7 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
       */
       $event.preventDefault();
       $event.stopImmediatePropagation();
-      // console.log('que entra..getting better', layer);
+      console.log('que entra..getting better layer and this.layerActive', layer, this.layerActive);
       // not layer active
       if (this.layerActive === null){
         // set the clicked layer as active
@@ -152,6 +153,7 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
           layer.onEdit = false;
           this.layerActive = null;
           this.openLayersService.updateShowEditToolbar(false);
+          this.editLayerClick.emit(null);
           return;
         }
        // layer was in identifying // stop this action
@@ -218,8 +220,10 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
         return;
       }
       // the layer was active in editing
+      console.log('PASA AQUI.. 221, onIdentifyLayerClick');
       layer.onEdit = false;
       layer.onIdentify = true;
+      this.editLayerClick.emit(null);
       this.openLayersService.updateShowEditToolbar(false);
       this.identifyLayerClick.emit({layer, groupName});
       return;
@@ -231,6 +235,7 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
     this.updateEditActionInLayers(this.layerActive);
     // workaroeund..
     this.openLayersService.updateShowEditToolbar(false);
+    this.editLayerClick.emit(null);
     // set the selected layer as active
     this.layerActive = layer.layerName;
     layer.onIdentify = true;
@@ -330,11 +335,11 @@ onGroupLayerVisClick(  $event: any, layer: any){
      */
     $event.preventDefault();
     $event.stopImmediatePropagation();
-    console.log ('layergroup being emitted', layer, this.groupLayers);
+    // console.log ('layergroup being emitted', layer, this.groupLayers);
     // update visible of the group in the global variable groupLayers
     const tgroup = this.groupLayers.find(x => x.groupName === layer.groupName);
     tgroup.visible = true;
-    console.log('layerGroup visibility updated', layer, this.groupLayers);
+    // console.log('layerGroup visibility updated', layer, this.groupLayers);
 
     // emit the event to update the group visibility in the map
     this.groupLayerVisClick.emit(layer);  // emit the change

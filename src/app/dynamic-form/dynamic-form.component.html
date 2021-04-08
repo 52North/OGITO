@@ -1,5 +1,14 @@
 <div class ="example-list"  *ngIf="showForm$ | async"  cdkDragBoundary=".map" cdkDrag >
-<span class="tittle"><strong>Details</strong></span>
+ <mat-card>
+      <mat-card-title-group>
+        <mat-card-title>Details</mat-card-title>
+        <button mat-flat-button (click)="closeForm()" class="matCloseWrapper">
+          <mat-icon >close</mat-icon>
+        </button>
+
+      </mat-card-title-group>
+      <mat-divider class = "toolbarDivider"></mat-divider>
+
   <form (ngSubmit)="onSubmit()" [formGroup]="form">
 
     <div *ngFor="let question of sQuestions" class="form-row">
@@ -47,5 +56,6 @@
   <!-- <div *ngIf="payLoad" class="form-row">
     <strong>Saved the following values</strong><br>{{payLoad}}
   </div> !-->
+  </mat-card>
 </div>
 

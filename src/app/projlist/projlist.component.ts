@@ -22,8 +22,8 @@ export class ProjlistComponent implements OnInit {
     srsID: 'EPSG:3857'   //EPSG CODE
   },
     { name: 'GECCO Noise Munster',
-      url: 'http://130.89.6.97/' + 'qgs_projects/noisemunster2.qgz',  // wrokaround while solving thw WMS problem
-      file: this.projectFolder + 'noisemunster2.qgz',
+      url: AppConfiguration.hostname + 'qgs_projects/noisemunster3.qgz',  // wrokaround while solving thw WMS problem
+      file: this.projectFolder + 'noisemunster3.qgz',
       img: AppConfiguration.hostname + 'qgs_projects/imgMunster.png',
       qGsServerUrl: 'http://130.89.6.97/cgi-bin/qgis_mapserv.fcgi?',
       srsID: 'EPSG:25832'  //EPSG CODE

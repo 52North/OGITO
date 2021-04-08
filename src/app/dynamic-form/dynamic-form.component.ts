@@ -49,7 +49,9 @@ export class DynamicFormComponent implements OnInit {
 
   }
 
-
+  closeForm(){
+    this.showForm$ = observableOf(false);
+  }
 
   onSubmit() {
     // this.payLoad = JSON.stringify(this.form.getRawValue());

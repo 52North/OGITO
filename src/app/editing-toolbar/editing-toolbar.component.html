@@ -22,6 +22,7 @@
               (click)="drawingShapes('Polygon')" matTooltip="Add polygon" [ngClass]="actionActive['Polygon'] ? 'active': 'normal'">
         <mat-icon svgIcon="add_poly"></mat-icon>
       </button>
+     <!--
       <button *ngIf="(layerTypeEdit$ == 'Polygon' || layerTypeEdit$ == 'Multi'|| layerTypeEdit$ == 'MultiPolygon'|| layerTypeEdit$ == 'MultiPolygonZ') " mat-icon-button
               (click)="drawingShapes('Square')" matTooltip="Add Square" [ngClass]="actionActive['Square'] ? 'active': 'normal'">
         <mat-icon>crop_square</mat-icon>
@@ -30,6 +31,7 @@
               (click)="drawingShapes('Circle')" matTooltip="Add Circle" [ngClass]="actionActive['Circle'] ? 'active': 'normal'">
         <mat-icon>radio_button_unchecked</mat-icon>
       </button>
+      -->
       <button mat-icon-button (click)="startEditAction('ModifyBox');showSymbolPanel(false);" matTooltip="Select element(s) to move"
               [ngClass]="actionActive['ModifyBox'] ? 'active': 'normal'" >
         <mat-icon svgIcon="selectBoxFeature"></mat-icon>
