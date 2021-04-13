@@ -1999,6 +1999,7 @@ startEditing(layer: any) {
       // update the observables
      // this is done from layerPanel commented 01032021 this.openLayersService.updateShowEditToolbar(true);
       console.log('que entra en startediting layer', layer);
+      // The problem seem to be that the symbol panel is show before knowing the layer..
       this.openLayersService.updateLayerEditing(layer.layerName, layer.geometryType);
       // clear caches and styles  // #TODO best way to do...
       // this.cacheFeatures = [];

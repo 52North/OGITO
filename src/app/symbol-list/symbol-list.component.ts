@@ -39,20 +39,22 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
   this.subscriptionToShowSymbols = this.openLayersService.showSymbolPanel$.subscribe(
     data => {
       // this.displaySymbolList$ = observableOf(data);
+      // console.log('in show symbols, first time? this.symbols$',  this.symbols$);
       this.showSymbolList(data);
     },
       error => {console.log ('Error in subscription to showSymbolPanel', error); }
   );
   this.subscriptionToLayerEditing = this.openLayersService.layerEditing$.subscribe(
     data => {
-      // console.log('que viene de ol service data:', data);
+      console.log('que viene de ol service data:', data);
       this.styles = this.mapQgsStyleService.getLayerStyle(data.layerName);
       // console.log('styles in symbolList.. pasito a pasito', this.styles);
       // this.symbols$ = this.getSymbolList (this.styles);
       this.symbols$ = this.getJsonSymbolList(this.styles);
-      console.log(' this.symbols$',  this.symbols$);
+      // console.log(' this.symbols$',  this.symbols$);
       this.symbolsLength = Object.keys(this.symbols$).length;
       this.geometryTypeSymbols = data.layerGeom;
+      this.unsetActiveSymbol();
     },
       error => console.log('Error in subscription to Layer Editing in SymbolList', error)
   );
@@ -85,7 +87,7 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit(): void {
-    this.displaySymbolList$ = observableOf(false);  // #Only for development purposes, #TODO put in fs
+    this.displaySymbolList$ = observableOf(true);  // #Only for development purposes, #TODO put in fs
   }
 
   ngAfterViewInit(){
@@ -133,10 +135,11 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
      */
     // let canvas = this.myCanvas.toArray()[i].nativeElement;
     // this version consider only one level of symbols.
+    console.log('this.symbols$ en afterviewinit',this.symbols$);
     try {
       let feature: any;
       const allCanvas = this.myCanvas.toArray();
-      console.log('allCanvas in createJsonSymbolsinCanvas', allCanvas);
+      // console.log('allCanvas in createJsonSymbolsinCanvas', allCanvas);
       for (let i = 0; i < allCanvas.length; i++) {
         const factor = 10; // factor to use in scaling symbol in the canvas
         const canvas = allCanvas[i];
@@ -150,7 +153,7 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
           const render = toContext(canvas.nativeElement.getContext('2d'));
           // console.log(' que llega a this.symbols$', this.symbols$);
           const stylelayer = this.symbols$[key];
-          console.log('que hay en stylelayer', stylelayer);
+          // console.log('que hay en stylelayer', stylelayer);
           const stylelayerClone = [];   // clone the style hopefully deep copy
           // console.log('entra this.geometryTypeSymbols', this.geometryTypeSymbols);
           const olStyle = stylelayer.style;
@@ -164,7 +167,7 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
               let imageClone: any;
               // cloneStyle = style.clone();
               imageClone = olStyle.clone().getImage();
-              // console.log('imageClone color and scale', imageClone.getColor, imageClone.getScale());
+              // console.log('imageClone image fill and scale', olStyle.clone().getImage(), olStyle.getFill(), imageClone.getScale());
               imageClone.setScale(imageClone.getScale() * 5);  // #TODO check this
               // this is working
 
@@ -201,11 +204,9 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
               break;
             }
           }
-          // if stylelayerClone has something it will be drawn
-          // console.log('feature', feature);
-          // console.log('cloneStyle and feature', feature, cloneStyle);
-          // console.log('what is in render', render);
-          console.log(' feature, cloneStyle', feature, cloneStyle );
+
+          // console.log(' feature, cloneStyle render', feature, cloneStyle, render );
+         // render.drawFeature(feature, testStyle);
           render.drawFeature(feature, cloneStyle);
         }
       }
@@ -215,7 +216,15 @@ catch (e) {
     }
   }
 
-updateActivesymbol(symbol: any) {
+  unsetActiveSymbol() {
+    /**
+     * unsets any symbol from the symbol list
+     */
+    console.log('this.symbolActiveKey in unsetActiveSymbol', this.symbolActiveKey);
+    this.symbolActiveKey = null;
+  }
+
+  updateActivesymbol(symbol: any) {
     /**
      * update the activeSymbol
      * @param symbol: array of styles
@@ -225,7 +234,8 @@ updateActivesymbol(symbol: any) {
     // console.log('y ahora que sigue..activeKey, key, value.', this.symbolActiveKey, symbol.key, symbol );
     this.symbolActiveKey = symbol.key;
     const curDiv = document.getElementById('+' + symbol.key );
-    curDiv.className += ' active';
+    // commented 13-04 curDiv.className += ' active';
+    curDiv.className = ' active';
     console.log('selected symbol in symbollist', symbol);
     this.openLayersService.updateCurrentSymbol(symbol);
   }

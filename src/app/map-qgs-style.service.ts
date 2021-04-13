@@ -435,19 +435,22 @@ export class MapQgsStyleService {
       case 'image/svg+xml': {
         let svg = onlineResource.$['xlink:href'];
         svg = svg. substring(7, svg.length);
+        const newIcon = new Icon({
+          opacity: 1,
+          crossOrigin: 'anonymous',
+          src: 'data:image/svg+xml;base64,' + svg,
+          scale: 0.9,
+          // size: size,
+          color
+        });
+        newIcon.load();
+        // Load not yet loaded URI. When rendering a feature with an icon style, the vector renderer will automatically call this method;
+        // ypu might want to call this method for preloading or other purposes
         // console.log('svg', onlineResource, svg);
         newStyle = new Style({
-          image: new Icon({
-            opacity: 1,
-            crossOrigin: 'anonymous',
-            src: 'data:image/svg+xml;base64,' + svg,
-            scale: 0.9,
-            // size: size,
-            color
-          }),
+          image: newIcon,
           fill
         });
-
         // console.log('svgMarker in newStyle', newStyle);
         break;
       }

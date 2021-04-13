@@ -76,7 +76,6 @@ export class OpenLayersService {
     /** Updates the observable to the next value
      * visible: boolean; true or false to show/hide the editing toolbar
      */
-    console.log('HERE all good');
     this.showEditToolbarSource.next(visible);
   }
   updateQgsProjectUrl(url: any)
@@ -95,6 +94,7 @@ export class OpenLayersService {
     /** Updates the observable Geometry type for editing to the next value
      * geom: string; the geometry type: point, line, polygons..
      */
+    console.log('when gets here RRRR');
     this.layerEditingSource.next({layerName, layerGeom});
   }
 

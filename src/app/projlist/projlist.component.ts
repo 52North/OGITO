@@ -25,7 +25,7 @@ export class ProjlistComponent implements OnInit {
       url: AppConfiguration.hostname + 'qgs_projects/noisemunster3.qgz',  // wrokaround while solving thw WMS problem
       file: this.projectFolder + 'noisemunster3.qgz',
       img: AppConfiguration.hostname + 'qgs_projects/imgMunster.png',
-      qGsServerUrl: 'http://130.89.6.97/cgi-bin/qgis_mapserv.fcgi?',
+      qGsServerUrl: 'https://ogito.itc.utwente.nl/cgi-bin/qgis_mapserv.fcgi?',
       srsID: 'EPSG:25832'  //EPSG CODE
     }
 

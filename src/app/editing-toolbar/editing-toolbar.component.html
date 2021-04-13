@@ -7,7 +7,7 @@
  <div>
     <mat-toolbar>
       <button   *ngIf= " (layerTypeEdit$ == 'Point' || layerTypeEdit$ == 'Multi'|| layerTypeEdit$ == 'MultiPoint') " mat-icon-button
-                (click)="drawingShapes('Point');showSymbolPanel(true);" matTooltip="Add point/marker" [ngClass]="actionActive['Point'] ? 'active': 'normal'">
+                (click)="drawingShapes('Point')" matTooltip="Add point/marker" [ngClass]="actionActive['Point'] ? 'active': 'normal'">
         <mat-icon>add_location</mat-icon>
       </button>
       <!-- <button   *ngIf= " (layerTypeEdit$ == 'Point' || layerTypeEdit$ == 'Multi' || layerTypeEdit$ == 'MultiPoint') " mat-icon-button
