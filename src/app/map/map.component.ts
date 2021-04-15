@@ -1398,7 +1398,7 @@ enableAddShape(shape: string) {
           const geom = evt.target;
           let output;
           // show the tooltip only when drawing polys
-          if (self.draw.type_ === 'LineString' && self.curEditingLayer.geometry === 'Polygon') {  // self.curEditingLayer[2]
+          if (self.draw.type_ === 'LineString' && self.curEditingLayer.geometryType.indexOf('Polygon') > -1){  // self.curEditingLayer[2]
             //    let geom = e.feature.getProperties().geometry;
             const last = geom.getLastCoordinate();
             const first = geom.getFirstCoordinate();
@@ -1435,19 +1435,31 @@ enableAddShape(shape: string) {
           const sourceProj = this.map.getView().getProjection();
           // transform coordinates to a 4326 to use getDistance
           const distance = getDistance(transform(first, sourceProj, 'EPSG:4326'), transform(last, sourceProj, 'EPSG:4326'));    //
-          if (distance < threshold) {
-            const newCoordinates = e.feature.getProperties().geometry.getCoordinates();
-            newCoordinates.push(first);
-            console.log("la crea o no antes ?", newCoordinates[newCoordinates.length -1]);
-            const tgeometry = new Polygon([newCoordinates]);
-            if (tgeometry) {
-              e.feature.setGeometry(tgeometry);
-            }
+          if (distance > threshold){
+            e.feature.setGeometry(null);
+            this.unsetMeasureToolTip();
+            // the line is not save in the buffer, so no invalid geoms are stored
+            return;
           }
+          const newCoordinates = e.feature.getProperties().geometry.getCoordinates();
+          newCoordinates.push(first);
+            // console.log('la crea o no antes ?', newCoordinates[newCoordinates.length -1]);
+          const tgeometry = new Polygon([newCoordinates]);
+          // CHECKING IF VALID GEOMETRY?
+          if (!(tgeometry instanceof Polygon)){
+            e.feature.setGeometry(null);
+            this.unsetMeasureToolTip();
+            // the line is not save in the buffer, so no invalid geoms are stored
+            return;
+          }
+          // it was a line and it was converted into a closed polygon
+          e.feature.setGeometry(tgeometry);
+          // console.log('ES UN POLY valido?', tgeometry);
           self.measureTooltipElement.innerHTML = distance;
           self.measureTooltipElement.className = 'ol-tooltip ol-tooltip-static';  // #TODO styling is not working
           self.measureTooltip.setOffset([0, -7]);
-          console.log('distance', distance, ' self.measureTooltipElement.innerHTML', self.measureTooltipElement.innerHTML);
+         //  console.log('distance', distance, ' self.measureTooltipElement.innerHTML', self.measureTooltipElement.innerHTML);
+
         }
         // adding the interactions that were stopped when drawing
         if (self.draw.type_ === 'Point' || self.draw.type_ === 'MultiPoint' || self.draw.type_ === 'Circle') {
@@ -1456,10 +1468,10 @@ enableAddShape(shape: string) {
             self.addDragPinchInteractions();
           }, 1000);
         }
-        // prompting for attributes and finishing that
-        this.popAttrForm(this.curEditingLayer.layerName, e.feature);
         // unset tooltip so that a new one can be created
         this.unsetMeasureToolTip();
+        // prompting for attributes and finishing that
+        this.popAttrForm(this.curEditingLayer.layerName, e.feature);
       });
 
     } catch (e) {
