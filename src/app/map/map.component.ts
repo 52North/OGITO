@@ -1,4 +1,5 @@
-import {AfterViewInit, Component, ElementRef, EventEmitter, OnDestroy, OnInit, Output, ViewChild} from '@angular/core';
+import {AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild} from '@angular/core';
+import {MatSnackBar, MatSnackBarHorizontalPosition, MatSnackBarVerticalPosition} from '@angular/material/snack-bar';
 import {Subject, Subscription} from 'rxjs';
 import {AppConfiguration} from '../app-configuration';
 import 'ol/ol.css';
@@ -78,9 +79,9 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
   showFormSubject: Subject<boolean> = new Subject<boolean>();
   featureLayerForm: {};
   payload: any;
-  dataForm = new Subject <any>();
-  dataForm$ = this.dataForm.asObservable();
-
+  // dataForm = new Subject <any>();
+  // dataForm$ = this.dataForm.asObservable();
+  formOpen = false;
   public existingProject = true;
   map: Map;
   view: View;
@@ -143,7 +144,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
   constructor(private mapQgsStyleService: MapQgsStyleService,
               private  openLayersService: OpenLayersService,
               private questionService: QuestionService,
-              public auth: AuthService) {
+              public auth: AuthService,
+              private snackBar: MatSnackBar) {
 
     this.subsToShapeEdit = this.openLayersService.shapeEditType$.subscribe(
       data => {
@@ -198,15 +200,11 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     );
 
-
-    this.dataForm$.subscribe(
+    /* this.dataForm$.subscribe(
       (data) => {
         console.log('data in constructorXXXXXXXXXXXXXXX', data);
       });
-
-
-
-
+    */
 
     this.openLayersService.editAction$.subscribe(
       // starts an action and stop the others..is this ready with stop interactions?
@@ -1158,26 +1156,32 @@ imageCircle(radius) {
   }
 
 
-popAttrForm(layerName: any, feature: any) {
+popAttrForm(layer: any, feature: any) {
   /**
-   * Build and fire a form according to the editable attriibute of the layer
+   * Builds and fires a form according to the editable attriibute of the layer
    * it fires a virtual keyboard for text and slidebar for number
+   * @param layer: the layer including source and everythin
+   * @param feature: the feature just added in the map
    */
   try {
-    this.formQuestions = this.questionService.getQuestions(layerName);
+    this.formOpen = true; // test
+    // highlight the element
+    this.select = new Select({
+      condition: click,  // check if this work on touch
+      layers: [layer],   // check if tis works
+      hitTolerance: 7, // check if this is enough
+     // style: this.selectStyle,
+    });
+    this.map.addInteraction(this.select);
+    const selectedFeatures = this.select.getFeatures();
+    selectedFeatures.push(feature);
+    this.select.dispatchEvent('select');
+    console.log('selectedFeatures in popAttrForm', selectedFeatures);
+    // triggering the form
+    this.formQuestions = this.questionService.getQuestions(layer.layerName);
     console.log('this.formQuestions', this.formQuestions);
-    this.updateFormQuestions(this.formQuestions, layerName, feature);
+    this.updateFormQuestions(this.formQuestions, layer.layerName, feature);
     this.updateShowForm(true);
-    // adding features to a buffer cache
-    /*this.dynamicFormComponent.payLoad$.subscribe(
-      (data) => {
-                  // assign attributes
-                  const newFeature = this.addingAttrFeature(feature, data);
-                  // save in the buffer
-                  this.saveFeatinBuffer(layerName, layerSource, feature);
-        },
-      (error) => {console.log('ya no estoy estancada', error); }
-    );*/
   }
   catch
     (e) { alert('Error initializing form' + e);  }
@@ -1193,6 +1197,10 @@ getFormData(data: any) {
   // this.payload = payload;
   // this.payloadSource.next(payload);
   this.updateShowForm(false);
+  // enable adding features
+  this.formOpen = false;
+  // unselect the feature in the map
+  this.select.getFeatures().clear();
   // assign attributes
   this.addingAttrFeature(data.layerName, data.feature, data.payload);
     // save in the buffer
@@ -1384,7 +1392,21 @@ enableAddShape(shape: string) {
       this.map.addInteraction(this.snap);
       this.createMeasureTooltip();
       let listener;
+      // configuration for matsnackbar
+      const horizontalPosition: MatSnackBarHorizontalPosition = 'start';
+      const verticalPosition: MatSnackBarVerticalPosition = 'bottom';
       this.draw.on('drawstart', evt => {
+        console.log('this.formOpen in drawstart', this.formOpen);
+        if (this.formOpen) {
+          // alert('There is a form open, add attributes or close the form');
+          this.snackBar.open('There is a form open, close it first', 'ok',
+            { horizontalPosition: 'center',
+              verticalPosition: 'top',
+              duration: 3000});
+          this.draw.abortDrawing();
+          return;
+        }
+
         if (this.currentClass == null){
           // modified 02 03 2021 other atts will be required.
           // e.feature.set('class', this.currentClass);
@@ -1471,7 +1493,7 @@ enableAddShape(shape: string) {
         // unset tooltip so that a new one can be created
         this.unsetMeasureToolTip();
         // prompting for attributes and finishing that
-        this.popAttrForm(this.curEditingLayer.layerName, e.feature);
+        this.popAttrForm(this.curEditingLayer, e.feature);
       });
 
     } catch (e) {

@@ -18,7 +18,7 @@
 </div>
 <app-dynamic-form #dynamicForm  [questions]="questionsSubject.asObservable()"
                    [showForm]="showFormSubject.asObservable()"
-                  [dataForm] = "dataForm"
+
                     (formSubmitted) = "getFormData($event)"
                     [featureLayer] = "featureLayerForm"> <!--[questions]="formQuestions" -->  <!-- from parent to Child) -->
 </app-dynamic-form>
