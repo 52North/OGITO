@@ -1,6 +1,6 @@
 .example-list{
   left: 60% !important;
-  max-width: 20%;
+  max-width: 40%;
   top: 40% !important;
   opacity:0.9;
   background-color: white;
@@ -21,8 +21,19 @@
   // padding-left: 5px;
   text-align: center;
 }
+.sliderLabel{
+  padding-top: 10px;
+  padding-right: 8px;
+
+}
 .form-row {
-  padding-top: 15px;
+  padding-top: 5px;
+}
+.container{
+  display: flex;
+}
+.closingButton{
+  text-align: right;
 }
 
 input[type="range"] {

@@ -153,6 +153,13 @@ export class QuestionService {
     const group: any = {};
 
     questions.forEach(question => {
+
+      if (question.controlType === 'checkbox') {
+        group[question.key] = question.required ? new FormControl(question.value || '', Validators.required)
+          : new FormControl( false); // workaround...
+        return;
+      }
+
       group[question.key] = question.required ? new FormControl(question.value || '', Validators.required)
         : new FormControl(question.value || '');
     });

@@ -22,6 +22,7 @@ export class DynamicFormComponent implements OnInit {
   sQuestions: QuestionBase<string>[];
   form: FormGroup;
   payLoad = '';
+  checkBoxChecked = false;  //workaround to solve the issue that checkbox are shown ckecked by default.
   payLoadSource = new Subject <any>();
   payLoad$ = this.payLoadSource.asObservable();
   // public dataForm: Promise<any>;
@@ -63,7 +64,19 @@ export class DynamicFormComponent implements OnInit {
     // this.dataForm.resolve(this.payLoad));
    // this.dataForm = of(this.payLoad);
   }
+  showQuestionValue(elementID: any, value: any){
+    console.log('showing value of slider', elementID, value);
+    const label = document.getElementById(elementID);
+    console.log('label', label);
+    if (label)
+    {  console.log('label', label);
+       label.innerHTML = value; }
+  }
 
+
+  checkingChecks(questionKey: any, value: any){
+    console.log('showing value of questionKey', questionKey, value);
+  }
 
 // get isValid() { return this.form.controls[this.questions[key].valid;}
 ngOnDestroy() {

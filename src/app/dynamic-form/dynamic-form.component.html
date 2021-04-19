@@ -14,20 +14,55 @@
     <div *ngFor="let question of sQuestions" class="form-row">
      <!-- <app-question [question]="question" [form]="form"></app-question> -->
       <div [formGroup]="form">
-        <label class="label" [attr.for]="question.key">{{question.label}}: </label>
+       <!-- <label class="label" [attr.for]="question.key">{{question.label}}: </label>-->
         <div class="inputField" [ngSwitch]="question.controlType">
-          <input class="inputText" *ngSwitchCase="'textbox'" [formControlName]="question.key"
-                 [id]="question.key" [type]="question.type">
+         <mat-form-field *ngSwitchCase="'textbox'" >
+           <mat-label>
+             {{question.label}}:
+           </mat-label>
+           <input matInput class="inputText" [formControlName]="question.key" [id]="question.key">
+         </mat-form-field>
+         <div  *ngSwitchCase="'checkbox'" >
+           <mat-checkbox  [formControlName]="question.key"  [checked] = "question.checked" labelPosition='after' color = 'primary'
+                          (change)="checkingChecks(question.key, $event.checked)">
+              <label> {{question.label}}  </label>
+           </mat-checkbox>
+         </div>
 
-          <input class="inputText" *ngSwitchCase="'checkbox'" [formControlName]="question.key"
-                 [id]="question.key" [type]="question.type">
-        <div *ngSwitchCase="'slider'">
+
+          <div class="container" *ngSwitchCase="'slider'">
+            <div class="sliderLabel">
+              <label >{{question.label}}: </label>
+            </div>
+
+            <div>
+              <mat-slider  color = 'primary' [formControlName]="question.key" [max]="question.max"
+                          [min]="question.min" [thumbLabel]=true  [value]="question.min"
+                           (change) = "showQuestionValue(question.key, $event.value)">{{question.value}}</mat-slider>
+
+            </div>
+           <div>  <label id={{question.key}}> {{question.value}} </label></div>
+          </div>
+
+
+         <!-- <div *ngSwitchCase="'slider'">
          <span>{{question.min}} </span>
           <input  [id]="question.key" type="range"  [min]="question.min" [value]="question.min" [max]="question.max" step="1"
                   [formControlName]="question.key" >
          <span>{{question.max}} </span>
           <span></span>
-        </div>
+        </div> -->
+          <!--<mat-form-field  *ngSwitchCase="'slider'">
+            <mat-label>{{question.label}} </mat-label>
+            <input matInput type="number" [id]="question.key"
+                   [formControlName]="question.key" >
+            <mat-slider [max]="question.max" [min]="question.min" [thumbLabel]=true  [value]="question.min"
+            (change) = "setQuestionValue(question.key, $event.value)"></mat-slider>
+
+
+          </mat-form-field> -->
+
+
 
           <!--
           // https://stackoverflow.com/questions/58970793/get-value-of-slider-in-typescript
@@ -37,19 +72,15 @@
           <select [id]="question.key" *ngSwitchCase="'dropdown'" [formControlName]="question.key">
             <option *ngFor="let opt of question.options" [value]="opt.key">{{opt.value}}</option>
           </select>
-
-
-
         </div>
-
        <!-- <div class="errorMessage" *ngIf="!isValid">{{question.label}} is required</div>  -->
       </div>
 
 
     </div>
 
-    <div class="form-row">
-      <button class="" type="submit" [disabled]="!form.valid">Ok</button>
+    <div class="closingButton">
+      <button mat-flat-button color="primary" type="submit" [disabled]="!form.valid">Ok</button>
     </div>
   </form>
 

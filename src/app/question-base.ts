@@ -8,6 +8,7 @@ export class QuestionBase<T> {
   max: number;
   controlType: string;
   type: string;
+  checked: boolean;
   options: {key: string, value: string}[];
 
   constructor(options: {
@@ -20,6 +21,7 @@ export class QuestionBase<T> {
     max?: number;
     controlType?: string;
     type?: string;
+    checked?: boolean;
     options?: {key: string, value: string}[];
      } = {}) {
     this.value = options.value;
@@ -31,6 +33,7 @@ export class QuestionBase<T> {
     this.max = options.max === undefined ? 10 : options.max;
     this.controlType = options.controlType || '';
     this.type = options.type || '';
+    this.checked = options.checked || false;
     this.options = options.options || [];
   }
 }
