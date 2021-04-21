@@ -2,7 +2,7 @@ import {BrowserModule, HammerModule} from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { MapComponent } from './map/map.component';
+import { MapComponent, DialogRatingDialog } from './map/map.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HomeComponent } from './home/home.component';
 import {DemoMaterialModule} from './material-module';
@@ -15,6 +15,7 @@ import {HttpClientModule } from '@angular/common/http';
 import { ProjlistComponent } from './projlist/projlist.component';
 import { DynamicFormComponent } from './dynamic-form/dynamic-form.component';
 import { DynamicFormQuestionComponent } from './dynamic-form-question/dynamic-form-question.component';
+
 @NgModule({
   declarations: [
     AppComponent,
@@ -26,7 +27,8 @@ import { DynamicFormQuestionComponent } from './dynamic-form-question/dynamic-fo
     ToolbarComponent,
     ProjlistComponent,
     DynamicFormComponent,
-    DynamicFormQuestionComponent
+    DynamicFormQuestionComponent,
+    DialogRatingDialog
   ],
   imports: [
     BrowserModule,

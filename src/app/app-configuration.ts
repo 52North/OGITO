@@ -59,4 +59,7 @@ export class AppConfiguration{
        'noise_nachts': 11
     }
     };
+  static ratingPrex = {
+    'leise_orte_obs': 'rank_'
+  }
 }

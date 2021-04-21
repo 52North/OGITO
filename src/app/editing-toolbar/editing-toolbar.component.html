@@ -36,6 +36,11 @@
               [ngClass]="actionActive['ModifyBox'] ? 'active': 'normal'" >
         <mat-icon svgIcon="selectBoxFeature"></mat-icon>
       </button>
+
+      <button mat-icon-button (click)="startEditAction('Rating');showSymbolPanel(false);" matTooltip="Rank element"
+              [ngClass]="actionActive['Rating'] ? 'active': 'normal'" >
+        <mat-icon>star_rate</mat-icon>
+      </button>
       <!--
       <button mat-icon-button (click)="startEditAction('Copy');showSymbolPanel(false)" matTooltip="Copiar element(s)"
               [ngClass]="actionActive['Copy'] ? 'active': 'normal'" >
@@ -69,7 +74,7 @@
       <button mat-icon-button aria-label="UndoLastEdit" (click)="startEditAction('Undo');" matTooltip="Undo">
         <mat-icon>undo</mat-icon>
       </button>
-      <button mat-icon-button (click)="showSymbolPanel(true)" matTooltip="Select/Change symbol"
+      <button mat-icon-button (click)="showSymbolPanel(true)" matTooltip="Open symbol list"
               [ngClass]="actionActive['showSymbols'] ? 'active': 'normal'">
         <mat-icon   aria-label="">category</mat-icon>
       </button>

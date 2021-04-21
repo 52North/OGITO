@@ -1,5 +1,6 @@
-import {AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild} from '@angular/core';
+import {AfterViewInit, Component, ElementRef, Inject, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import {MatSnackBar, MatSnackBarHorizontalPosition, MatSnackBarVerticalPosition} from '@angular/material/snack-bar';
+import {MatDialog, MatDialogRef, MAT_DIALOG_DATA} from '@angular/material/dialog';
 import {Subject, Subscription} from 'rxjs';
 import {AppConfiguration} from '../app-configuration';
 import 'ol/ol.css';
@@ -56,6 +57,14 @@ import {QuestionService} from '../question-service.service';
 import {QuestionBase} from '../question-base';
 import {catchError} from 'rxjs/operators';
 import {DynamicFormComponent} from '../dynamic-form/dynamic-form.component';
+import {getPathMappingsFromTsConfig} from '@angular/compiler-cli/ngcc/src/path_mappings';
+
+// To use dialogs
+export interface DialogData {
+  layerNameDialog: string;
+  rating: number;
+}
+
 
 @Component({
   selector: 'app-map',
@@ -135,6 +144,10 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
   helpTooltip: any; // The measure tooltip element.  * @type {HTMLElement}*/
   helpTooltipElement: any; // Overlay to show the measurement. * @type {Overlay}
   overlay: any;
+  // variables to use modal dialog
+  layerNameDialog: string;
+  rating: number;
+  // subscriptions
   subsToShapeEdit: Subscription;
   subsTocurrentSymbol: Subscription;
   subsToSaveCurrentLayer: Subscription;
@@ -145,7 +158,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
               private  openLayersService: OpenLayersService,
               private questionService: QuestionService,
               public auth: AuthService,
-              private snackBar: MatSnackBar) {
+              private snackBar: MatSnackBar,
+              public dialog: MatDialog) {
 
     this.subsToShapeEdit = this.openLayersService.shapeEditType$.subscribe(
       data => {
@@ -200,15 +214,11 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     );
 
-    /* this.dataForm$.subscribe(
-      (data) => {
-        console.log('data in constructorXXXXXXXXXXXXXXX', data);
-      });
-    */
 
     this.openLayersService.editAction$.subscribe(
       // starts an action and stop the others..is this ready with stop interactions?
       data => {
+        if (this.formOpen) {return;};    // will not do anything when a form is open.
         console.log('que viene', data);
         this.removeInteractions();
         if (this.helpTooltip) {
@@ -224,6 +234,10 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         switch (data) {
           case 'ModifyBox': {
             this.startTranslating();
+            break;
+          }
+          case 'Rating': {
+            this.startRating();
             break;
           }
           case 'Rotate': {
@@ -276,6 +290,98 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
      */
    // console.log('user authorized', userProfile);   // how to  get the value?
   }
+
+  openDialog(layerName: string, feature: any): void{
+   // #TODO change this title
+    const ratingName =  layerName === 'leise_orte_obs' ? 'Leise Orte' : 'Measures';
+    const dialogRef = this.dialog.open(DialogRatingDialog,{
+      width: '250px',
+      data: {layerNameDialog: ratingName, rating: this.rating}
+    });
+    dialogRef.afterClosed().subscribe(result => {
+      console.log('the rating selected was', result);
+      this.rating = result;
+      // unselect the feature in the map
+      this.select.getFeatures().clear();
+      this.saveRating(layerName, feature);
+    });
+  }
+
+  saveRating(layerName: string, feature: any){
+    // how to update the database
+    console.log('layerName feature and rating', layerName, feature, this.rating);
+    // get the previous value and sum?
+    const attrRanking = AppConfiguration.ratingPrex[layerName] + this.rating.toString();
+    const newRating = feature.get(attrRanking) + this.rating;
+    // console.log('attrRanking:', attrRanking , 'feature.get(attrRanking):', feature.get(attrRanking));
+    // assign attributes
+    feature.set(attrRanking, newRating);
+    // console.log('feature with new rating', feature);
+    // add the changes to the edit buffer
+    this.saveFeatinBuffer(this.curEditingLayer.layerName, feature, 'rating');
+  }
+
+  startRating(){
+    /**
+     * Allows editing only the attributes of a layer
+     * designed to work well with polygons layers
+     * it uses a selecting interaction, get the element and show a form to update its attributes...
+     */
+    // add an interaction for selection
+    // there is a layer being edited
+    if (!this.curEditingLayer) {
+      // this condition will be never held.. but...
+      this.snackBar.open('Error retrieving current layer on edit', 'ok',
+        { horizontalPosition: 'center',
+          verticalPosition: 'top',
+          duration: 5000});
+      return;
+    }
+    // checking that layer can be ranked.. this is in AppConfiguration
+    if (!AppConfiguration.ratingPrex[this.curEditingLayer.layerName]) {
+    // The layer is not available for rating
+    this.snackBar.open('Current layer is not available for rating', 'ok',
+    { horizontalPosition: 'center',
+      verticalPosition: 'top',
+      duration: 5000});
+    return;
+     }
+
+    let lyr = this.findLayer(this.curEditingLayer.layerName);
+    if (lyr === null) {
+      // alert('Error retrieving current layer');
+      this.snackBar.open('Error retrieving current layer 2', 'ok',
+        { horizontalPosition: 'center',
+          verticalPosition: 'top',
+          duration: 5000});
+      return;
+    }
+    this.removeInteractions();
+    this.removeDragPinchInteractions();
+    this.select = new Select({
+      layers: [lyr],   // avoid selecting in other layers..
+      condition: click,  // check if this work on touch
+      hitTolerance: 7,    // check if we should adjust for # types of geometries..
+      style: this.selectStyle,
+    });
+    this.map.addInteraction(this.select);
+    console.log('Interactions in the map in startRating', this.map.getInteractions());
+    this.select.on('select', (e) => {
+
+      const selectedFeatures = e.target.getFeatures().getArray();
+      console.log('selectedFeatures', selectedFeatures );
+      if (selectedFeatures.length <= 0) {
+        this.snackBar.open('No features selected', 'ok',
+          { horizontalPosition: 'center',
+            verticalPosition: 'top',
+            duration: 3000});
+        return;
+      }
+      this.openDialog( this.curEditingLayer.layerName, selectedFeatures[0]);
+    });
+  }
+
+
   updateSelectedProject(qgsProject: any){
     // get the var from the selection List
     if (qgsProject.file.length > 0) {
@@ -290,7 +396,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 
  requestProjectInfo(qgsfile: string){
     const strRequest = this.qGsServerUrl + 'service=WMS&request=GetProjectSettings&MAP=' + qgsfile;
-    console.log('strRequest', strRequest);
+    // console.log('strRequest', strRequest);
     const projectSettings = fetch(strRequest)
      .then(response => response.text())
      .then (data => {
@@ -314,9 +420,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
      */
     const xmlParser = new DOMParser();
     const xmlText = xmlParser.parseFromString(gqsProjectinfo, 'text/xml');
-    // console.log ('xmlText', xmlText);
     const WFSLayers = xmlText.getElementsByTagName('WFSLayers')[0];
-    console.log ('WFSLayers', WFSLayers);
     const wfsLayerList = [];
     if (WFSLayers !== undefined) {
       for (let k = 0; k < WFSLayers.getElementsByTagName('WFSLayer').length; k++) {
@@ -324,14 +428,11 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     }
 
-    // console.log('wfsLayerList', wfsLayerList);
     const rootLayer = xmlText.getElementsByTagName('Layer')[0];
-    console.log('rootLayer', rootLayer);
     // get the CRS in EPSG format
     let crs: string;
     // there are might be varios CRS, we should look for the BBOX defined for the prefered EPSG define in the projlist
     // Projected Bounding box
-
     if (rootLayer.getElementsByTagName('CRS').length > 1) {
       // the epsg code comes in the second place in the list
       crs = rootLayer.getElementsByTagName('CRS')[1].childNodes[0].nodeValue;
@@ -355,14 +456,11 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
        this.mapCanvasExtent = [westBoundLongitude, eastBoundLongitude, northBoundLatitude, southBoundLatitude];
        // console.log('BBOX', BBOX, westBoundLongitude, eastBoundLongitude, southBoundLatitude, northBoundLatitude);
      }
-    console.log('this.mapCanvasExtent', this.mapCanvasExtent, 'this.srsID', this.srsID);
+    // console.log('this.mapCanvasExtent', this.mapCanvasExtent, 'this.srsID', this.srsID);
 
     const nGroups = rootLayer.getElementsByTagName('Layer').length;
     const layerList = xmlText.querySelectorAll('Layer > Layer');
-    // console.log('layerList', layerList);
-    // console.log('nGroups', nGroups, 'children', rootLayer.children);
     // console.log('children[0]', rootLayer.children[0]);
-    // const groupList = [];
     for (let i = 0; i < rootLayer.getElementsByTagName('Layer').length; i++) {
       const node = layerList[i];
       if (node.getElementsByTagName('Layer').length > 0) {
@@ -381,13 +479,9 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
           // console.log('geometryType', geometryType);
           const layerName = layer.getElementsByTagName('Name')[0].childNodes[0].nodeValue;
           const layerTittle = layer.getElementsByTagName('Title')[0].childNodes[0].nodeValue;
-          // const layerLegendUrl = layer.getAttribute('Tittle');
-          // let layerLegendUrl = layer.getElementsByTagName('LegendURL')[0].childNodes[0].nodeValue;
-          // let layerLegendUrl = layer.getElementsByTagName('LegendURL')[0];
           const urlResource = layer.querySelector('OnlineResource').getAttribute('xlink:href');
           // console.log('checkpoint', j, layerName, layerTittle, urlResource);
           const legendLayer = await this.createLegendLayer(urlResource, layerName);
-          // console.log('legendLayer',legendLayer );
           const fields = [];
           if (wfsLayerList.find(element => element === layerName)) {
             layerIsWfs = true;
@@ -432,12 +526,6 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       }
 
     }
-    // console.log('this.groupsLayers', this.groupsLayers);
-    // get the order in which layers are rendered
-   // this.layersOrder.push(layerName); // #TODO evaluate if this is needed or worthy, it is not being used somewhere else
-    // register the project projection definion in proj4 format
-   // const projectionDef = xmlText.getElementsByTagName('proj4')[0].childNodes[0].nodeValue;
-   // this.srsID = xmlText.getElementsByTagName('authid')[0].childNodes[0].nodeValue;
 
     // get the styles for WFS layers
     this.mapQgsStyleService.createAllLayerStyles(this.qGsServerUrl, this.qgsProjectFile, wfsLayerList);
@@ -508,17 +596,17 @@ ngOnInit(): void {
   }
 
 setIdentifying() {
-    console.log('this.curInfoLayer.source in setIdentifying', this.curInfoLayer);
+    // console.log('this.curInfoLayer.source in setIdentifying', this.curInfoLayer);
     this.map.on('singleclick', (evt) => {         // this was click, still needs to be tested in a touch
       if (evt.dragging) {
         // info.tooltip('hide');
         return;
       }
       if (!this.curInfoLayer){    // undefined or null?
-        console.log ('cuando pasa por AQUI....');
+        // console.log ('cuando pasa por AQUI....');
         return;
       }
-      console.log('this.curInfoLayer.getSource() instanceof ImageWMS', (this.curInfoLayer.getSource() instanceof ImageWMS));
+      // console.log('this.curInfoLayer.getSource() instanceof ImageWMS', (this.curInfoLayer.getSource() instanceof ImageWMS));
       this.container.nativeElement.style.display = 'block';
       if (this.curInfoLayer.getSource() instanceof ImageWMS ) {
         // console.log('ENTRA AQUI.WMS..');
@@ -806,163 +894,6 @@ loadWMTSlayers(xmlWMTS: WMTSCapabilities) {
     });
   }
 
-reorderingGroups(groups) {
-    /**
-     *  Moves the groups and allocate layers on it according to the order in the project
-     *  @param groups: contain the groups for which layers will be ordered
-     *  try to make one function that receives the groups for which layers will be ordered.
-     */
-    const nGroups = this.groupsLayers.length;
-    let nLysInGrp = 0;
-    this.groupsLayers.forEach(group => {
-      // console.log('indexOf', this.groupsLayers.indexOf(group), group.layers);
-      this.map.getLayers().forEach(layer => {
-        if (layer.get('name') === group.name) {
-          const grpZIndex = (nGroups - this.groupsLayers.indexOf(group)) * 10;
-          layer.setZIndex(grpZIndex);
-          // console.log('layer', layer.get('name'), layer.getLayers().array_.length);
-          // order layers inside the group
-          if (layer.getLayers().array_.length > 0) {
-            // console.log('tiene capas dentro', group.name);
-            nLysInGrp = layer.getLayers().array_.length;  // numbers of layers in the
-            layer.getLayers().forEach(lyrInGrp => {
-              // console.log('indexOF inside', group.name, lyrInGrp.get('name'), group.layers.findIndex( x => x.name === lyrInGrp.get('name')));
-              lyrInGrp.setZIndex(grpZIndex - group.layers.findIndex(x => x.name === lyrInGrp.get('name')));  // will work until 10 layers/group
-            });
-          }
-
-        }
-      });
-    });
-  }
-
-parseProject(qgsfile: string) {
-    /** uses the xml text of qgs project file listed in AppConfiguration to load
-     * it send part of the xml text to other functions to load part of the project
-     * 1. A dictionary of layer styles
-     * 2. A dictionary with the layer geometries
-     *
-     */
-    const fieldLayers = {};
-    const xmlParser = new DOMParser();
-    const xmlText = xmlParser.parseFromString(qgsfile, 'text/xml');
-    console.log ('xmlText', xmlText);
-    // comment temporal #todo this.projectTitle = xmlText.getElementsByTagName('title')[0].childNodes[0].nodeValue;
-    // register the project projection definion in proj4 format
-    const projectionDef = xmlText.getElementsByTagName('proj4')[0].childNodes[0].nodeValue;
-    this.srsID = xmlText.getElementsByTagName('authid')[0].childNodes[0].nodeValue;
-    proj4.defs(this.srsID, projectionDef);
-    register(proj4);
-    const mapcanvas = xmlText.getElementsByTagName('mapcanvas')[0];
-    const units = mapcanvas.getElementsByTagName('units')[0].childNodes[0].nodeValue;
-    const extent = mapcanvas.getElementsByTagName('extent')[0];
-    const xmin = Number(extent.getElementsByTagName('xmin')[0].childNodes[0].nodeValue);
-    const xmax = Number(extent.getElementsByTagName('xmax')[0].childNodes[0].nodeValue);
-    const ymin = Number(extent.getElementsByTagName('ymin')[0].childNodes[0].nodeValue);
-    const ymax = Number(extent.getElementsByTagName('ymax')[0].childNodes[0].nodeValue);
-    // console.log(`xmin xmax ymin ymax ${ xmin } ${ xmax } ${ ymin } ${ ymax } `);
-    // extent [minx, miny, maxx, maxy].
-    this.mapCanvasExtent = [xmin, xmax, ymin, ymax];
-    const projectionWKT = xmlText.getElementsByTagName('wkt');
-    if (projectionWKT.length > 0) {
-      const projectWKT = xmlText.getElementsByTagName('wkt')[0].childNodes[0].nodeValue
-        .replace('PROJCRS', 'PROJCS');
-      const m = projectWKT.indexOf('[', projectWKT.indexOf('BBOX'));
-      const n = projectWKT.indexOf(']', m);
-      const bbox = projectWKT.slice(m + 1, n).split(',');
-      this.BBOX = [Number(bbox[0]), Number(bbox[1]), Number(bbox[2]), Number(bbox[3])];
-      // console.log(`bbox ${ this.BBOX }`);
-    } else {
-      this.BBOX = this.mapCanvasExtent;
-    }
-    this.projectProjection = new Projection({
-      code: this.srsID,
-      extent: this.BBOX,
-    });
-    const layerTreeGroup = xmlText.getElementsByTagName('layer-tree-group')[0];
-    // get the order in which layers are rendered
-    const nLayers = layerTreeGroup.getElementsByTagName('layer-tree-layer').length;
-    for (let i = 0; i < nLayers; i++) {
-      const node = layerTreeGroup.getElementsByTagName('layer-tree-layer')[i];
-      const layerName = node.getAttribute('name');
-      this.layersOrder.push(layerName); // #TODO evaluate if this is needed or worthy, it is not being used somewhere else
-    }
-    // get the wfs map layers as stated in the proj file
-    const wfsLayersList = [];
-    const wfsLayers = xmlText.getElementsByTagName('WFSLayers')[0];
-    const nlayerWFS = wfsLayers.getElementsByTagName('value').length;
-    // console.log('wfs layers in project file', wfsLayers, nlayerWFS);
-    for (let i = 0; i < nlayerWFS; i++) {
-      const layerName = wfsLayers.getElementsByTagName('value')[i].childNodes[0].nodeValue;
-      wfsLayersList.push(layerName.slice(0, layerName.length - 37)); // 36 is the number of chars added as id + 1 ('_')
-    }
-    const legend = xmlText.getElementsByTagName('legend')[0];
-    // get the layers without groups
-    const layersWithoutGroup = [];
-    for (let i = 0; i < legend.getElementsByTagName('legendlayer').length; i++) {
-      const legendlayer = legend.getElementsByTagName('legendlayer')[i];
-      const layerName = legendlayer.getAttribute('name');
-      if (legendlayer.parentNode.nodeName !== 'legendgroup') {
-        // layersWihoutGroup.push({name: layerName});  // let's try
-        if (wfsLayersList.find(element => element === layerName)) {
-          layersWithoutGroup.push({name: layerName, wfs: true, onEdit: false});
-        } else {
-          layersWithoutGroup.push({name: layerName, wfs: false, onEdit: false});
-        }
-      }
-    }
-    if (layersWithoutGroup.length > 0 ) {
-      this.groupsLayers.push({name: 'Others', layers: layersWithoutGroup});
-    }
-    for (let i = 0; i < legend.getElementsByTagName('legendgroup').length; i++) {
-      const legendGroup = legend.getElementsByTagName('legendgroup')[i];
-      const groupName = legendGroup.getAttribute('name');
-      // console.log('groupName', groupName);
-      const layersinGroup = [];
-      for (let j = 0; j < legendGroup.getElementsByTagName('legendlayer').length; j++) {
-        const layerInGroup = legendGroup.getElementsByTagName('legendlayer')[j].getAttribute('name');
-        // console.log('layerInGroup', layerInGroup);
-        if (wfsLayersList.find(element => element === layerInGroup)) {
-          layersinGroup.push({name: layerInGroup, wfs: true, onEdit: false});  // onEdi will be kept for the time being
-        } else {
-          layersinGroup.push({name: layerInGroup, wfs: false, onEdit: false});
-        }
-      }
-      this.groupsLayers.push({name: groupName, layers: layersinGroup});
-      // console.log('layers in group', legendGroup.getElementsByTagName('legendlayer').length);
-    }
-
-    // #TODO implement something with the groups in the legend
-    const mapLayersLst = xmlText.getElementsByTagName('maplayer');
-    for (let i = 0; i < mapLayersLst.length; i++) {
-      const lyr = xmlText.getElementsByTagName('maplayer')[i];
-      const layerName = lyr.getElementsByTagName('layername')[0].childNodes[0].nodeValue;
-      const layerGeom = lyr.getAttribute('geometry');
-      this.layersGeometryType[layerName] = {layerName, layerGeom};
-      const renderer = lyr.getElementsByTagName('renderer-v2')[0];
-      // create the OL style for the renderer
-      if (renderer) {
-        this.mapQgsStyleService.createLayerStyles(layerName, renderer);
-      }
-      // get the fields, what to do with no-editable fields in QGIS?
-      // preferred option is not to edit or input data via keyboard, just select icons oas osm
-      const fieldLst = {};
-      const fieldsConf = lyr.getElementsByTagName('fieldConfiguration')[0];
-      if (fieldsConf) {
-        for (let k = 0; k < fieldsConf.children.length; k++) {
-          const field = lyr.getElementsByTagName('field')[k];
-          const fieldName = field.getAttribute('name');
-          fieldLst[fieldName] = field.getElementsByTagName('editWidget')[0].getAttribute('type');
-        }
-        fieldLayers [layerName] = fieldLst;
-      }
-    }
-    // console.log('fields of layer', fieldLayers);
-    // console.log('this.layersGeometryType', this.layersGeometryType);  // #TODO not sure if this is worthy layers migth be not published..
-    this.fieldWFSLayers = fieldLayers;
-    this.layerStyles = this.mapQgsStyleService.getLayerStyles(); // need to check if this is working well;
-    // console.log(this.layerStyles);
-  }
 
 loadWMSlayers(urlWMS: string, xmlCapabilities: WMSCapabilities) {
     /**
@@ -977,7 +908,7 @@ loadWMSlayers(urlWMS: string, xmlCapabilities: WMSCapabilities) {
         console.log('no layers in WMS');
         return;
       }
-      console.log('xmlCapabilities', xmlCapabilities);
+      // console.log('xmlCapabilities', xmlCapabilities);
       const layerList = xmlCapabilities.Capability.Layer.Layer;
       layerList.forEach(layer => {
         // console.log('this.loadedWfsLayers', this.loadedWfsLayers);
@@ -1086,38 +1017,6 @@ addWebServLayer(layerName: any, webServlayer: any) {
     this.map.addLayer(newGroup);
   }
 
-  /* addWFSLayer(layerName, wfsVectorLayer){
-    // find the layer in a group
-    let groupName = '';
-    this.groupsLayers.forEach(group => {
-      if ( group.layers.findIndex(lyr  => lyr.name === layerName) > -1)   // findIndex return -1 if not found
-      {
-        groupName = group.name;
-      }
-      });
-    // console.log('wfs layerName and group', layerName, groupName);
-    // the layer is not in a group, add it to the map and return
-    if (groupName === '') {
-      this.map.addLayer(wfsVectorLayer);
-      return;
-    }
-    // the layer was in a group and the group does exist
-    this.map.getLayers().forEach(lyr  => {
-      if (lyr.get('name') === groupName) {
-        // console.log ('there is a group already', groupName);
-        lyr.getLayers().push(wfsVectorLayer);
-        return;
-      }
-    });
-    // the layer was in a group and the group does not exist ==> lets create it
-    const newGroup = new LayerGroup({
-        name : groupName,
-        layers: [wfsVectorLayer]
-      });
-    this.map.addLayer(newGroup);
-   // console.log('pasito a pasito layers in map', this.map.getLayers());
-} */
-
 getEditingStyle() {
     const editingstyle = [
       new Style({
@@ -1204,16 +1103,8 @@ getFormData(data: any) {
   // assign attributes
   this.addingAttrFeature(data.layerName, data.feature, data.payload);
     // save in the buffer
-  this.saveFeatinBuffer(data.layerName, data.feature);
+  this.saveFeatinBuffer(data.layerName, data.feature, 'insert');
 }
-
-/*gettingDataForm(data: any){
-  //
-  console.log('data in gettingDataForm', data);
-  data.then((data) => {
-    console.log('data dentro del then', data);
-  });
-  } */
 
 
 addingAttrFeature(layerName: string, feature: any,  attr: any){
@@ -1221,11 +1112,11 @@ addingAttrFeature(layerName: string, feature: any,  attr: any){
   // find the layer in groups to get the editable fields
   const tlayer = this.findLayerinGroups(layerName);
   const fields = tlayer.fields;
-  console.log('fields in addingAttFeature', fields);
+  // console.log('fields in addingAttFeature', fields);
   if (attr !== 'undefined') {
     for (const key in attr) {
       const type = fields.find(x => x.name === key).type;
-      console.log ('Name and type of field', key, type);
+      //  console.log ('Name and type of field', key, type);
       feature.set(key, this.mapAttribute(type, attr[key]));
     }
   }
@@ -1260,8 +1151,11 @@ mapAttribute(type: string, value: string){
 
 
 
-saveFeatinBuffer(layerName: string, feature: any){
-  // find layer
+saveFeatinBuffer(layerName: string, feature: any, operation: string){
+  /**
+   * @param operation: 'insert' or 'update'
+   */
+    // find layer
   let tlayer: any;
   tlayer = this.findWfsLayer(layerName);
   console.log('layerSource in saveFeatinBuffer', tlayer.source);
@@ -1269,7 +1163,7 @@ saveFeatinBuffer(layerName: string, feature: any){
   const layerSource = tlayer.source;
   this.editBuffer.push({
     layerName,
-    transaction: 'insert',
+    transaction: operation,
     feats: feature,
     dirty: true,    // dirty is not in the WFS
     // 'layer': self.curEditingLayer[0],
@@ -1279,7 +1173,7 @@ saveFeatinBuffer(layerName: string, feature: any){
   this.canBeUndo = true;
   this.cacheFeatures.push({
     layerName,
-    transaction: 'insert',
+    transaction: operation,
     feats: feature,
     dirty: true,    // dirty is not in the WFS
     // 'layer': self.curEditingLayer[0],
@@ -1535,7 +1429,7 @@ startDeleting() {
     const self = this;
     const dirty = true;
     // HERE add code to delete from the source and add to the buffer
-    this.select.on('select', function(e) {
+    this.select.on('select', (e) => {
       const selectedFeatures = e.target.getFeatures();
       // const cacheFeatures = [];
       if (selectedFeatures.getLength() <= 0) {
@@ -1906,11 +1800,11 @@ updateMapVisibleLayer(selectedLayer: any){
    * updates the visibility of a layer in the map
    * @param selectedLayer is a dictionary layer that was clicked to show/hide
    */
-    console.log('selectedLayer', selectedLayer);
+    // console.log('selectedLayer', selectedLayer);
     const layerName = selectedLayer.layer.layerName;
     const groupName = selectedLayer.groupName;
 
-    console.log('Map groups', this.map.getLayers());
+    // console.log('Map groups', this.map.getLayers());
     this.map.getLayers().forEach(layer => {
       if (groupName === layer.get('name')) {
         layer.getLayers().forEach(lyrinGroup => {
@@ -1927,11 +1821,28 @@ updateMapVisibleLayer(selectedLayer: any){
   }
 
 findLayerinGroups(layerName: string): any {
+  /**
+   * finds a layer in the groups dictionary
+   */
+  for (const group of this.groupsLayers) {
+      const lyr = group.layers.find(x => x.layerName.toLowerCase() === layerName.toLowerCase());
+      if (lyr) {
+        // console.log ('la consigue en los grupos', lyr);
+        return (lyr);  // it was lyr
+      }
+    }
+
+  }
+
+  findGroupLayer(layerName: string): any {
+    /**
+     * finds the group which th layer belongs to
+     */
     for (const group of this.groupsLayers) {
       const lyr = group.layers.find(x => x.layerName.toLowerCase() === layerName.toLowerCase());
       if (lyr) {
-        console.log ('la consigue en los grupos', lyr);
-        return (lyr);
+        // console.log ('la consigue en los grupos', lyr);
+        return (group);  // it was lyr
       }
     }
 
@@ -1947,7 +1858,7 @@ updateEditingLayer(layerOnEdit: any) {
      *  #TODO catch exception
      */
    let layer: any;
-   console.log('what is inside updateEditingLayer', layerOnEdit);
+   // console.log('what is inside updateEditingLayer', layerOnEdit);
    if (this.curEditingLayer) {
       // a layer was being edited - ask for saving changes
       this.stopEditing();  // test is changes are save to the right layer, otherwise it should go #
@@ -1985,9 +1896,7 @@ stopEditing() {
 
 saveEdits(editLayer: any) {
       // save edits in all layers
-      // console.log('editBuffer.indexOf(editLayer.layerName', this.editBuffer.findIndex(x => x.layerName ===  editLayer.layerName) );
-      console.log('editlayer en save', editLayer);
-      console.log('en save', this.editBuffer);
+       // console.log('editlayer en save', editLayer,'en save', this.editBuffer);
       if (!(this.editBuffer.length > 0)) {  // nothing to save
         return;
       }
@@ -1998,8 +1907,15 @@ saveEdits(editLayer: any) {
       if (editLayer.geometryType === 'Point' || editLayer.geometryType === 'Line' || editLayer.geometryType === 'Polygon'
         || editLayer.geometryType === 'MultiPolygon' || editLayer.geometryType === 'MultiPolygonZ' || editLayer.geometryType === 'MultiPoint')
       {
-         this.writeTransactWfs(editLayer);
-
+         const result = this.writeTransactWfs(editLayer);
+         if (result){
+           this.snackBar.open('Result TO BE CHANGED for another msg', 'ok',
+             { horizontalPosition: 'center',
+               verticalPosition: 'top',
+               duration: 3000});
+           console.log('result', result);  // TODO send a message
+           return;
+         }
       }
       else {
           this.saveSketchLayer(editLayer);
@@ -2068,7 +1984,7 @@ undoLastEdit() {
       return;
     }
     const lastOperation = this.editBuffer.filter(obj => obj.layerName === this.curEditingLayer.layerName).pop(); // curEdits.pop();
-    console.log ('lastOperatoion', lastOperation);
+    console.log ('lastOperation', lastOperation);
     switch (lastOperation.transaction)
     // rotate and translate are treated as update #TODO change attributes
     {
@@ -2079,20 +1995,28 @@ undoLastEdit() {
         break;
       }
       case 'update': {
-        // change to the oldFeat // there could be several features
+      // change to the oldFeat // there could be several features
         lastOperation.feats.forEach( feat => {
           const oldFeat = feat.get('oldFeat');
-          oldFeat.getGeometry();
-          const curFeatGeomClone = feat.getGeometry().clone();
-          // set the geometry to the old one
-          feat.setGeometry(oldFeat.getGeometry());
-          // set the new old geometry to the current one
-          feat.set('oldFeat', curFeatGeomClone);
-          // Changes should be available in the buffer
+          // oldFeat is undefined then it was an update of attributes --> rating
+          if (oldFeat){
+            oldFeat.getGeometry();
+            const curFeatGeomClone = feat.getGeometry().clone();
+            // set the geometry to the old one
+            feat.setGeometry(oldFeat.getGeometry());
+            // set the new old geometry to the current one
+            feat.set('oldFeat', curFeatGeomClone);
+            // Changes should be available in the buffer
+          }
+
         });
         break;
       }
-       case 'delete': {
+      case 'rating': {
+        //apaprently nothing to do here... just delete the last operation and it will delete from the editBffer
+        console.log('The last record was done .. so check that the rating was not added');
+      }
+      case 'delete': {
          // insert back
          // console.log('temp feat', lastOperation.feats.getProperties().class);
          lastOperation.feats.setStyle(null);  // to allow the style function of the layer to render the feat properly
@@ -2130,6 +2054,9 @@ writeTransactWfs(editLayer: any) {
           case 'delete':
             layerTrs[editLayer.layerName].delete.push(t.feats); // t.feats is one feat #TODO next ver delete several
             break;
+          case 'rating':
+            layerTrs[editLayer.layerName].update.push(t.feats); // t.feats is one feat
+            break;
           case 'update':
             /* t.feats.forEach(f => {
               layerTrs[editLayer.layerName].update.push(f); // t.feats is an array with one or several feats
@@ -2162,23 +2089,21 @@ writeTransactWfs(editLayer: any) {
     if (layerTrs[editLayer.layerName].insert.length > 0) {
       node = formatWFS.writeTransaction( layerTrs[editLayer.layerName].insert, null, null, formatGML);
       str = xs.serializeToString(node);
-      console.log('str', str);
       return fetch(strUrl, {
         method: 'POST', mode: 'no-cors', body: str
       })
         .then((textInsert) => {
-          console.log('text response insert WFS', textInsert.text());
+          // console.log('text response insert WFS', textInsert.text());
           layerTrs[editLayer.layerName].insert = [];
           if (layerTrs[editLayer.layerName].update.length > 0) {
             // Edits should be done in chain... 1)insert, 2)updates, 3) deletes
             node = formatWFS.writeTransaction(null, layerTrs[editLayer.layerName].update, null, formatGML);
             str = xs.serializeToString(node);
-            console.log('pasa x aqui?');
             return fetch(strUrl, {
               method: 'POST', body: str
             })
               .then(respUpdate => {
-                console.log('text response update WFS', respUpdate.text());
+                // console.log('text response update WFS', respUpdate.text());
                 layerTrs[editLayer.layerName].update = [];
                 if (layerTrs[editLayer.layerName].delete.length > 0) {
                   // Edits should be done in chain... 1)insert, 2)updates, 3) deletes // if enter here only deletes were done
@@ -2202,7 +2127,7 @@ writeTransactWfs(editLayer: any) {
         .then(() => {
           // cleaning the editbuffer after inserting - updating and deleting
           this.editBuffer = this.editBuffer.filter(obj => obj.layerName !== editLayer.layerName);
-          console.log('this.editBufferTemp after saving', this.editBuffer);
+          // console.log('this.editBufferTemp after saving', this.editBuffer);
         });
     }
     if (layerTrs[editLayer.layerName].update.length > 0) {
@@ -2213,7 +2138,7 @@ writeTransactWfs(editLayer: any) {
         method: 'POST', body: str
       })
         .then(respUpdate => {
-          console.log('text response update WFS', respUpdate.text());
+          // console.log('text response update WFS', respUpdate.text());
           layerTrs[editLayer.layerName].update = [];
           if (layerTrs[editLayer.layerName].delete.length > 0) {
             // Edits should be done in chain... 1)insert, 2)updates, 3) deletes // if enter here only deletes were done
@@ -2226,20 +2151,20 @@ writeTransactWfs(editLayer: any) {
                 return respDelete.text();
               })
               .then(textDelete => {
-                console.log('text response update WFS', textDelete);
+                // console.log('text response update WFS', textDelete);
                 layerTrs[editLayer.layerName].delete = [];
-                console.log('edit array', layerTrs[editLayer.layerName].delete);
+                // console.log('edit array', layerTrs[editLayer.layerName].delete);
               });
           }
         })
         .then(() => {
           // cleaning the editbuffer when only updates and deletes where done
           this.editBuffer = this.editBuffer.filter(obj => obj.layerName !== editLayer.layerName);
-          console.log('this.editBufferTemp after saving', this.editBuffer);
+          // console.log('this.editBufferTemp after saving', this.editBuffer);
         });
     }
     if (layerTrs[editLayer.layerName].delete.length > 0) {
-      console.log ('entra aqui?.. mientras espera la subscription..');
+
       // Edits should be done in chain... 1)insert, 2)updates, 3) deletes // if enter here only deletes were done
       node = formatWFS.writeTransaction(null, null, layerTrs[editLayer.layerName].delete, formatGML);
       str = xs.serializeToString(node);
@@ -2250,21 +2175,15 @@ writeTransactWfs(editLayer: any) {
           return respDelete.text();
         })
         .then(respDelete => {
-          console.log('text response update WFS', respDelete);
+          // console.log('text response update WFS', respDelete);
           layerTrs[editLayer.layerName].delete = [];
           // cleaning the editbuffer when only deletes were done
           this.editBuffer = this.editBuffer.filter(obj => obj.layerName !== editLayer.layerName);
-          console.log('this.editBufferTemp after saving', this.editBuffer);
+          // console.log('this.editBufferTemp after saving', this.editBuffer);
           });
     }
   }
 
-saveWFSAll() {
-  /** this saves all the changes accumulated in the editWFSbuffer
-   * it helps to prevent any data loss
-   * #TODO
-   */
-  }
 
 findWfsLayer(layerName: string) {
   /**
@@ -2273,21 +2192,24 @@ findWfsLayer(layerName: string) {
    * @return tlayer: the object layer found
    */
   let tlayer: any = null;
-  // const groupName = this.findLayerinGroups(layerName);
-  // console.log('this.map.getLayers() in findlayer', this.map.getLayers());
   tlayer = this.loadedWfsLayers.find(x => x.layerName.toLowerCase() === layerName.toLowerCase());
-  console.log('tlayer in findLyer', tlayer);
+  // console.log('tlayer in findLyer', tlayer);
   return (tlayer);
 }
 
+
 findLayer(layerName: string) {
+  /**
+   * finds a layer in the map and return its source and so on.
+   * @param layerName the name of the layer
+   */
   let tlayer: any = null;
-  const groupName = this.findLayerinGroups(layerName);
-  // console.log('groupName', groupName)
+  const group = this.findGroupLayer(layerName);
+  //  console.log('groupName', group);
   this.map.getLayers().forEach(layer => {
-      if (groupName.layerName.toLowerCase() === layer.get('name').toLowerCase()) {
+      if (group.groupName.toLowerCase() === layer.get('name').toLowerCase()) {
         layer.getLayers().forEach(lyrinGroup => {
-          console.log('lyrinGroup.get(\'name\')', lyrinGroup.get('name'));
+          // console.log('lyrinGroup.get(\'name\')', lyrinGroup.get('name'));
           if (layerName.toLowerCase() === lyrinGroup.get('name').toLowerCase()) {
             tlayer = lyrinGroup;
           }
@@ -2307,7 +2229,11 @@ startTranslating()
    const lyr = this.findLayer(this.curEditingLayer.layerName);
    const updateFeats = [];
    if (lyr === null) {
-     alert('Error retrieving current layer');
+     // alert('Error retrieving current layer');
+     this.snackBar.open('Error retrieving current layer', 'ok',
+       { horizontalPosition: 'center',
+         verticalPosition: 'top',
+         duration: 5000});
      return;
    }
    this.removeInteractions();
@@ -2771,10 +2697,10 @@ updateOrderGroupsLayers(groupsLayers: any) {
 
   printLayerOrder(){
     this.map.getLayers().forEach(layer => {
-      console.log('group index', layer, layer.get('name') + ': ' + layer.getZIndex());
+      // console.log('group index', layer, layer.get('name') + ': ' + layer.getZIndex());
       if (layer.getLayers().array_.length > 0) {
         layer.getLayers().forEach(lyrInGrp => {
-          console.log('layer index', lyrInGrp.get('name')  + ': ' +  lyrInGrp.getZIndex());
+          // console.log('layer index', lyrInGrp.get('name')  + ': ' +  lyrInGrp.getZIndex());
         });
       }
     });
@@ -2856,4 +2782,76 @@ ngOnDestroy() {
   }
 
 // have a default map? have a parameter in the cinfiguration file..
+}
+
+@Component({
+  // tslint:disable-next-line:component-selector
+  selector: 'dialog-rating-dialog',
+  templateUrl: './dialog-rating-dialog.html',
+  styleUrls: ['./map.component.scss']
+})
+// tslint:disable-next-line:component-class-suffix
+export class DialogRatingDialog {
+
+  selectedRating = 0;
+  stars = [
+    {
+      id: 1,
+      icon: 'star',
+      class: 'star-gray star-hover star'
+    },
+    {
+      id: 2,
+      icon: 'star',
+      class: 'star-gray star-hover star'
+    },
+    {
+      id: 3,
+      icon: 'star',
+      class: 'star-gray star-hover star'
+    },
+    {
+      id: 4,
+      icon: 'star',
+      class: 'star-gray star-hover star'
+    },
+    {
+      id: 5,
+      icon: 'star',
+      class: 'star-gray star-hover star'
+    }
+
+  ];
+
+
+  constructor(
+    public dialogRef: MatDialogRef<DialogRatingDialog>,
+    @Inject(MAT_DIALOG_DATA) public data: DialogData) {}
+
+
+  selectStar(value): void{
+
+    // prevent multiple selection
+    if ( this.selectedRating === 0){
+
+      this.stars.filter( (star) => {
+
+        if ( star.id <= value){
+          star.class = 'star-gold star';
+        }
+        else {
+          star.class = 'star-gray star';
+        }
+        return star;
+      });
+
+    }
+   // this.selectedRating = value;
+    this.data.rating = value;
+  }
+
+  onNoClick(): void {
+    this.dialogRef.close();
+  }
+
 }

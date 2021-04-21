@@ -132,7 +132,7 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
       */
       $event.preventDefault();
       $event.stopImmediatePropagation();
-      console.log('que entra..getting better layer and this.layerActive', layer, this.layerActive);
+      // console.log('que entra..getting better layer and this.layerActive',$event, layer, this.layerActive);
       // not layer active
       if (this.layerActive === null){
         // set the clicked layer as active
@@ -306,7 +306,7 @@ onPan(event: any): void {
     for (const group of this.groupLayers) {
       const lyr = group.layers.find(x => x.layerName.toLowerCase() === layerName.toLowerCase());
       if (lyr) {
-        console.log ('la consigue en los grupos', lyr);
+        // console.log ('la consigue en los grupos', lyr);
         return (lyr);
       }
     }
@@ -324,7 +324,7 @@ onPan(event: any): void {
     // update visible of the layer in the variable
     const tlayer = this.findLayerinGroups(layer.layerName);
     tlayer.visible = true;
-    console.log('layer visibility updated', layer, groupName, this.groupLayers);
+    // console.log('layer visibility updated', layer, groupName, this.groupLayers);
     this.layerVisClick.emit({layer, groupName});
 }
 

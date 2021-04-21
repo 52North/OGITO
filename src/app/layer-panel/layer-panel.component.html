@@ -80,8 +80,9 @@
   <mat-card class = 'layerPanelCard'>
     <mat-card-title-group>
       <mat-card-title class ="panelTitle">Layers  </mat-card-title>
-      <button mat-flat-button   (click)="closeLayerPanel(false)"  >
-        <mat-icon class="closeLayerPanel">close</mat-icon>
+      <button mat-flat-button   (click)="closeLayerPanel(false)" >
+
+        <mat-icon class="closeLayerPanel" matTooltip="Close layer Panel">close</mat-icon>
       </button>
     </mat-card-title-group>
     <mat-divider class = "toolbarDivider"></mat-divider>
@@ -114,10 +115,10 @@
                    </div>
                    <span class="spacer"></span>
                    <div *ngIf="layer.wfs">
-                     <button mat-icon-button
-                             (click)="onEditLayerClick($event, layer, group.groupName)"
+                     <button mat-icon-button matTooltip="Edit layer"
+                             (click)="onEditLayerClick($event, layer, group)"
                              [ngClass]="layer.onEdit ? 'activeAction': 'normal'">
-                       <mat-icon  class= "editIcon">edit</mat-icon>
+                       <mat-icon  class= "editIcon" >edit</mat-icon>
 
                      </button>
                    </div>
@@ -125,7 +126,8 @@
                    <div>
 
                      <!-- the identify button to the layer panel neede for WMS layers -->
-                     <button mat-icon-button (click)="onIdentifyLayerClick($event, layer, group.groupName)"
+                     <button mat-icon-button matTooltip="Identify elements in the layer"
+                             (click)="onIdentifyLayerClick($event, layer, group.groupName)"
                              [ngClass]="layer.onIdentify ? 'activeAction': 'normal'">
                        <mat-icon class= "editIcon" >info_outline</mat-icon>
                      </button>

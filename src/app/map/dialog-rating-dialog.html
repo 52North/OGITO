@@ -1,0 +1,15 @@
+<h2 mat-dialog-title>Rating {{data.layerNameDialog}}</h2>
+<mat-dialog-content>
+  Enter your rating:
+  <div class="star-rating-container star-rating-animation" fxLayout="row" fxLayoutAlign="start center" >
+
+    <div *ngFor="let star of stars" [ngClass]="[star.class]" (click)="selectStar(star.id)">
+      <mat-icon>{{star.icon}}</mat-icon>
+    </div>
+
+  </div>
+</mat-dialog-content>
+<mat-dialog-actions>
+  <button mat-button color="primary" [mat-dialog-close]="data.rating" cdkFocusInitial>Ok</button>
+  <button mat-button (click)="onNoClick()">Cancel</button>
+</mat-dialog-actions>

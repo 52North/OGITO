@@ -46,12 +46,9 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
   );
   this.subscriptionToLayerEditing = this.openLayersService.layerEditing$.subscribe(
     data => {
-      console.log('que viene de ol service data:', data);
+      // console.log('que viene de ol service data:', data);
       this.styles = this.mapQgsStyleService.getLayerStyle(data.layerName);
-      // console.log('styles in symbolList.. pasito a pasito', this.styles);
-      // this.symbols$ = this.getSymbolList (this.styles);
       this.symbols$ = this.getJsonSymbolList(this.styles);
-      // console.log(' this.symbols$',  this.symbols$);
       this.symbolsLength = Object.keys(this.symbols$).length;
       this.geometryTypeSymbols = data.layerGeom;
       this.unsetActiveSymbol();
@@ -100,7 +97,6 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
     /** Creates a dictionary with the styles per class when needed
      * @param styles: the array with the classes and styles
      */
-    // console.log('styles', styles);
     const symbolDict = {};
     for (const key of Object.keys(styles)){
       // console.log(`${key} -> ${styles[key].value}`);
@@ -117,12 +113,10 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
 
     const symbolDict = {};
     const styles = layerStyle.style;
-    // console.log('styles in getJsonSymbolList', styles);
     for (const key of Object.keys(styles)){
       // console.log(`${key} -> ${styles[key].value}`);
       symbolDict[styles[key].value] = {style: styles[key].style, label: styles[key].label};             // styles[key].style;
     }
-    // console.log('estilos en dict format', symbolDict);
     return symbolDict;
   }
 
@@ -135,11 +129,10 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
      */
     // let canvas = this.myCanvas.toArray()[i].nativeElement;
     // this version consider only one level of symbols.
-    console.log('this.symbols$ en afterviewinit',this.symbols$);
+
     try {
       let feature: any;
       const allCanvas = this.myCanvas.toArray();
-      // console.log('allCanvas in createJsonSymbolsinCanvas', allCanvas);
       for (let i = 0; i < allCanvas.length; i++) {
         const factor = 10; // factor to use in scaling symbol in the canvas
         const canvas = allCanvas[i];
@@ -153,9 +146,7 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
           const render = toContext(canvas.nativeElement.getContext('2d'));
           // console.log(' que llega a this.symbols$', this.symbols$);
           const stylelayer = this.symbols$[key];
-          // console.log('que hay en stylelayer', stylelayer);
           const stylelayerClone = [];   // clone the style hopefully deep copy
-          // console.log('entra this.geometryTypeSymbols', this.geometryTypeSymbols);
           const olStyle = stylelayer.style;
           let cloneStyle: any;
           cloneStyle = olStyle.clone();
@@ -167,10 +158,8 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
               let imageClone: any;
               // cloneStyle = style.clone();
               imageClone = olStyle.clone().getImage();
-              // console.log('imageClone image fill and scale', olStyle.clone().getImage(), olStyle.getFill(), imageClone.getScale());
               imageClone.setScale(imageClone.getScale() * 5);  // #TODO check this
               // this is working
-
               cloneStyle = new Style({
                 image: imageClone,
                 fill: olStyle.getFill()
@@ -195,8 +184,6 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
             case 'Polygon':
             case 'MultiPolygon':
             case 'MultiPolygonZ': {
-              // en landuse 9 es muy interesante, pattern is not visible
-              // console.log('Entra aqui');
               render.lineWidth = 5;
               const wide = width - (width / 4);
               const high = height - (height / 4);
@@ -204,9 +191,6 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
               break;
             }
           }
-
-          // console.log(' feature, cloneStyle render', feature, cloneStyle, render );
-         // render.drawFeature(feature, testStyle);
           render.drawFeature(feature, cloneStyle);
         }
       }
@@ -220,7 +204,7 @@ catch (e) {
     /**
      * unsets any symbol from the symbol list
      */
-    console.log('this.symbolActiveKey in unsetActiveSymbol', this.symbolActiveKey);
+    // console.log('this.symbolActiveKey in unsetActiveSymbol', this.symbolActiveKey);
     this.symbolActiveKey = null;
   }
 
@@ -236,7 +220,6 @@ catch (e) {
     const curDiv = document.getElementById('+' + symbol.key );
     // commented 13-04 curDiv.className += ' active';
     curDiv.className = ' active';
-    console.log('selected symbol in symbollist', symbol);
     this.openLayersService.updateCurrentSymbol(symbol);
   }
 

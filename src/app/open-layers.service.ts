@@ -94,8 +94,7 @@ export class OpenLayersService {
     /** Updates the observable Geometry type for editing to the next value
      * geom: string; the geometry type: point, line, polygons..
      */
-    console.log('when gets here RRRR');
-    this.layerEditingSource.next({layerName, layerGeom});
+     this.layerEditingSource.next({layerName, layerGeom});
   }
 
   updateShowSymbolPanel(visible: boolean) {

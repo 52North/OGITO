@@ -1,9 +1,9 @@
 import {Component, ElementRef, OnInit, ViewChild} from '@angular/core';
-import {Observable, Subscription, of as observableOf, observable} from 'rxjs';
+import {Observable, Subscription, of as observableOf} from 'rxjs';
 import {OpenLayersService} from '../open-layers.service';
 import { MatIconRegistry } from "@angular/material/icon";
 import {DomSanitizer} from "@angular/platform-browser";
-import {observableToBeFn} from 'rxjs/internal/testing/TestScheduler';
+
 import {MapQgsStyleService} from '../map-qgs-style.service';
 
 
@@ -39,7 +39,8 @@ export class EditingToolbarComponent implements OnInit {
     Identify: false,
     Delete: false,
     MeasureLine: false,
-    MeasureArea: false
+    MeasureArea: false,
+    ModifyAttribute: false
   };
   onPanStart(event: any): void {
     this.startX = this.x;
@@ -252,7 +253,7 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
      *  @param visible: boolean
      */
   this.isVisible$ = observableOf(visible);
-  console.log ('showing Toolbar', visible);
+  // console.log ('showing Toolbar', visible);
   // hide the symboloanel
   if (!visible){
    this.showSymbolPanel(false);
