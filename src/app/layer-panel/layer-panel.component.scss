@@ -2,7 +2,7 @@
   background-color: #e35183;  //to focus the icons
   color: blue;
 }
-.editIcon {
+/*.editIcon {
   font-size: 1vw;
   text-align: center;
   padding-top: 0;
@@ -10,18 +10,10 @@
   margin-top: 5px;
   padding-right: 0;
 }
-
+*/
 .spacer {
   flex: 1 1 auto;
 }
-/*.mapBoundary{
-  width: 97%;
-  position: absolute;
-  left: 3%;
-  height: 93% ;
-  border-color: green;
-
-} */
 .toolbarDivider {
   padding-top: 5px !important;
 }
@@ -142,9 +134,9 @@
 }
 
 :host ::ng-deep .mat-icon-button {
-  width: 1.3vw !important;
-  height: 1.3vw !important;
-  top: 0.3vw !important;
+  width: 1.2vw !important;
+  height: 1.2vw !important;
+  // top: 0.3vw !important;
 }
 :host ::ng-deep .mat-icon {
   //top: 0.3vw !important;
@@ -197,3 +189,4 @@
 .activeAction {
   background: #e35183;   //green;
 }
+

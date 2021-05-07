@@ -1,82 +1,8 @@
 <!--suppress AngularUndefinedBinding -->  <!-- to fix a bug in webstorm -->
+
 <!--
-  <div class ="example-list"   *ngIf="showLayerPanel$ | async" [style.left.px]="x" [style.top.px]="y"
-     (panstart)="onPanStart($event)" (panmove)="onPan($event)" cdkDragBoundary=".mapBoundary" cdkDrag >
-<mat-card class = 'layerPanelCard'>
-  <mat-card-title-group>
-      <mat-card-title class ="panelTitle">Layers  </mat-card-title>
-      <button mat-flat-button   (click)="closeLayerPanel(false)"  >
-        <mat-icon class="closeLayerPanel">close</mat-icon>
-      </button>
-  </mat-card-title-group>
-  <mat-divider class = "toolbarDivider"></mat-divider>
-  <mat-accordion #layerAccordion cdkDropList (cdkDropListDropped)="dropExpansion($event)">
-    <ng-container  *ngFor= "let group of groupLayers" >
-      <mat-expansion-panel cdkDrag>
-
-        <mat-expansion-panel-header [collapsedHeight]="'2.1vw'" [expandedHeight]="'2.1vw'">
-        <mat-panel-title>
-        <mat-selection-list [id]="group.groupName">
-             <mat-list-option class = "group" checkboxPosition="before" (click)="onGroupLayerVisClick($event,group)"
-                         selected="true" >
-                {{group.groupName}}
-             </mat-list-option>
-        </mat-selection-list>
-       </mat-panel-title>
-        </mat-expansion-panel-header>
-        <mat-selection-list (selectionChange)="onSelectedChanged($event)">
-
-          <mat-list-option class="example-box mat-primary" *ngFor="let layer of group.layers" [value]="layer.layerName"
-                           (click)="onLayerVisClick($event,layer,group.groupName)" checkboxPosition="before"
-                           [ngClass]="layerActive == layer.layerName? 'active': 'normal'" selected="true">
-            <div class="selectLayer" >
-
-              <div style="display:flex;align-items:center">
-                {{layer.layerName}}
-              </div>
-
-              <div *ngIf="layer.wfs">
-                <button mat-icon-button
-                        (click)="onEditLayerClick($event, layer, group.groupName)" >
-                  <mat-icon  class= "editIcon">edit</mat-icon>
-                </button>
-              </div>
-              <div>
-
-
-              <button mat-icon-button (click)="onIdentifyLayerClick($event, layer, group.groupName)">
-                <mat-icon class= "editIcon" >info_outline</mat-icon>
-              </button>
-                <button mat-icon-button (click)="onOpacityLayerClick($event, layer)">
-                  <mat-icon  class= "editIcon">opacity</mat-icon>
-                </button>
-
-
-              </div>
-              <div class="selectLayer">
-
-                <mat-list *ngFor="let icon of layer.legendLayer">
-                  {{icon.title}}
-                  <img [src] = icon.iconSrc alt="legend">
-                </mat-list>
-              </div>
-            </div>
-
-          </mat-list-option>
-
-        </mat-selection-list>
-  </mat-expansion-panel>
-
-  </ng-container>
-  </mat-accordion>
-  <div #groupedListDiv class="example-list-top" cdkDropList (cdkDropListDropped)="drop($event)">
-  </div>
-</mat-card>
-</div>
--->
-<div id='second' class ="example-list"   *ngIf="showLayerPanel$ | async"  cdkDragBoundary=".map" cdkDrag >
-  <!-- <div class ="example-list"   *ngIf="showLayerPanel$ | async" [style.left.px]="x" [style.top.px]="y"
-      (panstart)="onPanStart($event)" (panmove)="onPan($event)" cdkDragBoundary=".mapBoundary" cdkDrag >  -->
+<div id='second' class ="example-list"   *ngIf="showLayerPanel$ | async" [style.left.px]="x" [style.top.px]="y"
+     (panstart)="onPanStart($event)" (panmove)="onPan($event)" cdkDragBoundary=".map" cdkDrag >
   <mat-card class = 'layerPanelCard'>
     <mat-card-title-group>
       <mat-card-title class ="panelTitle">Layers  </mat-card-title>
@@ -88,7 +14,7 @@
     <mat-divider class = "toolbarDivider"></mat-divider>
     <mat-accordion #groupsAccordion cdkDropList (cdkDropListDropped)="dropExpansion($event)">
       <mat-expansion-panel *ngFor= "let group of groupLayers" cdkDrag>
-          <!--togglePosition='before'-->
+
           <mat-expansion-panel-header [collapsedHeight]="'2.1vw'" [expandedHeight]="'2.1vw'">
             <mat-panel-title>
               <mat-selection-list [id]="group.groupName">
@@ -111,7 +37,7 @@
                                 [ngClass]="layerActive == layer.layerName? 'active': 'normal'"  [selected]="layer.visible">
                  <div class="selectLayer" >
                   <div style="display:flex;align-items:center">
-                     {{layer.layerName}} <!-- {{layer['layerTitle']}} -->
+                     {{layer.layerName}}
                    </div>
                    <span class="spacer"></span>
                    <div *ngIf="layer.wfs">
@@ -124,16 +50,16 @@
                    </div>
                    <span class="spacer"></span>
                    <div>
-
-                     <!-- the identify button to the layer panel neede for WMS layers -->
                      <button mat-icon-button matTooltip="Identify elements in the layer"
                              (click)="onIdentifyLayerClick($event, layer, group.groupName)"
                              [ngClass]="layer.onIdentify ? 'activeAction': 'normal'">
                        <mat-icon class= "editIcon" >info_outline</mat-icon>
                      </button>
-                    <!-- <button mat-icon-button (click)="onOpacityLayerClick($event, layer)">
-                       <mat-icon  class= "editIcon">opacity</mat-icon>
-                     </button> -->
+                     <div *ngIf="layer.layerForRanking">
+                      <button   mat-icon-button (click)="onRatingLayerClick($event, layer, group.groupName)">
+                        <mat-icon  svgIcon="ratingActionPlan"></mat-icon>
+                      </button>
+                     </div>
                    </div>
                   </div>
                 </mat-list-option>
@@ -155,6 +81,95 @@
             </ng-container>
           </mat-accordion>
         </mat-expansion-panel>
+    </mat-accordion>
+  </mat-card>
+</div>
+!-->
+
+<div id='third' class ="example-list"   *ngIf="showLayerPanel$ | async" [style.left.px]="x" [style.top.px]="y"
+     (panstart)="onPanStart($event)" (panmove)="onPan($event)" cdkDragBoundary=".map" cdkDrag >
+  <!-- <div class ="example-list"   *ngIf="showLayerPanel$ | async" [style.left.px]="x" [style.top.px]="y"
+      (panstart)="onPanStart($event)" (panmove)="onPan($event)" cdkDragBoundary=".mapBoundary" cdkDrag >  -->
+  <mat-card class = 'layerPanelCard'>
+    <mat-card-title-group>
+      <mat-card-title class ="panelTitle">Layers  </mat-card-title>
+      <button mat-flat-button   (click)="closeLayerPanel(false)" >
+
+        <mat-icon class="closeLayerPanel" matTooltip="Close layer Panel">close</mat-icon>
+      </button>
+    </mat-card-title-group>
+    <mat-divider class = "toolbarDivider"></mat-divider>
+    <mat-accordion #groupsAccordion cdkDropList (cdkDropListDropped)="dropExpansion($event)">
+      <mat-expansion-panel *ngFor= "let group of groupLayers" cdkDrag>
+        <!--togglePosition='before'-->
+        <mat-expansion-panel-header [collapsedHeight]="'2.1vw'" [expandedHeight]="'2.1vw'">
+          <mat-panel-title>
+            <mat-selection-list [id]="group.groupName">
+              <mat-list-option class = "group" checkboxPosition="before" (click)="onGroupLayerVisClick($event,group)"
+                               [selected]="group.visible" >
+                {{group.groupName}}
+              </mat-list-option>
+            </mat-selection-list>
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+
+        <mat-accordion>
+          <ng-container  *ngFor= "let layer of group.layers" >
+            <mat-expansion-panel>
+              <mat-expansion-panel-header [collapsedHeight]="'2.3vw'" [expandedHeight]="'2.3vw'">
+                <mat-panel-title>
+                  <mat-selection-list (selectionChange)="onSelectedChanged($event)">
+                    <mat-list-option class="example-box mat-primary" [value]="layer.layerName"
+                                     (click)="onLayerVisClick($event,layer,group.groupName)" checkboxPosition="before"
+                                     [ngClass]="layerActive == layer.layerName? 'active': 'normal'"  [selected]="layer.visible">
+                      <div class="selectLayer" >
+                        <div style="display:flex;align-items:center">
+                          {{layer.layerName}} <!-- {{layer['layerTitle']}} -->
+                        </div>
+                         <div class = 'selectLayer'>
+                           <span class="spacer"></span>
+                          <button  *ngIf="layer.wfs" mat-icon-button matTooltip="Edit layer"
+                                  (click)="onEditLayerClick($event, layer, group)"
+                                  [ngClass]="layer.onEdit ? 'activeAction': 'normal'">
+                            <mat-icon>edit</mat-icon>
+                          </button>
+                           <span class="spacer"></span>
+                          <button *ngIf="layer.layerForRanking"  mat-icon-button (click)="onRatingLayerClick($event, layer, group.groupName)"
+                                  [ngClass]="layer.onRanking ? 'activeAction': 'normal'">
+                            <mat-icon  svgIcon="ratingActionPlan"></mat-icon>
+                          </button>
+                           <span class="spacer"></span>
+                         <!-- the identify button to the layer panel needed for WMS layers -->
+                          <button mat-icon-button matTooltip="Identify elements in the layer"
+                                  (click)="onIdentifyLayerClick($event, layer, group.groupName)"
+                                  [ngClass]="layer.onIdentify ? 'activeAction': 'normal'">
+                            <mat-icon>info_outline</mat-icon>
+                          </button>
+                           <span class="spacer"></span>
+                          <!-- <button mat-icon-button (click)="onOpacityLayerClick($event, layer)">
+                             <mat-icon  class= "editIcon">opacity</mat-icon>
+                           </button> -->
+                      </div>
+                      </div>
+                    </mat-list-option>
+                  </mat-selection-list>
+                </mat-panel-title>
+
+              </mat-expansion-panel-header >
+              <mat-list *ngFor="let icon of layer.legendLayer">
+                <div>
+                  <div class="iconTitle">
+                    <img class = iconLegend [src] = icon.iconSrc alt="legend">
+                  </div>
+                  <div class="iconTitle">
+                    {{icon.title}}
+                  </div>
+                </div>
+              </mat-list>
+            </mat-expansion-panel>
+          </ng-container>
+        </mat-accordion>
+      </mat-expansion-panel>
     </mat-accordion>
   </mat-card>
 </div>

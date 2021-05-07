@@ -1,13 +1,20 @@
 <h2 mat-dialog-title>Rating {{data.layerNameDialog}}</h2>
 <mat-dialog-content>
-  Enter your rating:
+  Enter your rating for the measures:
+ <!-- enter here a container, prepare the data for an array and double loop-->
   <div class="star-rating-container star-rating-animation" fxLayout="row" fxLayoutAlign="start center" >
-
-    <div *ngFor="let star of stars" [ngClass]="[star.class]" (click)="selectStar(star.id)">
-      <mat-icon>{{star.icon}}</mat-icon>
+    <div *ngFor="let field of fieldNames" >
+      <mat-slider  color = 'primary' [formControlName]="field" [max]= 5
+                   [min]=1 [thumbLabel]=true  [value]="field.min"
+                   (change) = "showQuestionValue(field, $event.value)">{{field.value}}</mat-slider>
     </div>
 
   </div>
+
+
+
+
+
 </mat-dialog-content>
 <mat-dialog-actions>
   <button mat-button color="primary" [mat-dialog-close]="data.rating" cdkFocusInitial>Ok</button>

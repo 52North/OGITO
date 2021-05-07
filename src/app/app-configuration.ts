@@ -35,31 +35,52 @@ export class AppConfiguration{
     'qaeCTal2b38gdhJQh3/bice9lIpU+LNho3vtzSuof+TGi9Q0fZ9L6EB4q/yldlpit+x3fslpvzPO+TtwAAAABJRU5ErkJggg==';
 
   // Values for range in slider
-  static range = { min: 1, max: 10};
+  static range = { min: 0, max: 10};
   static ranges = {
-     'intensity_auto': {min: 1, max: 10},
-     'intensity_schiene': {min: 1, max: 10},
-     'intensity_kinder': {min: 1, max: 10},
-     'intensity_sonstiges': {min: 1, max: 10},
-     'intensity_arbeit': {min: 1, max: 10},
-     'intensity_bus': {min: 1, max: 10},
+     'intensity_auto': {min: 0, max: 10},
+     'intensity_schiene': {min: 0, max: 10},
+     'intensity_kinder': {min: 0, max: 10},
+     'intensity_sonstiges': {min: 0, max: 10},
+     'intensity_arbeit': {min: 0, max: 10},
+     'intensity_bus': {min: 0, max: 10},
   };
   static fieldsOrder = {
     'laute_orte': {
-       'place_name': 1,
-       'source_auto': 2,
-       'intensity_auto': 3,
-       'source_schiene': 4,
-       'intensity_schiene': 5,
-       'source_sonstiges': 6,
-       'intensity_sonstiges': 7,
-       'noise_morgens': 8,
-       'noise_tagsuber': 9,
-       'noise_abends': 10,
-       'noise_nachts': 11
+       'name': 1,
+       'laermquelle_auto': 2,
+       'intensitaet_auto': 3,
+       'laermquelle_schiene': 4,
+       'intensitaet_schiene': 5,
+       'laermquelle_sonstiges': 6,
+       'intensitaet_sonstiges': 7,
+       'laerm_morgens': 8,
+       'laerm_tagsuber': 9,
+       'laerm_abends': 10,
+       'laerm_nachts': 11
     }
     };
   static ratingPrex = {
-    'leise_orte_obs': 'rank_'
-  }
+    'leise_Orte_obs': 'rank_'
+  };
+  // indicate which layers contain measures
+  static ratingMeasureLayers = {
+    'massnahmen_laute': ['geschwindigkeitsbegrenzung', 'fluesterasphalt', 'laermschutzwand', 'nutzungsaenderung'],
+    'massnahmen_leise': ['legalprotection', 'visualenhancement', 'accesibility', 'safety']
+  };
+
+  static formPeers = {
+    laute_orte: {source_auto: 'intensity_auto'}
+  };
+  /* Layers available for ranking and method of ranking
+   *  rankingMethod  choose between 'allFiveStars' or 'oneFiveStars'
+   *  rankingLayers array of layers available for ranking
+   */
+  static rankingMethod = 'allFiveStars';    // Change to 'oneFiveStars'  =>
+  static rankingLayers = ['massnahmen_laute', 'massnahmen_leise'];
+  static noAddingFeatsLayers = ['massnahmen_laute', 'massnahmen_leise'];
+  /* layers below will have a default style for LDEN noise map taken from train_LDEN*/
+  static urlLegendLDEN = {
+    'GECCO Noise Munster': {'IVU_LDEN': '', 'SCH_Bund_LDEN': '', 'SCH_Sonstige_LDEN': '', 'STR_LDEN': ''}
+  };
+
 }

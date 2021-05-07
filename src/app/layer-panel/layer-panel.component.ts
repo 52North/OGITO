@@ -18,12 +18,11 @@ export class LayerPanelComponent implements OnInit, AfterViewInit {
   @Output() groupLayerVisClick = new EventEmitter<any>();   // emit an event when a layer is clicked in the list
   @Output() editLayerClick = new EventEmitter<any>();   // emit an event when the edit button of a layer is clicked
   @Output() layersOrder = new EventEmitter<any>();   // emit an event when layers were reordered (drop)
-  @Output() layersBackOrder = new EventEmitter<any>();  // emit an event when the order of base layers changes
-  @Output() layerBackVisClick = new EventEmitter<any>(); // emit an event when the edit button of a layer is clicked
-  @Output() identifyLayerClick = new EventEmitter<any>();  // #TODO link in maps
+  @Output() identifyLayerClick = new EventEmitter<any>();  // emit the layer to start identifying
+  @Output() rankingLayerClick = new EventEmitter<any>();  // #TODO link in maps
 
-  x = 0;
-  y = 0;
+  x = 40;
+  y = 80;
   startX = 0;
   startY = 0;
   selectedOptions = [];
@@ -44,6 +43,10 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
     'getInfo',
     sanitizer.bypassSecurityTrustResourceUrl('assets/img/identify-24px2.svg')
   );
+  iconRegistry.addSvgIcon(
+    'ratingActionPlan',
+    sanitizer.bypassSecurityTrustResourceUrl('assets/img/rate_action_plan2.svg')
+  );
 }
  /*drop(event: CdkDragDrop<string[]>) {
     /** Moves the layers in the panel after a drop gesture and emits a layersOrder event
@@ -54,11 +57,10 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
     // this.layersOrder.emit(this.editLayers);
   // } */
 
-  dropExpansion(event: CdkDragDrop<string[]>){
+  dropExpansion(event: CdkDragDrop<string[]>) {
    // console.log(this.layerAccordion.nativeElement.children);
    moveItemInArray(this.groupLayers, event.previousIndex, event.currentIndex);
    this.layersOrder.emit(this.groupLayers);
-   // console.log(this.groupLayers);
    }
 
 
@@ -242,6 +244,15 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
     this.identifyLayerClick.emit({layer, groupName});
   }
 
+
+  onRatingLayerClick($event: any, layer: any, groupName: any) {
+  this.layerActive = layer.layerName;
+  layer.onRanking = true;
+  console.log('layer and groupName in onRatingLayerClick', layer, groupName);
+  this.rankingLayerClick.emit({layer, groupName});
+  }
+
+
 closeLayerPanel(value: any) {
   /** Updates the value of the observable $showLayerPanel$ that controls the layer Panel visibility
    * @param value, type boolean
@@ -280,18 +291,6 @@ onPan(event: any): void {
     // #TODO uncomment this.openLayersService.updateVisLayers(this.selectedOptions);
     }
 
-  onBackListChange($event, selectedList){
-    /**
-     * Updates layers visibility on the map. This is for background layers
-     * @param $event: the event emitted
-     * @param selectedList: list of layers being selected to become visible
-     */
-    this.selectedOptions = selectedList.map(s => s.value);
-    console.log('sigo', this.selectedOptions);
-    // Actualizando las lista de las capas
-    this.layerBackVisClick.emit(this.selectedOptions);  // the order
-    // this.selectedOption =$event;
-  }
 
   onSelectedChanged($event: any){
     // console.log('probando esto a lo loco $event.option.value', $event.option.value, $event );

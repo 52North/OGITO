@@ -16,7 +16,6 @@ import ImageLayer from 'ol/layer/Image';
 import ImageWMS from 'ol/source/ImageWMS';
 import {Group as LayerGroup} from 'ol/layer';
 import {platformModifierKeyOnly} from 'ol/events/condition';
-import OSM from 'ol/source/OSM';
 import WFS from 'ol/format/WFS';
 import GML from 'ol/format/GML';
 import WMSCapabilities from 'ol/format/WMScapabilities.js';
@@ -55,9 +54,8 @@ import {bbox as bboxStrategy} from 'ol/loadingstrategy';
 import {toStringHDMS} from 'ol/coordinate';
 import {QuestionService} from '../question-service.service';
 import {QuestionBase} from '../question-base';
-import {catchError} from 'rxjs/operators';
 import {DynamicFormComponent} from '../dynamic-form/dynamic-form.component';
-import {getPathMappingsFromTsConfig} from '@angular/compiler-cli/ngcc/src/path_mappings';
+import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
 
 // To use dialogs
 export interface DialogData {
@@ -147,6 +145,11 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
   // variables to use modal dialog
   layerNameDialog: string;
   rating: number;
+   // snackbar
+  horizontalPosition: MatSnackBarHorizontalPosition = 'start';
+  verticalPosition: MatSnackBarVerticalPosition = 'bottom';
+  // variables to use in the ranking dialog
+  ranking: any;
   // subscriptions
   subsToShapeEdit: Subscription;
   subsTocurrentSymbol: Subscription;
@@ -159,7 +162,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
               private questionService: QuestionService,
               public auth: AuthService,
               private snackBar: MatSnackBar,
-              public dialog: MatDialog) {
+              public dialog: MatDialog,
+              private sanitizer: DomSanitizer) {
 
     this.subsToShapeEdit = this.openLayersService.shapeEditType$.subscribe(
       data => {
@@ -291,6 +295,34 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
    // console.log('user authorized', userProfile);   // how to  get the value?
   }
 
+  openDialogRankingMeasures(layerName: string, feature: any): void{
+    /**
+     * rank measures in action plab
+     * @params layerName
+     * @params @feature the feature selected for ranking (represents a location with predefined measures)
+     */
+    const ratingName =  layerName === 'massnahmen_laute' ? 'Massnahmen Laute Orte' : 'Massnahmen Leise Orte';
+    // # TODO modify this
+    const fieldsNames =  AppConfiguration.ratingMeasureLayers[layerName];
+
+
+    const dialogRef = this.dialog.open(DialogRatingMeasureDialog,{
+      width: '250px',
+      data: {layerNameDialog: ratingName, fieldNames: fieldsNames, ranking: this.ranking}
+    });
+    dialogRef.afterClosed().subscribe(result => {
+      console.log('the ranking measures selected was', result);
+      this.ranking = result;
+      // unselect the feature in the map
+      this.select.getFeatures().clear();
+      if (result){
+        // result is different to undefined
+        this.saveRatingMeasures(layerName, feature);
+      }
+
+    });
+  }
+
   openDialog(layerName: string, feature: any): void{
    // #TODO change this title
     const ratingName =  layerName === 'leise_orte_obs' ? 'Leise Orte' : 'Measures';
@@ -303,7 +335,11 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       this.rating = result;
       // unselect the feature in the map
       this.select.getFeatures().clear();
-      this.saveRating(layerName, feature);
+      if (result){
+        // result is different to undefined
+        this.saveRating(layerName, feature);
+      }
+
     });
   }
 
@@ -312,13 +348,17 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     console.log('layerName feature and rating', layerName, feature, this.rating);
     // get the previous value and sum?
     const attrRanking = AppConfiguration.ratingPrex[layerName] + this.rating.toString();
-    const newRating = feature.get(attrRanking) + this.rating;
+    const newRating = feature.get(attrRanking) + 1; // the number of times that people ranked with 3, 4, 5 starts;
     // console.log('attrRanking:', attrRanking , 'feature.get(attrRanking):', feature.get(attrRanking));
     // assign attributes
     feature.set(attrRanking, newRating);
     // console.log('feature with new rating', feature);
     // add the changes to the edit buffer
     this.saveFeatinBuffer(this.curEditingLayer.layerName, feature, 'rating');
+  }
+
+  saveRatingMeasures(layerName: string, feature: any){
+    // #TODO
   }
 
   startRating(){
@@ -357,7 +397,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
     this.removeInteractions();
-    this.removeDragPinchInteractions();
+    // this.removeDragPinchInteractions();
     this.select = new Select({
       layers: [lyr],   // avoid selecting in other layers..
       condition: click,  // check if this work on touch
@@ -473,18 +513,24 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         const listLayersinGroup = [];
         for (let j = 0; j < layersinGroup.length; j++) {
           let layerIsWfs = false;
+          let layerForRanking = false;
           const layer = layersinGroup.item(j);
 
           const geometryType = layer.getAttribute('geometryType');
-          // console.log('geometryType', geometryType);
           const layerName = layer.getElementsByTagName('Name')[0].childNodes[0].nodeValue;
           const layerTittle = layer.getElementsByTagName('Title')[0].childNodes[0].nodeValue;
+          // console.log('Name', layerName);
           const urlResource = layer.querySelector('OnlineResource').getAttribute('xlink:href');
           // console.log('checkpoint', j, layerName, layerTittle, urlResource);
           const legendLayer = await this.createLegendLayer(urlResource, layerName);
           const fields = [];
+          // console.log('wfsLayerList and AppConfiguration.rankingLayers', wfsLayerList, AppConfiguration.rankingLayers);
           if (wfsLayerList.find(element => element === layerName)) {
             layerIsWfs = true;
+            // check if more elements can be added
+            if (AppConfiguration.noAddingFeatsLayers.find(element => element === layerName)) {
+              layerIsWfs = false;  // the edit icon will not appear;
+             }
             // get the editable attributes
             const attrs = layer.getElementsByTagName('Attributes')[0];
             // console.log('attrs', attrs);
@@ -502,6 +548,11 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
               });
 
             }
+            // check if layer is available for rating
+            if (AppConfiguration.rankingLayers.find(element => element === layerName)) {
+              console.log('layerName', layerName);
+              layerForRanking = true;
+            }
           }
           listLayersinGroup.push({
             layerName,
@@ -512,7 +563,9 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
             geometryType,
             onEdit: false,
             onIdentify: false,
+            onRanking: false,
             visible: false,
+            layerForRanking,
             fields
           });
         }
@@ -536,13 +589,17 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     this.requestProjectInfo(qgsfile);
     }
 
+  sanitizeImageUrl(imageUrl: string): SafeUrl {
+    return this.sanitizer.bypassSecurityTrustUrl(imageUrl);
+  }
+
   createIconSymbols(iconSymbols: any, layerName: any): any{
     // return something for raster
-    // console.log ('iconSymbols', iconSymbols);
+    // console.log('layerName en y iconSymbols.nodes.length', layerName, this.qgsProjectFile, iconSymbols.nodes.length);
     if (iconSymbols.nodes.length === 0) {
        // layer does not have symbols, raster
-      // return ([{iconSrc: rasterIcon, title: layerName}]);
-      return ([{iconSrc: AppConfiguration.rasterIcon, title: layerName}]);
+     //  return ([{iconSrc: AppConfiguration.rasterIcon, title: layerName}]);
+      return ([{iconSrc: this.sanitizeImageUrl(AppConfiguration.rasterIcon), title: layerName}]);
     }
     // aqui puede venir una lista
     const symbolList = [];
@@ -551,7 +608,14 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         // console.log('icon.title and type', icon.title, icon.type);
         if (icon.hasOwnProperty('icon')){
           // it has one element
-          symbolList.push({iconSrc: 'data:image/png;base64,' + icon.icon, title: icon.title});
+          if (icon.icon !== ''){
+            symbolList.push({iconSrc: 'data:image/png;base64,' + icon.icon, title: icon.title});
+          }
+          else {
+            // workaround issue with OSM in GECCO
+            symbolList.push({iconSrc: this.sanitizeImageUrl(AppConfiguration.rasterIcon), title: layerName});
+          }
+
         }
         if (icon.hasOwnProperty('symbols')){
           // it has an array of symbols
@@ -645,9 +709,6 @@ initializeMap() {
     this.dragPan = new DragPan();
     this.dragRotate = new DragRotate();
     this.dragZoom = new DragZoom();
-    // DragRotate, DoubleClickZoom, DragPan, PinchRotate, PinchZoom, KeyboardPan,
-    // KeyboardZoom, MouseWheelZoom, DragZoom, Select, DragBox
-    //
     this.dragAndDropInteraction = new DragAndDrop({
       formatConstructors: [
         GeoJSON,
@@ -674,7 +735,16 @@ initializeMap() {
         stroke: new Stroke({color: '#EE266D', width: 2, lineDash: [8, 5]})
       })
     });
-    console.log('Interactions onInit', this.map.getInteractions());
+    // console.log('Interactions onInit', this.map.getInteractions());
+    // #TODO put here the intercation pinch and check.
+    this.pinchZoom = this.map.getInteractions().getArray().find(interaction => interaction instanceof PinchZoom );
+    console.log('pinch in InitializeMap', this.pinchZoom);
+    this.pinchZoom.on('change', () => {
+      console.log('event capture by which component');
+    });
+    this.pinchZoom.on('change', () => {
+     console.log('event capture by change which component');
+  });
   }
 
 createHelpTooltip(){
@@ -742,7 +812,7 @@ updateMapView() {
     this.map.addControl(new ZoomSlider());
     this.map.addControl(new ScaleLine());
     this.map.on('touchstart', function(e) {
-      console.log('length', e.touches.length);
+      console.log('ALGUNA VEZ PASA X aqui.. length', e.touches.length);
     });
     // console.log('this.view.getCenter', this.view.getCenter(), this.view.getProjection(), this.view.calculateExtent());
   }
@@ -1189,11 +1259,21 @@ enableAddShape(shape: string) {
      */
       // previously addShapeToLayer check the API OL
     console.log ('shape', shape, this.curEditingLayer);
-
     if (!this.curEditingLayer) {   // velid for null and undefined
       alert('No layer selected to edit');
       return;
     }
+    // the layer is not available for addingnewFeatures
+    if (AppConfiguration.noAddingFeatsLayers.findIndex(x => x.toLowerCase() === this.curEditingLayer.layerName.toLowerCase()) >= 0){
+      this.snackBar.open('No more elements can be added to this layer', 'ok',
+        { horizontalPosition: 'center',
+          verticalPosition: 'top',
+          duration: 3000});
+      return;
+    }
+
+
+
     // console.log('this.currentClass', !this.currentClass, this.currentClass);
     const self = this;
     const tsource = this.curEditingLayer.source;
@@ -1275,6 +1355,7 @@ enableAddShape(shape: string) {
               return false;
             }
           });
+          this.removeDragPinchInteractions();
           break;
         }
       }
@@ -1378,7 +1459,8 @@ enableAddShape(shape: string) {
 
         }
         // adding the interactions that were stopped when drawing
-        if (self.draw.type_ === 'Point' || self.draw.type_ === 'MultiPoint' || self.draw.type_ === 'Circle') {
+        if (self.draw.type_ === 'Point' || self.draw.type_ === 'LineString' ||
+          self.curEditingLayer.geometryType.indexOf('Polygon') > -1 || self.draw.type_ === 'Circle') {
           // console.log('interaction en el timeout', self.map.getInteractions());
           setTimeout(() => {
             self.addDragPinchInteractions();
@@ -1499,7 +1581,7 @@ startDeleting() {
       const self = this;
       const tsource = this.curEditingLayer.source;
       this.removeInteractions();
-      this.removeDragPinchInteractions();
+      // this.removeDragPinchInteractions();   porque remover la interacion para click aqui o el box?
       this.select = new Select({
         condition: click,  // check if this work on touch
         layers: [tlayer],
@@ -1601,13 +1683,14 @@ removeDragPinchInteractions() {
             interaction.setActive(false);
           }
         });
-      console.log('es posible que aun quede pinchzoom? o se puede incluir en el if de arriba', this.map.getInteractions());
-      if (this.pinchZoom) {
+      console.log('after setting to false', this.map.getInteractions());
+
+      /*if (this.pinchZoom) {
         this.map.removeInteraction(this.pinchZoom); // check if is there
       }
       if (this.pinchRotate) {
         this.map.removeInteraction(this.pinchRotate);   // check if is there
-      }
+      } */
     } catch (e) {
       console.log('Error removing Drag/Pinch interactions', e);
     }
@@ -1859,22 +1942,26 @@ updateEditingLayer(layerOnEdit: any) {
      */
    let layer: any;
    // console.log('what is inside updateEditingLayer', layerOnEdit);
+  if (layerOnEdit === null) {
    if (this.curEditingLayer) {
       // a layer was being edited - ask for saving changes
-      this.stopEditing();  // test is changes are save to the right layer, otherwise it should go #
-      if (layerOnEdit === null) {
-       this.curEditingLayer = null;
-       return;
-     }
-      layer = this.loadedWfsLayers.find(x => x.layerName === layerOnEdit.layerName);
-     // layer contains the source.
-      if (this.curEditingLayer === layer) {
-        this.curEditingLayer = null;
-        this.stopEditing(); // maybe is not needed this should be controlled since the layer panel
-        return;
-     }
-   }
-    // the user wants to switch to another layer, already the edit was stopped with the previous layer
+      this.stopEditing();
+    }
+    this.curEditingLayer = null;
+    return;
+  }
+  if (this.curEditingLayer) {
+    // a layer was being edited - ask for saving changes
+    this.stopEditing();  // test is changes are save to the right layer, otherwise it should go #
+    layer = this.loadedWfsLayers.find(x => x.layerName === layerOnEdit.layerName);
+    // layer contains the source.
+    if (this.curEditingLayer === layer) {
+      this.curEditingLayer = null;
+      this.stopEditing(); // maybe is not needed this should be controlled since the layer panel
+      return;
+    }
+  }
+  // the user wants to switch to another layer, already the edit was stopped with the previous layer
    layer = this.loadedWfsLayers.find(x => x.layerName === layerOnEdit.layerName);
    this.curEditingLayer = layer;
    this.startEditing(layer);
@@ -2197,6 +2284,29 @@ findWfsLayer(layerName: string) {
   return (tlayer);
 }
 
+  findLayerWithGroup(layerName: string, groupName: string) {
+    /**
+     * finds a layer in the map and return its source and so on.
+     * @param layerName the name of the layer
+     * @parma groupName the name of the group parent of the layer
+     */
+  let tlayer: any = null;
+  //  console.log('groupName', group);
+  this.map.getLayers().forEach(layer => {
+      if (groupName.toLowerCase() === layer.get('name').toLowerCase()) {
+        layer.getLayers().forEach(lyrinGroup => {
+          // console.log('lyrinGroup.get(\'name\')', lyrinGroup.get('name'));
+          if (layerName.toLowerCase() === lyrinGroup.get('name').toLowerCase()) {
+            tlayer = lyrinGroup;
+          }
+        });
+        return;
+      }
+    });
+  return tlayer;
+  }
+
+
 
 findLayer(layerName: string) {
   /**
@@ -2237,7 +2347,7 @@ startTranslating()
      return;
    }
    this.removeInteractions();
-   this.removeDragPinchInteractions();
+   // this.removeDragPinchInteractions();  // 25-04-2021 probar con las interacciones
    this.select = new Select({
       layers: [lyr],   // avoid selecting in other layers..
       condition: click,  // check if this work on touch
@@ -2245,22 +2355,25 @@ startTranslating()
       style: this.selectStyle,
     });
    this.map.addInteraction(this.select);
-   console.log('interactions in the map in startTranslating', this.map.getInteractions());
    this.dragBox = new DragBox({
-     className: 'boxSelect',
-      condition: touchOnly // platformModifierKeyOnly  // before it did not have any condition
+      // className: 'boxSelect',
+     condition: touchOnly // platformModifierKeyOnly  // before it did not have any condition
    });
    this.map.addInteraction(this.dragBox);
+   console.log('interactions in the map in startTranslating two dragbox?', this.map.getInteractions());
    const self = this;
    const tsource = this.curEditingLayer.source;
    // add #TODO here the rest of the code.
    // clear a previous selection
 
    this.dragBox.on('boxend', () => {
+    console.log('what is happening at draweend this.dragBox.getGeometry()', this.dragBox.getGeometry());
+    const extent = this.dragBox.getGeometry().getExtent();
+    console.log('extent boxend', extent);
     if (this.dragBox.getGeometry() == null) {
       return;
     }
-    const extent = this.dragBox.getGeometry().getExtent();
+
     tsource.forEachFeatureIntersectingExtent(extent, f => {
             const lastFeat = f.clone();
             lastFeat.setId(f.getId());
@@ -2286,6 +2399,7 @@ startTranslating()
      console.log('selected features', selectedFeatures);
      selectedFeatures.forEach( f => {
        updateFeats.push(f);
+       console.log('feature to be updated in translateend ', f);
      });
 
      // const tempId = f.getId();
@@ -2296,15 +2410,14 @@ startTranslating()
          feats: updateFeats,    // add all the features moved in a unique transaction --> check in saving WFS
          source: tsource
        });
-     this.select.getFeatures().clear();
-     });
-   console.log('self.editBuffer', self.editBuffer);
      // clear the selection
+     this.select.getFeatures().clear();
 
-   //
-   // action can be undo
-   this.canBeUndo = true;
-
+     //
+     console.log('self.editBuffer', self.editBuffer);
+     // action can be undo
+     this.canBeUndo = true;
+     });
    // each time of starting a box clear features
    this.dragBox.on('boxstart', function() {
       self.select.getFeatures().clear();
@@ -2460,7 +2573,58 @@ startIdentifying(layerOnIdentifying: any)
   this.curInfoLayer = layer;   // this is a real OL layer
   }
 
-formatHtmlInfoResponse(json: string): string {
+  startRankingMeasures(Rankinglayer: any){
+    this.snackBar.open('que viene ' + Rankinglayer.layer.layerName + 'group:' + Rankinglayer.groupName, 'ok', { duration: 5000});
+// checking that layer can be ranked.. this is in AppConfiguration
+    if (!AppConfiguration.rankingLayers[Rankinglayer.layer.layerName]) {
+      // The layer is not available for rating
+      this.snackBar.open('Current layer is not available for rating in Action Plan', 'ok',
+        { horizontalPosition: 'center',
+          verticalPosition: 'top',
+          duration: 5000});
+      return;
+    }
+
+    let lyr = this.findLayerWithGroup(Rankinglayer.layer.layerName, Rankinglayer.groupName);
+    if (lyr === null) {
+      // alert('Error retrieving current layer');
+      this.snackBar.open('Error retrieving layer for rating measures in Action Plan', 'ok',
+        { horizontalPosition: 'center',
+          verticalPosition: 'top',
+          duration: 5000});
+      return;
+    }
+    this.removeInteractions();
+    // this.removeDragPinchInteractions();
+    this.select = new Select({
+      layers: [lyr],   // avoid selecting in other layers..
+      condition: click,  // check if this work on touch
+      hitTolerance: 10,    // check if we should adjust for # types of geometries..
+      style: this.selectStyle,
+    });
+    this.map.addInteraction(this.select);
+    console.log('Interactions in the map in startRanking', this.map.getInteractions());
+    this.select.on('select', (e) => {
+
+      const selectedFeatures = e.target.getFeatures().getArray();
+      console.log('selectedFeatures', selectedFeatures );
+      if (selectedFeatures.length <= 0) {
+        this.snackBar.open('No features selected', 'ok',
+          { horizontalPosition: 'center',
+            verticalPosition: 'top',
+            duration: 3000});
+        return;
+      }
+      this.openDialogRankingMeasures( this.curEditingLayer.layerName, selectedFeatures[0]);
+    });
+
+
+
+
+
+  }
+
+  formatHtmlInfoResponse(json: string): string {
     /*
     Transform the text response from a WMS request into a more 'friendly' format
      */
@@ -2781,7 +2945,7 @@ ngOnDestroy() {
      subscriptions.unsubscribe();
   }
 
-// have a default map? have a parameter in the cinfiguration file..
+// have a default map? have a parameter in the configuration file..
 }
 
 @Component({
@@ -2849,6 +3013,38 @@ export class DialogRatingDialog {
    // this.selectedRating = value;
     this.data.rating = value;
   }
+
+  onNoClick(): void {
+    this.dialogRef.close();
+  }
+
+}
+@Component({
+  // tslint:disable-next-line:component-selector
+  selector: 'dialog-rating-measure-dialog',
+  templateUrl: './dialog-rating-measure-dialog.html',
+  styleUrls: ['./map.component.scss']
+})
+// tslint:disable-next-line:component-class-suffix
+export class DialogRatingMeasureDialog {
+
+  selectedRating = 0;
+  fieldNames: any;  // esto debe ir a data.fieldNames..
+
+  constructor(
+    public dialogRef: MatDialogRef<DialogRatingMeasureDialog>,
+    @Inject(MAT_DIALOG_DATA) public data: DialogData) {
+  }
+
+
+  selectStar(value): void{
+    
+    // this.selectedRating = value;
+    this.data.rating = value;
+  }
+
+  showQuestionValue(field:any, value:any){}
+  // here code to show the value of the slider
 
   onNoClick(): void {
     this.dialogRef.close();

@@ -15,15 +15,15 @@ export class ProjlistComponent implements OnInit {
   projectFolder = '/home/qgis/projects/';
   projects = [{
     name: 'Noise Action Plan Bochum',
-    url: AppConfiguration.hostname + 'qgs_projects/checking2.qgs',
-    file: this.projectFolder + 'checking2.qgs',
+    url: AppConfiguration.hostname + 'qgs_projects/noisebochum.qgs',
+    file: this.projectFolder + 'noisebochum.qgs',     // was checking4
     img: AppConfiguration.hostname + 'qgs_projects/noise.png',
     qGsServerUrl: 'https://ogito.itc.utwente.nl/cgi-bin/qgis_mapserv.fcgi?',
     srsID: 'EPSG:3857'   //EPSG CODE
   },
     { name: 'GECCO Noise Munster',
-      url: AppConfiguration.hostname + 'qgs_projects/noisemunster3.qgz',  // wrokaround while solving thw WMS problem
-      file: this.projectFolder + 'noisemunster3.qgz',
+      url: AppConfiguration.hostname + 'qgs_projects/noisemunster4.qgz',  // wrokaround while solving thw WMS problem
+      file: this.projectFolder + 'noisemunster4.qgz',
       img: AppConfiguration.hostname + 'qgs_projects/imgMunster.png',
       qGsServerUrl: 'https://ogito.itc.utwente.nl/cgi-bin/qgis_mapserv.fcgi?',
       srsID: 'EPSG:25832'  //EPSG CODE

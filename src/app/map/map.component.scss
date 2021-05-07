@@ -7,34 +7,7 @@
   z-index: 0;
   position: absolute;
 }
-/*
-.tooltip  {
-  position: relative;
-  background: rgba(0, 0, 0, 0.5);
-  border-radius: 4px !important;
-  color: white;
-  padding: 4px 8px;
-  opacity: 0.7;
-  white-space: nowrap;
-}
-.tooltip-measure {
-  opacity: 1;
-  font-weight: bold;
-}
-.tooltip-measure:before,
-.tooltip-static:before {
-  border-top: 6px solid rgba(0, 0, 0, 0.5);
-  border-right: 6px solid transparent;
-  border-left: 6px solid transparent;
-  content: "";
-  position: absolute;
-  bottom: -6px;
-  margin-left: -7px;
-  left: 50%;
-}
-.tooltip-static:before {
-  border-top-color: #ffcc33;
-} */
+
 ::ng-deep .ol-tooltip {
   position: relative;
   background: rgba(0, 0, 0, 0.5);
@@ -161,8 +134,8 @@
 th[scope="row"] {
   background-color: #d7d9f2;
 }
-// styles for the rating
 
+// styles for the rating
 .star{
   margin: 0px 0px;
   color: #a9a5a5;
@@ -172,8 +145,8 @@ th[scope="row"] {
   transform: scale(1);
 }
 .star .mat-icon{
-  width: 40px;
-  height: 40px;
+  width: 30px;
+  height: 30px;
 }
 .star-gold{
   color: orange;
@@ -188,5 +161,5 @@ th[scope="row"] {
   color: #ddd;
 }
 .star-rating-animation .star-hover:hover{
-  transform: scale(1.3);
+  transform: scale(1.2);
 }

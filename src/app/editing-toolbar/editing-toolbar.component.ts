@@ -5,6 +5,7 @@ import { MatIconRegistry } from "@angular/material/icon";
 import {DomSanitizer} from "@angular/platform-browser";
 
 import {MapQgsStyleService} from '../map-qgs-style.service';
+import {AppConfiguration} from '../app-configuration';
 
 
 @Component({
@@ -81,7 +82,10 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
     'add_location_attr',
     sanitizer.bypassSecurityTrustResourceUrl('assets/img/add_location_attr-24px.svg')
   );
-
+  iconRegistry.addSvgIcon(
+    'ratingActionPlan',
+    sanitizer.bypassSecurityTrustResourceUrl('assets/img/rate_action_plan.svg')
+  );
   this.subsToShowEditToolbar = this.openLayersService.showEditToolbar$.subscribe(
     (data) => {
       this.showToolbar(data);
@@ -118,7 +122,9 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
      /**
       *   Updates the observable in services to remove the interaction
       */
-      if (true === this.actionActive[shapeType] ) {
+
+     // Preventing adding features to some layers
+     if (true === this.actionActive[shapeType] ) {
         // The layer was on editing
         this.openLayersService.updateShapeEditType(null); //
         this.showSymbolPanel(false);

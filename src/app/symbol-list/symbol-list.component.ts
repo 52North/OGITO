@@ -192,6 +192,7 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
             }
           }
           render.drawFeature(feature, cloneStyle);
+          console.log('cloneStyle what is missing', cloneStyle);
         }
       }
     }

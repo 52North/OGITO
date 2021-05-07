@@ -41,6 +41,11 @@
               [ngClass]="actionActive['Rating'] ? 'active': 'normal'" >
         <mat-icon>star_rate</mat-icon>
       </button>
+
+      <button mat-icon-button (click)="startEditAction('RatingMeasure');showSymbolPanel(false);" matTooltip="Rank measure"
+              [ngClass]="actionActive['RatingMeasure'] ? 'active': 'normal'" >
+        <mat-icon  svgIcon="ratingActionPlan"></mat-icon>
+      </button>
       <!--
       <button mat-icon-button (click)="startEditAction('Copy');showSymbolPanel(false)" matTooltip="Copiar element(s)"
               [ngClass]="actionActive['Copy'] ? 'active': 'normal'" >
@@ -63,10 +68,10 @@
               [ngClass]="actionActive['Delete'] ? 'active': 'normal'">
         <mat-icon>delete_forever</mat-icon>
       </button>
-      <button mat-icon-button (click)="startEditAction('Identify');showSymbolPanel(false)"  aria-label="identify" matTooltip="Identify element"
+      <!-- <button mat-icon-button (click)="startEditAction('Identify');showSymbolPanel(false)"  aria-label="identify" matTooltip="Identify element"
               [ngClass]="actionActive['Identify'] ? 'active': 'normal'">
         <mat-icon svgIcon="identify"></mat-icon>
-      </button>
+      </button> -->
       <!--<button mat-icon-button (click)="startEditAction('Search');showSymbolPanel(false)"  aria-label="identify" matTooltip="Search in map"
               [ngClass]="actionActive['Search'] ? 'active': 'normal'">
         <mat-icon>search</mat-icon>
@@ -78,12 +83,12 @@
               [ngClass]="actionActive['showSymbols'] ? 'active': 'normal'">
         <mat-icon   aria-label="">category</mat-icon>
       </button>
-      <button [disabled]="stopSave" mat-icon-button (click)="saveLayer()" matTooltip = "Save all edits into the layers/disable pending #TODO">
+      <button [disabled]="stopSave" mat-icon-button (click)="saveLayer()" matTooltip = "Save edits into the layers">
         <mat-icon>save_alt</mat-icon>
       </button>
-      <button  [disabled]="stopSaveAll" mat-icon-button (click)="saveAllLayer()" matTooltip = "Save all edits in all layers">
+      <!--<button  [disabled]="stopSaveAll" mat-icon-button (click)="saveAllLayer()" matTooltip = "Save all edits in all layers">
         <mat-icon>save</mat-icon>
-      </button>
+      </button> -->
 
 
      </mat-toolbar>
