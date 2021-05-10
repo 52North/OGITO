@@ -3,7 +3,7 @@
   Enter your rating for the measures:
  <!-- enter here a container, prepare the data for an array and double loop-->
   <div class="star-rating-container star-rating-animation" fxLayout="row" fxLayoutAlign="start center" >
-    <div *ngFor="let field of fieldNames" >
+    <div *ngFor="let field of data.fieldNames" >
       <mat-slider  color = 'primary' [formControlName]="field" [max]= 5
                    [min]=1 [thumbLabel]=true  [value]="field.min"
                    (change) = "showQuestionValue(field, $event.value)">{{field.value}}</mat-slider>

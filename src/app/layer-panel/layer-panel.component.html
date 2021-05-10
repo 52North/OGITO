@@ -128,13 +128,13 @@
                         </div>
                          <div class = 'selectLayer'>
                            <span class="spacer"></span>
-                          <button  *ngIf="layer.wfs" mat-icon-button matTooltip="Edit layer"
+                          <button  *ngIf="layer.wfs && layer.layerForNewFeatures" mat-icon-button matTooltip="Edit layer"
                                   (click)="onEditLayerClick($event, layer, group)"
                                   [ngClass]="layer.onEdit ? 'activeAction': 'normal'">
                             <mat-icon>edit</mat-icon>
                           </button>
                            <span class="spacer"></span>
-                          <button *ngIf="layer.layerForRanking"  mat-icon-button (click)="onRatingLayerClick($event, layer, group.groupName)"
+                          <button *ngIf="layer.layerForRanking"  mat-icon-button (click)="onRankingLayerClick($event, layer, group.groupName)"
                                   [ngClass]="layer.onRanking ? 'activeAction': 'normal'">
                             <mat-icon  svgIcon="ratingActionPlan"></mat-icon>
                           </button>

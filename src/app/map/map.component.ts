@@ -57,12 +57,14 @@ import {QuestionBase} from '../question-base';
 import {DynamicFormComponent} from '../dynamic-form/dynamic-form.component';
 import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
 
-// To use dialogs
+// To use rating dialogs
 export interface DialogData {
   layerNameDialog: string;
   rating: number;
+  fieldNames: any;
 }
 
+// To use rating measure dialogs
 
 @Component({
   selector: 'app-map',
@@ -222,7 +224,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     this.openLayersService.editAction$.subscribe(
       // starts an action and stop the others..is this ready with stop interactions?
       data => {
-        if (this.formOpen) {return;};    // will not do anything when a form is open.
+        if (this.formOpen) {return; };    // will not do anything when a form is open.
         console.log('que viene', data);
         this.removeInteractions();
         if (this.helpTooltip) {
@@ -304,10 +306,10 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     const ratingName =  layerName === 'massnahmen_laute' ? 'Massnahmen Laute Orte' : 'Massnahmen Leise Orte';
     // # TODO modify this
     const fieldsNames =  AppConfiguration.ratingMeasureLayers[layerName];
-
+    console.log('fieldsNames in openDialogRankingMeasures in ' + layerName, fieldsNames);
 
     const dialogRef = this.dialog.open(DialogRatingMeasureDialog,{
-      width: '250px',
+      width: '350px',
       data: {layerNameDialog: ratingName, fieldNames: fieldsNames, ranking: this.ranking}
     });
     dialogRef.afterClosed().subscribe(result => {
@@ -327,7 +329,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
    // #TODO change this title
     const ratingName =  layerName === 'leise_orte_obs' ? 'Leise Orte' : 'Measures';
     const dialogRef = this.dialog.open(DialogRatingDialog,{
-      width: '250px',
+      width: '300px',
       data: {layerNameDialog: ratingName, rating: this.rating}
     });
     dialogRef.afterClosed().subscribe(result => {
@@ -467,7 +469,6 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         wfsLayerList.push(WFSLayers.getElementsByTagName('WFSLayer')[k].getAttribute('name'));
       }
     }
-
     const rootLayer = xmlText.getElementsByTagName('Layer')[0];
     // get the CRS in EPSG format
     let crs: string;
@@ -514,6 +515,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         for (let j = 0; j < layersinGroup.length; j++) {
           let layerIsWfs = false;
           let layerForRanking = false;
+          let layerForNewFeatures = true;
           const layer = layersinGroup.item(j);
 
           const geometryType = layer.getAttribute('geometryType');
@@ -528,8 +530,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
           if (wfsLayerList.find(element => element === layerName)) {
             layerIsWfs = true;
             // check if more elements can be added
-            if (AppConfiguration.noAddingFeatsLayers.find(element => element === layerName)) {
-              layerIsWfs = false;  // the edit icon will not appear;
+            if (AppConfiguration.noAddingFeatsLayers.findIndex(element => element === layerName) > -1) {
+              layerForNewFeatures = false;  // the edit icon will not appear;
              }
             // get the editable attributes
             const attrs = layer.getElementsByTagName('Attributes')[0];
@@ -550,7 +552,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
             }
             // check if layer is available for rating
             if (AppConfiguration.rankingLayers.find(element => element === layerName)) {
-              console.log('layerName', layerName);
+              // console.log('layerName', layerName);
               layerForRanking = true;
             }
           }
@@ -566,6 +568,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
             onRanking: false,
             visible: false,
             layerForRanking,
+            layerForNewFeatures,
             fields
           });
         }
@@ -581,7 +584,10 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     // get the styles for WFS layers
-    this.mapQgsStyleService.createAllLayerStyles(this.qGsServerUrl, this.qgsProjectFile, wfsLayerList);
+    if (wfsLayerList.length > 0) {
+      this.mapQgsStyleService.createAllLayerStyles(this.qGsServerUrl, this.qgsProjectFile, wfsLayerList);
+    }
+
     this.questionService.setQuestions(this.groupsLayers);
   }
 
@@ -655,7 +661,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 
 ngOnInit(): void {
     // initialize the map
-    console.log('check if here you have the input proyect and load everything then');
+    // console.log('check if here you have the input proyect and load everything then');
     this.initializeMap();
   }
 
@@ -738,7 +744,7 @@ initializeMap() {
     // console.log('Interactions onInit', this.map.getInteractions());
     // #TODO put here the intercation pinch and check.
     this.pinchZoom = this.map.getInteractions().getArray().find(interaction => interaction instanceof PinchZoom );
-    console.log('pinch in InitializeMap', this.pinchZoom);
+    // console.log('pinch in InitializeMap', this.pinchZoom);
     this.pinchZoom.on('change', () => {
       console.log('event capture by which component');
     });
@@ -940,7 +946,7 @@ reorderingGroupsLayers() {
         }
       });
     });
-    console.log('loaded layers..', this.map.getLayers());
+    // console.log('loaded layers..', this.map.getLayers());
   }
 
 loadWMTSlayers(xmlWMTS: WMTSCapabilities) {
@@ -978,15 +984,14 @@ loadWMSlayers(urlWMS: string, xmlCapabilities: WMSCapabilities) {
         console.log('no layers in WMS');
         return;
       }
-      // console.log('xmlCapabilities', xmlCapabilities);
+      console.log('xmlCapabilities in WMS', xmlCapabilities);
+      console.log('this.loadedWfsLayers', this.loadedWfsLayers);
       const layerList = xmlCapabilities.Capability.Layer.Layer;
       layerList.forEach(layer => {
-        // console.log('this.loadedWfsLayers', this.loadedWfsLayers);
-        // console.log('layer', layer);
-        if (!this.loadedWfsLayers.find(x => x.layerName.toLowerCase() === layer.Name.toLowerCase())) {
+      if (!this.loadedWfsLayers.find(x => x.layerName.toLowerCase() === layer.Name.toLowerCase())) {
           if (!layer.hasOwnProperty('Layer')) {
             // it is a simple WMS layer without a group
-            // console.log('simple layer..', layer.Name);
+            console.log(' adding a simple layer..', layer.Name);
             const WMSSource = new ImageWMS({
               url: urlWMS,
               params: {LAYERS: layer.Name},
@@ -1009,29 +1014,31 @@ loadWMSlayers(urlWMS: string, xmlCapabilities: WMSCapabilities) {
           if (layer.Layer.length > 0) {
             // layer is a group and has layers in an array
             layer.Layer.forEach(lyr => {
-              // console.log('layer in a group..', lyr.Name);
-              const WMSSource = new ImageWMS({
-                url: urlWMS,
-                params: {LAYERS: lyr.Name},
-                serverType: 'qgis',
-                crossOrigin: null
-              });
-              const WMSLayer = new ImageLayer({
-                source: WMSSource,
-                name: lyr.Title,
-                visible: false
-              });
-              this.addWebServLayer(lyr.Title, WMSLayer);
-              this.loadedWmsLayers.push({
-                layerName: lyr.Name,
-                layerTitle: lyr.Title,
-                source: WMSSource
-              });
+             // console.log( lyr.Name.toLowerCase() + ' layer is WFS?', this.loadedWfsLayers.findIndex(x => x.layerName.toLowerCase() === lyr.Name.toLowerCase()));
+             if (!(this.loadedWfsLayers.findIndex(x => x.layerName.toLowerCase() === lyr.Name.toLowerCase()) > -1)) {
+               const WMSSource = new ImageWMS({
+                 url: urlWMS,
+                 params: {LAYERS: lyr.Name},
+                 serverType: 'qgis',
+                 crossOrigin: null
+               });
+               const WMSLayer = new ImageLayer({
+                 source: WMSSource,
+                 name: lyr.Title,
+                 visible: false
+               });
+               this.addWebServLayer(lyr.Title, WMSLayer);
+               this.loadedWmsLayers.push({
+                 layerName: lyr.Name,
+                 layerTitle: lyr.Title,
+                 source: WMSSource
+               });
+             }
             });
           }
         }
       });
-      console.log('this.loadedWmsLayers', this.loadedWmsLayers);
+      // console.log('this.loadedWmsLayers', this.loadedWmsLayers);
     } catch (e) {
       console.log('Error retrieving WMS layers');
       alert('Error loading WMS layers, please check the QGIS project configuration');
@@ -2574,9 +2581,16 @@ startIdentifying(layerOnIdentifying: any)
   }
 
   startRankingMeasures(Rankinglayer: any){
-    this.snackBar.open('que viene ' + Rankinglayer.layer.layerName + 'group:' + Rankinglayer.groupName, 'ok', { duration: 5000});
-// checking that layer can be ranked.. this is in AppConfiguration
-    if (!AppConfiguration.rankingLayers[Rankinglayer.layer.layerName]) {
+    // console.log('loaded layers', this.map.getLayers());
+
+    if (!Rankinglayer) {
+      // the ranking process is over...
+      console.log('remove select interaction?TODO');
+      return;
+    }
+    // this.snackBar.open('que viene ' + Rankinglayer.layer.layerName + 'group:' + Rankinglayer.groupName, 'ok', { duration: 2000});
+    // checking that layer can be ranked.. this is in AppConfiguration, seems not necessary
+    if (!AppConfiguration.ratingMeasureLayers[Rankinglayer.layer.layerName]) {
       // The layer is not available for rating
       this.snackBar.open('Current layer is not available for rating in Action Plan', 'ok',
         { horizontalPosition: 'center',
@@ -2586,6 +2600,7 @@ startIdentifying(layerOnIdentifying: any)
     }
 
     let lyr = this.findLayerWithGroup(Rankinglayer.layer.layerName, Rankinglayer.groupName);
+    // console.log(' lyr and style', lyr, this.selectStyle);
     if (lyr === null) {
       // alert('Error retrieving current layer');
       this.snackBar.open('Error retrieving layer for rating measures in Action Plan', 'ok',
@@ -2595,17 +2610,16 @@ startIdentifying(layerOnIdentifying: any)
       return;
     }
     this.removeInteractions();
-    // this.removeDragPinchInteractions();
+
     this.select = new Select({
       layers: [lyr],   // avoid selecting in other layers..
       condition: click,  // check if this work on touch
-      hitTolerance: 10,    // check if we should adjust for # types of geometries..
+      hitTolerance: 7,    // check if we should adjust for # types of geometries..
       style: this.selectStyle,
     });
     this.map.addInteraction(this.select);
     console.log('Interactions in the map in startRanking', this.map.getInteractions());
     this.select.on('select', (e) => {
-
       const selectedFeatures = e.target.getFeatures().getArray();
       console.log('selectedFeatures', selectedFeatures );
       if (selectedFeatures.length <= 0) {
@@ -2615,13 +2629,8 @@ startIdentifying(layerOnIdentifying: any)
             duration: 3000});
         return;
       }
-      this.openDialogRankingMeasures( this.curEditingLayer.layerName, selectedFeatures[0]);
+      this.openDialogRankingMeasures(Rankinglayer.layer.layerName, selectedFeatures[0]);
     });
-
-
-
-
-
   }
 
   formatHtmlInfoResponse(json: string): string {
@@ -3017,8 +3026,11 @@ export class DialogRatingDialog {
   onNoClick(): void {
     this.dialogRef.close();
   }
-
 }
+
+/**
+ * Definition of dialogRatingMeasureDialog
+ */
 @Component({
   // tslint:disable-next-line:component-selector
   selector: 'dialog-rating-measure-dialog',
@@ -3038,7 +3050,7 @@ export class DialogRatingMeasureDialog {
 
 
   selectStar(value): void{
-    
+
     // this.selectedRating = value;
     this.data.rating = value;
   }

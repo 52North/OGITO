@@ -218,7 +218,7 @@ export class MapQgsStyleService {
     // let layerStyles = [];
     parser.parseString(xmlTextStyle, (err, result) => {
       const jsonStyle = result;
-      // console.log('que sale', jsonStyle);
+      //console.log('que sale', jsonStyle);
       // console.log(jsonStyle.StyledLayerDescriptor.NamedLayer);
       //  console.log('lenght', jsonStyle.StyledLayerDescriptor.NamedLayer.length);
       for (let i = 0; i < jsonStyle.StyledLayerDescriptor.NamedLayer.length; i++) {
@@ -298,7 +298,7 @@ export class MapQgsStyleService {
     const capRequest = '&REQUEST=GetStyles';
     const wmsVersion = 'SERVICE=WMS&VERSION=' + AppConfiguration.wmsVersion;
     const urlStyle = qGsServerUrl + wmsVersion + capRequest + qGsProject + '&LAYERS=' + layerList;
-    // ('urlStyle', urlStyle);
+    console.log('urlStyle in createAllLayerStyles', urlStyle);
     const xmlStyles = fetch(urlStyle)
       .then(response => response.text())
       .then(text => {

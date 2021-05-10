@@ -155,7 +155,7 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
      */
     if (true === this.actionActive[action]) {
       // action was active --> it must be stopped
-      // console.log('que entra.. action', action, this.actionActive[action],true === this.actionActive[action]);
+      console.log('que entra.. action', action);
       this.openLayersService.updateEditAction(null);
     }
     else {

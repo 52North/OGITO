@@ -92,7 +92,7 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
 
   updateIdentifyActionInLayers(layerName: string){
     /**
-     * updates the status of the action @action in all the layers except in layerName
+     * updates the status of the action @action in  layerName
      * @param layerName: layerName for exception
      * #TODO declarar layer as a class and use setters and getters
      */
@@ -108,7 +108,7 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
   }
   updateEditActionInLayers(layerName: string){
       /**
-       * updates the status of the action @action in all the layers except in layerName
+       * updates the status of the action  in layerName
        * @param layerName: layerName for exception
        * #TODO declare layer as a class and use setters and getters
        */
@@ -120,12 +120,37 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
             // console.log('layer', layer);
             if (layer.layerName.toLowerCase() === layerName.toLowerCase() && layer.onEdit) {
               layer.onEdit = false;
-              console.log('cambiando action Edit in', layer.layerName, layer.onEdit);
+              // stop editing
+              this.editLayerClick.emit(null);
+              // hide editing toolbar
+              this.openLayersService.updateShowEditToolbar(false);
+              // console.log('cambiando action Edit in', layer.layerName, layer.onEdit);
             }
           }
         });
        }
       }
+
+  updateRankingActionInLayers(layerName: string){
+    /**
+     * updates the status of the action in layerName
+     * @param layerName: layerName for exception
+     * #TODO declare layer as a class and use setters and getters
+     */
+    // console.log('layerName in updateEditActioninLayers', layerName);
+    for (const group of this.groupLayers) {
+      group.layers.forEach(layer => {
+          // console.log('layer in updateRankingActionInLayers', layer.layerName);
+          if (layer.layerName.toLowerCase() === layerName.toLowerCase() && layer.onRanking) {
+            layer.onRanking = false;
+            this.rankingLayerClick.emit(null); // emit the event? hope not twice
+            //  console.log('cambiando action ranking in', layer.layerName, layer.onRanking);
+          }
+
+      });
+    }
+  }
+
 
      onEditLayerClick($event: any, layer: any, groupName:string){
      /** allows to start editing a particular layer in the layer panel
@@ -151,11 +176,17 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
       if (this.layerActive === layer.layerName) {
         // layer active was in editing
         if (layer.onEdit) {
+          this.layerActive = null;
           // stop editing
           layer.onEdit = false;
-          this.layerActive = null;
           this.openLayersService.updateShowEditToolbar(false);
           this.editLayerClick.emit(null);
+          return;
+        }
+        if (layer.onRanking) {
+          // stop ranking
+          layer.onRanking = false;
+          this.rankingLayerClick.emit(null);
           return;
         }
        // layer was in identifying // stop this action
@@ -169,6 +200,7 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
       // there is an active layer and its not the same than the selected layer
       this.updateEditActionInLayers(this.layerActive); // code was changed to update only one layer, the previous one
       this.updateIdentifyActionInLayers(this.layerActive);
+      this.updateRankingActionInLayers(this.layerActive);
       this.layerActive = layer.layerName;
       layer.onEdit = true;
       this.openLayersService.updateShowEditToolbar(true);
@@ -221,12 +253,23 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
         this.identifyLayerClick.emit(null);
         return;
       }
+      // the layer was in ranking
+      if (layer.onRanking){
+        // update the status and icon ranking in the layer if so
+        layer.onRanking = false;
+        this.rankingLayerClick.emit(null);
+        // update the property in the layer object
+        layer.onIdentify = true;
+        // stop the action in the map
+        this.identifyLayerClick.emit({layer, groupName});
+        return;
+      }
       // the layer was active in editing
       console.log('PASA AQUI.. 221, onIdentifyLayerClick');
       layer.onEdit = false;
-      layer.onIdentify = true;
       this.editLayerClick.emit(null);
       this.openLayersService.updateShowEditToolbar(false);
+      layer.onIdentify = true;
       this.identifyLayerClick.emit({layer, groupName});
       return;
     }
@@ -235,7 +278,7 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
     this.updateIdentifyActionInLayers(this.layerActive);
     // stop editing if so
     this.updateEditActionInLayers(this.layerActive);
-    // workaroeund..
+    // workaround..
     this.openLayersService.updateShowEditToolbar(false);
     this.editLayerClick.emit(null);
     // set the selected layer as active
@@ -245,11 +288,59 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
   }
 
 
-  onRatingLayerClick($event: any, layer: any, groupName: any) {
-  this.layerActive = layer.layerName;
-  layer.onRanking = true;
-  console.log('layer and groupName in onRatingLayerClick', layer, groupName);
-  this.rankingLayerClick.emit({layer, groupName});
+  onRankingLayerClick($event: any, layer: any, groupName: any) {
+    $event.preventDefault();
+    $event.stopImmediatePropagation();
+    // console.log('to start ranking layer, check the layer active thing', layer);
+    if (this.layerActive === null) {
+      this.layerActive = layer.layerName;
+      layer.onRanking = true;
+      this.rankingLayerClick.emit({layer, groupName});
+      return;
+    }
+    // there is an active layer and it is the same
+    if (this.layerActive === layer.layerName){
+      // the layer was on rating
+      if (layer.onRanking){
+        // unset the layer active
+        this.layerActive = null;
+        // unset the property
+        layer.onRanking = false;
+        // emit the event
+        this.rankingLayerClick.emit(null);
+        return;
+      }
+      // the layer was on editing
+      if (layer.onEdit) {
+        // stops edits and hide edit toolbar
+        layer.onEdit = false;
+        this.openLayersService.updateShowEditToolbar(false);
+        this.editLayerClick.emit(null);
+        // update action of ranking
+        layer.onRanking = true;
+        this.rankingLayerClick.emit({layer, groupName});
+        return;
+      }
+      // the layer was in identifying
+      // update the property in the layer object
+      layer.onIdentify = false;
+      // stop the action in the map
+      this.identifyLayerClick.emit(null);
+      // update the action in the layer
+      layer.onRanking = true;
+      return;
+    }
+    // there was another layer active? in edit or identifying or ranking..
+    // update the status and icon identifying in the layer
+    this.updateIdentifyActionInLayers(this.layerActive);
+    // update the status and icon edit in the layer
+    this.updateEditActionInLayers(this.layerActive);
+    // update the status and icon ranking in the other layer if so
+    this.updateRankingActionInLayers(this.layerActive);
+    this.layerActive = layer.layerName;
+    layer.onRanking = true;
+    this.rankingLayerClick.emit({layer, groupName});
+
   }
 
 
