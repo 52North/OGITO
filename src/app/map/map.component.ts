@@ -331,7 +331,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 
   openDialog(layerName: string, feature: any): void{
    // #TODO change this title
-    const ratingName =  layerName === 'leise_orte_obs' ? 'Leise Orte' : 'Measures';
+    // const ratingName =  layerName === 'leise_orte_Obs' ? 'Leise Orte' : 'Measures';
+    const ratingName = 'Leise Orte';
     const dialogRef = this.dialog.open(DialogRatingDialog,{
       width: '300px',
       data: {layerNameDialog: ratingName, rating: this.rating}
@@ -1261,19 +1262,13 @@ enableAddShape(shape: string) {
       return;
     }
     // the layer is not available for addingnewFeatures
-
-  /*
-   if (AppConfiguration.noAddingFeatsLayers.findIndex(x => x.toLowerCase() === this.curEditingLayer.layerName.toLowerCase()) >= 0){
+    if (AppConfiguration.noAddingFeatsLayers.findIndex(x => x.toLowerCase() === this.curEditingLayer.layerName.toLowerCase()) >= 0){
       this.snackBar.open('No more elements can be added to this layer', 'ok',
         { horizontalPosition: 'center',
           verticalPosition: 'top',
           duration: 3000});
       return;
     }
-    */
-   
-
-
 
     // console.log('this.currentClass', !this.currentClass, this.currentClass);
     const self = this;
@@ -2961,7 +2956,7 @@ export class DialogRatingDialog {
     },
     {
       id: 2,
-      icon: 'star',
+      icon: 'favorite',
       class: 'star-gray star-hover star'
     },
     {
