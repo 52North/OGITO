@@ -24,6 +24,8 @@ export class EditingToolbarComponent implements OnInit {
   stopSaveAll = false;
   isVisible$: Observable<boolean>;
   layerTypeEdit$: string;  // type of geometry of the layer in editing
+  layerTypeRateMeasures$ = false; // if the layer is for ranking;
+  layerTypeRate$ = false;
   styles: any;
   subsToShowEditToolbar: Subscription;
   subsToGeomTypeEditing: Subscription;
@@ -41,7 +43,9 @@ export class EditingToolbarComponent implements OnInit {
     Delete: false,
     MeasureLine: false,
     MeasureArea: false,
-    ModifyAttribute: false
+    ModifyAttribute: false,
+    RankingMeasures: false,
+    Rating: false
   };
   onPanStart(event: any): void {
     this.startX = this.x;
@@ -86,6 +90,10 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
     'ratingActionPlan',
     sanitizer.bypassSecurityTrustResourceUrl('assets/img/rate_action_plan.svg')
   );
+  iconRegistry.addSvgIcon(
+    'ratingActionPlan',
+    sanitizer.bypassSecurityTrustResourceUrl('assets/img/rate_action_plan2.svg')
+  );
   this.subsToShowEditToolbar = this.openLayersService.showEditToolbar$.subscribe(
     (data) => {
       this.showToolbar(data);
@@ -94,7 +102,9 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
   );
   this.subsToGeomTypeEditing = this.openLayersService.layerEditing$.subscribe(
     (data: any) => {
-      // console.log('data aqui', data);
+      console.log('data aqui', data);
+      this.updateLayerTypeRanking(data.layerName);
+      this.updateLayerTypeRating(data.layerName);
       this.updateLayerTypeEdit(data.layerGeom);
     },
     error => {
@@ -102,6 +112,23 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
     }
   );
   }
+
+  updateLayerTypeRanking(layerName: string) {
+    // console.log('Object.keys(AppConfiguration.ratingMeasureLayers)', Object.keys(AppConfiguration.ratingMeasureLayers));
+    // console.log('in updateLayerTypeRanking' + layerName, Object.keys(AppConfiguration.ratingMeasureLayers).findIndex(x => x === layerName));
+    this.layerTypeRateMeasures$ = false;
+    if (Object.keys(AppConfiguration.ratingMeasureLayers).findIndex(x => x === layerName)  > -1) {
+      this.layerTypeRateMeasures$ = true;
+    }
+  }
+
+  updateLayerTypeRating(layerName: string) {
+    this.layerTypeRate$ = false;
+    if (Object.keys(AppConfiguration.ratingPrex).findIndex(x => x === layerName) > -1) {
+      this.layerTypeRate$ = true;
+    }
+  }
+
 
   closeEditingToolbar(){
     this.isVisible$ = observableOf(false);
@@ -114,7 +141,7 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
      * @param geomType: string indicating the geometry type
      */
     this.layerTypeEdit$ = geomType;
-    // console.log('this.layerTypeEdit$', this.layerTypeEdit$);
+
   }
 
 

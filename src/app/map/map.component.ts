@@ -56,6 +56,7 @@ import {QuestionService} from '../question-service.service';
 import {QuestionBase} from '../question-base';
 import {DynamicFormComponent} from '../dynamic-form/dynamic-form.component';
 import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
+import {FormControl, FormGroup, Validators} from '@angular/forms';
 
 // To use rating dialogs
 export interface DialogData {
@@ -224,7 +225,6 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     this.openLayersService.editAction$.subscribe(
       // starts an action and stop the others..is this ready with stop interactions?
       data => {
-        if (this.formOpen) {return; };    // will not do anything when a form is open.
         console.log('que viene', data);
         this.removeInteractions();
         if (this.helpTooltip) {
@@ -275,6 +275,10 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
             this.undoLastEdit();
             break;
           }
+          case 'RankingMeasures': {
+            this.startRankingMeasures();
+            break;
+          }
         }
       },
       error => alert('Error implementing action on features' + error)
@@ -309,7 +313,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     console.log('fieldsNames in openDialogRankingMeasures in ' + layerName, fieldsNames);
 
     const dialogRef = this.dialog.open(DialogRatingMeasureDialog,{
-      width: '350px',
+      width: '400px',
       data: {layerNameDialog: ratingName, fieldNames: fieldsNames, ranking: this.ranking}
     });
     dialogRef.afterClosed().subscribe(result => {
@@ -319,7 +323,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       this.select.getFeatures().clear();
       if (result){
         // result is different to undefined
-        this.saveRatingMeasures(layerName, feature);
+        this.saveRatingMeasures(layerName, feature, result);
       }
 
     });
@@ -359,9 +363,25 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     this.saveFeatinBuffer(this.curEditingLayer.layerName, feature, 'rating');
   }
 
-  saveRatingMeasures(layerName: string, feature: any){
+
+  saveRatingMeasures(layerName: string, feature: any, rating:any){
     // #TODO
-  }
+    console.log('que llega in saveRatingMeasures', layerName, feature , rating);
+    for (const key in rating) {
+      console.log('key in saveRatingMeasures', key, rating[key]);
+      if (key !== 'sonstiges') {
+        for (let i = AppConfiguration.ratingMin;  i <= AppConfiguration.ratingMax; i++){
+            console.log('rating.key', key + '_rank' + i,  feature.get(key + '_rank' + i));
+            if (rating[key] === i) {
+              console.log('consigue algo.. FINALLY');
+              feature.set(key + '_rank' + i, feature.get(key + '_rank' + i) + 1);
+          }
+        }
+      }
+    }
+    feature.set('sonstiges', rating.sonstiges);
+    this.saveFeatinBuffer(layerName, feature, 'rating');
+    }
 
   startRating(){
     /**
@@ -551,7 +571,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 
             }
             // check if layer is available for rating
-            if (AppConfiguration.rankingLayers.find(element => element === layerName)) {
+            if (AppConfiguration.ratingMeasureLayers[layerName]) {
               // console.log('layerName', layerName);
               layerForRanking = true;
             }
@@ -858,6 +878,29 @@ zoomToHome() {
     this.map.getView().setCenter([this.mapCenterXY[0], this.mapCenterXY[1]]);
   }
 
+prepareLoadWMSLayers(qGsServerUrl: string, capRequest: string, qGsProject:string ){
+  // request getCapabilities to load WMS images
+  const wmsVersion = 'SERVICE=WMS&VERSION=' + AppConfiguration.wmsVersion;
+  const urlWMS = qGsServerUrl + wmsVersion + capRequest + qGsProject;
+  let parser: any;
+  parser = new WMSCapabilities();
+  // console.log('urlWMS', urlWMS);
+  fetch(urlWMS)
+    .then(response => {
+      return response.text();
+    })
+    .then(text => {
+      const xmlWMStext = parser.read(text);
+      this.loadWMSlayers(qGsServerUrl + wmsVersion + qGsProject, xmlWMStext);
+
+      // this.reorderingGroupsLayers();
+      this.reorderingGroupsLayers();
+      return (xmlWMStext);
+    })
+    .catch(error => console.error(error));
+}
+
+
 workQgsProject() {
     /** Retrieves the capabilities WFS and WMS associated to the qgis project listed in AppConfiguration
      * it send these capabilities to other functions to load the WMS and WFS layers
@@ -875,46 +918,12 @@ workQgsProject() {
       .then(text => {
         this.loadWFSlayers(text);
         // self.layerPanel.updateLayerList(self.loadedWfsLayers);   // trying another approach with input
+        // include loading WMS layers here to guarantee consistency
+
         return (text);
       })
+      .then( text => this.prepareLoadWMSLayers(qGsServerUrl, capRequest, qGsProject))
       .catch(error => console.error(error));
-
-    // request getCapabilities to load WMS images
-    const wmsVersion = 'SERVICE=WMS&VERSION=' + AppConfiguration.wmsVersion;
-    const urlWMS = qGsServerUrl + wmsVersion + capRequest + qGsProject;
-    let parser: any;
-    parser = new WMSCapabilities();
-    // console.log('urlWMS', urlWMS);
-    fetch(urlWMS)
-      .then(response => {
-        return response.text();
-      })
-      .then(text => {
-        const xmlWMStext = parser.read(text);
-        this.loadWMSlayers(qGsServerUrl + wmsVersion + qGsProject, xmlWMStext);
-
-        // this.reorderingGroupsLayers();
-        this.reorderingGroupsLayers();
-        return (xmlWMStext);
-      })
-      .catch(error => console.error(error));
-    /*
-    // WMTS is not fully yet implemented in qGIS server (31/08/2020) lets skip it for now
-     // request getCapabilites to load WMTS layers
-     const wmtsVersion = 'SERVICE=WMTS&VERSION=' + AppConfiguration.wmtsVersion;
-     const urlWMTS = qGsServerUrl + wmtsVersion + capRequest + qGsProject;
-     const parserWMTS = new WMTSCapabilities();
-     const xmlWMTS = fetch(urlWMTS)
-       .then(response => {
-         return response.text();
-       })
-       .then(text => {
-         const xmlWMTS = parserWMTS.read(text);
-         this.loadWMTSlayers(xmlWMTS);
-         this.reorderingGroupsLayers();
-       }); */
-
-
   }
 
 
@@ -949,35 +958,12 @@ reorderingGroupsLayers() {
     // console.log('loaded layers..', this.map.getLayers());
   }
 
-loadWMTSlayers(xmlWMTS: WMTSCapabilities) {
-    /**
-     * Orders layer groups in the map
-     * @param xmlWMTS WMTS capabilities fromm thw QGIS proj
-     */
-    console.log(xmlWMTS);
-    const layerList = xmlWMTS.Contents.Layer;
-    layerList.forEach(layer => {
-      const options = optionsFromCapabilities(xmlWMTS, {
-        layer: layer.Identifier,
-        matrixSet: AppConfiguration.srsName,  // only one system
-        crossOrigin: null
-      });
-      const WMSTLayer = new TileLayer({
-        source: new WMTS(options),
-        name: layer.Identifier
-      });
-      this.addWebServLayer(layer.Identifier, WMSTLayer);
-    });
-  }
-
-
 loadWMSlayers(urlWMS: string, xmlCapabilities: WMSCapabilities) {
     /**
      * Loads the layers in the QGS project from a OL xmlCapabilities file
      * @param urlWMS the url address of the geo webserver and WMS service
      * @param XmlCapText: OL WMSCapabilities
      */
-
 
     try {
       if (!xmlCapabilities.Capability.Layer.Layer) {
@@ -986,9 +972,11 @@ loadWMSlayers(urlWMS: string, xmlCapabilities: WMSCapabilities) {
       }
       console.log('xmlCapabilities in WMS', xmlCapabilities);
       console.log('this.loadedWfsLayers', this.loadedWfsLayers);
+
       const layerList = xmlCapabilities.Capability.Layer.Layer;
       layerList.forEach(layer => {
-      if (!this.loadedWfsLayers.find(x => x.layerName.toLowerCase() === layer.Name.toLowerCase())) {
+      console.log('aqui a nivel de grupo ' + layer.Name, !this.loadedWfsLayers.find(x => x.layerName.toLowerCase() === layer.Name.toLowerCase()));
+      if (this.loadedWfsLayers.findIndex(x => x.layerName.toLowerCase() === layer.Name.toLowerCase()) === -1) {
           if (!layer.hasOwnProperty('Layer')) {
             // it is a simple WMS layer without a group
             console.log(' adding a simple layer..', layer.Name);
@@ -1013,9 +1001,12 @@ loadWMSlayers(urlWMS: string, xmlCapabilities: WMSCapabilities) {
           }
           if (layer.Layer.length > 0) {
             // layer is a group and has layers in an array
+            console.log('Entra aqui KKKKKK', layer.Name );
             layer.Layer.forEach(lyr => {
              // console.log( lyr.Name.toLowerCase() + ' layer is WFS?', this.loadedWfsLayers.findIndex(x => x.layerName.toLowerCase() === lyr.Name.toLowerCase()));
-             if (!(this.loadedWfsLayers.findIndex(x => x.layerName.toLowerCase() === lyr.Name.toLowerCase()) > -1)) {
+             // console.log('condition', this.loadedWfsLayers.findIndex(x => x.layerName.toLowerCase() === lyr.Name.toLowerCase()) === -1);
+             if (this.loadedWfsLayers.findIndex(x => x.layerName.toLowerCase() === lyr.Name.toLowerCase()) === -1) {
+               console.log('addding ' + lyr.Name.toLowerCase(), 'condition:', this.loadedWfsLayers.findIndex(x => x.layerName.toLowerCase() === lyr.Name.toLowerCase()) === -1 );
                const WMSSource = new ImageWMS({
                  url: urlWMS,
                  params: {LAYERS: lyr.Name},
@@ -1051,7 +1042,7 @@ addWebServLayer(layerName: any, webServlayer: any) {
     let groupName = '';
     let groupLayer: any;
     this.groupsLayers.forEach(group => {
-      if (group.layers.findIndex(lyr => lyr.layerName === layerName) > -1)   // findIndex return -1 if not found
+      if (group.layers.findIndex(lyr => lyr.layerName.toLowerCase() === layerName.toLowerCase()) > -1)   // findIndex return -1 if not found
       {
         groupName = group.groupName;
       }
@@ -1075,7 +1066,7 @@ addWebServLayer(layerName: any, webServlayer: any) {
     }
     // the layer was in a group and the group does exist
     this.map.getLayers().forEach(lyr => {
-      if (lyr.get('name') === groupName) {
+      if (lyr.get('name').toLowerCase() === groupName.toLowerCase()) {
         groupLayer = lyr;
         return;
       }
@@ -1235,7 +1226,6 @@ saveFeatinBuffer(layerName: string, feature: any, operation: string){
     // find layer
   let tlayer: any;
   tlayer = this.findWfsLayer(layerName);
-  console.log('layerSource in saveFeatinBuffer', tlayer.source);
   // get data source
   const layerSource = tlayer.source;
   this.editBuffer.push({
@@ -1271,13 +1261,17 @@ enableAddShape(shape: string) {
       return;
     }
     // the layer is not available for addingnewFeatures
-    if (AppConfiguration.noAddingFeatsLayers.findIndex(x => x.toLowerCase() === this.curEditingLayer.layerName.toLowerCase()) >= 0){
+
+  /*
+   if (AppConfiguration.noAddingFeatsLayers.findIndex(x => x.toLowerCase() === this.curEditingLayer.layerName.toLowerCase()) >= 0){
       this.snackBar.open('No more elements can be added to this layer', 'ok',
         { horizontalPosition: 'center',
           verticalPosition: 'top',
           duration: 3000});
       return;
     }
+    */
+   
 
 
 
@@ -1789,21 +1783,9 @@ loadWFSlayers(XmlCapText) {
             crossOrigin: null,   // gis.stackexchange.com/questions/71715/enabling-cors-in-openlayers
             strategy: bboxStrategy
           });
-          /*
-          old version
-          const vectorSource = new VectorSource ({
-          format: new GeoJSON(),
-          // the url can be setup to include extent, projection and resolution
-          url: urlWFS,
-          crossOrigin: null
-          });
-          */
           const wfsVectorLayer = new VectorLayer({
             source: vectorSource,
             name: layerName,
-            // extent [minx, miny, maxx, maxy].
-            // extent: [lowCorner.split(' ')[0], lowCorner.split(' ')[1],
-            //  upperCorner.split(' ')[0], upperCorner.split(' ')[1]],
             visible: false,   // #TODO comment this line, by default layers are not visible
             zIndex: nLayers - i,   // highest zIndex for the first layer and so on.
             style(feature) {    // this equiv to style: function(feature)
@@ -1947,8 +1929,8 @@ updateEditingLayer(layerOnEdit: any) {
      * and the group name of the layer
      *  #TODO catch exception
      */
-   let layer: any;
-   // console.log('what is inside updateEditingLayer', layerOnEdit);
+  let layer: any;
+  // console.log('what is inside updateEditingLayer', layerOnEdit);
   if (layerOnEdit === null) {
    if (this.curEditingLayer) {
       // a layer was being edited - ask for saving changes
@@ -1960,7 +1942,8 @@ updateEditingLayer(layerOnEdit: any) {
   if (this.curEditingLayer) {
     // a layer was being edited - ask for saving changes
     this.stopEditing();  // test is changes are save to the right layer, otherwise it should go #
-    layer = this.loadedWfsLayers.find(x => x.layerName === layerOnEdit.layerName);
+    //layer = this.loadedWfsLayers.find(x => x.layerName === layerOnEdit.layerName);
+    layer = this.loadedWfsLayers.find(x => x.layerName === layerOnEdit.layer.layerName);
     // layer contains the source.
     if (this.curEditingLayer === layer) {
       this.curEditingLayer = null;
@@ -1969,7 +1952,7 @@ updateEditingLayer(layerOnEdit: any) {
     }
   }
   // the user wants to switch to another layer, already the edit was stopped with the previous layer
-   layer = this.loadedWfsLayers.find(x => x.layerName === layerOnEdit.layerName);
+   layer = this.loadedWfsLayers.find(x => x.layerName === layerOnEdit.layer.layerName);
    this.curEditingLayer = layer;
    this.startEditing(layer);
  }
@@ -2003,7 +1986,7 @@ saveEdits(editLayer: any) {
       {
          const result = this.writeTransactWfs(editLayer);
          if (result){
-           this.snackBar.open('Result TO BE CHANGED for another msg', 'ok',
+           this.snackBar.open('Changes saved', 'ok',
              { horizontalPosition: 'center',
                verticalPosition: 'top',
                duration: 3000});
@@ -2041,8 +2024,8 @@ startEditing(layer: any) {
     try {
       // this.removeInteractions();  //#TODO verify this is done in addShape
       // update the observables
-     // this is done from layerPanel commented 01032021 this.openLayersService.updateShowEditToolbar(true);
-      console.log('que entra en startediting layer', layer);
+      // this is done from layerPanel commented 01032021 this.openLayersService.updateShowEditToolbar(true);
+      // console.log('que entra en startediting layer', layer);
       // The problem seem to be that the symbol panel is show before knowing the layer..
       this.openLayersService.updateLayerEditing(layer.layerName, layer.geometryType);
       // clear caches and styles  // #TODO best way to do...
@@ -2580,17 +2563,20 @@ startIdentifying(layerOnIdentifying: any)
   this.curInfoLayer = layer;   // this is a real OL layer
   }
 
-  startRankingMeasures(Rankinglayer: any){
-    // console.log('loaded layers', this.map.getLayers());
+  startRankingMeasures(){
+    console.log('TODO move to editing Layer and validate that layer is for ranking', this.map.getLayers());
 
-    if (!Rankinglayer) {
-      // the ranking process is over...
-      console.log('remove select interaction?TODO');
+    if (!this.curEditingLayer) {
+      // There is not editng layer
+      this.snackBar.open('Current layer is not available for rating in Action Plan', 'ok',
+        { horizontalPosition: 'center',
+          verticalPosition: 'top',
+          duration: 5000});
       return;
     }
     // this.snackBar.open('que viene ' + Rankinglayer.layer.layerName + 'group:' + Rankinglayer.groupName, 'ok', { duration: 2000});
     // checking that layer can be ranked.. this is in AppConfiguration, seems not necessary
-    if (!AppConfiguration.ratingMeasureLayers[Rankinglayer.layer.layerName]) {
+    if (Object.keys(AppConfiguration.ratingMeasureLayers).findIndex(x => x === this.curEditingLayer.layerName)  === -1){
       // The layer is not available for rating
       this.snackBar.open('Current layer is not available for rating in Action Plan', 'ok',
         { horizontalPosition: 'center',
@@ -2599,8 +2585,8 @@ startIdentifying(layerOnIdentifying: any)
       return;
     }
 
-    let lyr = this.findLayerWithGroup(Rankinglayer.layer.layerName, Rankinglayer.groupName);
-    // console.log(' lyr and style', lyr, this.selectStyle);
+    let lyr = this.findLayer(this.curEditingLayer.layerName);
+    console.log(' lyr and style in ranking', lyr);
     if (lyr === null) {
       // alert('Error retrieving current layer');
       this.snackBar.open('Error retrieving layer for rating measures in Action Plan', 'ok',
@@ -2614,7 +2600,7 @@ startIdentifying(layerOnIdentifying: any)
     this.select = new Select({
       layers: [lyr],   // avoid selecting in other layers..
       condition: click,  // check if this work on touch
-      hitTolerance: 7,    // check if we should adjust for # types of geometries..
+      hitTolerance: 9,    // check if we should adjust for # types of geometries..
       style: this.selectStyle,
     });
     this.map.addInteraction(this.select);
@@ -2629,7 +2615,7 @@ startIdentifying(layerOnIdentifying: any)
             duration: 3000});
         return;
       }
-      this.openDialogRankingMeasures(Rankinglayer.layer.layerName, selectedFeatures[0]);
+      this.openDialogRankingMeasures(this.curEditingLayer.layerName, selectedFeatures[0]);
     });
   }
 
@@ -2970,7 +2956,7 @@ export class DialogRatingDialog {
   stars = [
     {
       id: 1,
-      icon: 'star',
+      icon: 'radio_button_unchecked', // 'star'
       class: 'star-gray star-hover star'
     },
     {
@@ -3042,12 +3028,20 @@ export class DialogRatingMeasureDialog {
 
   selectedRating = 0;
   fieldNames: any;  // esto debe ir a data.fieldNames..
-
+  formGroup: FormGroup;
   constructor(
     public dialogRef: MatDialogRef<DialogRatingMeasureDialog>,
     @Inject(MAT_DIALOG_DATA) public data: DialogData) {
-  }
+    const group: any = {};
 
+    data.fieldNames.forEach(question => {
+        group[question] = new FormControl(question.value || '', Validators.required);
+    });
+    // console.log('from group un Question Service', new FormGroup(group));
+    // add the sonstiges question
+    group.sonstiges = new FormControl( '');  // not required
+    this.formGroup = new FormGroup(group);
+  }
 
   selectStar(value): void{
 
@@ -3055,8 +3049,13 @@ export class DialogRatingMeasureDialog {
     this.data.rating = value;
   }
 
-  showQuestionValue(field:any, value:any){}
+  showQuestionValue(elementID: any, value:any){
   // here code to show the value of the slider
+  const label = document.getElementById(elementID);
+  if (label)  {
+    label.innerHTML = value;
+   }
+  }
 
   onNoClick(): void {
     this.dialogRef.close();

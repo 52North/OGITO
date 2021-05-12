@@ -107,7 +107,7 @@
             <mat-selection-list [id]="group.groupName">
               <mat-list-option class = "group" checkboxPosition="before" (click)="onGroupLayerVisClick($event,group)"
                                [selected]="group.visible" >
-                {{group.groupName}}
+                {{group.groupName | titlecase}}
               </mat-list-option>
             </mat-selection-list>
           </mat-panel-title>
@@ -124,20 +124,20 @@
                                      [ngClass]="layerActive == layer.layerName? 'active': 'normal'"  [selected]="layer.visible">
                       <div class="selectLayer" >
                         <div style="display:flex;align-items:center">
-                          {{layer.layerName}} <!-- {{layer['layerTitle']}} -->
+                          {{layer.layerName | titlecase}} <!-- {{layer['layerTitle']}} -->
                         </div>
                          <div class = 'selectLayer'>
                            <span class="spacer"></span>
-                          <button  *ngIf="layer.wfs && layer.layerForNewFeatures" mat-icon-button matTooltip="Edit layer"
+                          <button  *ngIf="layer.wfs" mat-icon-button matTooltip="Edit layer"
                                   (click)="onEditLayerClick($event, layer, group)"
                                   [ngClass]="layer.onEdit ? 'activeAction': 'normal'">
                             <mat-icon>edit</mat-icon>
                           </button>
                            <span class="spacer"></span>
-                          <button *ngIf="layer.layerForRanking"  mat-icon-button (click)="onRankingLayerClick($event, layer, group.groupName)"
+                          <!--<button *ngIf="layer.layerForRanking"  mat-icon-button (click)="onRankingLayerClick($event, layer, group.groupName)"
                                   [ngClass]="layer.onRanking ? 'activeAction': 'normal'">
                             <mat-icon  svgIcon="ratingActionPlan"></mat-icon>
-                          </button>
+                          </button> -->
                            <span class="spacer"></span>
                          <!-- the identify button to the layer panel needed for WMS layers -->
                           <button mat-icon-button matTooltip="Identify elements in the layer"
@@ -162,7 +162,7 @@
                     <img class = iconLegend [src] = icon.iconSrc alt="legend">
                   </div>
                   <div class="iconTitle">
-                    {{icon.title}}
+                    {{icon.title | titlecase}}
                   </div>
                 </div>
               </mat-list>

@@ -38,8 +38,8 @@ export class MapQgsStyleService {
     // console.log('this.layerStyles  in findJsonStyle', this.layerStyles);
     const styleLyr = this.layerStyles[layerName];
     if (styleLyr.symbolType === 'Single symbol'){
-     // console.log('estilo conseguido', styleLyr.style);
-      return (styleLyr.style['default'].style);
+     // console.log('estilo conseguido para layerName', styleLyr.style);
+     return (styleLyr.style['default'].style);
     }
     // #TODO
     // categorized style or by rule ;)
@@ -242,13 +242,20 @@ export class MapQgsStyleService {
                 const size = seGraphic['se:Size'][0];
                 // console.log('format pasa x aqui', seGraphic['se:ExternalGraphic'][1]['se:OnlineResource'][0]);
                 const theStyle = this.mapQsJsonPointSymbol(format, onlineResource, mark, size);
+                let symbolLabel = 'default';
+                if (layerName.toLowerCase() === 'laute_orte' ) {
+                  symbolLabel = 'Lauter Ort';
+                }
+                if (layerName.toLowerCase() === 'leise_orte' ) {
+                  symbolLabel = 'Leiser Ort';
+                }
                 // this.layerStyles[layerName] = {symbolType: styleType, style: theStyle};
                 this.layerStyles[layerName] = {
                   symbolType: styleType,
                   style: {
                     'default': {
                       style: theStyle,      // style is a list
-                      label: 'default',
+                      label: symbolLabel,
                       value: 'default',
                       attr: 'default',
                       symbol: 'default'

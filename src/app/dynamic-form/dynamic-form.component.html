@@ -1,4 +1,4 @@
-<div class ="example-list"  *ngIf="showForm$ | async" > <!--cdkDragBoundary=".map" cdkDrag-->
+<div class ="example-list"  *ngIf="showForm$ | async" cdkDragBoundary=".map" cdkDrag > <!---->
  <mat-card>
       <mat-card-title-group>
         <mat-card-title>Details</mat-card-title>
@@ -32,7 +32,7 @@
 
           <div class="container" *ngSwitchCase="'slider'">
             <div class="sliderLabel">
-              <label >{{question.label}}: </label>
+              <label >{{question.label | titlecase}}: </label>
             </div>
 
             <div>

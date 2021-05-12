@@ -62,21 +62,21 @@ export class AppConfiguration{
   static ratingPrex = {
     'leise_Orte_obs': 'rank_'
   };
-  // indicate which layers contain measures
-  static ratingMeasureLayers = {
-    'massnahmen_laute': ['geschwindigkeitsbegrenzung', 'fluesterasphalt', 'laermschutzwand', 'nutzungsaenderung'],
-    'massnahmen_leise': ['legalprotection', 'visualenhancement', 'accesibility', 'safety']
-  };
 
-  static formPeers = {
-    laute_orte: {source_auto: 'intensity_auto'}
-  };
+  static ratingMax = 5;
+  static ratingMin = 1;
+
   /* Layers available for ranking and method of ranking
    *  rankingMethod  choose between 'allFiveStars' or 'oneFiveStars'
    *  rankingLayers array of layers available for ranking
    */
   static rankingMethod = 'allFiveStars';    // Change to 'oneFiveStars'  =>
-  static rankingLayers = ['massnahmen_laute', 'massnahmen_leise'];
+  // static rankingLayers = ['massnahmen_laute', 'massnahmen_leise'];
+  // indicate which layers contain measures
+  static ratingMeasureLayers = {
+    'massnahmen_laute': ['geschwindigkeitsbegrenzung', 'fluesterasphalt', 'laermschutzwand', 'nutzungsaenderung'],
+    'massnahmen_leise': ['legalprotection', 'visualenhancement', 'accesibility', 'safety']
+  };
   static noAddingFeatsLayers = ['massnahmen_laute', 'massnahmen_leise'];
   /* layers below will have a default style for LDEN noise map taken from train_LDEN*/
   static urlLegendLDEN = {

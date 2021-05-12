@@ -13,7 +13,7 @@
 <app-layer-panel  [groupLayers] = "groupsLayers"
                  (layerVisClick)="updateMapVisibleLayer($event)"
 (editLayerClick)="updateEditingLayer($event)"  (groupLayerVisClick)="updateMapVisibleGroupLayer($event)"
-(layersOrder) = "updateOrderGroupsLayers($event)" (rankingLayerClick)="startRankingMeasures($event)"
+(layersOrder) = "updateOrderGroupsLayers($event)"
 (identifyLayerClick)="startIdentifying($event)">   </app-layer-panel>
 </div>
 <app-dynamic-form #dynamicForm  [questions]="questionsSubject.asObservable()"

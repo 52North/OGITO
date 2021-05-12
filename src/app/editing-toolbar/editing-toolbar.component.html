@@ -37,9 +37,13 @@
         <mat-icon svgIcon="selectBoxFeature"></mat-icon>
       </button>
 
-      <button mat-icon-button (click)="startEditAction('Rating');showSymbolPanel(false);" matTooltip="Rank element"
+      <button *ngIf="(layerTypeRate$)" mat-icon-button (click)="startEditAction('Rating');showSymbolPanel(false);" matTooltip="Rate element"
               [ngClass]="actionActive['Rating'] ? 'active': 'normal'" >
         <mat-icon>star_rate</mat-icon>
+      </button>
+      <button  *ngIf="(layerTypeRateMeasures$)" mat-icon-button (click)="startEditAction('RankingMeasures');showSymbolPanel(false);" matTooltip="Rate actions"
+              [ngClass]="actionActive['RankingMeasures'] ? 'active': 'normal'" >
+        <mat-icon svgIcon="ratingActionPlan"></mat-icon>
       </button>
 
       <!-- another approach <button mat-icon-button (click)="startEditAction('RatingMeasure');showSymbolPanel(false);" matTooltip="Rank measure"
