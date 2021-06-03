@@ -88,11 +88,16 @@ export class DynamicFormComponent implements OnInit {
   }
   showQuestionValue(elementID: any, value: any){
     console.log('showing value of slider', elementID, value);
+
     const label = document.getElementById(elementID);
     // console.log('label', label);
     if (label)
     { // console.log('label', label);
        label.innerHTML = value; }
+  }
+  stopMoving($event: any){
+    $event.stopImmediatePropagation();
+    console.log('deja de moverse?');
   }
 
 

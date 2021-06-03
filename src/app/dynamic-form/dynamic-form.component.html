@@ -34,12 +34,11 @@
             <div class="sliderLabel">
               <label >{{question.label | titlecase}}: </label>
             </div>
-
             <div>
               <mat-slider  color = 'primary' [formControlName]="question.key" [max]="question.max"
                           [min]="question.min" [thumbLabel]=true  [value]="question.min"
-                           (change) = "showQuestionValue(question.key, $event.value)">{{question.value}}</mat-slider>
-
+                           (change) = "showQuestionValue(question.key, $event.value)">
+              </mat-slider>
             </div>
            <div>  <label id={{question.key}}> {{question.value}} </label></div>
           </div>

@@ -72,6 +72,18 @@
 .active {
   background: #e35183;   //green;
 }
+button:focus {
+  outline: none !important;
+}
+.mat-button-focus-overlay {
+  background-color: transparent!important;
+}
+.normal{
+  background: none;   //green;
+  outline: none;
+}
+
+
 .toolbarDivider {
   background-color: #e35183;  // for testing --
 }

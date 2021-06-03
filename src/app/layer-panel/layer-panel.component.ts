@@ -1,26 +1,30 @@
-import {Component, OnInit, AfterViewInit, Input, Output, EventEmitter, OnChanges} from '@angular/core';
-import {Observable, of as observableOf} from 'rxjs';
+import {Component, OnInit, OnDestroy, Input, Output, EventEmitter} from '@angular/core';
+import {Observable, of as observableOf, Subscription} from 'rxjs';
 import {CdkDragDrop, moveItemInArray} from '@angular/cdk/drag-drop';
 import {OpenLayersService} from '../open-layers.service';
 
 import {MatIconRegistry} from '@angular/material/icon';
 import {DomSanitizer} from '@angular/platform-browser';
+import {QuestionBase} from '../question-base';
 
 @Component({
   selector: 'app-layer-panel',
   templateUrl: './layer-panel.component.html',
   styleUrls: ['./layer-panel.component.scss', '../map/map.component.scss']     // to access the .map css selector
 })
-export class LayerPanelComponent implements OnInit, AfterViewInit {
+export class LayerPanelComponent implements OnInit, OnDestroy{
   // @Input() editLayers: Array<any>;
-  @Input() groupLayers: any;
+  @Input() groupLayers: Observable<{}>;
+  private groupLayersSubscription: Subscription;
+  private showEditToolsSubscription: Subscription;
+  private
+  sgroupLayers: any;
   @Output() layerVisClick = new EventEmitter<any>();   // emit an event when a layer is clicked in the list
   @Output() groupLayerVisClick = new EventEmitter<any>();   // emit an event when a layer is clicked in the list
   @Output() editLayerClick = new EventEmitter<any>();   // emit an event when the edit button of a layer is clicked
   @Output() layersOrder = new EventEmitter<any>();   // emit an event when layers were reordered (drop)
   @Output() identifyLayerClick = new EventEmitter<any>();  // emit the layer to start identifying
   // @Output() rankingLayerClick = new EventEmitter<any>();  // #TODO link in maps
-
   x = 40;
   y = 80;
   startX = 0;
@@ -59,36 +63,30 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
 
   dropExpansion(event: CdkDragDrop<string[]>) {
    // console.log(this.layerAccordion.nativeElement.children);
-   moveItemInArray(this.groupLayers, event.previousIndex, event.currentIndex);
-   this.layersOrder.emit(this.groupLayers);
+   moveItemInArray(this.sgroupLayers, event.previousIndex, event.currentIndex);
+   this.layersOrder.emit(this.sgroupLayers);
    }
 
-
   ngOnInit(): void {
-  console.log('in Layer Panel con delay', this.groupLayers);
   this.layerActive = null;
   this.showLayerPanel$ = observableOf(true);
-  this.openLayersService.showEditLayerPanel$.subscribe(data =>{
-  this.showLayerPanel$ = observableOf(data);
-  },
+
+  this.showEditToolsSubscription = this.openLayersService.showEditLayerPanel$.subscribe(data =>{
+     this.showLayerPanel$ = observableOf(data);  },
     error => console.log('error showing layer panel'));
+
+  /*this.openLayersService.showEditLayerPanel$.subscribe(data =>{
+        this.showLayerPanel$ = observableOf(data);
+      },
+      error => console.log('error showing layer panel'));*/
+
+  this.groupLayersSubscription = this.groupLayers.subscribe(
+      data => {
+        this.sgroupLayers = data;
+       //  console.log ('que tiene this.featureLayer en questionSubscription', data);
+      },
+      error => console.log ('Error in subscription to questions ', error)    );
   }
-
-
-  addingGroupsLayers(){
-  // console.log('primera', this.groupedListDiv.nativeElement.textContent);
-    /*
-     console.log(this.groupLayers);
-     const  textgroup = document.createElement("P");                 // Create a <p> element
-     textgroup.innerHTML = "This is a paragraph.";
-       // Insert text
-     this.groupedListDiv.nativeElement.appendChild(textgroup);
-     */
-     }
-
-     ngAfterViewInit(){
-       this.addingGroupsLayers();
-     }
 
   updateIdentifyActionInLayers(layerName: string){
     /**
@@ -97,7 +95,7 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
      * #TODO declarar layer as a class and use setters and getters
      */
     console.log('layerName in updateEditActioninLayers', layerName);
-    for (const group of this.groupLayers) {
+    for (const group of this.sgroupLayers) {
       group.layers.forEach(layer => {
           if (layer.layerName.toLowerCase() === layerName.toLowerCase() && layer.onIdentify) {
             layer.onIdentify = false;
@@ -113,7 +111,7 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
        * #TODO declare layer as a class and use setters and getters
        */
       // console.log('layerName in updateEditActioninLayers', layerName);
-      for (const group of this.groupLayers) {
+      for (const group of this.sgroupLayers) {
         group.layers.forEach(layer => {
 
           if (layer.wfs) {
@@ -268,19 +266,10 @@ onPan(event: any): void {
     this.y = this.startY + event.deltaY;
   }
 
-  onEditListChange($event, selectedList, options){
-    /**
-     * Updates layers order on the map. This is for editable layers
-     * @param $event: the event emitted
-     * @param selectedList: list of layers being selected to become visible
-     */
-    this.selectedOptions = selectedList.map(s => s.value);
-    console.log('sigo', this.selectedOptions);
-    // Actualizando las lista de las capas
-    //this.layerListChanged.emit(this.selectedOptions);  // emit the change
-    //console.log('que tiene this.layerListChanged ', this.layerListChanged);
-    // #TODO uncomment this.openLayersService.updateVisLayers(this.selectedOptions);
-    }
+ngOnDestroy(){
+  this.showEditToolsSubscription.unsubscribe();
+  this.groupLayersSubscription.unsubscribe();
+}
 
 
   onSelectedChanged($event: any){
@@ -293,7 +282,7 @@ onPan(event: any): void {
 
 
   findLayerinGroups(layerName: string): any {
-    for (const group of this.groupLayers) {
+    for (const group of this.sgroupLayers) {
       const lyr = group.layers.find(x => x.layerName.toLowerCase() === layerName.toLowerCase());
       if (lyr) {
         // console.log ('la consigue en los grupos', lyr);
@@ -314,7 +303,6 @@ onPan(event: any): void {
     // update visible of the layer in the variable
     const tlayer = this.findLayerinGroups(layer.layerName);
     tlayer.visible = true;
-    // console.log('layer visibility updated', layer, groupName, this.groupLayers);
     this.layerVisClick.emit({layer, groupName});
 }
 
@@ -325,13 +313,10 @@ onGroupLayerVisClick(  $event: any, layer: any){
      */
     $event.preventDefault();
     $event.stopImmediatePropagation();
-    // console.log ('layergroup being emitted', layer, this.groupLayers);
     // update visible of the group in the global variable groupLayers
-    const tgroup = this.groupLayers.find(x => x.groupName === layer.groupName);
+    const tgroup = this.sgroupLayers.find(x => x.groupName === layer.groupName);
     tgroup.visible = true;
-    // console.log('layerGroup visibility updated', layer, this.groupLayers);
-
-    // emit the event to update the group visibility in the map
+     // emit the event to update the group visibility in the map
     this.groupLayerVisClick.emit(layer);  // emit the change
   }
 }

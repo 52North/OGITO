@@ -3,8 +3,8 @@ import {Observable, Subscription, of as observableOf} from 'rxjs';
 import {OpenLayersService} from '../open-layers.service';
 import { MatIconRegistry } from "@angular/material/icon";
 import {DomSanitizer} from "@angular/platform-browser";
-
-import {MapQgsStyleService} from '../map-qgs-style.service';
+// import {FocusMonitor, FocusOrigin} from '@angular/cdk/a11y';
+// import {MapQgsStyleService} from '../map-qgs-style.service';
 import {AppConfiguration} from '../app-configuration';
 
 
@@ -13,9 +13,11 @@ import {AppConfiguration} from '../app-configuration';
   templateUrl: './editing-toolbar.component.html',
   styleUrls: ['./editing-toolbar.component.scss']
 })
-export class EditingToolbarComponent implements OnInit {
+export class EditingToolbarComponent implements OnInit{
   @ViewChild('symbolList', { static: false })
   symbolList?: ElementRef<HTMLElement>;
+  /* @ViewChild('editToolbar') editToolbar: ElementRef <HTMLElement>;
+  editToolbarOrigin = this.formatOrigin(null); */
   x = 0;
   y = 0;
   startX = 0;
@@ -57,7 +59,11 @@ export class EditingToolbarComponent implements OnInit {
     this.y = this.startY + event.deltaY;
   }
 
-constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private openLayersService: OpenLayersService) {
+constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private openLayersService: OpenLayersService,
+            /*private _focusMonitor: FocusMonitor,
+            private _cdr: ChangeDetectorRef,
+            private _ngZone: NgZone */
+) {
   iconRegistry.addSvgIcon(
     'add_line',
     sanitizer.bypassSecurityTrustResourceUrl('assets/img/baseline-line-nodes-24px.svg')
@@ -112,6 +118,21 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
     }
   );
   }
+ /*
+  formatOrigin(origin: FocusOrigin): string {
+    return origin ? origin + ' focused' : 'blurred';
+  }
+
+  ngAfterViewInit() {
+   this._focusMonitor.monitor(this.editToolbar, true)
+      .subscribe(origin => this._ngZone.run(() => {
+        this.editToolbarOrigin = this.formatOrigin(origin);
+        this._cdr.markForCheck();
+      }));
+  }
+  ngOnDestroy() {
+    this._focusMonitor.stopMonitoring(this.editToolbar);
+  } */
 
   updateLayerTypeRanking(layerName: string) {
     // console.log('Object.keys(AppConfiguration.ratingMeasureLayers)', Object.keys(AppConfiguration.ratingMeasureLayers));
@@ -168,12 +189,12 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
     this.actionActive[action] = !this.actionActive[action];
     // change the rest of interactions to false
     for (const key in this.actionActive ) {
-      // console.log("otra...this.actionActive[key]",key,this.actionActive[key]);
       if ((key !== action) && (true === this.actionActive[key]))
       {
         this.actionActive[key] = !this.actionActive[key];
       }
     }
+    console.log('this.actionActive[key]', this.actionActive);
   }
 
   startEditAction(action: string){

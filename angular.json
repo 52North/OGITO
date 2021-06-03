@@ -72,7 +72,7 @@
           "configurations": {
             "production": {
               "browserTarget": "myOgito:build:production",
-              "proxyConfig": "src/proxy.conf.json"
+              "proxyConfig": "src/proxy.json"
             }
           }
         },

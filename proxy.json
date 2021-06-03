@@ -1,19 +1,7 @@
 {
-  "/upload/": {
-    "target": "http://ogito.itc.utwente.nl/upload/",   // "http://localhost/upload/",
-    "secure": "false",
-    "logLevel": "debug",
-    "changeOrigin": true
-  },
-  "/tmpfiles/": {
-    "target": "http://ogito.itc.utwente.nl/tmpfiles/",   //"http://localhost/tmpfiles/",
-    "secure": "false",
-    "logLevel": "debug",
-    "changeOrigin": true
-  },
-  "/qgis/": {
-    "target": "http://ogito.itc.utwente.nl/qgis/",    //"http://localhost/qgis/"
-    "secure":  false,
+  "/graphql/*": {
+    "target": "http://130.89.6.97:5000",
+    "secure": false,
     "logLevel": "debug",
     "changeOrigin": true
   }

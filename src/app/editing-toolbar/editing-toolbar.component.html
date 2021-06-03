@@ -4,7 +4,7 @@
 <mat-card>
  <!--  <mat-divider [vertical]="true"></mat-divider> -->
   <div class="container">
- <div>
+ <div #editToolbar>
     <mat-toolbar>
       <button   *ngIf= " (layerTypeEdit$ == 'Point' || layerTypeEdit$ == 'Multi'|| layerTypeEdit$ == 'MultiPoint') " mat-icon-button
                 (click)="drawingShapes('Point')" matTooltip="Add point/marker" [ngClass]="actionActive['Point'] ? 'active': 'normal'">

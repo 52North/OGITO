@@ -25,6 +25,7 @@ export class AppConfiguration{
   static projDefs = {
     25832: '+proj=utm +zone=32 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs',
   };
+  // raster icon used as symbol for WMS layers
   static rasterIcon =  'data:image/png;base64,' + 'iVBORw0KGgoAAAANSUhEUgAAACYAAAAmCAYAAACoPemuAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAXE' +
     'gAAFxIBZ5/SUgAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAIJSURBVFiF7dfNSxVhFMfxz71zkd40X1KzrZgmQRQF/Qkt2oSLWvive' +
     'HkIyoyyPyhKsqjoDSK5ILbIlXsX6tUZp0UpNi+kBGkx39XwnPN75vfAM+fMoeI/obbzEIRjmMNAJqeNySB8yoqDcArP0ZcJbdTV7zQ1vxRouvEM3Zn' +
@@ -45,7 +46,7 @@ export class AppConfiguration{
      'intensity_bus': {min: 0, max: 10},
   };
   static fieldsOrder = {
-    'laute_orte': {
+    'laute_Orte': {
        'name': 1,
        'laermquelle_auto': 2,
        'intensitaet_auto': 3,
@@ -53,10 +54,10 @@ export class AppConfiguration{
        'intensitaet_schiene': 5,
        'laermquelle_sonstiges': 6,
        'intensitaet_sonstiges': 7,
-       'laerm_morgens': 8,
-       'laerm_tagsuber': 9,
-       'laerm_abends': 10,
-       'laerm_nachts': 11
+       'noise_morgens': 8,
+       'noise_tagsuber': 9,    // noise must be changed to laerm
+       'noise_abends': 10,
+       'noise_nachts': 11
     }
     };
   static ratingPrex = {
@@ -74,13 +75,16 @@ export class AppConfiguration{
   // static rankingLayers = ['massnahmen_laute', 'massnahmen_leise'];
   // indicate which layers contain measures
   static ratingMeasureLayers = {
-    'massnahmen_laute': ['geschwindigkeitsbegrenzung', 'fluesterasphalt', 'laermschutzwand', 'nutzungsaenderung'],
-    'massnahmen_leise': ['legalprotection', 'visualenhancement', 'accesibility', 'safety']
+    massnahmen_laute: ['geschwindigkeitsbegrenzung', 'fluesterasphalt', 'laermschutzwand', 'nutzungsaenderung'],
+    massnahmen_leise: ['schutz', 'visuelle _verbesserung', 'zuganglichkeit_verbessern', 'zuganglichkeit_verbessern']
   };
   static noAddingFeatsLayers = ['massnahmen_laute', 'massnahmen_leise'];
   /* layers below will have a default style for LDEN noise map taken from train_LDEN*/
   static urlLegendLDEN = {
     'GECCO Noise Munster': {'IVU_LDEN': '', 'SCH_Bund_LDEN': '', 'SCH_Sonstige_LDEN': '', 'STR_LDEN': ''}
   };
+  static totalPopBochumArea =  64966.73;  // Result of the SQL query: select sum(population.value) as Sum   from population
+  static noiseGroupName = 'Laermkarten';  // in lower case
 
+  static nameSessionGroup = 'sessionGroup';
 }

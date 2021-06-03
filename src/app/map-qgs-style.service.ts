@@ -305,7 +305,7 @@ export class MapQgsStyleService {
     const capRequest = '&REQUEST=GetStyles';
     const wmsVersion = 'SERVICE=WMS&VERSION=' + AppConfiguration.wmsVersion;
     const urlStyle = qGsServerUrl + wmsVersion + capRequest + qGsProject + '&LAYERS=' + layerList;
-    console.log('urlStyle in createAllLayerStyles', urlStyle);
+    // console.log('urlStyle in createAllLayerStyles', urlStyle);
     const xmlStyles = fetch(urlStyle)
       .then(response => response.text())
       .then(text => {

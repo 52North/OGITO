@@ -1,4 +1,4 @@
-import {AfterViewInit, Component, ElementRef, Inject, OnDestroy, OnInit, ViewChild} from '@angular/core';
+import {AfterViewInit, Component, ElementRef, EventEmitter, Inject, OnDestroy, OnInit, Output, ViewChild} from '@angular/core';
 import {MatSnackBar, MatSnackBarHorizontalPosition, MatSnackBarVerticalPosition} from '@angular/material/snack-bar';
 import {MatDialog, MatDialogRef, MAT_DIALOG_DATA} from '@angular/material/dialog';
 import {Subject, Subscription} from 'rxjs';
@@ -19,9 +19,7 @@ import {platformModifierKeyOnly} from 'ol/events/condition';
 import WFS from 'ol/format/WFS';
 import GML from 'ol/format/GML';
 import WMSCapabilities from 'ol/format/WMScapabilities.js';
-import TileLayer from 'ol/layer/Tile';
-import WMTS, {optionsFromCapabilities} from 'ol/source/WMTS';
-import WMTSCapabilities from 'ol/format/WMTSCapabilities';
+
 import {click} from 'ol/events/condition.js';
 import Overlay from 'ol/Overlay';
 import {
@@ -57,15 +55,19 @@ import {QuestionBase} from '../question-base';
 import {DynamicFormComponent} from '../dynamic-form/dynamic-form.component';
 import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
 import {FormControl, FormGroup, Validators} from '@angular/forms';
+import {DialogPopulationExposedComponent} from '../dialog-population-exposed/dialog-population-exposed.component';
+import {request, gql} from 'graphql-request';
+import {switchAll} from 'rxjs/operators';
 
 // To use rating dialogs
 export interface DialogData {
+  layerList: any;
   layerNameDialog: string;
   rating: number;
   fieldNames: any;
 }
 
-// To use rating measure dialogs
+
 
 @Component({
   selector: 'app-map',
@@ -77,6 +79,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
   /**
    * Elements that make up the popup.
    */
+  @Output() updateLayerList = new EventEmitter<any>();
   @ViewChild('popup', {static: false}) container: ElementRef;  // the variable here is container, popup the html element
   @ViewChild('content', {static: false}) content: ElementRef;
   @ViewChild('closer', {static: false}) closer: ElementRef;
@@ -87,6 +90,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 
   questionsSubject: Subject<QuestionBase<string>[]> = new Subject<QuestionBase<string>[]>();
   showFormSubject: Subject<boolean> = new Subject<boolean>();
+  groupsLayersSubject: Subject<{}> = new Subject<{}>();
   featureLayerForm: {};
   payload: any;
   // dataForm = new Subject <any>();
@@ -106,6 +110,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
   fieldWFSLayers = {};
   layerStyles = {};
   selectStyle: any;
+  popExposedStyle: any;
   qgsProjectFile: string;
   qGsServerUrl: string;
   // map interactions
@@ -158,6 +163,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
   subsTocurrentSymbol: Subscription;
   subsToSaveCurrentLayer: Subscription;
   subsToZoomHome: Subscription;
+  subsToFindPopExposed: Subscription;
   subsToSelectProject: Subscription;
 
   constructor(private mapQgsStyleService: MapQgsStyleService,
@@ -209,6 +215,14 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       },
       error => alert('Error starting zooming Home' + error)
     );
+    this.subsToFindPopExposed = this.openLayersService.findPopExposed$.subscribe(
+      data => {
+        if (data) {
+          this.findPopExposed();
+        }
+      },
+      error => alert('Error starting finding exposed people' + error)
+    );
 
     this.subsToSelectProject = this.openLayersService.qgsProjectUrl$.subscribe(
       data => {
@@ -226,6 +240,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       // starts an action and stop the others..is this ready with stop interactions?
       data => {
         console.log('que viene', data);
+        console.log('map interactions', this.map.getInteractions());
         this.removeInteractions();
         if (this.helpTooltip) {
           console.log('entra aqui..');
@@ -312,7 +327,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     const fieldsNames =  AppConfiguration.ratingMeasureLayers[layerName];
     console.log('fieldsNames in openDialogRankingMeasures in ' + layerName, fieldsNames);
 
-    const dialogRef = this.dialog.open(DialogRatingMeasureDialog,{
+    const dialogRef = this.dialog.open(DialogRatingMeasureDialog, {
       width: '400px',
       data: {layerNameDialog: ratingName, fieldNames: fieldsNames, ranking: this.ranking}
     });
@@ -333,7 +348,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
    // #TODO change this title
     // const ratingName =  layerName === 'leise_orte_Obs' ? 'Leise Orte' : 'Measures';
     const ratingName = 'Leise Orte';
-    const dialogRef = this.dialog.open(DialogRatingDialog,{
+    const dialogRef = this.dialog.open(DialogRatingDialog, {
       width: '300px',
       data: {layerNameDialog: ratingName, rating: this.rating}
     });
@@ -350,9 +365,293 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
+  findPopExposed(){
+    const lowlevel = 0;
+    const highlevel = 0;
+    const layerList = [];  // ['straat', 'IVU', 'train'];  // temporal later pass the list from the group laemkarten
+    let selectedLayer: any;
+    let noiseGroup: any;
+    // find the layers
+    this.map.getLayers().forEach(layer => {
+        // console.log ('layer', layer.get('name'), AppConfiguration.noiseGroupName, AppConfiguration.noiseGroupName===layer.get('name'));
+        if (layer.get('name') === AppConfiguration.noiseGroupName) {
+          noiseGroup = layer;
+          return;
+       }
+      });
+    // console.log('noiseGroup', noiseGroup);
+    if (noiseGroup) {
+
+       noiseGroup.getLayers().forEach(
+         lyr  => {
+           layerList.push(lyr.get('name'));
+        });
+     }
+    // console.log('noiseGroup, layerList', layerList, noiseGroup);
+    const dialogPopExposed = this.dialog.open(DialogPopulationExposedComponent, {
+      width: '300px',
+      data: {layerList, lowlevel, highlevel, selectedLayer}
+    });
+
+    dialogPopExposed.afterClosed().subscribe(data => {
+      // console.log('the data from the form', data);
+      // do something
+      if (data){
+        // data is different to undefined
+        this.queryDBPopNoise(data);  // selectedLayer, lowlevel and highlevel
+      }
+    });
+  }
+
+  queryDBPopNoise(data: any) {
+    /**
+     * executes the query calling the DB API function to find people exposure under certain range of noise
+     * @param data.selectedLayer: string --> name of layer
+     * @param data.lowLevel: number --> low level for the range
+     * @param data.highLevel: number --> high level for the range
+     */
+    let query: any;
+    let layerName: string;
+    const lowLevel = + data.lowLevel;
+    const highLevel = + data.highLevel;
+    switch (data.selectedLayer.toLowerCase()) {
+     case 'straassenlaerm_lden': {
+     query = gql`
+      query {
+      populationStraassenlaermLden (dblow: ` + lowLevel + `dbhigh:` + highLevel + `) {
+       totalCount
+       nodes {
+        id
+        value
+        geom {
+          geojson
+          srid
+        }
+       }
+      }
+    }
+    `;
+     layerName = 'Pop' + 'straassen_lden' + '_' + lowLevel + '_' + highLevel;
+     break;
+      }
+    }
+
+    request('http://localhost:4200/graphql', query)
+      .then(result => {
+        // console.log('data', result);
+
+        this.processPopLden(result.populationStraassenlaermLden, layerName );
+      });
+  }
+
+    // http://localhost:4200/graphql--> by proxy diverted to http://130.89.6.97:5000/graphql
+
+   createStyleExposedPop(){
+     /** set the style function for the population exposed
+      *
+      **/
+     this.popExposedStyle = feature => {
+      let defaultStyle = new Style({
+        fill: new Fill({
+          color: 'red'
+        })
+      });
+      let valuePop = + feature.get('value');
+      if (valuePop > 1.6 && valuePop < 5.6) {
+        defaultStyle = new Style({
+          fill: new Fill({
+            color: '#fbf9fd'
+          })
+        });
+        return defaultStyle;
+      }
+      // 2.6 - 9.5
+      if (valuePop >= 5.6 && valuePop < 9.5) {
+        defaultStyle = new Style({
+          fill: new Fill({
+            color: '#dcdcec'
+          })
+        });
+        return defaultStyle;
+      }
+      // 9.5 - 13.5
+      if (valuePop >= 9.5 && valuePop < 13.5) {
+        defaultStyle = new Style({
+          fill: new Fill({
+            color: '#a3a0cb'
+          })
+        });
+        return defaultStyle;
+      }
+      // 13.5 - 17.5
+      if (valuePop >= 13.5 && valuePop < 17.5) {
+        defaultStyle = new Style({
+          fill: new Fill({
+            color: '#6a51a3'
+          })
+        });
+        return defaultStyle;
+      }
+      // 13.5 - 17.5
+      if (valuePop >= 17.5) {
+        defaultStyle = new Style({
+          fill: new Fill({
+            color: '#3f007d'
+          })
+        });
+        return defaultStyle;
+      }
+    }
+
+   }
+
+
+    processPopLden(data, layerName: string) {
+     // initialize the popExposedStyle
+
+      // start to process the data, get the sum
+      console.log ('data.nodes[2]', JSON.parse(data.nodes[1].geom.geojson));
+      const popExposed = Math.round(data.nodes.reduce((sum, current) => sum + Number(current.value), 0) *100/100);
+      const popShare =  Math.round(popExposed / AppConfiguration.totalPopBochumArea * 100)
+      console.log('Sum Pop', popExposed , 'Share =', popShare);
+      // snackbar here
+      this.snackBar.open('Approximated Ppopulation exposed: ' +
+        popExposed + '. This is a share of: ' + popShare + '%. Result can be explored in the layer Panel', 'ok',
+        { horizontalPosition: 'center',
+          verticalPosition: 'bottom',
+          duration: 10000});
+      // load the layer - creates a group if needed
+      this.loadJson(data.nodes, layerName);
+    }
+
+
+  loadJson(geoJsonArray: any, layerName: string) {
+    // build features
+    const features = [];
+    geoJsonArray.forEach(f => {
+      const geojson = JSON.parse(f.geom.geojson);
+      const geoJsonNode =  {
+          type: 'Feature',
+          geometry: {
+            type: geojson.type,
+            coordinates: geojson.coordinates,
+            value: f.value,
+          },
+         properties: {
+          value: f.value,   // value is used in the style
+          id: f.id
+         }
+        };
+      // console.log('geoJsonNode', geoJsonNode);
+      features.push(geoJsonNode);
+    });
+    // console.log('features', features);
+    const geojsonObject = {
+      type: 'FeatureCollection',
+      crs: {
+        type: 'name',
+        properties: {
+          name: 'EPSG:25832',
+        },
+      },
+      features
+    };
+    // set the style function
+    this.createStyleExposedPop();
+    const vectorSource = new VectorSource({
+      features: new GeoJSON().readFeatures(geojsonObject),
+    });
+    const vectorLayer = new VectorLayer({
+      source: vectorSource,
+      name: layerName,
+      style: this.popExposedStyle,
+      visible: false,
+      opacity: 0.5
+    });
+    // add the layer to the map
+    // this.map.addLayer(vectorLayer);
+    const fieldstoShow = [{name: 'value', type: 'QString', typeName: 'varchar', comment: ''}]
+
+    this.addSessionLayer(vectorLayer, fieldstoShow);
+  }
+
+  addLayerGroupLayerPanel(layerName: any, fieldsToShow: any){
+    // add configuration to the layer to be added in a group
+    let layers = [];
+    const layerItem = {fields: fieldsToShow,  // add a generic name
+    geometryType: null,
+    layerForNewFeatures: false,
+    layerForRanking: false,
+    layerLegendUrl: null,   // que hacer aqui?
+    layerName,
+    layerTittle: layerName,
+    legendLayer: null,
+    onEdit: false,
+    onIdentify: false,
+    onRanking: false,
+    visible: false,
+    wfs: false };
+    // add the item to an array;
+    layers.push(layerItem);
+    // group does not exist
+    if (!(this.groupsLayers.findIndex(x => x.groupName === AppConfiguration.nameSessionGroup) >= 0 )){
+      this.groupsLayers.push({groupName: AppConfiguration.nameSessionGroup,
+        groupTittle: AppConfiguration.nameSessionGroup,
+        visible: false,
+        layers});
+      // console.log('this.groupsLayers in addSessionLayer', this.groupsLayers);
+      return;
+    }
+   // group does exists
+    const group = this.groupsLayers.find(x => x.groupName === AppConfiguration.nameSessionGroup);
+    group.layers.push(layerItem);
+    this.groupsLayersSubject.next(this.groupsLayers);
+    this.snackBar.open('Results were added to the layer Panel', 'ok',
+      { horizontalPosition: 'center',
+        verticalPosition: 'top',
+        duration: 5000});
+    return;
+  }
+
+  addSessionLayer(layer: any, fieldstoShow: any){
+  /**
+   *   Add a layer in a 'session group', layers are sketch or queries result
+   *   @param: layer with the vector source associated
+   */
+  // check if group exist
+  // tslint:disable-next-line:max-line-length
+  if (!(this.map.getLayers().getArray().findIndex(x => AppConfiguration.nameSessionGroup.toLowerCase() === x.get('name').toLowerCase()) > 0)){
+      // group does not exist, create it.
+      const newGroup = new LayerGroup({
+        name: AppConfiguration.nameSessionGroup,
+        layers: [],
+        visible: false,
+        zIndex: 100
+      });
+      this.map.addLayer(newGroup);
+      newGroup.getLayers().push(layer);
+      this.addLayerGroupLayerPanel(layer.get('name'), fieldstoShow);
+      return;
+    }
+  let group: any;
+  this.map.getLayers().forEach(
+      grp => {
+       if (grp.get('name').toLowerCase()  === AppConfiguration.nameSessionGroup.toLowerCase()){
+         console.log('group found in addSessionLayer', grp.get('name').toLowerCase() );
+         group = grp;
+       }
+      });
+    // add the layer
+  console.log('group found OUTSIDE in addSessionLayer', group);
+  group.getLayers().push(layer);
+  this.addLayerGroupLayerPanel(layer.get('name'), fieldstoShow);
+  }
+
+
+
   saveRating(layerName: string, feature: any){
     // how to update the database
-    console.log('layerName feature and rating', layerName, feature, this.rating);
+    // console.log('layerName feature and rating', layerName, feature, this.rating);
     // get the previous value and sum?
     const attrRanking = AppConfiguration.ratingPrex[layerName] + this.rating.toString();
     const newRating = feature.get(attrRanking) + 1; // the number of times that people ranked with 3, 4, 5 starts;
@@ -365,7 +664,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
 
-  saveRatingMeasures(layerName: string, feature: any, rating:any){
+  saveRatingMeasures(layerName: string, feature: any, rating: any){
     // #TODO
     console.log('que llega in saveRatingMeasures', layerName, feature , rating);
     for (const key in rating) {
@@ -380,7 +679,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         }
       }
     }
-    feature.set('sonstiges', rating.sonstiges);
+    feature.set('sonstiges', feature.get('sonstiges') + ' ' + rating['sonstiges']);
     this.saveFeatinBuffer(layerName, feature, 'rating');
     }
 
@@ -410,7 +709,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     return;
      }
 
-    let lyr = this.findLayer(this.curEditingLayer.layerName);
+    const lyr = this.findLayer(this.curEditingLayer.layerName);
     if (lyr === null) {
       // alert('Error retrieving current layer');
       this.snackBar.open('Error retrieving current layer 2', 'ok',
@@ -428,11 +727,11 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       style: this.selectStyle,
     });
     this.map.addInteraction(this.select);
-    console.log('Interactions in the map in startRating', this.map.getInteractions());
+    // console.log('Interactions in the map in startRating', this.map.getInteractions());
     this.select.on('select', (e) => {
 
       const selectedFeatures = e.target.getFeatures().getArray();
-      console.log('selectedFeatures', selectedFeatures );
+      // console.log('selectedFeatures', selectedFeatures );
       if (selectedFeatures.length <= 0) {
         this.snackBar.open('No features selected', 'ok',
           { horizontalPosition: 'center',
@@ -469,6 +768,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
           // #TODO check if we should use a promise here, create styles then load wfs layers
           this.workQgsProject();
           this.setIdentifying();
+
          });
      }
        )
@@ -476,6 +776,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 
 
   }
+
+
 
   async parseQgsProject(gqsProjectinfo: any){
     /**
@@ -608,6 +910,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     if (wfsLayerList.length > 0) {
       this.mapQgsStyleService.createAllLayerStyles(this.qGsServerUrl, this.qgsProjectFile, wfsLayerList);
     }
+    // update the observable for layerPanel
+    this.groupsLayersSubject.next(this.groupsLayers);
 
     this.questionService.setQuestions(this.groupsLayers);
   }
@@ -867,6 +1171,9 @@ ngAfterViewInit() {
       return false;
     };
 
+  // setting the listener for changes in the map layerGroup
+   // this.setLayerGroupChange();
+
   }
 
 zoomToHome() {
@@ -879,7 +1186,7 @@ zoomToHome() {
     this.map.getView().setCenter([this.mapCenterXY[0], this.mapCenterXY[1]]);
   }
 
-prepareLoadWMSLayers(qGsServerUrl: string, capRequest: string, qGsProject:string ){
+prepareLoadWMSLayers(qGsServerUrl: string, capRequest: string, qGsProject: string ){
   // request getCapabilities to load WMS images
   const wmsVersion = 'SERVICE=WMS&VERSION=' + AppConfiguration.wmsVersion;
   const urlWMS = qGsServerUrl + wmsVersion + capRequest + qGsProject;
@@ -971,16 +1278,16 @@ loadWMSlayers(urlWMS: string, xmlCapabilities: WMSCapabilities) {
         console.log('no layers in WMS');
         return;
       }
-      console.log('xmlCapabilities in WMS', xmlCapabilities);
-      console.log('this.loadedWfsLayers', this.loadedWfsLayers);
+      // console.log('xmlCapabilities in WMS', xmlCapabilities);
+      // console.log('this.loadedWfsLayers', this.loadedWfsLayers);
 
       const layerList = xmlCapabilities.Capability.Layer.Layer;
       layerList.forEach(layer => {
-      console.log('aqui a nivel de grupo ' + layer.Name, !this.loadedWfsLayers.find(x => x.layerName.toLowerCase() === layer.Name.toLowerCase()));
+      // console.log('aqui a nivel de grupo ' + layer.Name, !this.loadedWfsLayers.find(x => x.layerName.toLowerCase() === layer.Name.toLowerCase()));
       if (this.loadedWfsLayers.findIndex(x => x.layerName.toLowerCase() === layer.Name.toLowerCase()) === -1) {
           if (!layer.hasOwnProperty('Layer')) {
             // it is a simple WMS layer without a group
-            console.log(' adding a simple layer..', layer.Name);
+            // console.log(' adding a simple layer..', layer.Name);
             const WMSSource = new ImageWMS({
               url: urlWMS,
               params: {LAYERS: layer.Name},
@@ -1002,12 +1309,12 @@ loadWMSlayers(urlWMS: string, xmlCapabilities: WMSCapabilities) {
           }
           if (layer.Layer.length > 0) {
             // layer is a group and has layers in an array
-            console.log('Entra aqui KKKKKK', layer.Name );
+            // console.log('Entra aqui KKKKKK', layer.Name );
             layer.Layer.forEach(lyr => {
              // console.log( lyr.Name.toLowerCase() + ' layer is WFS?', this.loadedWfsLayers.findIndex(x => x.layerName.toLowerCase() === lyr.Name.toLowerCase()));
              // console.log('condition', this.loadedWfsLayers.findIndex(x => x.layerName.toLowerCase() === lyr.Name.toLowerCase()) === -1);
              if (this.loadedWfsLayers.findIndex(x => x.layerName.toLowerCase() === lyr.Name.toLowerCase()) === -1) {
-               console.log('addding ' + lyr.Name.toLowerCase(), 'condition:', this.loadedWfsLayers.findIndex(x => x.layerName.toLowerCase() === lyr.Name.toLowerCase()) === -1 );
+               // console.log('addding ' + lyr.Name.toLowerCase(), 'condition:', this.loadedWfsLayers.findIndex(x => x.layerName.toLowerCase() === lyr.Name.toLowerCase()) === -1 );
                const WMSSource = new ImageWMS({
                  url: urlWMS,
                  params: {LAYERS: lyr.Name},
@@ -1287,8 +1594,8 @@ enableAddShape(shape: string) {
             stopClick: true,    // not clicks events will be fired when drawing points..
             style: this.getEditingStyle()
           });
-          console.log('TRY WITHOUT REMOVING INTERACTIONS');
-          this.removeDragPinchInteractions();  // a ver si el mapa deja de moverse cuando se dibuja
+          console.log('TRYING WITHOUT REMOVING INTERACTIONS');
+          // this.removeDragPinchInteractions();  // a ver si el mapa deja de moverse cuando se dibuja
           break;
         }
         case 'LineString': {
@@ -1931,13 +2238,13 @@ updateEditingLayer(layerOnEdit: any) {
       // a layer was being edited - ask for saving changes
       this.stopEditing();
     }
-    this.curEditingLayer = null;
-    return;
+   this.curEditingLayer = null;
+   return;
   }
   if (this.curEditingLayer) {
     // a layer was being edited - ask for saving changes
     this.stopEditing();  // test is changes are save to the right layer, otherwise it should go #
-    //layer = this.loadedWfsLayers.find(x => x.layerName === layerOnEdit.layerName);
+    // layer = this.loadedWfsLayers.find(x => x.layerName === layerOnEdit.layerName);
     layer = this.loadedWfsLayers.find(x => x.layerName === layerOnEdit.layer.layerName);
     // layer contains the source.
     if (this.curEditingLayer === layer) {
@@ -1947,9 +2254,9 @@ updateEditingLayer(layerOnEdit: any) {
     }
   }
   // the user wants to switch to another layer, already the edit was stopped with the previous layer
-   layer = this.loadedWfsLayers.find(x => x.layerName === layerOnEdit.layer.layerName);
-   this.curEditingLayer = layer;
-   this.startEditing(layer);
+  layer = this.loadedWfsLayers.find(x => x.layerName === layerOnEdit.layer.layerName);
+  this.curEditingLayer = layer;
+  this.startEditing(layer);
  }
 
 
@@ -1981,12 +2288,13 @@ saveEdits(editLayer: any) {
       {
          const result = this.writeTransactWfs(editLayer);
          if (result){
+           result.then(() => {
            this.snackBar.open('Changes saved', 'ok',
              { horizontalPosition: 'center',
                verticalPosition: 'top',
                duration: 3000});
            console.log('result', result);  // TODO send a message
-           return;
+           return; });
          }
       }
       else {
@@ -2085,7 +2393,7 @@ undoLastEdit() {
         break;
       }
       case 'rating': {
-        //apaprently nothing to do here... just delete the last operation and it will delete from the editBffer
+        // apaprently nothing to do here... just delete the last operation and it will delete from the editBffer
         console.log('The last record was done .. so check that the rating was not added');
       }
       case 'delete': {
@@ -2126,6 +2434,9 @@ writeTransactWfs(editLayer: any) {
           case 'delete':
             layerTrs[editLayer.layerName].delete.push(t.feats); // t.feats is one feat #TODO next ver delete several
             break;
+          case 'translate':
+            layerTrs[editLayer.layerName].update.push(t.feats); // t.feats is one feat #TODO next ver delete several
+            break;
           case 'rating':
             layerTrs[editLayer.layerName].update.push(t.feats); // t.feats is one feat
             break;
@@ -2145,7 +2456,7 @@ writeTransactWfs(editLayer: any) {
     // configure nodes.
     const strService = 'SERVICE=WFS&VERSION=' + AppConfiguration.wfsVersion + '&REQUEST=DescribeFeatureType';
     const strUrl = this.qGsServerUrl + strService + '&map=' + this.qgsProjectFile;
-    console.log('strUrl', strUrl);
+
     const formatWFS = new WFS();
     const formatGML = new GML({
       featureNS: 'http://localhost:4200',
@@ -2175,7 +2486,7 @@ writeTransactWfs(editLayer: any) {
               method: 'POST', body: str
             })
               .then(respUpdate => {
-                // console.log('text response update WFS', respUpdate.text());
+                console.log('text response update WFS', respUpdate.text());
                 layerTrs[editLayer.layerName].update = [];
                 if (layerTrs[editLayer.layerName].delete.length > 0) {
                   // Edits should be done in chain... 1)insert, 2)updates, 3) deletes // if enter here only deletes were done
@@ -2210,7 +2521,7 @@ writeTransactWfs(editLayer: any) {
         method: 'POST', body: str
       })
         .then(respUpdate => {
-          // console.log('text response update WFS', respUpdate.text());
+          console.log('text response update WFS', respUpdate.text());
           layerTrs[editLayer.layerName].update = [];
           if (layerTrs[editLayer.layerName].delete.length > 0) {
             // Edits should be done in chain... 1)insert, 2)updates, 3) deletes // if enter here only deletes were done
@@ -2223,7 +2534,7 @@ writeTransactWfs(editLayer: any) {
                 return respDelete.text();
               })
               .then(textDelete => {
-                // console.log('text response update WFS', textDelete);
+                console.log('text response update WFS', textDelete);
                 layerTrs[editLayer.layerName].delete = [];
                 // console.log('edit array', layerTrs[editLayer.layerName].delete);
               });
@@ -2352,9 +2663,9 @@ startTranslating()
    // clear a previous selection
 
    this.dragBox.on('boxend', () => {
-    console.log('what is happening at draweend this.dragBox.getGeometry()', this.dragBox.getGeometry());
+    // console.log('what is happening at draweend this.dragBox.getGeometry()', this.dragBox.getGeometry());
     const extent = this.dragBox.getGeometry().getExtent();
-    console.log('extent boxend', extent);
+    // console.log('extent boxend', extent);
     if (this.dragBox.getGeometry() == null) {
       return;
     }
@@ -2416,6 +2727,30 @@ startRotating() {
 startCopying()
 {
   }
+replaceNull(field: string):string{
+    if (field){
+      return field;
+    }
+    return ' ';
+}
+
+createReporMeasureLayer(layerOnIdentifyingName: any, featureValues: any): any{
+  const measureList = AppConfiguration.ratingMeasureLayers[layerOnIdentifyingName.toLowerCase()];
+  let text = '';
+  text = text.concat('<tr><td>' + 'id' + '</td><td>' + featureValues['id'] + '</td></tr>');
+  text = text.concat('<tr><td>' + 'Measures' + '</td><td>' + 'Rating 1' + '</td><td>' + 'Rating 2' + '</td><td>' + 'Rating 3' +
+    '</td><td>' + 'Rating 4' + '</td><td>' + 'Rating 5' + '</td></tr>');
+  measureList.forEach(measure => {
+    text = text.concat('<tr><td>' + measure + ' </td><td>' + this.replaceNull(featureValues[measure + '_rank1']) +
+                                              ' </td><td>' + this.replaceNull(featureValues[measure + '_rank2']) +
+                                              ' </td><td>' + this.replaceNull(featureValues[measure + '_rank3']) +
+                                              ' </td><td>' + this.replaceNull(featureValues[measure + '_rank4']) +
+                                              ' </td><td>' + this.replaceNull(featureValues[measure + '_rank5']) + '</td></tr>');
+    });
+  text = text.concat('<tr><td>' + 'Sonstiges' + '</td><td>' + this.replaceNull(featureValues['sonstiges']).slice(0, 50) + '</td></tr>');
+  return(text);
+}
+
 
 displayFeatureInfoWFS(evt) {
     const hdms = toStringHDMS(evt.coordinate);
@@ -2424,14 +2759,14 @@ displayFeatureInfoWFS(evt) {
     const  layerOnIdentifyingName = this.curInfoLayer.get('name');  // this.curInfoLayer is an OL layer object
     const tlayer = this.findLayerinGroups(layerOnIdentifyingName);
     const fieldsToShow = tlayer.fields;
-    console.log('layerOnIdentifyingName in displayFeatureInfoWFS', layerOnIdentifyingName);
+    console.log('layerOnIdentifyingName in displayFeatureInfoWFS', layerOnIdentifyingName, fieldsToShow);
     // #TODO code for getting features from WFS
     const featureValues = this.map.forEachFeatureAtPixel(evt.pixel, feature => {
         // #TODO aqui -- chequear bounding box or margins..
         const valuesToShow = {};
         console.log('feature', feature);
         for (const field of fieldsToShow){
-          // console.log('feature.get(key);', feature.get(key));
+          console.log('feature.get(field);', feature.get(field));
           valuesToShow [field.name] = feature.get(field.name);
         }
         return valuesToShow;   // here return all the values available
@@ -2444,22 +2779,31 @@ displayFeatureInfoWFS(evt) {
       }
     );
     if (featureValues) {
+
       console.log('featureValues', featureValues);
       // Prepare html text with all the information
       let text = '';
-      for (const key in featureValues){
-        if (key !== 'img'){
-          text = text.concat('<tr><td>' + key + '</td><td>' + featureValues[key] + '</td></tr>');
+      if  (AppConfiguration.ratingMeasureLayers.hasOwnProperty(layerOnIdentifyingName)) {
+      // create the table for rating measures
+       text = text  + this.createReporMeasureLayer(layerOnIdentifyingName, featureValues);
+      }
+      // report normal layer
+      else {
+        for (const key in featureValues){
+          if (key !== 'img'){
+            text = text.concat('<tr><td>' + key + '</td><td>' + featureValues[key] + '</td></tr>');
+          }
+        }
+        if (featureValues.img )  // the property img exists
+        {
+          // visualize img if any  --> document somewhere that we will look for a field called 'img'
+          console.log('pasa X AQUI');
+          const folder = AppConfiguration.curProject.substring(0, AppConfiguration.curProject.lastIndexOf('/'));
+          text = text.concat(
+            '<tr><img class=imgInfo src="' + folder + '/img/' + featureValues.img + '" alt="picture"></tr>');
         }
       }
-      if (featureValues.img )  // the property img exists
-      {
-        // visualize img if any  --> document somewhere that we will look for a field called 'img'
-        console.log('pasa X AQUI');
-        const folder = AppConfiguration.curProject.substring(0, AppConfiguration.curProject.lastIndexOf('/'));
-        text = text.concat(
-          '<tr><img class=imgInfo src="' + folder + '/img/' + featureValues.img + '" alt="picture"></tr>');
-      }
+
       // this.content.nativeElement.innerHTML = 'Element:<br><code>' + text + '</code>';  // featureValues
       // this.content.nativeElement.innerHTML = '<div id="popupDiv">' + '<b> Element</b> </br>' + '<code>' + text + '</code>' + '</div>';
       this.content.nativeElement.innerHTML = '<div id="popupDiv">' +
@@ -2580,7 +2924,7 @@ startIdentifying(layerOnIdentifying: any)
       return;
     }
 
-    let lyr = this.findLayer(this.curEditingLayer.layerName);
+    const lyr = this.findLayer(this.curEditingLayer.layerName);
     console.log(' lyr and style in ranking', lyr);
     if (lyr === null) {
       // alert('Error retrieving current layer');
@@ -3044,7 +3388,7 @@ export class DialogRatingMeasureDialog {
     this.data.rating = value;
   }
 
-  showQuestionValue(elementID: any, value:any){
+  showQuestionValue(elementID: any, value: any){
   // here code to show the value of the slider
   const label = document.getElementById(elementID);
   if (label)  {

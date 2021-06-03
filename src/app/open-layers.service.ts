@@ -30,6 +30,10 @@ export class OpenLayersService {
   zoomHome$ = this.zoomHomeSource.asObservable();
   private qgsProjectUrlSource = new Subject<any>();
   qgsProjectUrl$ = this.qgsProjectUrlSource.asObservable();
+  private findPopExposedSource = new Subject<any>();  // Population exposed to certain level of noise
+  findPopExposed$ = this.findPopExposedSource.asObservable();
+
+
   constructor() { }
 
   updateExistingProject(projectOpened: boolean){
@@ -109,5 +113,11 @@ export class OpenLayersService {
      * @param symbol: style to be used to draw current feature
      */
     this.currentSymbolSource.next(symbol);
+  }
+  updateFindPopExposed(data: any) {
+    /** Updates the observable popExposed to the next value
+     * @param data: the result of the query returned by the API
+     */
+    this.findPopExposedSource.next(data);
   }
 }

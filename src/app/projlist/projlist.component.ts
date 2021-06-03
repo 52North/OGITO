@@ -51,7 +51,7 @@ export class ProjlistComponent implements OnInit {
     this.showProjectList$ = observableOf(value);
   }
   setProject(project: any) {
-    console.log(project);
+
     // test 30-03 this.selectProject.emit(project);
     this.openLayersService.updateQgsProjectUrl(project);
     this.updateShowProjectList(false);

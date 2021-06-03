@@ -55,7 +55,9 @@ footer a {
 
 @media screen and (min-width: 900px) {
   .mat-toolbar {
-    background-color: #78002e; // primary dark color only for test removed later to keep the primary color
+   // background-color: #78002e; // primary dark color only for test removed later to keep the primary color
+    // test for GECCO
+    background-color: #3F51B5;
   }
   .mat-icon {
     font-size: 24px;
@@ -66,7 +68,8 @@ footer a {
 }
   @media screen and (min-width: 1400px){
     .mat-toolbar {
-      background-color: #ad1457; // primary normal color only for test removed later to keep the primary color
+      // background-color: #ad1457; // primary normal color only for test removed later to keep the primary color
+      background-color: #3F51B5;
     }
     .mat-icon {
         font-size: 36px;
@@ -76,7 +79,8 @@ footer a {
 
   @media screen and (min-width: 1900px){
     .mat-toolbar  {
-      background-color: darkred;  // only for test removed later to keep the primary color
+      // background-color: darkred;  // only for test removed later to keep the primary color
+      background-color: #3F51B5;
       .mat-icon {
         font-size: 48px;
       }

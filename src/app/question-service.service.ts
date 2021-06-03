@@ -24,7 +24,7 @@ export class QuestionService {
   updateShowEditForm(showForm: boolean){
     this.showEditFormSource.next(showForm);
   }
- setLayerQuestions(layerName: string, qgisFieldList:any) {
+ setLayerQuestions(layerName: string, qgisFieldList: any) {
     /**
      * forms the question from a list of fields;
      */
@@ -33,6 +33,7 @@ export class QuestionService {
   let question = null;
   let orderInLayer = false;
   // check if there is an specific order
+  // console.log(' no la consigue + typeof(AppConfiguration.fieldsOrder[layerName])',layerName, typeof(AppConfiguration.fieldsOrder[layerName]));
   if (typeof(AppConfiguration.fieldsOrder[layerName]) !== 'undefined'){
      orderInLayer = true;
    }
@@ -101,7 +102,7 @@ export class QuestionService {
  }
 
   findOrder(layerName: string, attrName: any){
-    // console.log('attrName',attrName);
+    // console.log('attrName + layerName', layerName, attrName);
     let order = 0;
     if (typeof (AppConfiguration.fieldsOrder[layerName]) !== 'undefined'){
       // console.log('AppConfiguration.fieldsOrder[layerName][attrName]', AppConfiguration.fieldsOrder[layerName][attrName]);

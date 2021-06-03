@@ -3,7 +3,8 @@ import {Subscription} from 'rxjs';
 import {OpenLayersService} from '../open-layers.service';
 import {MatIconRegistry} from '@angular/material/icon';
 import {DomSanitizer} from '@angular/platform-browser';
-//import {Indicator, IndicatorAnimations} from '../indicator';
+import {request, gql} from 'graphql-request';
+import {AppConfiguration} from '../app-configuration';
 
 @Component({
   selector: 'app-toolbar',
@@ -38,8 +39,8 @@ export class ToolbarComponent implements OnInit {
       sanitizer.bypassSecurityTrustResourceUrl('assets/img/baseline-layers-new-24px.svg')
     );
     iconRegistry.addSvgIcon(
-       'identify',
-       sanitizer.bypassSecurityTrustResourceUrl('assets/img/identify-24px.svg')
+       'noiseAnnoyance',
+       sanitizer.bypassSecurityTrustResourceUrl('assets/img/noiseannoyance-24px.svg')
      );
   }
   createScratchLayer(){
@@ -54,6 +55,61 @@ export class ToolbarComponent implements OnInit {
   searchOnMap(){
     alert('Search elements in a OSM layer #TODO');
   }
+
+  findExposedPeople() {
+    this.openLayersService.updateFindPopExposed(true);
+
+   /* const query = gql`
+    query {
+      leiseOrteById (id:17) {
+        id
+        detail
+      }
+    }
+    `*/
+
+    /* const query = gql`
+    query {
+      populationStraassenlaermLden (dblow:70, dbhigh: 75) {
+       totalCount
+       nodes {
+        id
+        value
+        geom {
+          geojson
+          srid
+        }
+       }
+      }
+    }
+    `
+
+     // http://localhost:4200/graphql--> by proxy diverted to http://130.89.6.97:5000/graphql
+    request('http://localhost:4200/graphql', query)
+      .then (data => { console.log('data', data);
+                    //   this.openLayersService.updatePopExposedSource(data.populationStraassenlaermLden);
+                       this.processPopLden(data.populationStraassenlaermLden);
+                       });
+
+     */
+  }
+
+  processPopLden(data){
+    /*totalCount
+    nodes {
+      id
+      value
+      geom {
+        geojson
+        srid
+      }
+    }*/
+   // start to process the data, get the sum
+   console.log ('data.nodes[2]', data.nodes);
+   const popExposed = data.nodes.reduce((sum, current) => sum + Number(current.value), 0);
+   console.log('Sum Pop in query', Math.round(popExposed * 100) / 100 , 'Share =', popExposed/ AppConfiguration.totalPopBochumArea );
+  }
+
 
   ngOnInit(): void {
     this.subscriptionExistingProject = this.openLayersService.existingProject$.subscribe(
