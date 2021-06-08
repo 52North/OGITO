@@ -58,6 +58,7 @@ import {FormControl, FormGroup, Validators} from '@angular/forms';
 import {DialogPopulationExposedComponent} from '../dialog-population-exposed/dialog-population-exposed.component';
 import {request, gql} from 'graphql-request';
 import {switchAll} from 'rxjs/operators';
+import {consoleTestResultHandler} from 'tslint/lib/test';
 
 // To use rating dialogs
 export interface DialogData {
@@ -389,7 +390,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
      }
     // console.log('noiseGroup, layerList', layerList, noiseGroup);
     const dialogPopExposed = this.dialog.open(DialogPopulationExposedComponent, {
-      width: '300px',
+      width: '400px',
       data: {layerList, lowlevel, highlevel, selectedLayer}
     });
 
@@ -411,12 +412,49 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
      * @param data.highLevel: number --> high level for the range
      */
     let query: any;
+    let queryName: string;
     let layerName: string;
     const lowLevel = + data.lowLevel;
     const highLevel = + data.highLevel;
+    layerName = 'Pop' + data.selectedLayer.toLowerCase() + '_' + lowLevel + '_' + highLevel;
+    // something was not selected
+    if (!data.selectedLayer || !data.lowLevel || !data.highLevel){
+      return;
+      this.snackBar.open('Verify parameters', 'ok',
+        { horizontalPosition: 'center',
+          verticalPosition: 'top',
+          duration: 5000});
+      return;
+    }
+    // the high and lower do not fit
+    if (lowLevel > highLevel) {
+      this.snackBar.open('Lower level should be less than the higher level', 'ok',
+        { horizontalPosition: 'center',
+          verticalPosition: 'top',
+          duration: 3000});
+      return;
+    }
+    // th layer already exist
+    console.log('layerName in queryDBPopNoise', layerName, data.selectedLayer.toLowerCase(), this.map.getLayers().getArray());
+    // first get the group
+    // alternatively --> this.searchLayer(layerName, AppConfiguration.nameSessionGroup.toLowerCase());
+    const groupSession = this.map.getLayers().getArray()
+        .find(x => x.get('name').toLowerCase() === AppConfiguration.nameSessionGroup.toLowerCase());
+    if (groupSession) {
+        if (groupSession.getLayers().getArray().findIndex(x => x.get('name').toLowerCase() === layerName.toLowerCase()) >= 0){
+        this.snackBar.open('This query was already computed, see the layer panel', 'ok',
+          { horizontalPosition: 'center',
+            verticalPosition: 'top',
+            duration: 5000});
+        return;
+      }
+    }
+    //
     switch (data.selectedLayer.toLowerCase()) {
      case 'straassenlaerm_lden': {
-     query = gql`
+       //
+      queryName = 'populationStraassenlaermLden';
+      query = gql`
       query {
       populationStraassenlaermLden (dblow: ` + lowLevel + `dbhigh:` + highLevel + `) {
        totalCount
@@ -431,16 +469,162 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     }
     `;
-     layerName = 'Pop' + 'straassen_lden' + '_' + lowLevel + '_' + highLevel;
-     break;
+      break;
+   }
+    case 'gesamtlarm_lden': {
+        // Gesamtlarm_LDEN
+      queryName = 'populationGesamtlarmLden';
+      query = gql`
+      query {
+      populationGesamtlarmLden (dblow: ` + lowLevel + `, dbhigh:` + highLevel + `) {
+       totalCount
+       nodes {
+        id
+        geom {
+          geojson
+          }
+          value
+       }
       }
     }
+    `;
 
+      break;
+      }
+   case 'industrielaerm_lden': {
+        // Industrielaerm_LDEN
+      queryName = 'populationIndustrielaermLden';
+      query = gql`
+      query {
+      populationIndustrielaermLden (dblow: ` + lowLevel + `dbhigh:` + highLevel + `) {
+       totalCount
+       nodes {
+        id
+        value
+        geom {
+          geojson
+          srid
+        }
+       }
+      }
+    }
+    `;
+      break;
+      }
+      case 'industrielaerm_lnight': {
+      // Industrielaerm_LNight
+      queryName = 'populationIndustrielaermLnight';
+      query = gql`
+      query {
+      populationIndustrielaermLnight (dblow: ` + lowLevel + `dbhigh:` + highLevel + `) {
+       totalCount
+       nodes {
+        id
+        value
+        geom {
+          geojson
+          srid
+        }
+       }
+      }
+    }
+    `;
+      break;
+      }
+      case 'straassenlaerm_lnight': {
+        // Straassenlaerm_LNight
+      queryName = 'populationStraassenlaermLnight';
+      query = gql`
+      query {
+      populationStraassenlaermLnight (dblow: ` + lowLevel + `, dbhigh:` + highLevel + `) {
+       totalCount
+       nodes {
+        id
+        value
+        geom {
+          geojson
+          srid
+        }
+       }
+      }
+    }
+    `;
+
+      break;
+      }
+      case 'zuglaerm_bogestra_lden': {
+        // Zuglaerm_Bogestra_LDEN
+        queryName = 'populationZuglaermBogestraLden';
+        query = gql`
+      query {
+      populationZuglaermBogestraLden (dblow: ` + lowLevel + `, dbhigh:` + highLevel + `) {
+       totalCount
+       nodes {
+        id
+        value
+        geom {
+          geojson
+          srid
+        }
+       }
+      }
+    }
+    `;
+        break;
+      }
+      case 'zuglaerm_bogestra_lnight': {
+        // Zuglaerm_Bogestra_LNight
+        queryName = 'populationZuglaermBogestraLnight';
+        query = gql`
+      query {
+      populationZuglaermBogestraLnight (dblow: ` + lowLevel + `, dbhigh:` + highLevel + `) {
+       totalCount
+       nodes {
+        id
+        value
+        geom {
+          geojson
+          srid
+        }
+       }
+      }
+    }
+    `;
+
+        break;
+      }
+      case 'zuglaerm_db_lden': {
+        // populationZuglaermDbLden
+      queryName = 'populationZuglaermDbLden';
+      query = gql`
+      query {
+      populationZuglaermDbLden (dblow: ` + lowLevel + `, dbhigh:` + highLevel + `) {
+       totalCount
+       nodes {
+        id
+        value
+        geom {
+          geojson
+          srid
+        }
+       }
+      }
+    }
+    `;
+      break;
+     }
+    }
+
+
+    this.snackBar.open('Sending request to a service.. please wait', 'ok',
+      { horizontalPosition: 'center',
+        verticalPosition: 'top',
+        duration: 3000});
     request('http://localhost:4200/graphql', query)
       .then(result => {
-        // console.log('data', result);
+        // console.log('data', result[queryName]);
 
-        this.processPopLden(result.populationStraassenlaermLden, layerName );
+        this.processPopLden(result[queryName], layerName );
       });
   }
 
@@ -456,7 +640,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
           color: 'red'
         })
       });
-      let valuePop = + feature.get('value');
+      const valuePop = + feature.get('value');
       if (valuePop > 1.6 && valuePop < 5.6) {
         defaultStyle = new Style({
           fill: new Fill({
@@ -501,7 +685,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         });
         return defaultStyle;
       }
-    }
+    };
 
    }
 
@@ -509,17 +693,24 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     processPopLden(data, layerName: string) {
      // initialize the popExposedStyle
 
+     if (data.totalCount === 0) {
+       this.snackBar.open('No records to report', 'ok',
+         { horizontalPosition: 'center',
+           verticalPosition: 'bottom',
+           duration: 10000});
+       return;
+     }
       // start to process the data, get the sum
-      console.log ('data.nodes[2]', JSON.parse(data.nodes[1].geom.geojson));
-      const popExposed = Math.round(data.nodes.reduce((sum, current) => sum + Number(current.value), 0) *100/100);
-      const popShare =  Math.round(popExposed / AppConfiguration.totalPopBochumArea * 100)
-      console.log('Sum Pop', popExposed , 'Share =', popShare);
+      // console.log ('data.nodes[2]', JSON.parse(data.nodes[1].geom.geojson));
+      const popExposed = Math.round(data.nodes.reduce((sum, current) => sum + Number(current.value), 0) * 100 / 100);
+      const popShare =  Math.round(popExposed / AppConfiguration.totalPopBochumArea * 100);
+      // console.log('Sum Pop', popExposed , 'Share =', popShare);
       // snackbar here
-      this.snackBar.open('Approximated Ppopulation exposed: ' +
+      this.snackBar.open('Approximated Population exposed: ' +
         popExposed + '. This is a share of: ' + popShare + '%. Result can be explored in the layer Panel', 'ok',
         { horizontalPosition: 'center',
           verticalPosition: 'bottom',
-          duration: 10000});
+          duration: 30000});   // 30 seconds
       // load the layer - creates a group if needed
       this.loadJson(data.nodes, layerName);
     }
@@ -570,14 +761,14 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     });
     // add the layer to the map
     // this.map.addLayer(vectorLayer);
-    const fieldstoShow = [{name: 'value', type: 'QString', typeName: 'varchar', comment: ''}]
+    const fieldstoShow = [{name: 'value', type: 'QString', typeName: 'varchar', comment: ''}];
 
     this.addSessionLayer(vectorLayer, fieldstoShow);
   }
 
   addLayerGroupLayerPanel(layerName: any, fieldsToShow: any){
     // add configuration to the layer to be added in a group
-    let layers = [];
+    const layers = [];
     const layerItem = {fields: fieldsToShow,  // add a generic name
     geometryType: null,
     layerForNewFeatures: false,
@@ -606,11 +797,11 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     const group = this.groupsLayers.find(x => x.groupName === AppConfiguration.nameSessionGroup);
     group.layers.push(layerItem);
     this.groupsLayersSubject.next(this.groupsLayers);
-    this.snackBar.open('Results were added to the layer Panel', 'ok',
+    /* this.snackBar.open('Results were added to the layer Panel', 'ok',
       { horizontalPosition: 'center',
         verticalPosition: 'top',
         duration: 5000});
-    return;
+    return; */
   }
 
   addSessionLayer(layer: any, fieldstoShow: any){
@@ -637,12 +828,10 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
   this.map.getLayers().forEach(
       grp => {
        if (grp.get('name').toLowerCase()  === AppConfiguration.nameSessionGroup.toLowerCase()){
-         console.log('group found in addSessionLayer', grp.get('name').toLowerCase() );
          group = grp;
        }
       });
     // add the layer
-  console.log('group found OUTSIDE in addSessionLayer', group);
   group.getLayers().push(layer);
   this.addLayerGroupLayerPanel(layer.get('name'), fieldstoShow);
   }
@@ -655,10 +844,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     // get the previous value and sum?
     const attrRanking = AppConfiguration.ratingPrex[layerName] + this.rating.toString();
     const newRating = feature.get(attrRanking) + 1; // the number of times that people ranked with 3, 4, 5 starts;
-    // console.log('attrRanking:', attrRanking , 'feature.get(attrRanking):', feature.get(attrRanking));
     // assign attributes
     feature.set(attrRanking, newRating);
-    // console.log('feature with new rating', feature);
     // add the changes to the edit buffer
     this.saveFeatinBuffer(this.curEditingLayer.layerName, feature, 'rating');
   }
@@ -666,20 +853,20 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 
   saveRatingMeasures(layerName: string, feature: any, rating: any){
     // #TODO
-    console.log('que llega in saveRatingMeasures', layerName, feature , rating);
+    // console.log('que llega in saveRatingMeasures', layerName, feature , rating);
     for (const key in rating) {
-      console.log('key in saveRatingMeasures', key, rating[key]);
+      // console.log('key in saveRatingMeasures', key, rating[key]);
       if (key !== 'sonstiges') {
         for (let i = AppConfiguration.ratingMin;  i <= AppConfiguration.ratingMax; i++){
             console.log('rating.key', key + '_rank' + i,  feature.get(key + '_rank' + i));
             if (rating[key] === i) {
-              console.log('consigue algo.. FINALLY');
+              // console.log('consigue algo.. FINALLY');
               feature.set(key + '_rank' + i, feature.get(key + '_rank' + i) + 1);
           }
         }
       }
     }
-    feature.set('sonstiges', feature.get('sonstiges') + ' ' + rating['sonstiges']);
+    feature.set('sonstiges', feature.get('sonstiges') + ' ' + rating.sonstiges);
     this.saveFeatinBuffer(layerName, feature, 'rating');
     }
 
@@ -742,8 +929,6 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       this.openDialog( this.curEditingLayer.layerName, selectedFeatures[0]);
     });
   }
-
-
   updateSelectedProject(qgsProject: any){
     // get the var from the selection List
     if (qgsProject.file.length > 0) {
@@ -777,8 +962,6 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 
   }
 
-
-
   async parseQgsProject(gqsProjectinfo: any){
     /**
      * The styles for WFS layers are called from here
@@ -800,13 +983,11 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     if (rootLayer.getElementsByTagName('CRS').length > 1) {
       // the epsg code comes in the second place in the list
       crs = rootLayer.getElementsByTagName('CRS')[1].childNodes[0].nodeValue;
-      // console.log('crs', crs);
       // Projected Bounding box
       const projBBOX = rootLayer.getElementsByTagName('BoundingBox')[0];
       this.mapCanvasExtent = [Number(projBBOX.getAttribute('minx')), Number(projBBOX.getAttribute('maxx')),
         Number(projBBOX.getAttribute('miny') ), Number(projBBOX.getAttribute('maxy'))];
       this.srsID = projBBOX.getAttribute('CRS');
-      // console.log('CRS', this.srsID, AppConfiguration.projDefs[this.srsID.replace(/\D/g, '')]);
       proj4.defs(this.srsID, AppConfiguration.projDefs[this.srsID.replace(/\D/g, '')]);
       register(proj4);
     }
@@ -818,10 +999,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
        const northBoundLatitude = Number(BBOX.getElementsByTagName('northBoundLatitude')[0].childNodes[0].nodeValue);
        this.srsID = 'EPSG:4326';
        this.mapCanvasExtent = [westBoundLongitude, eastBoundLongitude, northBoundLatitude, southBoundLatitude];
-       // console.log('BBOX', BBOX, westBoundLongitude, eastBoundLongitude, southBoundLatitude, northBoundLatitude);
      }
-    // console.log('this.mapCanvasExtent', this.mapCanvasExtent, 'this.srsID', this.srsID);
-
     const nGroups = rootLayer.getElementsByTagName('Layer').length;
     const layerList = xmlText.querySelectorAll('Layer > Layer');
     // console.log('children[0]', rootLayer.children[0]);
@@ -831,16 +1009,13 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       // tiene layer dentro es un grupo...
         const groupName = layerList[i].getElementsByTagName('Name')[0].childNodes[0].nodeValue;
         const groupTittle = layerList[i].getElementsByTagName('Title')[0].childNodes[0].nodeValue;
-        // console.log('group details', i, groupName, groupTittle);
         const layersinGroup = layerList[i].querySelectorAll('Layer > Layer'); // devuelve in node
-        // console.log('layers in Group', layersinGroup);
         const listLayersinGroup = [];
         for (let j = 0; j < layersinGroup.length; j++) {
           let layerIsWfs = false;
           let layerForRanking = false;
           let layerForNewFeatures = true;
           const layer = layersinGroup.item(j);
-
           const geometryType = layer.getAttribute('geometryType');
           const layerName = layer.getElementsByTagName('Name')[0].childNodes[0].nodeValue;
           const layerTittle = layer.getElementsByTagName('Title')[0].childNodes[0].nodeValue;
@@ -871,7 +1046,6 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
                 name: field.getAttribute('name'),
                 comment: field.getAttribute('comment')
               });
-
             }
             // check if layer is available for rating
             if (AppConfiguration.ratingMeasureLayers[layerName]) {
@@ -903,7 +1077,6 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         layers: listLayersinGroup
         });
       }
-
     }
 
     // get the styles for WFS layers
@@ -912,13 +1085,12 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     // update the observable for layerPanel
     this.groupsLayersSubject.next(this.groupsLayers);
-
     this.questionService.setQuestions(this.groupsLayers);
   }
 
-    updateMap(qgsfile: string) {
+  updateMap(qgsfile: string) {
     this.requestProjectInfo(qgsfile);
-    }
+  }
 
   sanitizeImageUrl(imageUrl: string): SafeUrl {
     return this.sanitizer.bypassSecurityTrustUrl(imageUrl);
@@ -929,7 +1101,6 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     // console.log('layerName en y iconSymbols.nodes.length', layerName, this.qgsProjectFile, iconSymbols.nodes.length);
     if (iconSymbols.nodes.length === 0) {
        // layer does not have symbols, raster
-     //  return ([{iconSrc: AppConfiguration.rasterIcon, title: layerName}]);
       return ([{iconSrc: this.sanitizeImageUrl(AppConfiguration.rasterIcon), title: layerName}]);
     }
     // aqui puede venir una lista
@@ -946,7 +1117,6 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
             // workaround issue with OSM in GECCO
             symbolList.push({iconSrc: this.sanitizeImageUrl(AppConfiguration.rasterIcon), title: layerName});
           }
-
         }
         if (icon.hasOwnProperty('symbols')){
           // it has an array of symbols
@@ -955,10 +1125,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
               // console.log('symbol.title', symbol.title);
               symbolList.push({iconSrc: 'data:image/png;base64,' + symbol.icon, title: symbol.title});
             }
-            // here the code for raster #TODO
           });
         }
-
       });
     return(symbolList);
   }
@@ -979,7 +1147,6 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
               return (symbols);
               })
            .then (symbols => symbols)
-
            .catch(error => console.log ('Error retrivieng symbology', error));
      return legend;
   }
@@ -998,19 +1165,15 @@ setIdentifying() {
         return;
       }
       if (!this.curInfoLayer){    // undefined or null?
-        // console.log ('cuando pasa por AQUI....');
         return;
       }
       // console.log('this.curInfoLayer.getSource() instanceof ImageWMS', (this.curInfoLayer.getSource() instanceof ImageWMS));
       this.container.nativeElement.style.display = 'block';
       if (this.curInfoLayer.getSource() instanceof ImageWMS ) {
-        // console.log('ENTRA AQUI.WMS..');
-
         this.displayFeatureInfoWMS(evt);
         return;
       }
       if (this.curInfoLayer.getSource() instanceof VectorSource) {
-        // console.log('ENTRA AQUI WFS...');
         this.displayFeatureInfoWFS(evt);
       }
     }); //  search around 10 css pixels
@@ -2727,30 +2890,44 @@ startRotating() {
 startCopying()
 {
   }
-replaceNull(field: string):string{
+replaceNull(field: any): any{
     if (field){
       return field;
     }
-    return ' ';
+    return 0;
 }
 
 createReporMeasureLayer(layerOnIdentifyingName: any, featureValues: any): any{
   const measureList = AppConfiguration.ratingMeasureLayers[layerOnIdentifyingName.toLowerCase()];
-  let text = '';
-  text = text.concat('<tr><td>' + 'id' + '</td><td>' + featureValues['id'] + '</td></tr>');
-  text = text.concat('<tr><td>' + 'Measures' + '</td><td>' + 'Rating 1' + '</td><td>' + 'Rating 2' + '</td><td>' + 'Rating 3' +
-    '</td><td>' + 'Rating 4' + '</td><td>' + 'Rating 5' + '</td></tr>');
+
+  let totalCount = 0;
+  let weightedAvg = 0;
+  let text = '<div id="popupDiv">' +   '<table border=0 width=100%>' ;
+   // '<tr><th>Measures</th><th colspan="2">Weighted Average</th><th>Total Count</th></tr>';
+  // text = text.concat('<tr><td>' + 'id' + '</td><td colspan="3">' + featureValues.id + '</td></tr>');
+  text = text.concat('<tr><th>' + 'Measures' + '</th>' +
+    '<th colspan="2">' + 'Weighted Average' + '</th>' +
+    '<th>' + 'Total Count' + '</th></tr>');
   measureList.forEach(measure => {
-    text = text.concat('<tr><td>' + measure + ' </td><td>' + this.replaceNull(featureValues[measure + '_rank1']) +
+    totalCount = featureValues[measure + '_rank1'] + featureValues[measure + '_rank2'] + featureValues[measure + '_rank3'] +
+                 featureValues[measure + '_rank4'] + featureValues[measure + '_rank5'];
+    weightedAvg = (1 * featureValues[measure + '_rank1'] + 2 * featureValues[measure + '_rank2'] + 3 * featureValues[measure + '_rank3'] +
+      4 * featureValues[measure + '_rank4'] + 5 * featureValues[measure + '_rank5']) / totalCount;
+    text =  text.concat ('<tr><td>' + measure + '</td>' +
+      '<td>' + '<input type="range" min="1" max="5" value="' +  this.replaceNull(Math.round(weightedAvg * 10) / 10)  + '" disabled=true>' + '</td>');
+    text = text.concat('</td><td>' +  this.replaceNull(Math.round(weightedAvg * 10) / 10)) + '</td><td style="text-align:right"> '
+      +  this.replaceNull(totalCount) + '</td></tr>';
+    /*text = text.concat('<tr><td>' + measure + ' </td><td>' + this.replaceNull(featureValues[measure + '_rank1']) +
                                               ' </td><td>' + this.replaceNull(featureValues[measure + '_rank2']) +
                                               ' </td><td>' + this.replaceNull(featureValues[measure + '_rank3']) +
                                               ' </td><td>' + this.replaceNull(featureValues[measure + '_rank4']) +
-                                              ' </td><td>' + this.replaceNull(featureValues[measure + '_rank5']) + '</td></tr>');
+                                              ' </td><td>' + this.replaceNull(featureValues[measure + '_rank5']) + '</td></tr>');*/
     });
-  text = text.concat('<tr><td>' + 'Sonstiges' + '</td><td>' + this.replaceNull(featureValues['sonstiges']).slice(0, 50) + '</td></tr>');
+  text = text.concat('<tr><td>' + 'Sonstiges' + '</td><td  colspan="3">' +
+    this.replaceNull(featureValues.sonstiges).toString().slice(0, 50) + '</td></tr>');
+  text = text.concat('</table>' + '</div>');
   return(text);
 }
-
 
 displayFeatureInfoWFS(evt) {
     const hdms = toStringHDMS(evt.coordinate);
@@ -2759,10 +2936,7 @@ displayFeatureInfoWFS(evt) {
     const  layerOnIdentifyingName = this.curInfoLayer.get('name');  // this.curInfoLayer is an OL layer object
     const tlayer = this.findLayerinGroups(layerOnIdentifyingName);
     const fieldsToShow = tlayer.fields;
-    console.log('layerOnIdentifyingName in displayFeatureInfoWFS', layerOnIdentifyingName, fieldsToShow);
-    // #TODO code for getting features from WFS
     const featureValues = this.map.forEachFeatureAtPixel(evt.pixel, feature => {
-        // #TODO aqui -- chequear bounding box or margins..
         const valuesToShow = {};
         console.log('feature', feature);
         for (const field of fieldsToShow){
@@ -2779,13 +2953,12 @@ displayFeatureInfoWFS(evt) {
       }
     );
     if (featureValues) {
-
-      console.log('featureValues', featureValues);
       // Prepare html text with all the information
       let text = '';
       if  (AppConfiguration.ratingMeasureLayers.hasOwnProperty(layerOnIdentifyingName)) {
       // create the table for rating measures
        text = text  + this.createReporMeasureLayer(layerOnIdentifyingName, featureValues);
+        this.content.nativeElement.innerHTML = text;
       }
       // report normal layer
       else {
@@ -2802,14 +2975,10 @@ displayFeatureInfoWFS(evt) {
           text = text.concat(
             '<tr><img class=imgInfo src="' + folder + '/img/' + featureValues.img + '" alt="picture"></tr>');
         }
+        this.content.nativeElement.innerHTML = '<div id="popupDiv">' +
+          '<table border=0 width=100%>' + '<tr><th>Attribute</th><th>Value</th></tr>' +
+          text + '</table>' + '</div>';
       }
-
-      // this.content.nativeElement.innerHTML = 'Element:<br><code>' + text + '</code>';  // featureValues
-      // this.content.nativeElement.innerHTML = '<div id="popupDiv">' + '<b> Element</b> </br>' + '<code>' + text + '</code>' + '</div>';
-      this.content.nativeElement.innerHTML = '<div id="popupDiv">' +
-        '<table border=0 width=100%>' + '<tr><th>Attribute</th><th>Value</th></tr>' +
-        text + '</table>' + '</div>';
-      console.log('final text', this.content.nativeElement.innerHTML );
     }
     else {
       this.content.nativeElement.innerHTML = '<p>Not elements found :</p>';
@@ -2821,7 +2990,6 @@ displayFeatureInfoWMS(evt)  {
      */
     // display a msg
     const  layerOnIdentifying = this.curInfoLayer;
-    console.log('this.curInfoLayer in displayFeatureInfoWMS', layerOnIdentifying);
     const hdms = toStringHDMS(evt.coordinate);
     this.content.nativeElement.innerHTML = '<p>Searching at:</p><code>' + hdms + '</code>';
     this.overlay.setPosition(evt.coordinate);
@@ -2833,7 +3001,6 @@ displayFeatureInfoWMS(evt)  {
         AppConfiguration.srsName,
         {INFO_FORMAT: 'application/json' }    // //'text/html'
       );
-    console.log('wmsUrl', wmsUrl);
     if (wmsUrl) {
         fetch(wmsUrl)
           .then(response => response.text())
@@ -2850,33 +3017,14 @@ displayFeatureInfoWMS(evt)  {
     }
   }
 
-findLayerInWfsWms(layerOnIdentifying: any) {
-    /*
-    * find the layer in wms or wfs groups of loaded layers
-    * @param layerOnIdentifying
-    * */
-   if (layerOnIdentifying.wfs === true) {
-     // layer contains the source.
-     console.log('layerOnIdentifying', layerOnIdentifying);
-    // console.log('layerOnIdentifying', this.loadedWfsLayers);
-     return(this.loadedWfsLayers.find(x => x.layerName === layerOnIdentifying.name));
-   }
-   // console.log('layerOnIdentifying', this.loadedWmsLayers);
-   return(this.loadedWmsLayers.find(x => x.layerTitle === layerOnIdentifying.name));
- }
-
 searchLayer(layerName: any, groupName: any) {
-    /* only one nest level */
+    /* only one nest level, assume group exists */
     let layer = null;
-    const groupLayers = this.map.getLayers().getArray();
-    // find the group in the array
-    /* console.log ('groupLayers searchLayer', groupLayers);
-    console.log ('groupName searchLayer', groupName);
-    console.log ('find searchLayer', groupLayers.find(x => x.get('name') === groupName )); */
-    const group = groupLayers.find(x => x.get('name') === groupName );
-    // console.log ('group searchLayer', group);
-    const layers = group.getLayers().getArray();
-    layer = layers.find(x => x.get('name') === layerName );
+    const group = this.map.getLayers().getArray().find(x => x.get('name') === groupName );
+    if (group){
+      const layers = group.getLayers().getArray();
+      layer = layers.find(x => x.get('name') === layerName );
+    }
     return layer;
   }
 

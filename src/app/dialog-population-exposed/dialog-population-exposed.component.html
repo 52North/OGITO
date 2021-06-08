@@ -1,4 +1,4 @@
-<h2 mat-dialog-title>Bewertung {{data.layerList}}</h2>
+<h2 mat-dialog-title>Bewertung</h2>
 <mat-dialog-content>
   Wählen Sie eine Ebene:
   <!--Choose the noise layer:-->
@@ -11,13 +11,13 @@
            </mat-select>
       </mat-form-field>
       <mat-form-field appearance="fill">
-        <mat-label>Select low noise level</mat-label>
+        <mat-label>Select low noise level (>=)</mat-label>
         <mat-select class="form-control" id = "lowLevel" formControlName="lowLevel" required>
             <mat-option *ngFor= "let level of noiseLevels"  [value]="level"> {{level}} </mat-option>
         </mat-select>
       </mat-form-field>
       <mat-form-field appearance="fill">
-        <mat-label>Select high noise level</mat-label>
+        <mat-label>Select high noise level (<)</mat-label>
         <mat-select class="form-control" id = "highLevel" formControlName="highLevel" required>
             <mat-option *ngFor= "let level of noiseLevels" [value]="level"> {{level}} </mat-option>
         </mat-select>

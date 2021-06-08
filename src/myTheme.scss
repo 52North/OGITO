@@ -3,8 +3,9 @@
 @include mat-core();
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
-//$myOgito-app-primary: mat-palette($mat-pink,800,100,900);
-$myOgito-app-primary: mat-palette($mat-indigo,500);
+$myOgito-app-primary: mat-palette($mat-pink,800,100,900);
+// GECCO colors
+// $myOgito-app-primary: mat-palette($mat-indigo,500);
 
 $myOgito-app-accent: mat-palette($mat-amber,50);
 $myOgito-app-theme:mat-light-theme($myOgito-app-primary,$myOgito-app-accent);

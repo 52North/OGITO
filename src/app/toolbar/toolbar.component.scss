@@ -7,9 +7,9 @@
   flex-direction: column;
   position: absolute;
   border-radius: 3px;
-  // background-color: #ad1457;   //same that primary color
+  background-color: #ad1457;   //same that primary color
   // test for gecco
-  background-color: blue;
+  // background-color: blue;
 }
 .mapToolbar:hover {
   cursor:pointer;
@@ -28,8 +28,8 @@
   padding-left: 0px;
   padding-right: 0px;
   margin: 0 0;
-  // background-color:#ad1457 !important;
-  background-color:#3F51B5 !important;
+  background-color:#ad1457 !important;
+  // background-color:#3F51B5 !important;
 
 }
 .toolbarTitle:hover {

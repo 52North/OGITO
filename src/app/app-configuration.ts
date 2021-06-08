@@ -76,7 +76,7 @@ export class AppConfiguration{
   // indicate which layers contain measures
   static ratingMeasureLayers = {
     massnahmen_laute: ['geschwindigkeitsbegrenzung', 'fluesterasphalt', 'laermschutzwand', 'nutzungsaenderung'],
-    massnahmen_leise: ['schutz', 'visuelle _verbesserung', 'zuganglichkeit_verbessern', 'zuganglichkeit_verbessern']
+    massnahmen_leise: ['schutz', 'visuelle _verbesserung', 'zuganglichkeit_verbessern', 'sicherheit']
   };
   static noAddingFeatsLayers = ['massnahmen_laute', 'massnahmen_leise'];
   /* layers below will have a default style for LDEN noise map taken from train_LDEN*/
