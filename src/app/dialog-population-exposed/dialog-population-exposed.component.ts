@@ -9,6 +9,7 @@ export interface DialogNoisePopData {
   lowlevel: number;
   highlevel: number;
   selectedLayer: any;
+  noiseMapList: any;
 }
 
 @Component({
@@ -28,6 +29,7 @@ export class DialogPopulationExposedComponent implements OnInit {
     @Inject(MAT_DIALOG_DATA) public data: DialogNoisePopData) {
     this.formGroup = new FormGroup({
       selectedLayer: new FormControl(),
+      selectedNoiseLayer: new FormControl(),
       lowLevel : new FormControl(),
       highLevel : new FormControl()
      });

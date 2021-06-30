@@ -32,7 +32,8 @@ export class OpenLayersService {
   qgsProjectUrl$ = this.qgsProjectUrlSource.asObservable();
   private findPopExposedSource = new Subject<any>();  // Population exposed to certain level of noise
   findPopExposed$ = this.findPopExposedSource.asObservable();
-
+  private findInstitutionsExposedSource = new Subject<any>();  // Population exposed to certain level of noise
+  findInstitutionsExposed$ = this.findInstitutionsExposedSource.asObservable();
 
   constructor() { }
 
@@ -119,5 +120,12 @@ export class OpenLayersService {
      * @param data: the result of the query returned by the API
      */
     this.findPopExposedSource.next(data);
+  }
+
+  updateFindInstitutionsExposed(data: any) {
+    /** Updates the observable popExposed to the next value
+     * @param data: the result of the query returned by the API
+     */
+    this.findInstitutionsExposedSource.next(data);
   }
 }

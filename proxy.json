@@ -1,6 +1,6 @@
 {
   "/graphql/*": {
-    "target": "http://130.89.6.97:5000",
+    "target": "https://ogito.itc.utwente.nl/graphql",
     "secure": false,
     "logLevel": "debug",
     "changeOrigin": true

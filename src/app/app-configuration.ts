@@ -76,7 +76,7 @@ export class AppConfiguration{
   // indicate which layers contain measures
   static ratingMeasureLayers = {
     massnahmen_laute: ['geschwindigkeitsbegrenzung', 'fluesterasphalt', 'laermschutzwand', 'nutzungsaenderung'],
-    massnahmen_leise: ['schutz', 'visuelle _verbesserung', 'zuganglichkeit_verbessern', 'sicherheit']
+   // massnahmen_leise: ['schutz', 'visuelle _verbesserung', 'zuganglichkeit_verbessern', 'sicherheit']
   };
   static noAddingFeatsLayers = ['massnahmen_laute', 'massnahmen_leise'];
   /* layers below will have a default style for LDEN noise map taken from train_LDEN*/
@@ -85,6 +85,6 @@ export class AppConfiguration{
   };
   static totalPopBochumArea =  64966.73;  // Result of the SQL query: select sum(population.value) as Sum   from population
   static noiseGroupName = 'Laermkarten';  // in lower case
-
+  static institutionsGroupName = 'oeffentliche Einrichtungen';  // in lower case
   static nameSessionGroup = 'sessionGroup';
 }

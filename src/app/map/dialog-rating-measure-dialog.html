@@ -1,6 +1,7 @@
 <h2 mat-dialog-title>Bewertung {{data.layerNameDialog}}</h2>
 <mat-dialog-content>
-  Geben Sie Ihre Bewertung für die Maßnahmen ein:
+  Geben Sie Ihre Bewertung für die Maßnahmen ein:<br>
+  ein 0-Wert bedeutet, dass keine Bewertung vorliegt<br>
   <!--Enter your rating for the measures:-->
  <!-- enter here a container, prepare the data for an array and double loop-->
   <div class="star-rating-container star-rating-animation" fxLayout="row" fxLayoutAlign="start center" >
@@ -9,7 +10,7 @@
 
       <label >{{field | titlecase }}: </label>
       <mat-slider  color = 'primary' [formControlName]="field" [max]= 5
-                   [min]=1 [thumbLabel]=true  [value]="field.min"
+                   [min]=0 [thumbLabel]=true  [value]="field.min"
                    (change) = "showQuestionValue(field, $event.value)">{{field.value}}</mat-slider>
       <label id={{field}}> 0 </label>
     </div>

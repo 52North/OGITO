@@ -42,6 +42,10 @@ export class ToolbarComponent implements OnInit {
        'noiseAnnoyance',
        sanitizer.bypassSecurityTrustResourceUrl('assets/img/noiseannoyance-24px.svg')
      );
+    iconRegistry.addSvgIcon(
+       'noiseOrgAnnoyance',
+       sanitizer.bypassSecurityTrustResourceUrl('assets/img/organnoyance-24px.svg')
+     );
   }
   createScratchLayer(){
     /**
@@ -58,7 +62,6 @@ export class ToolbarComponent implements OnInit {
 
   findExposedPeople() {
     this.openLayersService.updateFindPopExposed(true);
-
    /* const query = gql`
     query {
       leiseOrteById (id:17) {
@@ -108,6 +111,11 @@ export class ToolbarComponent implements OnInit {
    console.log ('data.nodes[2]', data.nodes);
    const popExposed = data.nodes.reduce((sum, current) => sum + Number(current.value), 0);
    console.log('Sum Pop in query', Math.round(popExposed * 100) / 100 , 'Share =', popExposed/ AppConfiguration.totalPopBochumArea );
+  }
+
+
+  findExposedInstitutions() {
+    this.openLayersService.updateFindInstitutionsExposed(true);
   }
 
 
