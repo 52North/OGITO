@@ -1,0 +1,36 @@
+<h2 mat-dialog-title>Bewertung</h2>
+<mat-dialog-content>
+  Wählen Sie eine Ebene:
+  <!--Choose the noise layer:-->
+  <!-- enter here a container, prepare the data for an array and double loop-->
+  <div [formGroup]="formGroup">
+    <mat-form-field appearance="fill">
+      <mat-label>Institutionen</mat-label>
+      <mat-select class="form-control" id = "selectedLayer" formControlName="selectedLayer" required >
+        <mat-option   *ngFor= "let layer of data.layerList"  [value]="layer"> {{layer | titlecase}} </mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="fill">
+      <mat-label>Laermkarten</mat-label>
+      <mat-select class="form-control" id = "selectedNoiseLayer" formControlName="selectedNoiseLayer" required >
+        <mat-option   *ngFor= "let noiseLayer of data.noiseMapList"  [value]="noiseLayer"> {{noiseLayer | titlecase}} </mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="fill">
+      <mat-label>Select low noise level (>=)</mat-label>
+      <mat-select class="form-control" id = "lowLevel" formControlName="lowLevel" required>
+        <mat-option *ngFor= "let level of noiseLevels"  [value]="level"> {{level}} </mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="fill">
+      <mat-label>Select high noise level (<)</mat-label>
+      <mat-select class="form-control" id = "highLevel" formControlName="highLevel" required>
+        <mat-option *ngFor= "let level of noiseLevels" [value]="level"> {{level}} </mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+</mat-dialog-content>
+<mat-dialog-actions>
+  <button mat-button color="primary" [mat-dialog-close]="formGroup.getRawValue()" cdkFocusInitial>Ok</button>
+  <button mat-button color="primary"  (click)="onNoClick()">Cancel</button>
+</mat-dialog-actions>

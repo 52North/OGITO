@@ -60,6 +60,7 @@ import {request, gql} from 'graphql-request';
 import {switchAll} from 'rxjs/operators';
 import {consoleTestResultHandler} from 'tslint/lib/test';
 import {QueryDBService} from '../query-db.service';
+import {DialogOrgExposedComponent} from '../dialog-org-exposed/dialog-org-exposed.component';
 
 // To use rating dialogs
 export interface DialogData {
@@ -435,7 +436,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
           duration: 5000});
       return;
     }
-    const dialogInstitutionsExposed = this.dialog.open(DialogPopulationExposedComponent, {
+    const dialogInstitutionsExposed = this.dialog.open(DialogOrgExposedComponent, {
       width: '400px',
       data: {layerList, noiseMapList, lowlevel, highlevel, selectedLayer, selectedNoiseLayer}
     });
@@ -446,7 +447,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       if (data){
         // data is different to undefined
         this.queryOrgExposedNoise(data) // selectedLayer, lowlevel and highlevel
-        .then(r => this.processOrgLden(r, data.selectedLayer));
+        .then( r => this.processOrgLden(r));
       }
     });
   }
@@ -459,12 +460,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
      * @param data.lowLevel: number --> low level for the range
      * @param data.highLevel: number --> high level for the range
      */
-    let query: any;
-    let queryName: string;
     let layerName: string;
-    const lowLevel = + data.lowLevel;
-    const highLevel = + data.highLevel;
-    layerName = 'Org' + data.selectedLayer.toLowerCase() + '_' + lowLevel + '_' + highLevel;
     // something was not selected
     if (!data.selectedLayer || !data.lowLevel || !data.highLevel){
       this.snackBar.open('Verify parameters', 'ok',
@@ -473,6 +469,9 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
           duration: 5000});
       return;
     }
+    const lowLevel = + data.lowLevel;
+    const highLevel = + data.highLevel;
+    layerName = data.selectedLayer.toLowerCase() + '_' + data.selectedLayer.toLowerCase() + '_' + lowLevel + '_' + highLevel;
     // the high and lower do not fit
     if (lowLevel > highLevel) {
       this.snackBar.open('Lower level should be less than the higher level', 'ok',
@@ -482,7 +481,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
     // the layer already exist?
-    console.log('layerName in queryDBInstitutionNoise', layerName, data.selectedLayer.toLowerCase(), this.map.getLayers().getArray());
+    // console.log('layerName in queryDBInstitutionNoise', layerName, data.selectedLayer.toLowerCase(), this.map.getLayers().getArray());
     // first get the group
     const groupSession = this.map.getLayers().getArray()
       .find(x => x.get('name').toLowerCase() === AppConfiguration.nameSessionGroup.toLowerCase());
@@ -504,7 +503,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         duration: 3000});
     const result =  await this.queryDBService.getOrgExposed(data);
     console.log('result in queryOrgExposedNoise', result);
-    return result;
+    return ({result, layerName});
   }
 
   findPopExposed(){
@@ -772,16 +771,23 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       });
   }
 
-  processOrgLden(data, layerName: string) {
-    console.log('data in processOrgLden', data);
-    if (!data) {
+  processOrgLden(dataLayerName: any) {
+    /**
+     * dataLayerName contains in an array both the data dnd the result.
+     */
+    // console.log('data in processOrgLden', dataLayerName.data);
+    console.log('data for OrgExposed', dataLayerName);
+    if (!dataLayerName) {
      this.snackBar.open('There was an error while retrieving the data, contact the administrator', 'ok',
        { horizontalPosition: 'center',
          verticalPosition: 'top',
          duration: 10000});
      return;
     }
-    console.log('data for OrgExposed', data);
+    const data = dataLayerName.result;
+    const layerName = dataLayerName.layerName;
+
+
     if (data.totalCount === 0) {
       this.snackBar.open('No records to report', 'ok',
         { horizontalPosition: 'center',
@@ -790,75 +796,16 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
     // start to process the data, get the sum  #TODO mod
-    const orgExposed = Math.round(data.nodes.reduce((sum, current) => sum + Number(current.value), 0) * 100 / 100);
-    const orgShare =  Math.round(orgExposed / AppConfiguration.totalPopBochumArea * 100);
+    const orgExposed = data.totalCount;
     // load the layer - creates a group if needed
-    this.loadJson(data.nodes, layerName);
+    this.loadJsonPoint(data.nodes, layerName);
     // here no need for a dialog, use  instead  a snackbar
     this.snackBar.open('Approximated Institutions exposed: ' +
-      orgExposed  + '%. Result can be explored in the layer Panel', 'ok',
+      orgExposed  + '. Result can be explored in the layer Panel', 'ok',
       { horizontalPosition: 'center',
         verticalPosition: 'top',
         duration: 60000});   // 60 seconds
   }
-
-   createStyleExposedPop(){
-    /** set the style function for the population exposed
-     *
-     **/
-     this.popExposedStyle = feature => {
-      let defaultStyle = new Style({
-        fill: new Fill({
-          color: 'red'
-        })
-      });
-      const valuePop = + feature.get('value');
-      if (valuePop > 1.6 && valuePop < 5.6) {
-        defaultStyle = new Style({
-          fill: new Fill({
-            color: '#fbf9fd'
-          })
-        });
-        return defaultStyle;
-      }
-      // 2.6 - 9.5
-      if (valuePop >= 5.6 && valuePop < 9.5) {
-        defaultStyle = new Style({
-          fill: new Fill({
-            color: '#dcdcec'
-          })
-        });
-        return defaultStyle;
-      }
-      // 9.5 - 13.5
-      if (valuePop >= 9.5 && valuePop < 13.5) {
-        defaultStyle = new Style({
-          fill: new Fill({
-            color: '#a3a0cb'
-          })
-        });
-        return defaultStyle;
-      }
-      // 13.5 - 17.5
-      if (valuePop >= 13.5 && valuePop < 17.5) {
-        defaultStyle = new Style({
-          fill: new Fill({
-            color: '#6a51a3'
-          })
-        });
-        return defaultStyle;
-      }
-      // 13.5 - 17.5
-      if (valuePop >= 17.5) {
-        defaultStyle = new Style({
-          fill: new Fill({
-            color: '#3f007d'
-          })
-        });
-        return defaultStyle;
-      }
-    };
-   }
 
     processPopLden(data, layerName: string) {
      // initialize the popExposedStyle
@@ -914,7 +861,9 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       features
     };
     // set the style function
-    this.createStyleExposedPop();
+    // this.createStyleExposedPop();
+    // using a mqgis service
+    this.popExposedStyle = this.mapQgsStyleService.createStyleExposedPop();
     const vectorSource = new VectorSource({
       features: new GeoJSON().readFeatures(geojsonObject),
     });
@@ -930,16 +879,73 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     this.addSessionLayer(vectorLayer, fieldstoShow);
   }
 
+  loadJsonPoint(geoJsonArray: any, layerName: string) {
+    // build features
+    console.log('geoJsonArray in loadJsonPoint', geoJsonArray);
+    const features = [];
+    geoJsonArray.forEach(f => {
+      const geojson = JSON.parse(f.geom.geojson);
+      const geoJsonNode =  {
+        type: 'Feature',
+        geometry: {
+          type: geojson.type,
+          coordinates: geojson.coordinates,
+          bezirkeId: f.bezirkeId,
+        },
+        properties: {
+          bezirkeId: f.bezirkeId,   // value in this case is not used in the style
+          id: f.id
+        }
+      };
+      // console.log('geoJsonNode', geoJsonNode);
+      features.push(geoJsonNode);
+    });
+    // console.log('features', features);
+    const geojsonObject = {
+      type: 'FeatureCollection',
+      crs: {
+        type: 'name',
+        properties: {
+          name: 'EPSG:25832',
+        },
+      },
+      features
+    };
+    // set the style function
+    const orgStyle = this.mapQgsStyleService.createStyleExposedOrg(layerName);
+    const vectorSource = new VectorSource({
+      features: new GeoJSON().readFeatures(geojsonObject),
+    });
+    const vectorLayer = new VectorLayer({
+      source: vectorSource,
+      name: layerName,
+      style: orgStyle,
+      visible: false,
+      opacity: 0.5
+    });
+    // add the layer to the map
+    const fieldstoShow = [{name: 'bezirkeId', type: 'QString', typeName: 'varchar', comment: ''},
+                          {name: 'id', type: 'QString', typeName: 'varchar', comment: ''}];
+    console.log('creates the new vector layer', vectorLayer);
+    this.addSessionLayer(vectorLayer, fieldstoShow);
+    console.log('this.groupsLayers in loadJsonPoint', this.groupsLayers);
+
+  }
+
+
+
   addLayerGroupLayerPanel(layerName: any, fieldsToShow: any){
     // add configuration to the layer to be added in a group
+    console.log('layerName and fieldsToShow in addLayerGroupLayerPanel', layerName, fieldsToShow);
     const layers = [];
-    const layerItem = {fields: fieldsToShow,  // add a generic name
+    const layerItem = {
+    layerName,
+    layerTittle: layerName,
+    fields: fieldsToShow,  // add a generic name
     geometryType: null,
     layerForNewFeatures: false,
     layerForRanking: false,
     layerLegendUrl: null,   // que hacer aqui?
-    layerName,
-    layerTittle: layerName,
     legendLayer: null,
     onEdit: false,
     onIdentify: false,
@@ -948,12 +954,14 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     wfs: false };
     // add the item to an array;
     layers.push(layerItem);
-    // group does not exist
+    // group does not exist in the variable
     if (!(this.groupsLayers.findIndex(x => x.groupName === AppConfiguration.nameSessionGroup) >= 0 )){
       this.groupsLayers.push({groupName: AppConfiguration.nameSessionGroup,
         groupTittle: AppConfiguration.nameSessionGroup,
         visible: false,
         layers});
+      // console.log('GROUP session did not exist this.groupsLayers', this.groupsLayers);
+      this.groupsLayersSubject.next(this.groupsLayers);
       return;
     }
    // group does exists
@@ -965,6 +973,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         verticalPosition: 'top',
         duration: 5000});
     return; */
+    // console.log('this.groupsLayers', this.groupsLayers);
   }
 
   addSessionLayer(layer: any, fieldstoShow: any){
@@ -972,6 +981,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
    *   Add a layer in a 'session group', layers are sketch or queries result
    *   @param: layer with the vector source associated
    */
+  console.log('Llega aqui addSessionLayer linea 1027 ', layer);
   // check if group exist
   if (!(this.map.getLayers().getArray()
     .findIndex(x => AppConfiguration.nameSessionGroup.toLowerCase() === x.get('name').toLowerCase()) > 0)){
@@ -2507,10 +2517,11 @@ findLayerinGroups(layerName: string): any {
   /**
    * finds a layer in the groups dictionary
    */
+  // console.log ('this.groupsLayers in findLayerinGroups', this.groupsLayers);
   for (const group of this.groupsLayers) {
       const lyr = group.layers.find(x => x.layerName.toLowerCase() === layerName.toLowerCase());
       if (lyr) {
-        // console.log ('la consigue en los grupos', lyr);
+        console.log ('la consigue en los grupos', lyr);
         return (lyr);  // it was lyr
       }
     }
@@ -3075,13 +3086,15 @@ createReporMeasureLayer(layerOnIdentifyingName: any, featureValues: any): any{
   return(text);
 }
 
-displayFeatureInfoWFS(evt) {
+displayFeatureInfoWFS(evt: any) {
     const hdms = toStringHDMS(evt.coordinate);
     this.content.nativeElement.innerHTML = '<p>Searching at:</p><code>' + hdms + '</code>';
     this.overlay.setPosition(evt.coordinate);
     const  layerOnIdentifyingName = this.curInfoLayer.get('name');  // this.curInfoLayer is an OL layer object
+    console.log('this.groupLayer in displayFeatureInfoWFS', this.groupsLayers );
     const tlayer = this.findLayerinGroups(layerOnIdentifyingName);
     const fieldsToShow = tlayer.fields;
+    console.log('fieldsToShow in displayFeatureInfoWFS', tlayer, fieldsToShow);
     const featureValues = this.map.forEachFeatureAtPixel(evt.pixel, feature => {
         const valuesToShow = {};
         console.log('feature', feature);
@@ -3188,7 +3201,7 @@ startIdentifying(layerOnIdentifying: any)
     this.container.nativeElement.style.display = 'none';
     return;
   }
-  console.log('layerOnIdentifying  startIdentifying', layerOnIdentifying );
+  // console.log('layerOnIdentifying  startIdentifying', layerOnIdentifying );
   const layer = this.searchLayer(layerOnIdentifying.layer.layerName, layerOnIdentifying.groupName); // find the layer in its group
   if (!layer){
     return;
@@ -3456,7 +3469,7 @@ updateOrderGroupsLayers(groupsLayers: any) {
     this.map.getLayers().forEach(layer => {
       if (layer.getLayers().array_.length > 0) {
         layer.getLayers().forEach(lyrInGrp => {
-          console.log('layer index', lyrInGrp.get('name')  + ': ' +  lyrInGrp.getZIndex());
+          // console.log('layer index', lyrInGrp.get('name')  + ': ' +  lyrInGrp.getZIndex());
         });
       }
     });

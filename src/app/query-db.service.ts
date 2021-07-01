@@ -25,11 +25,10 @@ export class QueryDBService {
     const bezirke = 'Bezirke';
     const selectedNoiseLayer = data.selectedNoiseLayer.toLowerCase();
     let queryResult = null;
-
+    const layerName = selectedNoiseLayer + data.selectedLayer.toLowerCase() + '_' + lowLevel + '_' + highLevel;
     const layerNames = {straassenlaerm_lden: 'StraassenlaermLden',
                         straassenlaerm_lnight: 'StraassenlaermLnight'
                        };
-
 
 
     const queryName =  selectedLayer + bezirke + layerNames[selectedNoiseLayer];
@@ -52,7 +51,8 @@ export class QueryDBService {
     console.log('query', query, 'queryName', queryName);
     // http://localhost:4200/graphql--> by proxy diverted to http://130.89.6.97:5000/graphql
     //request('https://ogito.itc.utwente.nl/graphql', query)
-    queryResult = request('https://ogito.itc.utwente.nl/graphql', query)
+    // queryResult = request('https://ogito.itc.utwente.nl/graphql', query)
+    queryResult = request('http://localhost:4200/graphql', query)
         .then(result => {
             console.log('data', result,  result[queryName]);
             queryResult = result[queryName];

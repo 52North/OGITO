@@ -5,17 +5,17 @@
   <!-- enter here a container, prepare the data for an array and double loop-->
     <div [formGroup]="formGroup">
       <mat-form-field appearance="fill">
-        <mat-label>Select</mat-label>
+        <mat-label>Laermkarten</mat-label>
         <mat-select class="form-control" id = "selectedLayer" formControlName="selectedLayer" required >
           <mat-option   *ngFor= "let layer of data.layerList"  [value]="layer"> {{layer | titlecase}} </mat-option>
            </mat-select>
       </mat-form-field>
-      <mat-form-field appearance="fill">
-        <mat-label>Select</mat-label>
+    <!--  <mat-form-field appearance="fill">
+        <mat-label>Laermkarten</mat-label>
         <mat-select class="form-control" id = "selectedNoiseLayer" formControlName="selectedNoiseLayer" required >
           <mat-option   *ngFor= "let noiseLayer of data.noiseMapList"  [value]="noiseLayer"> {{noiseLayer | titlecase}} </mat-option>
         </mat-select>
-      </mat-form-field>
+      </mat-form-field> -->
       <mat-form-field appearance="fill">
         <mat-label>Select low noise level (>=)</mat-label>
         <mat-select class="form-control" id = "lowLevel" formControlName="lowLevel" required>
