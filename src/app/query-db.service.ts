@@ -52,6 +52,8 @@ export class QueryDBService {
     // http://localhost:4200/graphql--> by proxy diverted to http://130.89.6.97:5000/graphql
     //request('https://ogito.itc.utwente.nl/graphql', query)
     // queryResult = request('https://ogito.itc.utwente.nl/graphql', query)
+
+    // for debug
     queryResult = request('http://localhost:4200/graphql', query)
         .then(result => {
             console.log('data', result,  result[queryName]);

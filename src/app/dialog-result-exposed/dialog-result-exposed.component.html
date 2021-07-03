@@ -1,0 +1,16 @@
+<h2 mat-dialog-title>Zusammenfassung</h2>
+<mat-dialog-content>
+  <div>
+    There are {{ data.totalCount }} found.
+    Results can be explored in the layer panel.<br>
+    <table border="0" width="100%">
+      <th>BezirkeId</th><th>Institutionen</th>
+      <tr *ngFor= "let item of data.summary">
+        <td>{{item.key}}</td> <td>{{ item.value }}</td>
+        </tr>
+    </table>
+  </div>
+</mat-dialog-content>
+<mat-dialog-actions>
+  <button mat-button color="primary" (click)="onClick()" cdkFocusInitial>Ok</button>
+</mat-dialog-actions>

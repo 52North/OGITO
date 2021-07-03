@@ -56,6 +56,7 @@ import {DynamicFormComponent} from '../dynamic-form/dynamic-form.component';
 import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
 import {FormControl, FormGroup, Validators} from '@angular/forms';
 import {DialogPopulationExposedComponent} from '../dialog-population-exposed/dialog-population-exposed.component';
+import {DialogResultExposedComponent} from '../dialog-result-exposed/dialog-result-exposed.component';
 import {request, gql} from 'graphql-request';
 import {switchAll} from 'rxjs/operators';
 import {consoleTestResultHandler} from 'tslint/lib/test';
@@ -358,6 +359,15 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
+  openDialogResult(count: number, summary: any): void{
+    // open a dialog to show org by district
+    this.dialog.open(DialogResultExposedComponent, {
+      width: '300px',
+      data: {totalCount: count, summary}
+    });
+  }
+
+
   openDialog(layerName: string, feature: any): void{
    // #TODO change this title
     // const ratingName =  layerName === 'leise_orte_Obs' ? 'Leise Orte' : 'Measures';
@@ -471,7 +481,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     const lowLevel = + data.lowLevel;
     const highLevel = + data.highLevel;
-    layerName = data.selectedLayer.toLowerCase() + '_' + data.selectedLayer.toLowerCase() + '_' + lowLevel + '_' + highLevel;
+    layerName = data.selectedLayer.toLowerCase() + '_' + data.selectedNoiseLayer.toLowerCase() + '_' + lowLevel + '_' + highLevel;
     // the high and lower do not fit
     if (lowLevel > highLevel) {
       this.snackBar.open('Lower level should be less than the higher level', 'ok',
@@ -799,13 +809,48 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     const orgExposed = data.totalCount;
     // load the layer - creates a group if needed
     this.loadJsonPoint(data.nodes, layerName);
-    // here no need for a dialog, use  instead  a snackbar
-    this.snackBar.open('Approximated Institutions exposed: ' +
-      orgExposed  + '. Result can be explored in the layer Panel', 'ok',
+    // getting the schools by district
+    const summary = this.summarizeOrgByDistrict(data.nodes, 'bezirkeId');
+    this.openDialogResult(data.totalCount, summary);
+    // here no need for this snackbar was replaced by a mat-dialog
+   /* this.snackBar.open('Approximated Institutions exposed: ' +
+      orgExposed  +
+        '. Result can be explored in the layer Panel', 'ok',
       { horizontalPosition: 'center',
         verticalPosition: 'top',
-        duration: 60000});   // 60 seconds
+        duration: 60000});   // 60 seconds */
   }
+
+  summarizeOrgByDistrict(nodes: any, districName: string){
+    /**
+     * summarizes by district the org affected by certain noise levels
+     * @param nodes a json array containing the result
+     */
+    let lookup = {}; // this gives unique values
+    let items = nodes;
+    let result = [];
+
+    for (let i = 0;  i < items.length;i++) {
+
+      const name = items[i][districName];
+      // console.log ('name', name);
+      if (!(name in lookup)) {
+        lookup[name] = 1;
+        result.push(name);
+      }
+      else {
+        lookup[name] += 1;
+      }
+    }
+    console.log ('items and result', items, lookup, result);
+    // make an array to show in the dialog
+    let arr = [];
+    for (const key in lookup) {
+      arr.push({ key, value: lookup[key]});
+    }
+    return arr;
+  }
+
 
     processPopLden(data, layerName: string) {
      // initialize the popExposedStyle
@@ -881,7 +926,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 
   loadJsonPoint(geoJsonArray: any, layerName: string) {
     // build features
-    console.log('geoJsonArray in loadJsonPoint', geoJsonArray);
+    // console.log('geoJsonArray in loadJsonPoint', geoJsonArray);
     const features = [];
     geoJsonArray.forEach(f => {
       const geojson = JSON.parse(f.geom.geojson);
@@ -926,9 +971,9 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     // add the layer to the map
     const fieldstoShow = [{name: 'bezirkeId', type: 'QString', typeName: 'varchar', comment: ''},
                           {name: 'id', type: 'QString', typeName: 'varchar', comment: ''}];
-    console.log('creates the new vector layer', vectorLayer);
+    // console.log('creates the new vector layer', vectorLayer);
     this.addSessionLayer(vectorLayer, fieldstoShow);
-    console.log('this.groupsLayers in loadJsonPoint', this.groupsLayers);
+    // console.log('this.groupsLayers in loadJsonPoint', this.groupsLayers);
 
   }
 
@@ -2468,7 +2513,7 @@ readProjectFile(projectFile: any) {
         return (text);
       })
       .catch(err => {
-        console.log('Error', err);
+        // console.log('Error', err);
         return ('');
       });
     return (qgsProj);
@@ -2521,7 +2566,7 @@ findLayerinGroups(layerName: string): any {
   for (const group of this.groupsLayers) {
       const lyr = group.layers.find(x => x.layerName.toLowerCase() === layerName.toLowerCase());
       if (lyr) {
-        console.log ('la consigue en los grupos', lyr);
+        // console.log ('la consigue en los grupos', lyr);
         return (lyr);  // it was lyr
       }
     }
@@ -2684,13 +2729,13 @@ undoLastEdit() {
       return;
     }
     const lastOperation = this.editBuffer.filter(obj => obj.layerName === this.curEditingLayer.layerName).pop(); // curEdits.pop();
-    console.log ('lastOperation', lastOperation);
+    // console.log ('lastOperation', lastOperation);
     switch (lastOperation.transaction)
     // rotate and translate are treated as update #TODO change attributes
     {
       case 'insert': {
         // remove from the source
-        console.log('feat', lastOperation.feats);
+        // console.log('feat', lastOperation.feats);
         this.curEditingLayer.source.removeFeature(lastOperation.feats);
         break;
       }
@@ -2726,11 +2771,11 @@ undoLastEdit() {
     }
     // remove from the edit Buffer
     this.removeFeatEditBuffer(lastOperation.feats);
-    console.log('this.editBuffer', this.editBuffer);
+    // console.log('this.editBuffer', this.editBuffer);
   }
 
 writeTransactWfs(editLayer: any) {
-    console.log ('entra a save...', this.editBuffer);
+    // console.log ('entra a save...', this.editBuffer);
     /** saves changes on a wfs layer
      * @param editLayer: layer to save changes stored in the editBuffer
      */
@@ -3012,10 +3057,10 @@ startTranslating()
    this.map.addInteraction(this.translate);
    // insert features into the editBuffer and cacheFeatures
    this.translate.on('translateend', () => {
-     console.log('selected features', selectedFeatures);
+     // console.log('selected features', selectedFeatures);
      selectedFeatures.forEach( f => {
        updateFeats.push(f);
-       console.log('feature to be updated in translateend ', f);
+       // console.log('feature to be updated in translateend ', f);
      });
 
      // const tempId = f.getId();
@@ -3091,21 +3136,21 @@ displayFeatureInfoWFS(evt: any) {
     this.content.nativeElement.innerHTML = '<p>Searching at:</p><code>' + hdms + '</code>';
     this.overlay.setPosition(evt.coordinate);
     const  layerOnIdentifyingName = this.curInfoLayer.get('name');  // this.curInfoLayer is an OL layer object
-    console.log('this.groupLayer in displayFeatureInfoWFS', this.groupsLayers );
+    // console.log('this.groupLayer in displayFeatureInfoWFS', this.groupsLayers );
     const tlayer = this.findLayerinGroups(layerOnIdentifyingName);
     const fieldsToShow = tlayer.fields;
-    console.log('fieldsToShow in displayFeatureInfoWFS', tlayer, fieldsToShow);
+    // console.log('fieldsToShow in displayFeatureInfoWFS', tlayer, fieldsToShow);
     const featureValues = this.map.forEachFeatureAtPixel(evt.pixel, feature => {
         const valuesToShow = {};
-        console.log('feature', feature);
+        // console.log('feature', feature);
         for (const field of fieldsToShow){
-          console.log('feature.get(field);', feature.get(field));
+          // console.log('feature.get(field);', feature.get(field));
           valuesToShow [field.name] = feature.get(field.name);
         }
         return valuesToShow;   // here return all the values available
       }, {
       layerFilter(layer) {
-          console.log('layer.get(\'name\') inside wfs foreachpixel', layer.get('name'));
+          // console.log('layer.get(\'name\') inside wfs foreachpixel', layer.get('name'));
           return layer.get('name') === layerOnIdentifyingName;  // to search only in the active layer
         },
       hitTolerance: 10
@@ -3117,7 +3162,7 @@ displayFeatureInfoWFS(evt: any) {
       if  (AppConfiguration.ratingMeasureLayers.hasOwnProperty(layerOnIdentifyingName)) {
       // create the table for rating measures
        text = text  + this.createReporMeasureLayer(layerOnIdentifyingName, featureValues);
-        this.content.nativeElement.innerHTML = text;
+       this.content.nativeElement.innerHTML = text;
       }
       // report normal layer
       else {
@@ -3232,7 +3277,7 @@ startIdentifying(layerOnIdentifying: any)
     }
 
     const lyr = this.findLayer(this.curEditingLayer.layerName);
-    console.log(' lyr and style in ranking', lyr);
+    // console.log(' lyr and style in ranking', lyr);
     if (lyr === null) {
       // alert('Error retrieving current layer');
       this.snackBar.open('Error retrieving layer for rating measures in Action Plan', 'ok',
@@ -3250,7 +3295,7 @@ startIdentifying(layerOnIdentifying: any)
       style: this.selectStyle,
     });
     this.map.addInteraction(this.select);
-    console.log('Interactions in the map in startRanking', this.map.getInteractions());
+    // console.log('Interactions in the map in startRanking', this.map.getInteractions());
     this.select.on('select', (e) => {
       const selectedFeatures = e.target.getFeatures().getArray();
       console.log('selectedFeatures', selectedFeatures );
@@ -3295,7 +3340,7 @@ startIdentifying(layerOnIdentifying: any)
   }
 
 startMeasuring(measureType = 'line') {
-  console.log('que comience la fiesta...', measureType);
+  // console.log('que comience la fiesta...', measureType);
   const source = new VectorSource();
   const vector = new VectorLayer({
       source,

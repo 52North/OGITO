@@ -17,6 +17,7 @@ import { DynamicFormComponent } from './dynamic-form/dynamic-form.component';
 import { DynamicFormQuestionComponent } from './dynamic-form-question/dynamic-form-question.component';
 import { DialogPopulationExposedComponent } from './dialog-population-exposed/dialog-population-exposed.component';
 import { DialogOrgExposedComponent } from './dialog-org-exposed/dialog-org-exposed.component';
+import { DialogResultExposedComponent } from './dialog-result-exposed/dialog-result-exposed.component';
 
 @NgModule({
   declarations: [
@@ -33,7 +34,8 @@ import { DialogOrgExposedComponent } from './dialog-org-exposed/dialog-org-expos
     DialogRatingDialog,
     DialogRatingMeasureDialog,
     DialogPopulationExposedComponent,
-    DialogOrgExposedComponent
+    DialogOrgExposedComponent,
+    DialogResultExposedComponent
   ],
   imports: [
     BrowserModule,
