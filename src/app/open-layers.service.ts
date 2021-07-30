@@ -34,7 +34,8 @@ export class OpenLayersService {
   findPopExposed$ = this.findPopExposedSource.asObservable();
   private findInstitutionsExposedSource = new Subject<any>();  // Population exposed to certain level of noise
   findInstitutionsExposed$ = this.findInstitutionsExposedSource.asObservable();
-
+  private addSketchLayerSource = new Subject<string>();
+  addSketchLayer$ = this.addSketchLayerSource.asObservable();
   constructor() { }
 
   updateExistingProject(projectOpened: boolean){
@@ -42,6 +43,12 @@ export class OpenLayersService {
      * @param projectOpened: indicates if there is a project opened (not a default view)
      */
     this.existingProject.next(projectOpened);
+  }
+  updateAddSketchLayer(value: string){
+    /**
+     * @param value: name of the sketch layer
+     */
+    this.addSketchLayerSource.next(value);
   }
 
   updateZoomHome(value= true){

@@ -1,10 +1,15 @@
-import { Component, OnInit } from '@angular/core';
+import {Component, Inject, OnInit} from '@angular/core';
 import {Subscription} from 'rxjs';
 import {OpenLayersService} from '../open-layers.service';
 import {MatIconRegistry} from '@angular/material/icon';
 import {DomSanitizer} from '@angular/platform-browser';
 import {request, gql} from 'graphql-request';
 import {AppConfiguration} from '../app-configuration';
+// import {MatDialog, MatDialogRef, MAT_DIALOG_DATA} from '@angular/material/dialog';
+
+/*export interface DialogData {
+  name: string;
+}*/
 
 @Component({
   selector: 'app-toolbar',
@@ -17,22 +22,11 @@ export class ToolbarComponent implements OnInit {
   y = 0;
   startX = 0;
   startY = 0;
+  layerSketchName: string;
   subscriptionExistingProject: Subscription;
   existingProject = true;
-
-  onPanStart(event: any): void {
-    this.startX = this.x;
-    this.startY = this.y;
-  }
-  onPan(event: any): void {
-    event.preventDefault();
-    this.x = this.startX + event.deltaX;
-    this.y = this.startY + event.deltaY;
-  }
-  zoomHome(){
-    this.openLayersService.updateZoomHome(true);
-  }
-   constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private openLayersService: OpenLayersService) {
+  constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer,
+              private openLayersService: OpenLayersService) {
 
     iconRegistry.addSvgIcon(
       'layerScratch',
@@ -47,10 +41,37 @@ export class ToolbarComponent implements OnInit {
        sanitizer.bypassSecurityTrustResourceUrl('assets/img/organnoyance-24px.svg')
      );
   }
+  onPanStart(event: any): void {
+    this.startX = this.x;
+    this.startY = this.y;
+  }
+  onPan(event: any): void {
+    event.preventDefault();
+    this.x = this.startX + event.deltaX;
+    this.y = this.startY + event.deltaY;
+  }
+  zoomHome(){
+    this.openLayersService.updateZoomHome(true);
+  }
+
+  openDialog(): void{
+/*    const dialogRef = this.dialog.open(DialogLayerNameDialog,{
+      width:'250px'
+    });
+    dialogRef.afterClosed().subscribe(result => {
+      console.log('the dialog layerName was closed', result);
+      this.layerSketchName = result;
+    });
+ */
+  }
+
   createScratchLayer(){
     /**
      * #TODO  send a subscription? ...
+     * Creates a new sketch layer and add it to the layer panel..
      */
+    this.openDialog();
+    if (this.layerSketchName) {  this.openLayersService.updateAddSketchLayer(this.layerSketchName); }
   }
   openLayerPanel(){
     this.openLayersService.updateShowLayerPanel(true);
@@ -135,3 +156,22 @@ export class ToolbarComponent implements OnInit {
   }
 
 }
+/*
+@Component({
+  // tslint:disable-next-line:component-selector
+  selector: 'dialog-layer-name-dialog',
+  templateUrl: 'dialog-layer-name-dialog.html',
+})
+// tslint:disable-next-line:component-class-suffix
+export class DialogLayerNameDialog {
+  sketchName: string;
+  constructor( public dialogRef: MatDialogRef<DialogLayerNameDialog>,
+               @Inject(MAT_DIALOG_DATA) public data: DialogData) {
+  }
+
+onNoClick(): void {
+    this.dialogRef.close();
+  }
+
+}
+*/

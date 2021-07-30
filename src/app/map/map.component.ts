@@ -58,10 +58,9 @@ import {FormControl, FormGroup, Validators} from '@angular/forms';
 import {DialogPopulationExposedComponent} from '../dialog-population-exposed/dialog-population-exposed.component';
 import {DialogResultExposedComponent} from '../dialog-result-exposed/dialog-result-exposed.component';
 import {request, gql} from 'graphql-request';
-import {switchAll} from 'rxjs/operators';
-import {consoleTestResultHandler} from 'tslint/lib/test';
 import {QueryDBService} from '../query-db.service';
 import {DialogOrgExposedComponent} from '../dialog-org-exposed/dialog-org-exposed.component';
+
 
 // To use rating dialogs
 export interface DialogData {
@@ -170,6 +169,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
   subsToFindPopExposed: Subscription;
   subsToFindOrgExposed: Subscription;
   subsToSelectProject: Subscription;
+  subsToAddSketchLayer: Subscription;
 
   constructor(private mapQgsStyleService: MapQgsStyleService,
               private  openLayersService: OpenLayersService,
@@ -250,6 +250,14 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     );
 
+    this.subsToAddSketchLayer = this.openLayersService.addSketchLayer$.subscribe(
+      data => {
+        if (data) this.addNewSketchLayer(data);
+      },
+      error => {
+        console.log('Error creating sketch layer', error);
+      }
+    );
 
     this.openLayersService.editAction$.subscribe(
       // starts an action and stop the others..is this ready with stop interactions?
@@ -390,7 +398,6 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   findOrgExposed(){
-    //
     /**
      * First do some checks, then call a function in the queryD service that executes the query by calling the DB API function
      * to find institutions exposed to certain range of noise
@@ -977,7 +984,22 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 
   }
 
+  addNewSketchLayer(sketchLayerName: string){
+    /**
+     * Adds a sketch layer to the panel to allow people "anotate noise map..."
+     * multi-geometry
+     */
+     //const newSource =
+    const newVector = new VectorLayer({
+      source : new VectorSource({wrapx:false}),
+      name: sketchLayerName,
+      zIndex : 101,   //this.zIndex
+      visible: true,
+      //getting defult style
+    });
 
+
+  }
 
   addLayerGroupLayerPanel(layerName: any, fieldsToShow: any){
     // add configuration to the layer to be added in a group
