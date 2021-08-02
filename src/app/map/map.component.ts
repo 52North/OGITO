@@ -60,7 +60,7 @@ import {DialogResultExposedComponent} from '../dialog-result-exposed/dialog-resu
 import {request, gql} from 'graphql-request';
 import {QueryDBService} from '../query-db.service';
 import {DialogOrgExposedComponent} from '../dialog-org-exposed/dialog-org-exposed.component';
-
+import {saveAs} from 'file-saver';
 
 // To use rating dialogs
 export interface DialogData {
@@ -110,8 +110,6 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
   mapCenterXY: number[] = [0, 0];   // the center of the map in the project EPSG coordinates
   projectProjection: Projection;
   mapZoom: number = AppConfiguration.mapZoom;
-  fieldWFSLayers = {};
-  layerStyles = {};
   selectStyle: any;
   popExposedStyle: any;
   qgsProjectFile: string;
@@ -132,6 +130,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
   // the project selected by the user
   selectedProject: any;
   loadedWfsLayers = []; // [{layerName: 'uno', layerTitle: 'Layer 1'}, {layerName: 'dos', layerTitle: 'layer 2'}];
+  loadedSketchLayers = [];
   groupsLayers: any[] = [];
   loadedWmsLayers = []; // [{layerName: 'uno', layerTitle: 'Layer 1'}, {layerName: 'dos', layerTitle: 'layer 2'}];
   formQuestions = [];
@@ -928,7 +927,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     });
     // add the layer to the map
     const fieldstoShow = [{name: 'value', type: 'QString', typeName: 'varchar', comment: ''}];
-    this.addSessionLayer(vectorLayer, fieldstoShow);
+    this.addSessionLayer(vectorLayer, fieldstoShow, false);
   }
 
   loadJsonPoint(geoJsonArray: any, layerName: string) {
@@ -979,7 +978,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     const fieldstoShow = [{name: 'bezirkeId', type: 'QString', typeName: 'varchar', comment: ''},
                           {name: 'id', type: 'QString', typeName: 'varchar', comment: ''}];
     // console.log('creates the new vector layer', vectorLayer);
-    this.addSessionLayer(vectorLayer, fieldstoShow);
+    this.addSessionLayer(vectorLayer, fieldstoShow, false);
     // console.log('this.groupsLayers in loadJsonPoint', this.groupsLayers);
 
   }
@@ -987,30 +986,58 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
   addNewSketchLayer(sketchLayerName: string){
     /**
      * Adds a sketch layer to the panel to allow people "anotate noise map..."
-     * multi-geometry
+     * multi-geometry --> all
      */
-     //const newSource =
+    const newSource  = new VectorSource({wrapx: false});
     const newVector = new VectorLayer({
-      source : new VectorSource({wrapx:false}),
+      source : newSource,
       name: sketchLayerName,
       zIndex : 101,   //this.zIndex
-      visible: true,
-      //getting defult style
+      visible: false,
+      // getting defult style
     });
+    // add the layer to the map
+    const fieldstoShow = [{name: 'detail', type: 'QString', typeName: 'varchar', comment: ''},
+      {name: 'id', type: 'QString', typeName: 'varchar', comment: ''}];
+    // fields to edit
+    const fieldsToEdit = [{name: 'detail', type: 'QString', typeName: 'varchar', comment: ''}];
+    this.addSessionLayer(newVector, fieldstoShow, true);
+    console.log('llego hasta aqui... activate sketch.. modify buffer and so son');
+    // add tp the group of sketch layers
+    this.loadedSketchLayers.push({
+       layerName: sketchLayerName,
+        // layerGeom,
+        layerTitle: sketchLayerName,
+        defaultSRS : AppConfiguration.srsName,
+        /*otherSrs: otherSrsLst,
+        lowCorner: [lowCorner.split(' ')[0], lowCorner.split(' ')[1]],
+        upperCorner: [upperCorner.split(' ')[0], upperCorner.split(' ')[1]], */
+        operations: ['insert', 'modify', 'delete'],  // #Check  this #TODO
+        geometryType: 'Multi', // Dependent of QGIS project as the styles.
+        source: newSource
+        });
+     // set the questions for the form
+    this.questionService.setSketchQuestions(sketchLayerName, fieldsToEdit);
 
 
   }
 
-  addLayerGroupLayerPanel(layerName: any, fieldsToShow: any){
+  addLayerGroupLayerPanel(layerName: any, fieldsToShow: any, sketch= false){
     // add configuration to the layer to be added in a group
     console.log('layerName and fieldsToShow in addLayerGroupLayerPanel', layerName, fieldsToShow);
+    let newFeats = false;
+    let geometryType = null;
+    if (sketch) {
+      newFeats = true;
+      geometryType = 'multi';
+    }
     const layers = [];
     const layerItem = {
     layerName,
     layerTittle: layerName,
     fields: fieldsToShow,  // add a generic name
-    geometryType: null,
-    layerForNewFeatures: false,
+    geometryType,
+    layerForNewFeatures: newFeats,
     layerForRanking: false,
     layerLegendUrl: null,   // que hacer aqui?
     legendLayer: null,
@@ -1018,7 +1045,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     onIdentify: false,
     onRanking: false,
     visible: false,
-    wfs: false };
+    wfs: false ,
+    sketch  };  // sketch will be used to activate editing mode.. #TODO
     // add the item to an array;
     layers.push(layerItem);
     // group does not exist in the variable
@@ -1027,7 +1055,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         groupTittle: AppConfiguration.nameSessionGroup,
         visible: false,
         layers});
-      // console.log('GROUP session did not exist this.groupsLayers', this.groupsLayers);
+        console.log('GROUP session did not exist this.groupsLayers', this.groupsLayers);
       this.groupsLayersSubject.next(this.groupsLayers);
       return;
     }
@@ -1040,10 +1068,10 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         verticalPosition: 'top',
         duration: 5000});
     return; */
-    // console.log('this.groupsLayers', this.groupsLayers);
+    console.log('GROUP session did exist this.groupsLayers', this.groupsLayers);
   }
 
-  addSessionLayer(layer: any, fieldstoShow: any){
+  addSessionLayer(layer: any, fieldstoShow: any, sketch = false){
   /**
    *   Add a layer in a 'session group', layers are sketch or queries result
    *   @param: layer with the vector source associated
@@ -1061,7 +1089,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       });
       this.map.addLayer(newGroup);
       newGroup.getLayers().push(layer);
-      this.addLayerGroupLayerPanel(layer.get('name'), fieldstoShow);
+      this.addLayerGroupLayerPanel(layer.get('name'), fieldstoShow, sketch);
       return;
     }
   let group: any;
@@ -1073,7 +1101,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       });
     // add the layer
   group.getLayers().push(layer);
-  this.addLayerGroupLayerPanel(layer.get('name'), fieldstoShow);
+  this.addLayerGroupLayerPanel(layer.get('name'), fieldstoShow, sketch);
   }
 
   saveRating(layerName: string, feature: any){
@@ -1874,7 +1902,7 @@ addingAttrFeature(layerName: string, feature: any,  attr: any){
   // find the layer in groups to get the editable fields
   const tlayer = this.findLayerinGroups(layerName);
   const fields = tlayer.fields;
-  // console.log('fields in addingAttFeature', fields);
+  console.log('fields in addingAttFeature', fields);
   if (attr !== 'undefined') {
     for (const key in attr) {
       const type = fields.find(x => x.name === key).type;
@@ -1917,9 +1945,16 @@ saveFeatinBuffer(layerName: string, feature: any, operation: string){
   /**
    * @param operation: 'insert' or 'update'
    */
-    // find layer
+  // find layer
   let tlayer: any;
+  // find layer in sketch layers..
   tlayer = this.findWfsLayer(layerName);
+  if (!tlayer) {
+    tlayer = this.findSketchLayer(layerName);
+    if (!tlayer) {
+      alert('Layer not found');
+    }
+  }
   // get data source
   const layerSource = tlayer.source;
   this.editBuffer.push({
@@ -2611,7 +2646,6 @@ findLayerinGroups(layerName: string): any {
 
 
 updateEditingLayer(layerOnEdit: any) {
-
     /**  starts or stops the editing mode for the layerName given
      * if there were some edits --> asks for saving changes
      * @param layerOnEdit: the oject layer that the user select to start/stop editing
@@ -2619,7 +2653,8 @@ updateEditingLayer(layerOnEdit: any) {
      *  #TODO catch exception
      */
   let layer: any;
-  // console.log('what is inside updateEditingLayer', layerOnEdit);
+  console.log('what is inside updateEditingLayer', layerOnEdit);  //no la consigue en las WFS...
+  console.log('groups', this.loadedSketchLayers, this.loadedWfsLayers);
   if (layerOnEdit === null) {
    if (this.curEditingLayer) {
       // a layer was being edited - ask for saving changes
@@ -2633,19 +2668,33 @@ updateEditingLayer(layerOnEdit: any) {
     this.stopEditing();  // test is changes are save to the right layer, otherwise it should go #
     // layer = this.loadedWfsLayers.find(x => x.layerName === layerOnEdit.layerName);
     layer = this.loadedWfsLayers.find(x => x.layerName === layerOnEdit.layer.layerName);
+    if (!layer) {
+      layer = this.loadedSketchLayers.find(x => x.layerName === layerOnEdit.layer.layerName);
+      if (!layer){
+        alert('Layer not found');
+        return;
+      }
+    }
     // layer contains the source.
     if (this.curEditingLayer === layer) {
       this.curEditingLayer = null;
-      this.stopEditing(); // maybe is not needed this should be controlled since the layer panel
+      this.stopEditing(); // maybe is not needed this should be controlled from the layer panel
       return;
     }
+    // it could be a sketch layer...
   }
   // the user wants to switch to another layer, already the edit was stopped with the previous layer
   layer = this.loadedWfsLayers.find(x => x.layerName === layerOnEdit.layer.layerName);
+  if (!layer) {
+    layer = this.loadedSketchLayers.find(x => x.layerName === layerOnEdit.layer.layerName);
+    if (!layer){
+      alert('Layer not found');
+      return;
+    }
+  }
   this.curEditingLayer = layer;
   this.startEditing(layer);
  }
-
 
 stopEditing() {
       /** Disables the interactions on the map to start moving/panning and stop drawing
@@ -2695,12 +2744,34 @@ saveSketchLayer(editLayer: any) {
     /** saves the changes in a sketch layer
      * @param editLayer: name of the layer to be saved.
      */
-    if (this.editBuffer.length > 0) {
-      if (!confirm('Do you want to save changes?')) {//  do not want to save changes
+    if (!(this.editBuffer.length > 0)){
+      this.snackBar.open('No features to save in current sketch layer', 'ok',
+        { horizontalPosition: 'center',
+          verticalPosition: 'top',
+          duration: 5000});
+      return;
+    }
+    if (!confirm('Do you want to save changes?')) {//  do not want to save changes
+        return;
+    }
+    try {
+      console.log('editLayer', editLayer);
+      const tsource = editLayer.source;
+      if (!tsource) {
+        this.snackBar.open('No source found in current sketch layer', 'ok',
+          { horizontalPosition: 'center',
+            verticalPosition: 'top',
+            duration: 5000});
         return;
       }
-      console.log('write the code to save sketchLayer' + editLayer);  // save the changes
-      return;
+      let data = new GeoJSON().writeFeatures(tsource.getFeatures());
+      const featJSON = JSON.parse(data);
+      data = JSON.stringify(featJSON, null, 4);
+      const blob = new Blob([data], {type: 'text/json;charset=UTF-8'});
+      saveAs(blob, editLayer.layerName);
+    }
+    catch (e){
+      console.log('write the code to save sketchLayer' + e);
     }
   }
 
@@ -2714,17 +2785,13 @@ startEditing(layer: any) {
     try {
       // this.removeInteractions();  //#TODO verify this is done in addShape
       // update the observables
-      // this is done from layerPanel commented 01032021 this.openLayersService.updateShowEditToolbar(true);
-      // console.log('que entra en startediting layer', layer);
       // The problem seem to be that the symbol panel is show before knowing the layer..
       this.openLayersService.updateLayerEditing(layer.layerName, layer.geometryType);
       // clear caches and styles  // #TODO best way to do...
       // this.cacheFeatures = [];
       this.currentClass = null;  // forcing the user to pick and style and cleaning previous style? check
-
-
     } catch (e) {
-    alert('Error starting editing...');
+    alert('Error starting editing...' + e);
     }
   }
 removeFeatEditBuffer(feat: any) {
@@ -2751,13 +2818,11 @@ undoLastEdit() {
       return;
     }
     const lastOperation = this.editBuffer.filter(obj => obj.layerName === this.curEditingLayer.layerName).pop(); // curEdits.pop();
-    // console.log ('lastOperation', lastOperation);
     switch (lastOperation.transaction)
     // rotate and translate are treated as update #TODO change attributes
     {
       case 'insert': {
         // remove from the source
-        // console.log('feat', lastOperation.feats);
         this.curEditingLayer.source.removeFeature(lastOperation.feats);
         break;
       }
@@ -2793,11 +2858,9 @@ undoLastEdit() {
     }
     // remove from the edit Buffer
     this.removeFeatEditBuffer(lastOperation.feats);
-    // console.log('this.editBuffer', this.editBuffer);
   }
 
 writeTransactWfs(editLayer: any) {
-    // console.log ('entra a save...', this.editBuffer);
     /** saves changes on a wfs layer
      * @param editLayer: layer to save changes stored in the editBuffer
      */
@@ -2811,7 +2874,6 @@ writeTransactWfs(editLayer: any) {
 
     this.editBuffer.forEach(t => {
       // create the node for CRU
-      // console.log("la consigue o no", layer.get('name'));
       if (t.layerName === editLayer.layerName) {
         // save edits in current edit layer
         switch (t.transaction) {
@@ -2954,6 +3016,17 @@ writeTransactWfs(editLayer: any) {
     }
   }
 
+  findSketchLayer(layerName: string) {
+    /**
+     * find the object layer with the name @layername
+     * @param layername: string, the name of the layer to find
+     * @return tlayer: the object layer found
+     */
+    let tlayer: any = null;
+    tlayer = this.loadedSketchLayers.find(x => x.layerName.toLowerCase() === layerName.toLowerCase());
+    // console.log('tlayer in findLyer', tlayer);
+    return (tlayer);
+  }
 
 findWfsLayer(layerName: string) {
   /**
@@ -3190,7 +3263,12 @@ displayFeatureInfoWFS(evt: any) {
       else {
         for (const key in featureValues){
           if (key !== 'img'){
-            text = text.concat('<tr><td>' + key + '</td><td>' + featureValues[key] + '</td></tr>');
+            if (featureValues[key]) {
+              text = text.concat('<tr><td>' + key + '</td><td>' + featureValues[key] + '</td></tr>');
+            }
+            else {
+              text = text.concat('<tr><td>' + key + '</td><td>' + '' + '</td></tr>');
+            }
           }
         }
         if (featureValues.img )  // the property img exists

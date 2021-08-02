@@ -5,6 +5,7 @@ import {MatIconRegistry} from '@angular/material/icon';
 import {DomSanitizer} from '@angular/platform-browser';
 import {request, gql} from 'graphql-request';
 import {AppConfiguration} from '../app-configuration';
+import {MatDialog, MatDialogRef} from '@angular/material/dialog';
 // import {MatDialog, MatDialogRef, MAT_DIALOG_DATA} from '@angular/material/dialog';
 
 /*export interface DialogData {
@@ -26,7 +27,8 @@ export class ToolbarComponent implements OnInit {
   subscriptionExistingProject: Subscription;
   existingProject = true;
   constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer,
-              private openLayersService: OpenLayersService) {
+              private openLayersService: OpenLayersService,
+              public dialog: MatDialog) {
 
     iconRegistry.addSvgIcon(
       'layerScratch',
@@ -54,25 +56,29 @@ export class ToolbarComponent implements OnInit {
     this.openLayersService.updateZoomHome(true);
   }
 
-  openDialog(): void{
-/*    const dialogRef = this.dialog.open(DialogLayerNameDialog,{
-      width:'250px'
-    });
-    dialogRef.afterClosed().subscribe(result => {
-      console.log('the dialog layerName was closed', result);
-      this.layerSketchName = result;
-    });
- */
-  }
-
-  createScratchLayer(){
+  createScratchLayer(): void{
     /**
-     * #TODO  send a subscription? ...
      * Creates a new sketch layer and add it to the layer panel..
      */
+    const dialogRef = this.dialog.open(DialogLayerNameDialog,{
+      width: '250px'
+    });
+    dialogRef.afterClosed().subscribe(result => {
+      console.log('the dialog layerName was closed', result, result.length);
+      if (result.length > 2){
+        this.openLayersService.updateAddSketchLayer(result);
+        // console.log('the dialog layerName was closed', result);
+      }
+       });
+    }
+
+  /*createScratchLayer(){
+
     this.openDialog();
     if (this.layerSketchName) {  this.openLayersService.updateAddSketchLayer(this.layerSketchName); }
   }
+
+   */
   openLayerPanel(){
     this.openLayersService.updateShowLayerPanel(true);
   }
@@ -156,7 +162,7 @@ export class ToolbarComponent implements OnInit {
   }
 
 }
-/*
+
 @Component({
   // tslint:disable-next-line:component-selector
   selector: 'dialog-layer-name-dialog',
@@ -165,8 +171,7 @@ export class ToolbarComponent implements OnInit {
 // tslint:disable-next-line:component-class-suffix
 export class DialogLayerNameDialog {
   sketchName: string;
-  constructor( public dialogRef: MatDialogRef<DialogLayerNameDialog>,
-               @Inject(MAT_DIALOG_DATA) public data: DialogData) {
+  constructor( public dialogRef: MatDialogRef<DialogLayerNameDialog>) {
   }
 
 onNoClick(): void {
@@ -174,4 +179,4 @@ onNoClick(): void {
   }
 
 }
-*/
+

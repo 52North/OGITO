@@ -108,7 +108,7 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
   );
   this.subsToGeomTypeEditing = this.openLayersService.layerEditing$.subscribe(
     (data: any) => {
-      console.log('data aqui', data);
+      console.log('data aqui de donde viene esto XXX LOL', data);
       this.updateLayerTypeRanking(data.layerName);
       this.updateLayerTypeRating(data.layerName);
       this.updateLayerTypeEdit(data.layerGeom);

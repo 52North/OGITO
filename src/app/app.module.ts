@@ -9,7 +9,7 @@ import {DemoMaterialModule} from './material-module';
 import { EditingToolbarComponent } from './editing-toolbar/editing-toolbar.component';
 import { LayerPanelComponent } from './layer-panel/layer-panel.component';
 import { SymbolListComponent } from './symbol-list/symbol-list.component';
-import { ToolbarComponent } from './toolbar/toolbar.component';
+import { ToolbarComponent, DialogLayerNameDialog } from './toolbar/toolbar.component';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {HttpClientModule } from '@angular/common/http';
 import { ProjlistComponent } from './projlist/projlist.component';
@@ -35,7 +35,8 @@ import { DialogResultExposedComponent } from './dialog-result-exposed/dialog-res
     DialogRatingMeasureDialog,
     DialogPopulationExposedComponent,
     DialogOrgExposedComponent,
-    DialogResultExposedComponent
+    DialogResultExposedComponent,
+    DialogLayerNameDialog
   ],
   imports: [
     BrowserModule,

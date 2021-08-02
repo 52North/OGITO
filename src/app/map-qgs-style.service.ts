@@ -315,6 +315,37 @@ export class MapQgsStyleService {
       .catch(error => console.error(error));
   }
 
+  setSketchStyle(): any{
+    // Sketch layer for example  return a default style #TODO
+    const fill = new Fill({
+      color: 'rgba(255,255,255,0.4)'
+    });
+    const stroke = new Stroke({
+      color: '#3399CC',
+      width: 1.25
+    });
+    const style =
+      new Style({
+        image: new Circle({
+          fill,
+          stroke,
+          radius: 5
+        }),
+        fill,
+        stroke
+      });
+    const dictStyle = {symbolType: 'Single Symbol',
+                      style: { default: { attr: 'default',
+                                         label: 'default',
+                                         style,
+                                         symbol: 'default',
+                                         value: 'default'}
+               }
+    };
+    return dictStyle;
+  }
+
+
   getLayerStyle(layerName: string){
     /** return the style for a layer
      * @param layername: string, the name of the layer
@@ -323,6 +354,10 @@ export class MapQgsStyleService {
     // 01-03 this. nodes  --> this.layerStyles
     if (this.layerStyles[layerName]){
        return this.layerStyles[layerName];
+    }
+    else {
+      // return the sketch style
+      return(this.setSketchStyle());
     }
   }
 

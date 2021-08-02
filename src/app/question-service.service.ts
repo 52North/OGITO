@@ -131,6 +131,14 @@ export class QuestionService {
     return max;
   }
 
+
+  setSketchQuestions(sketchName: string, fields: any) {
+    // set the questions for a new Sketch layer
+    // by default details a varchar field
+    const questions = this.setLayerQuestions(sketchName, fields);
+    this.questions[sketchName] = questions;
+  }
+
   setQuestions(layerGroups){
     /**
      * builds all the questions for all the layers

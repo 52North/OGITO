@@ -48,6 +48,7 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
     data => {
       // console.log('que viene de ol service data:', data);
       this.styles = this.mapQgsStyleService.getLayerStyle(data.layerName);
+      console.log('que viene en this.styles:', this.styles);
       this.symbols$ = this.getJsonSymbolList(this.styles);
       this.symbolsLength = Object.keys(this.symbols$).length;
       this.geometryTypeSymbols = data.layerGeom;
@@ -151,6 +152,10 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
           let cloneStyle: any;
           cloneStyle = olStyle.clone();
           switch (this.geometryTypeSymbols) {
+            case 'Multi': {
+              // all geometry types
+              return;
+            }
             case 'Point': {
               const cx = width / 2;
               const cy = height / 2;
