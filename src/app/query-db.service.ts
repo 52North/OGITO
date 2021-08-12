@@ -27,10 +27,14 @@ export class QueryDBService {
     let queryResult = null;
     const layerName = selectedNoiseLayer + data.selectedLayer.toLowerCase() + '_' + lowLevel + '_' + highLevel;
     const layerNames = {straassenlaerm_lden: 'StraassenlaermLden',
-                        straassenlaerm_lnight: 'StraassenlaermLnight'
-                       };
-
-
+                        straassenlaerm_lnight: 'StraassenlaermLnight',
+                        gesamtlarm_lden: 'GesamtlarmLden',
+                        Industrielaerm_lden: 'IndustrielaermLden',
+                        Industrielaerm_lnight: 'IndustrielaermLnight',
+                        Zuglaerm_bogestra_lden: 'ZuglaermBogestraLden',
+                        Zuglaerm_bogestra_lnight: 'ZuglaermBogestraLnight',
+                        Zuglaerm_db_lden: 'ZuglaermDbLden'
+    };
     const queryName =  selectedLayer + bezirke + layerNames[selectedNoiseLayer];
     const  query = gql`
       query { ` +

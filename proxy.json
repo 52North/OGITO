@@ -3,10 +3,7 @@
     "target": "https://ogito.itc.utwente.nl/graphql",
     "secure": true,
     "logLevel": "debug",
-    "changeOrigin": true,
-    "pathRewrite": {
-      "^/graphql": ""
-    }
+    "changeOrigin": true
   }
 
 }

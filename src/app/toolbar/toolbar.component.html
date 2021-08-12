@@ -1,7 +1,8 @@
 <!--suppress AngularUndefinedBinding -->  <!-- to fix a bug in webstorm -->
 
-<div class ="mapToolbar"   *ngIf="existingProject" [style.left.px]="x" [style.top.px]="y"
-     (panstart)="onPanStart($event)" (panmove)="onPan($event)">
+<div class ="mapToolbar"   *ngIf="existingProject" cdkDrag cdkDragBoundary=".app-content"
+     [style.left.px]="x" [style.top.px]="y"
+    >
 <mat-card class="spacetitle" color="primary">
  <!-- <mat-card-title-group>
     <mat-card-title class="toolbarTitle">&nbsp;</mat-card-title>

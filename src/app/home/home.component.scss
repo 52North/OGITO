@@ -41,7 +41,6 @@ footer a {
   align-items: center;
 }
 
-
 .terminal {
   position: relative;
   width: 80%;
@@ -52,7 +51,10 @@ footer a {
   overflow: hidden;
   background-color: rgb(15, 15, 16);
 }
-
+.app-content{
+  width: 100vw;
+  height: 93vh;
+}
 @media screen and (min-width: 900px) {
   .mat-toolbar {
     background-color: #78002e; // primary dark color only for test removed later to keep the primary color

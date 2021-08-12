@@ -134,6 +134,8 @@ export class MapQgsStyleService {
      * @param {layerName} name of the layer
      * @returns {Style} default style to render the feature
      */
+    // return the style for sketch..
+    return(this.defineSketchStyle());
   }
 
   mapQsJsonPointSymbol(format: any, onlineResource: any, mark: any, size: any) {
@@ -315,34 +317,68 @@ export class MapQgsStyleService {
       .catch(error => console.error(error));
   }
 
-  setSketchStyle(): any{
+  setSketchStyle(layerName: string){
+    this.layerStyles[layerName] = {
+      symbolType: 'Single Symbol',
+      style: {
+        default: {
+          style: this.defineSketchStyle(),      // style is a list
+          label: 'default',
+          value: 'default',
+          attr: 'default',
+          symbol: 'default'
+        }
+      }
+    };
+  }
+
+  defineSketchStyle(): any{
     // Sketch layer for example  return a default style #TODO
-    const fill = new Fill({
-      color: 'rgba(255,255,255,0.4)'
+    const svgMarker= 'PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjxzdmcKICAgaGVpZ2h0PSIyNHB4IgogICB2aWV3Qm' +
+      '94PSIwIDAgMjQgMjQiCiAgIHdpZHRoPSIyNHB4IgogICBmaWxsPSIjMDAwMDAwIgogICB2ZXJzaW9uPSIxLjEiCiAgIGlkPSJzdmc2IgogICBzb2RpcG9kaTpkb2NuYW1' +
+      'lPSJ3aGVyZV90b192b3RlX2JsYWNrXzI0ZHAuc3ZnIgogICBpbmtzY2FwZTp2ZXJzaW9uPSIxLjEgKGM2OGUyMmMzODcsIDIwMjEtMDUtMjMpIgogICB4bWxuczppbmt' +
+      'zY2FwZT0iaHR0cDovL3d3dy5pbmtzY2FwZS5vcmcvbmFtZXNwYWNlcy9pbmtzY2FwZSIKICAgeG1sbnM6c29kaXBvZGk9Imh0dHA6Ly9zb2RpcG9kaS5zb3VyY2Vmb3Jn' +
+      'ZS5uZXQvRFREL3NvZGlwb2RpLTAuZHRkIgogICB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciCiAgIHhtbG5zOnN2Zz0iaHR0cDovL3d3dy53My5vcmcvM' +
+      'jAwMC9zdmciPgogIDxkZWZzCiAgICAgaWQ9ImRlZnMxMCIgLz4KICA8c29kaXBvZGk6bmFtZWR2aWV3CiAgICAgaWQ9Im5hbWVkdmlldzgiCiAgICAgcGFnZWNvbG9yP' +
+      'SIjZmZmZmZmIgogICAgIGJvcmRlcmNvbG9yPSIjNjY2NjY2IgogICAgIGJvcmRlcm9wYWNpdHk9IjEuMCIKICAgICBpbmtzY2FwZTpwYWdlc2hhZG93PSIyIgogICAg' +
+      'IGlua3NjYXBlOnBhZ2VvcGFjaXR5PSIwLjAiCiAgICAgaW5rc2NhcGU6cGFnZWNoZWNrZXJib2FyZD0iMCIKICAgICBzaG93Z3JpZD0iZmFsc2UiCiAgICAgaW5rc2Nhc' +
+      'GU6em9vbT0iMzEuMzc1IgogICAgIGlua3NjYXBlOmN4PSIxMS45ODQwNjQiCiAgICAgaW5rc2NhcGU6Y3k9IjEyIgogICAgIGlua3NjYXBlOndpbmRvdy13aWR0aD0iM' +
+      'TkyMCIKICAgICBpbmtzY2FwZTp3aW5kb3ctaGVpZ2h0PSIxMDAxIgogICAgIGlua3NjYXBlOndpbmRvdy14PSItOSIKICAgICBpbmtzY2FwZTp3aW5kb3cteT0iMTE5M' +
+      'SIKICAgICBpbmtzY2FwZTp3aW5kb3ctbWF4aW1pemVkPSIxIgogICAgIGlua3NjYXBlOmN1cnJlbnQtbGF5ZXI9InN2ZzYiIC8+CiAgPHBhdGgKICAgICBkPSJNMCAwa' +
+      'DI0djI0SDBWMHoiCiAgICAgZmlsbD0ibm9uZSIKICAgICBpZD0icGF0aDIiIC8+CiAgPHBhdGgKICAgICBkPSJNIDEyLDEgQyA3LjU5LDEgNCw0LjU5IDQsOSBjIDAs' +
+      'NS41NyA2Ljk2LDEzLjM0IDcuMjYsMTMuNjcgTCAxMiwyMy40OSAxMi43NCwyMi42NyBDIDEzLjA0LDIyLjM0IDIwLDE0LjU3IDIwLDkgMjAsNC41OSAxNi40MSwxIDEy' +
+      'LDEgWiBtIDAsMTkuNDcgQyA5LjgyLDE3Ljg2IDYsMTIuNTQgNiw5IDYsNS42OSA4LjY5LDMgMTIsMyBjIDMuMzEsMCA2LDIuNjkgNiw2IDAsMy44MyAtNC4yNSw5LjM2I' +
+      'C02LDExLjQ3IHoiCiAgICAgaWQ9InBhdGg0IgogICAgIHNvZGlwb2RpOm5vZGV0eXBlcz0ic3NjY2Nzc2Nzc3NjIiAvPgo8L3N2Zz4K';
+
+    const svgMarkerColor = 'PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjxzdmcKICAgaGVpZ2h0PSIyNHB4IgogIC' +
+      'B2aWV3Qm94PSIwIDAgMjQgMjQiCiAgIHdpZHRoPSIyNHB4IgogICBmaWxsPSIjMDAwMDAwIgogICB2ZXJzaW9uPSIxLjEiCiAgIGlkPSJzdmc2IgogICBzb2RpcG9ka' +
+      'Tpkb2NuYW1lPSJ3aGVyZV90b192b3RlX2JsYWNrXzI0ZHAuc3ZnIgogICBpbmtzY2FwZTp2ZXJzaW9uPSIxLjEgKGM2OGUyMmMzODcsIDIwMjEtMDUtMjMpIgogICB4' +
+      'bWxuczppbmtzY2FwZT0iaHR0cDovL3d3dy5pbmtzY2FwZS5vcmcvbmFtZXNwYWNlcy9pbmtzY2FwZSIKICAgeG1sbnM6c29kaXBvZGk9Imh0dHA6Ly9zb2RpcG9kaS5' +
+      'zb3VyY2Vmb3JnZS5uZXQvRFREL3NvZGlwb2RpLTAuZHRkIgogICB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciCiAgIHhtbG5zOnN2Zz0iaHR0cDovL3d' +
+      '3dy53My5vcmcvMjAwMC9zdmciPgogIDxkZWZzCiAgICAgaWQ9ImRlZnMxMCIgLz4KCiAgPHBhdGgKICAgICBkPSJNMCAwaDI0djI0SDBWMHoiCiAgICAgZmlsbD0ibm9' +
+      'uZSIKICAgICBpZD0icGF0aDIiIC8+CiAgPHBhdGgKICAgICBkPSJNIDEyLDEgQyA3LjU5LDEgNCw0LjU5IDQsOSBjIDAsNS41NyA2Ljk2LDEzLjM0IDcuMjYsMTMuNjc' +
+      'gTCAxMiwyMy40OSAxMi43NCwyMi42NyBDIDEzLjA0LDIyLjM0IDIwLDE0LjU3IDIwLDkgMjAsNC41OSAxNi40MSwxIDEyLDEgWiBtIDAsMTkuNDcgQyA5LjgyLDE3Ljg' +
+      '2IDYsMTIuNTQgNiw5IDYsNS42OSA4LjY5LDMgMTIsMyBjIDMuMzEsMCA2LDIuNjkgNiw2IDAsMy44MyAtNC4yNSw5LjM2IC02LDExLjQ3IHoiCiAgICAgaWQ9InBhdG' +
+      'g0IgogICAgIHNvZGlwb2RpOm5vZGV0eXBlcz0ic3NjY2Nzc2Nzc3NjIgogICAgIHN0eWxlPSJmaWxsOiNkZDFjNzc7ZmlsbC1vcGFjaXR5OjEiIC8+Cjwvc3ZnPgo=';
+    const newIcon = new Icon({
+      opacity: 1,
+      crossOrigin: 'anonymous',
+      src: 'data:image/svg+xml;base64,' + svgMarkerColor,
+      scale: 0.9,
+      // size: size,
+      color: '#dd1c77'
     });
-    const stroke = new Stroke({
-      color: '#3399CC',
-      width: 1.25
-    });
+    newIcon.load();
+    const fill = new Fill({color: 'rgba(255,0,255,0.4)'});
+    const stroke = new Stroke({color: '#dd1c77', width: 1.25 });
     const style =
       new Style({
-        image: new Circle({
-          fill,
-          stroke,
-          radius: 5
-        }),
+        stroke,
         fill,
-        stroke
+        image: newIcon,
       });
-    const dictStyle = {symbolType: 'Single Symbol',
-                      style: { default: { attr: 'default',
-                                         label: 'default',
-                                         style,
-                                         symbol: 'default',
-                                         value: 'default'}
-               }
-    };
-    return dictStyle;
+
+    return(style);
   }
 
 
@@ -357,7 +393,7 @@ export class MapQgsStyleService {
     }
     else {
       // return the sketch style
-      return(this.setSketchStyle());
+      return(this.defineSketchStyle());
     }
   }
 
@@ -529,13 +565,13 @@ export class MapQgsStyleService {
          'lsbD0iZmlsbDpwYXJhbShmaWxsKSNmZmZmZmYiPg0KPHBhdGggZD0iTTAgMGgyNHYyNEgweiIgZmlsbD0ibm9uZSIvPg0KPHBhdGggZD0iTTE5IDNINWMtMS4xIDAtM' +
          'S45OS45LTEuOTkgMkwzIDE5YzAgMS4xLjkgMiAyIDJoMTRjMS4xIDAgMi0uOSAyLTJWNWMwLTEuMS0uOS0yLTItMnptLTEgMTFoLTR2NGgtNHYtNEg2di00aDRWNmg0' +
          'djRoNHY0eiIgc3R5bGU9ImZpbGw6cGFyYW0oZmlsbCkjZmZmZmZmIi8+PC9zdmc+'
-     }
+     };
      if (colors.hasOwnProperty(layerName)) {
        color = colors[layerName];
      }
-   if (svgs.hasOwnProperty(layerName)) {
+     if (svgs.hasOwnProperty(layerName)) {
      svg = svgs[layerName];
-   }
+     }
 
      console.log('color in createStyleExposedOrg', color, colors[layerName] );
 
@@ -553,15 +589,6 @@ export class MapQgsStyleService {
        fill: new Fill({ color })
      });
 
-     /*const orgExposedStyle =  new Style({
-        // fill: new Fill({ color }),
-        stroke: new Stroke({color}),
-        image: new CircleStyle({
-           radius: 7,
-           fill: new Fill({color}),
-           stroke: new Stroke({color, width: 2, lineDash: [8, 5]})
-         })
-     }); */
      return orgExposedStyle;
   }
 

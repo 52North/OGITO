@@ -19,3 +19,7 @@
   cursor:pointer;
   //border-bottom-color: aqua;
 }
+:host ::ng-deep  .mat-button  {
+  vertical-align: top !important;
+}
+

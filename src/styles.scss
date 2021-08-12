@@ -32,14 +32,16 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; overflow: h
 }
 
 .matCloseWrapper{
-  padding: 0 0 0 0;
+  padding: 0 0 0 0 !important;
   width: 1.7vw !important;
   height: 1.7vw !important;
   // line-height: 18px !important;
-  margin-top: 0;
+  margin-top: 0 !important;
 }
 
-
+.mat-flat-button{
+  vertical-align: top !important;
+}
 .closeIcon {
   font-size: 1vw;
   text-align: center;

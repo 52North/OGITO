@@ -261,8 +261,6 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     this.openLayersService.editAction$.subscribe(
       // starts an action and stop the others..is this ready with stop interactions?
       data => {
-        console.log('que viene', data);
-        console.log('map interactions', this.map.getInteractions());
         this.removeInteractions();
         if (this.helpTooltip) {
           console.log('entra aqui..');
@@ -347,11 +345,19 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     const ratingName =  layerName === 'massnahmen_laute' ? 'Massnahmen Laute Orte' : 'Massnahmen Leise Orte';
     // # TODO modify this
     const fieldsNames =  AppConfiguration.ratingMeasureLayers[layerName];
-    console.log('fieldsNames in openDialogRankingMeasures in ' + layerName, fieldsNames);
+    console.log('fieldsNames', fieldsNames)
+    let fieldsToRank = []; // select those that have a true value
+    fieldsNames.forEach(field  => {
+      console.log(feature,field, feature.get(field))
+     if (feature.get(field) === true) {
+       fieldsToRank.push(field);
+     }
+    });
+    console.log('fieldsNames in openDialogRankingMeasures in ' + layerName, fieldsNames,fieldsToRank );
 
     const dialogRef = this.dialog.open(DialogRatingMeasureDialog, {
       width: '400px',
-      data: {layerNameDialog: ratingName, fieldNames: fieldsNames, ranking: this.ranking}
+      data: {layerNameDialog: ratingName, fieldNames: fieldsToRank, ranking: this.ranking}
     });
     dialogRef.afterClosed().subscribe(result => {
       console.log('the ranking measures selected was', result);
@@ -780,7 +786,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         verticalPosition: 'top',
         duration: 3000});
     // http://localhost:4200/graphql--> by proxy diverted to http://130.89.6.97:5000/graphql
-    request('https://ogito.itc.utwente.nl/graphql', query)
+    // request('https://ogito.itc.utwente.nl/graphql', query)
+    request('http://localhost:4200/graphql', query)   // debug time
       .then(result => {
         // console.log('data', result[queryName]);
         this.processPopLden(result[queryName], layerName );
@@ -988,13 +995,23 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
      * Adds a sketch layer to the panel to allow people "anotate noise map..."
      * multi-geometry --> all
      */
+    // set style
+    this.mapQgsStyleService.setSketchStyle(sketchLayerName);
+    const self  = this;
     const newSource  = new VectorSource({wrapx: false});
     const newVector = new VectorLayer({
       source : newSource,
       name: sketchLayerName,
-      zIndex : 101,   //this.zIndex
+      zIndex : 101,   // this.zIndex
       visible: false,
-      // getting defult style
+      // getting default style
+      style(feature) {    // this equiv to style: function(feature)
+        let layerStyle = self.mapQgsStyleService.findJsonStyle(feature, sketchLayerName);
+        if (!layerStyle) {
+          layerStyle = self.mapQgsStyleService.findDefaultStyleProvisional(feature.getGeometry().getType(), sketchLayerName);
+        }
+        return (layerStyle);
+      }
     });
     // add the layer to the map
     const fieldstoShow = [{name: 'detail', type: 'QString', typeName: 'varchar', comment: ''},
@@ -1444,7 +1461,7 @@ changeSymbol(style: any) {
 
     this.currentStyle = style.value;
     this.currentClass = style.key;
-    // console.log('current class and Style', style, this.currentClass, this.currentStyle );
+    console.log('current class and Style', style, this.currentClass, this.currentStyle );
   }
 
 initializeMap() {
@@ -2653,8 +2670,8 @@ updateEditingLayer(layerOnEdit: any) {
      *  #TODO catch exception
      */
   let layer: any;
-  console.log('what is inside updateEditingLayer', layerOnEdit);  //no la consigue en las WFS...
-  console.log('groups', this.loadedSketchLayers, this.loadedWfsLayers);
+  // console.log('what is inside updateEditingLayer', layerOnEdit);  //no la consigue en las WFS...
+  // console.log('groups', this.loadedSketchLayers, this.loadedWfsLayers);
   if (layerOnEdit === null) {
    if (this.curEditingLayer) {
       // a layer was being edited - ask for saving changes
@@ -2751,7 +2768,7 @@ saveSketchLayer(editLayer: any) {
           duration: 5000});
       return;
     }
-    if (!confirm('Do you want to save changes?')) {//  do not want to save changes
+    if (!confirm('Do you want to download changes in this session layer?')) {//  do not want to save changes
         return;
     }
     try {
@@ -3398,7 +3415,7 @@ startIdentifying(layerOnIdentifying: any)
     // console.log('Interactions in the map in startRanking', this.map.getInteractions());
     this.select.on('select', (e) => {
       const selectedFeatures = e.target.getFeatures().getArray();
-      console.log('selectedFeatures', selectedFeatures );
+      // console.log('selectedFeatures', selectedFeatures );
       if (selectedFeatures.length <= 0) {
         this.snackBar.open('No features selected', 'ok',
           { horizontalPosition: 'center',

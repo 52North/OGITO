@@ -43,15 +43,7 @@ export class ToolbarComponent implements OnInit {
        sanitizer.bypassSecurityTrustResourceUrl('assets/img/organnoyance-24px.svg')
      );
   }
-  onPanStart(event: any): void {
-    this.startX = this.x;
-    this.startY = this.y;
-  }
-  onPan(event: any): void {
-    event.preventDefault();
-    this.x = this.startX + event.deltaX;
-    this.y = this.startY + event.deltaY;
-  }
+
   zoomHome(){
     this.openLayersService.updateZoomHome(true);
   }
@@ -64,14 +56,13 @@ export class ToolbarComponent implements OnInit {
       width: '250px'
     });
     dialogRef.afterClosed().subscribe(result => {
-      console.log('the dialog layerName was closed', result, result.length);
       if (result.length > 2){
+        console.log('the dialog layerName was closed', result, result.length);
         this.openLayersService.updateAddSketchLayer(result);
         // console.log('the dialog layerName was closed', result);
       }
-       });
+      });
     }
-
   /*createScratchLayer(){
 
     this.openDialog();

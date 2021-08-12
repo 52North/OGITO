@@ -66,24 +66,6 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
   }
 
 
-
-  onPanStart(event: any): void {
-    /** Sets the current coordinates of the layerPanel to use later when setting a new position
-     * triggered when a pan event starts in the layerpanel card
-     * @param event, type event
-     */
-    this.startX = this.x;
-    this.startY = this.y;
-  }
-  onPan(event: any): void {
-    /** Sets the new location of the layerPanel after a pan event was triggered in the layerPanel card
-     * @param event, type event
-     */
-    event.preventDefault();
-    this.x = this.startX + event.deltaX;
-    this.y = this.startY + event.deltaY;
-  }
-
   ngOnInit(): void {
     this.displaySymbolList$ = observableOf(true);  // #Only for development purposes, #TODO put in fs
   }
@@ -145,7 +127,7 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
           canvas.nativeElement.height = height;
           // console.log('width and height', height, width, canvas.nativeElement.width , devicePixelRatio  );
           const render = toContext(canvas.nativeElement.getContext('2d'));
-          // console.log(' que llega a this.symbols$', this.symbols$);
+          console.log('key', key, 'que llega a this.symbols$', this.symbols$[key], this.symbols$ );
           const stylelayer = this.symbols$[key];
           const stylelayerClone = [];   // clone the style hopefully deep copy
           const olStyle = stylelayer.style;
@@ -154,6 +136,37 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
           switch (this.geometryTypeSymbols) {
             case 'Multi': {
               // all geometry types
+              // draw a point, then a line and a polygon
+              const cx = width / 2;
+              const cy = height / 2;
+              feature = new Feature(new Point([cx, cy]));
+              let imageClone: any;
+              // cloneStyle = style.clone();
+              imageClone = olStyle.clone().getImage();
+              imageClone.setScale(imageClone.getScale() * 5);  // #TODO check this
+              // this is working
+              cloneStyle = new Style({
+                image: imageClone,
+                fill: olStyle.getFill()
+              });
+              render.drawFeature(feature, cloneStyle);
+              /* to discuss draw a line
+              // clone the style again
+              cloneStyle = olStyle.clone();
+              let heigthStroke = height / 2;
+              let strokeClone: any;
+              strokeClone = cloneStyle.getStroke();
+              strokeClone.setWidth(strokeClone.getWidth() * factor);   // 10 to mkae the line visible.
+              heigthStroke = (height - strokeClone.getWidth()) / 2;
+              cloneStyle.setStroke(strokeClone);
+              feature = new Feature(new LineString([[10, heigthStroke], [width - (width / 4), heigthStroke]]));
+              render.drawFeature(feature, cloneStyle);
+              // draw a polygon
+              render.lineWidth = 5;
+              const wide = width - (width / 4);
+              const high = height - (height / 4);
+              feature = new Feature(new Polygon([[[0, 0], [0, high], [wide, high], [wide, 0], [0, 0]]]));
+              render.drawFeature(feature, cloneStyle); */
               return;
             }
             case 'Point': {

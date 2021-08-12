@@ -1,5 +1,6 @@
-<div class ="example-list"   *ngIf="displaySymbolList$ | async" [style.left.px]="x" [style.top.px]="y"
-     (panstart)="onPanStart($event)" (panmove)="onPan($event)">
+<div class ="example-list"   *ngIf="displaySymbolList$ | async"
+     cdkDrag
+     cdkDragBoundary=".app-content" >
 <mat-card class="symbol-list"  #symListCard>
   <mat-card-title-group>
     <mat-card-title class="panelTitle">Symbols</mat-card-title>
@@ -10,11 +11,6 @@
   </mat-card-title-group>
   <mat-divider class = "toolbarDivider"></mat-divider>
   <span *ngIf= "symbolsLength == 0"> ..creating List of Symbols</span>
-  <!--<mat-list-item *ngFor="let symbol of symbols | keyvalue" class = "mat-list-item active" >
-    <button mat-icon-button (click)="changeCurrentSymbol(img)" > <img src = {{img.value}} > {{ img.key}}
-    </button>
-  </mat-list-item>  !-->
-  <!--<canvas id="symbolList" width="200" height="200"></canvas> -->
   <span>{{variable}}</span>
   <div class="symbol" *ngFor="let symbol of symbols$ | keyvalue">
      <div id = "+{{symbol.key}}"  (click)="updateActivesymbol(symbol)"
@@ -26,3 +22,4 @@
 
 </mat-card>
 </div>
+

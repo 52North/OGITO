@@ -75,7 +75,7 @@ export class AppConfiguration{
   // static rankingLayers = ['massnahmen_laute', 'massnahmen_leise'];
   // indicate which layers contain measures
   static ratingMeasureLayers = {
-    massnahmen_laute: ['geschwindigkeitsbegrenzung', 'fluesterasphalt', 'laermschutzwand', 'nutzungsaenderung'],
+    massnahmen_laute: ['geschwindigkeitsreduzierung', 'fluesterasphalt', 'schallschutzfenster', 'park&ride', 'fahrspurreduzierung'],
    // massnahmen_leise: ['schutz', 'visuelle _verbesserung', 'zuganglichkeit_verbessern', 'sicherheit']
   };
   static noAddingFeatsLayers = ['massnahmen_laute', 'massnahmen_leise'];

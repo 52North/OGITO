@@ -1,12 +1,14 @@
-<div class ="project-list"   *ngIf="showProjectList$ | async"  cdkDragBoundary=".map" cdkDrag >
+<div class="project-list"  *ngIf="showProjectList$ | async"
+     cdkDrag
+     cdkDragBoundary=".app-content">
   <!-- <div class ="example-list"   *ngIf="showLayerPanel$ | async" [style.left.px]="x" [style.top.px]="y"
       (panstart)="onPanStart($event)" (panmove)="onPan($event)" cdkDragBoundary=".mapBoundary" cdkDrag >  -->
   <mat-card >
     <mat-card-title-group>
-      <mat-card-title>Projects  </mat-card-title>
-      <button mat-flat-button   (click)="updateShowProjectList(false)" class="matCloseWrapper" >
+      <mat-card-title class="panelTitle">Projects  </mat-card-title>
+      <!--<button mat-flat-button   (click)="updateShowProjectList(false)" class="closeButton">
         <mat-icon>close</mat-icon>
-      </button>
+      </button>  -->
     </mat-card-title-group>
     <mat-divider class = "toolbarDivider"></mat-divider>
 
@@ -19,6 +21,5 @@
               </mat-nav-list>
 
       </ng-container>
-
   </mat-card>
 </div>

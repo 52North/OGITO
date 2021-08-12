@@ -1,17 +1,14 @@
 <!--suppress AngularUndefinedBinding -->  <!-- to fix a bug in webstorm -->
-
-
-
-<div id='third' class ="example-list"   *ngIf="showLayerPanel$ | async" [style.left.px]="x" [style.top.px]="y"
-     (panstart)="onPanStart($event)" (panmove)="onPan($event)" cdkDragBoundary=".map" cdkDrag >
+<div id='third' class ="example-list"   *ngIf="showLayerPanel$ | async"
+     cdkDrag
+     cdkDragBoundary=".app-content">
   <!-- <div class ="example-list"   *ngIf="showLayerPanel$ | async" [style.left.px]="x" [style.top.px]="y"
       (panstart)="onPanStart($event)" (panmove)="onPan($event)" cdkDragBoundary=".mapBoundary" cdkDrag >  -->
   <mat-card class = 'layerPanelCard'>
     <mat-card-title-group>
-      <mat-card-title class ="panelTitle">Layers  </mat-card-title>
+      <mat-card-title class="panelTitle">Layers  </mat-card-title>
       <button mat-flat-button   (click)="closeLayerPanel(false)" >
-
-        <mat-icon class="closeLayerPanel" matTooltip="Close layer Panel">close</mat-icon>
+        <mat-icon class="matCloseWrapper" matTooltip="Close layer Panel">close</mat-icon>
       </button>
     </mat-card-title-group>
     <mat-divider class = "toolbarDivider"></mat-divider>
@@ -32,7 +29,7 @@
         <mat-accordion>
           <ng-container  *ngFor= "let layer of group.layers" >
             <mat-expansion-panel>
-              <mat-expansion-panel-header [collapsedHeight]="'2.3vw'" [expandedHeight]="'2.3vw'">
+              <mat-expansion-panel-header [collapsedHeight]="'2.5vw'" [expandedHeight]="'2.5vw'">
                 <mat-panel-title>
                   <mat-selection-list (selectionChange)="onSelectedChanged($event)">
                     <mat-list-option class="example-box mat-primary" [value]="layer.layerName"
@@ -54,7 +51,7 @@
                                   [ngClass]="layer.onRanking ? 'activeAction': 'normal'">
                             <mat-icon  svgIcon="ratingActionPlan"></mat-icon>
                           </button> -->
-                           <span class="spacer"></span>
+
                          <!-- the identify button to the layer panel needed for WMS layers -->
                           <button mat-icon-button matTooltip="Identify elements in the layer"
                                   (click)="onIdentifyLayerClick($event, layer, group.groupName)"

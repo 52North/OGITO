@@ -45,12 +45,13 @@
 -->
 </div>
 <!-- uncomment to enable authentication  25/11/2020 -->
+<div id="app-content" class="app-content">
 <app-map *ngIf="auth.loggedIn"></app-map>
 <app-toolbar *ngIf="auth.loggedIn"></app-toolbar>
 <app-editing-toolbar *ngIf="auth.loggedIn"></app-editing-toolbar>
 <app-symbol-list *ngIf="auth.loggedIn"></app-symbol-list>
 <app-projlist *ngIf="auth.loggedIn"></app-projlist>
-
+</div>
 <!-- colocar algo para cuando no este autenticado -->
 <!-- bypassing Auth0 -->
 
