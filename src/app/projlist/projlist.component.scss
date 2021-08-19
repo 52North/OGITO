@@ -1,6 +1,6 @@
 .project-list {
   // width: 13%;
-  max-width: 20%;
+  max-width: 25%;
   border: solid 1px #ccc;
   min-height: 40px;
   display: block; // este esta bien
@@ -23,3 +23,6 @@
   vertical-align: top !important;
 }
 
+.mat-list-base .mat-list-item {
+  font-size: 14px;
+}
