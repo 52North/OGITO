@@ -15,13 +15,13 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; overflow: h
   overflow: auto;
   margin-left: 0;   // 4%
   margin-top: 0;    // 5%
-  z-index: 3;
+  z-index: 250;
   position: absolute;
   opacity:0.95;
   left: 4%;
   top: 10%;
 }
-.example-list:hover{
+.example-list hover{
   cursor:pointer;
   //border-bottom-color: aqua;
 }

@@ -1,4 +1,4 @@
-import {Component, ElementRef, OnInit, ViewChild} from '@angular/core';
+import {Component, ElementRef, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import {Observable, Subscription, of as observableOf} from 'rxjs';
 import {OpenLayersService} from '../open-layers.service';
 import { MatIconRegistry } from "@angular/material/icon";
@@ -13,7 +13,7 @@ import {AppConfiguration} from '../app-configuration';
   templateUrl: './editing-toolbar.component.html',
   styleUrls: ['./editing-toolbar.component.scss']
 })
-export class EditingToolbarComponent implements OnInit{
+export class EditingToolbarComponent implements OnInit, OnDestroy {
   @ViewChild('symbolList', { static: false })
   symbolList?: ElementRef<HTMLElement>;
   /* @ViewChild('editToolbar') editToolbar: ElementRef <HTMLElement>;
@@ -118,25 +118,20 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
     }
   );
   }
- /*
-  formatOrigin(origin: FocusOrigin): string {
-    return origin ? origin + ' focused' : 'blurred';
-  }
 
-  ngAfterViewInit() {
-   this._focusMonitor.monitor(this.editToolbar, true)
-      .subscribe(origin => this._ngZone.run(() => {
-        this.editToolbarOrigin = this.formatOrigin(origin);
-        this._cdr.markForCheck();
-      }));
-  }
+
   ngOnDestroy() {
-    this._focusMonitor.stopMonitoring(this.editToolbar);
-  } */
+    /**
+     * unsubscribe from the subscriptions
+     */
+    /* this can be replaced using takeuntil */
+   this.subsToShowEditToolbar.unsubscribe();
+   this.subsToGeomTypeEditing.unsubscribe();
+  }
 
   updateLayerTypeRanking(layerName: string) {
     // console.log('Object.keys(AppConfiguration.ratingMeasureLayers)', Object.keys(AppConfiguration.ratingMeasureLayers));
-    // console.log('in updateLayerTypeRanking' + layerName, Object.keys(AppConfiguration.ratingMeasureLayers).findIndex(x => x === layerName));
+    // console.log('layerName, Object.keys(AppConfiguration.ratingMeasureLayers).findIndex(x => x === layerName));
     this.layerTypeRateMeasures$ = false;
     if (Object.keys(AppConfiguration.ratingMeasureLayers).findIndex(x => x === layerName)  > -1) {
       this.layerTypeRateMeasures$ = true;
@@ -181,7 +176,7 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
         this.openLayersService.updateShapeEditType(shapeType);
         this.showSymbolPanel(true);
       }
-      this.highlightAction(shapeType);
+     this.highlightAction(shapeType);
    }
 
   highlightAction(action: string) {

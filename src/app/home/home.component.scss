@@ -54,6 +54,9 @@ footer a {
 .app-content{
   width: 100vw;
   height: 93vh;
+  border-color: #ffcc33;
+  border-style: solid;
+  z-index:100;
 }
 @media screen and (min-width: 900px) {
   .mat-toolbar {

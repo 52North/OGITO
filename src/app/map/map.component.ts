@@ -267,7 +267,6 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
           this.map.removeOverlay(this.helpTooltip);
           this.helpTooltipElement.innerHTML = '';
           this.helpTooltip = null;
-
         }
         if (data === null) {
           return;
@@ -299,11 +298,11 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
             break;
           }
           case 'MeasureLine': {
-            this.startMeasuring('line');
+            this.startMeasuring('LineString');
             break;
           }
           case 'MeasureArea': {
-            this.startMeasuring('area');
+            this.startMeasuring('Polygon');
             break;
           }
           case 'Undo': {
@@ -326,6 +325,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         alert('Error during authentication, try later');
       });
   }
+
 
   initializeUser(userProfile: any) {
     // testing user credentials
@@ -1509,7 +1509,7 @@ initializeMap() {
   });
   }
 
-createHelpTooltip(){
+  createHelpTooltip() {
     /**
      * Creates a new help tooltip
      */
@@ -1537,8 +1537,11 @@ createMeasureTooltip() {
     this.measureTooltipElement.className = 'ol-tooltip ol-tooltip-measure';
     this.measureTooltip = new Overlay({
       element: this.measureTooltipElement,
-      offset: [0, -15],
-      positioning: 'bottom-center'
+      offset: [ 0, -15],
+      // autoPan: true,
+      positioning: 'bottom-center',
+      stopEvent: false,
+      insertFirst: false
     });
     this.map.addOverlay(this.measureTooltip);
   }
@@ -3247,6 +3250,7 @@ displayFeatureInfoWFS(evt: any) {
     const hdms = toStringHDMS(evt.coordinate);
     this.content.nativeElement.innerHTML = '<p>Searching at:</p><code>' + hdms + '</code>';
     this.overlay.setPosition(evt.coordinate);
+    // this.view.setCenter(evt.coordinate);
     const  layerOnIdentifyingName = this.curInfoLayer.get('name');  // this.curInfoLayer is an OL layer object
     // console.log('this.groupLayer in displayFeatureInfoWFS', this.groupsLayers );
     const tlayer = this.findLayerinGroups(layerOnIdentifyingName);
@@ -3314,6 +3318,8 @@ displayFeatureInfoWMS(evt)  {
     const hdms = toStringHDMS(evt.coordinate);
     this.content.nativeElement.innerHTML = '<p>Searching at:</p><code>' + hdms + '</code>';
     this.overlay.setPosition(evt.coordinate);
+    // centers the map to the coordinates of the pixels. It does no
+    // this.view.setCenter(evt.coordinate);
     const viewResolution =  Number(this.view.getResolution());
     const wmsSource = layerOnIdentifying.getSource();
     const wmsUrl = wmsSource.getFeatureInfoUrl(
@@ -3456,11 +3462,16 @@ startIdentifying(layerOnIdentifying: any)
     return(text);
   }
 
-startMeasuring(measureType = 'line') {
+startMeasuring(measureType = 'LineString') {
+
+  // remove any drawing interaction when is null and remove the vector layer?
+
+
   // console.log('que comience la fiesta...', measureType);
   const source = new VectorSource();
   const vector = new VectorLayer({
-      source,
+    name: 'measuringLayer',     //measuringLayer should be the name to delete it later
+    source,
       style: new Style({
         fill: new Fill({
           color: 'rgba(255, 255, 255, 0.2)',
@@ -3493,10 +3504,42 @@ startMeasuring(measureType = 'line') {
      * @type {string}
      */
   const continueLineMsg = 'Click to continue drawing the line';
-  this.createMeasureTooltip();
+
+  /**
+   * Handle pointer move.
+   * @param {import("../src/ol/MapBrowserEvent").default} evt The event.
+   */
+  const pointerMoveHandler = evt => {
+    if (evt.dragging) {
+      return;
+    }
+    /** @type {string} */
+    let helpMsg = 'Click to start drawing';
+
+    if (sketch) {
+      const geom = sketch.getGeometry();
+      if (geom instanceof Polygon) {
+        helpMsg = continuePolygonMsg;
+      } else if (geom instanceof LineString) {
+        helpMsg = continueLineMsg;
+      }
+    }
+
+    this.helpTooltipElement.innerHTML = helpMsg;
+    this.helpTooltip.setPosition(evt.coordinate);
+
+    this.helpTooltipElement.classList.remove('hidden');
+  };
+
   // add the vector layer to the map
   this.map.addLayer(vector);
-  // add the handler
+  // add the handler and save the key
+  const keyMoveEvent = this.map.on('pointermove', pointerMoveHandler);
+  // hide the tooltiphelp
+  this.map.getViewport().addEventListener('mouseout', () => {
+    this.helpTooltipElement.classList.add('hidden');
+  });
+
     /**
      * Format length output.
      * @param {LineString} line The line.
@@ -3529,10 +3572,10 @@ startMeasuring(measureType = 'line') {
       return output;
     };
 
-  const type = measureType === 'line' ? 'LineString' : 'Polygon';
+  // const type = measureType === 'line' ? 'LineString' : 'Polygon';
   this.draw = new Draw({
         source,
-        type,
+        type: measureType,
         style: new Style({
           fill: new Fill({
             color: 'rgba(255, 255, 255, 0.2)',
@@ -3554,10 +3597,12 @@ startMeasuring(measureType = 'line') {
         }),
       });
   this.map.addInteraction(this.draw);
+  this.createMeasureTooltip();
+  this.createHelpTooltip();
 
   let listener;
   const self = this;
-  this.draw.on('drawstart', function(evt) {
+  this.draw.on('drawstart', evt => {
         // set sketch
         sketch = evt.feature;
 
@@ -3585,15 +3630,14 @@ startMeasuring(measureType = 'line') {
           vector.getSource().removeFeature(e.feature);
           sketch = null;
           // unset tooltip so that a new one can be created
+
           self.measureTooltipElement.innerHTML = '';
           self.measureTooltipElement = null;
-          self.map.removeOverlay(self.measureTooltip);
+          // self.map.removeOverlay(self.measureTooltip);
           self.createMeasureTooltip();
+          unByKey(listener);  // unsubscribe from the event change
+          unByKey(keyMoveEvent); // unsubscribe from the event mousemove
     }, 3000);
-        // unset tooltiphelo so that a new one can be created
-        // self.helpTooltipElement.innerHTML = '';
-        // unsubscribe from the event
-        unByKey(listener);
       });
    }
 
@@ -3648,6 +3692,8 @@ removeInteractions() {
       this.map.removeInteraction(this.translate);
       this.map.removeInteraction(this.snap);
       this.map.removeInteraction(this.dragBox);
+      // remove any other interaction
+      console.log('interactions on the map', this.map.getInteractions());
     }
     catch (e) {
       console.log ('Error removing interactions', e);

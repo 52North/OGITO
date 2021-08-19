@@ -17,8 +17,7 @@ export class LayerPanelComponent implements OnInit, OnDestroy{
   @Input() groupLayers: Observable<{}>;
   private groupLayersSubscription: Subscription;
   private showEditToolsSubscription: Subscription;
-  private
-  sgroupLayers: any;
+  public  sgroupLayers: any;
   @Output() layerVisClick = new EventEmitter<any>();   // emit an event when a layer is clicked in the list
   @Output() groupLayerVisClick = new EventEmitter<any>();   // emit an event when a layer is clicked in the list
   @Output() editLayerClick = new EventEmitter<any>();   // emit an event when the edit button of a layer is clicked
@@ -42,24 +41,16 @@ export class LayerPanelComponent implements OnInit, OnDestroy{
     Edit: false};*/
 
 constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private openLayersService: OpenLayersService) {
-
-  iconRegistry.addSvgIcon(
+ /* iconRegistry.addSvgIcon(
     'getInfo',
     sanitizer.bypassSecurityTrustResourceUrl('assets/img/identify-24px2.svg')
   );
   iconRegistry.addSvgIcon(
     'ratingActionPlan',
     sanitizer.bypassSecurityTrustResourceUrl('assets/img/rate_action_plan2.svg')
-  );
+  );*/
 }
- /*drop(event: CdkDragDrop<string[]>) {
-    /** Moves the layers in the panel after a drop gesture and emits a layersOrder event
-     * that is capture by the map component that effectively reorder the layers in the map.
-     * @param event --> cdkDragDrop event
-     */
-    // moveItemInArray(this.editLayers, event.previousIndex, event.currentIndex);
-    // this.layersOrder.emit(this.editLayers);
-  // } */
+
 
   dropExpansion(event: CdkDragDrop<string[]>) {
    // console.log(this.layerAccordion.nativeElement.children);
@@ -74,11 +65,6 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
   this.showEditToolsSubscription = this.openLayersService.showEditLayerPanel$.subscribe(data =>{
      this.showLayerPanel$ = observableOf(data);  },
     error => console.log('error showing layer panel'));
-
-  /*this.openLayersService.showEditLayerPanel$.subscribe(data =>{
-        this.showLayerPanel$ = observableOf(data);
-      },
-      error => console.log('error showing layer panel'));*/
 
   this.groupLayersSubscription = this.groupLayers.subscribe(
       data => {
@@ -173,21 +159,6 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
       }
 
 
-
-  onOpacityLayerClick($event: any, layer: any){
-  // TODO change opacity
-    /** shows a div below the layer with a slider to change the visibility of a layer
-     * @param $event for the future, doing nothing with it so far.
-     * @param item: item (layer) that was clicked on to change opacity
-     */
-    $event.preventDefault();
-    $event.stopImmediatePropagation();
-    console.log('colocar codigo aqui for opacity', $event, layer.layerName);
-    // this.editLayerClick.emit(layer);  // with this the map should act accordingly to stop/start editing.
-    // emit the event to chage opacity
-  }
-
-
   onIdentifyLayerClick($event: any, layer: any, groupName: any) {
     // TODO identify features
     /** enables identifies features in a layer
@@ -248,22 +219,6 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
    */
   // console.log(value);
   this.showLayerPanel$ = observableOf(value);
-  }
- onPanStart(event: any): void {
-  /** Sets the current coordinates of the layerPanel to use later when setting a new position
-   * triggered when a pan event starts in the layerpanel card
-   * @param event, type event
-   */
-    this.startX = this.x;
-    this.startY = this.y;
-  }
-onPan(event: any): void {
-  /** Sets the new location of the layerPanel after a pan event was triggered in the layerPanel card
-   * @param event, type event
-   */
-    event.preventDefault();
-    this.x = this.startX + event.deltaX;
-    this.y = this.startY + event.deltaY;
   }
 
 ngOnDestroy(){
