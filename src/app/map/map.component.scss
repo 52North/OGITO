@@ -45,7 +45,7 @@
 ::ng-deep .ol-tooltip-static:before {
   border-top-color: #ffcc33;
 }
-#info {
+/*#info {
   position: absolute;
   height: 1px;
   width: 1px;
@@ -62,7 +62,7 @@
 }
 [data-tooltip]:hover:before {
   opacity : 1;
-}
+}*/
 .hide {
   position: absolute;
   height: 0px;
@@ -70,7 +70,7 @@
   z-index: 100;
   opacity:0;
 }
-#progress {
+/*#progress {
   position: absolute;
   bottom: 0;
   left: 0;
@@ -78,7 +78,7 @@
   background: rgba(0, 60, 136, 0.4);
   width: 0;
   transition: width 250ms;
-}
+}*/
 .cdkDrag {
   display: inline-block;
 }
@@ -158,6 +158,7 @@ th[scope="row"] {
 /* make all stars orange*/
 .star-rating-animation:hover .star-hover{
   color: orange;
+
 }
 /* make all stars right from selected gray*/
 .star-rating-animation .star-hover:hover ~ .star-hover{

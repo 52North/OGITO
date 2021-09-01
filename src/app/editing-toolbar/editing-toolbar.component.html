@@ -26,7 +26,7 @@
 
       <button *ngIf="(layerTypeRate$)" mat-icon-button (click)="startEditAction('Rating');showSymbolPanel(false);" matTooltip="Rate element"
               [ngClass]="actionActive['Rating'] ? 'active': 'normal'" >
-        <mat-icon>star_rate</mat-icon>
+        <mat-icon svgIcon="ratingQuietArea"></mat-icon>
       </button>
       <button  *ngIf="(layerTypeRateMeasures$)" mat-icon-button (click)="startEditAction('RankingMeasures');showSymbolPanel(false);" matTooltip="Rate actions"
               [ngClass]="actionActive['RankingMeasures'] ? 'active': 'normal'" >
@@ -46,11 +46,11 @@
               [ngClass]="actionActive['Rotate'] ? 'active': 'normal'" >
         <mat-icon>rotate_right</mat-icon>
       </button> -->
-      <button mat-icon-button (click)="startEditAction('MeasureLine');showSymbolPanel(false)" matTooltip="Measure Lineal Distance"
+      <button mat-icon-button (click)="startEditAction('MeasureLine');showSymbolPanel(false)" matTooltip="Measure lineal distance"
               [ngClass]="actionActive['MeasureLine'] ? 'active': 'normal'" >
         <mat-icon svgIcon="measureLine"></mat-icon>
       </button>
-      <button mat-icon-button (click)="startEditAction('MeasureArea');showSymbolPanel(false)" matTooltip="Measure Areal Distance"
+      <button mat-icon-button (click)="startEditAction('MeasureArea');showSymbolPanel(false)" matTooltip="Measure areal distance"
               [ngClass]="actionActive['MeasureArea'] ? 'active': 'normal'" >
         <mat-icon svgIcon="measureArea"></mat-icon>
       </button>

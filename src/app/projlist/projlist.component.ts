@@ -13,7 +13,15 @@ export class ProjlistComponent implements OnInit {
   @Output() selectProject = new EventEmitter<any>();
   showProjectList$: Observable<boolean>;
   projectFolder = '/home/qgis/projects/';
-  projects = [{
+  projects = [
+    { name: 'Noise Action Plan Bochum Pilot',
+      url: AppConfiguration.hostname + 'qgs_projects/noisebochum_pilot.qgs',
+      file: this.projectFolder + 'noisebochum_pilot.qgs',
+      img: AppConfiguration.hostname + 'qgs_projects/noise_pilot.png',
+      qGsServerUrl: 'https://ogito.itc.utwente.nl/cgi-bin/qgis_mapserv.fcgi?',
+      srsID: 'EPSG:3857'   //EPSG CODE
+    },
+    {
     name: 'Noise Action Plan Bochum',
     url: AppConfiguration.hostname + 'qgs_projects/noisebochum.qgs',
     file: this.projectFolder + 'noisebochum.qgs',     // was checking4
@@ -28,14 +36,6 @@ export class ProjlistComponent implements OnInit {
       qGsServerUrl: 'https://ogito.itc.utwente.nl/cgi-bin/qgis_mapserv.fcgi?',
       srsID: 'EPSG:25832'  //EPSG CODE
     }
-
-
-  /*,
-    { name: 'Renewable Energy Twente',
-  url: AppConfiguration.hostname + 'qgs_projects/losser.qgs',
-  file: this.projectFolder + 'retwente.qgs',
-  img: AppConfiguration.hostname + 'qgs_projects/retwente.png'
-  }*/
   ];
 
   constructor( private  openLayersService: OpenLayersService, private sanitizer: DomSanitizer) {

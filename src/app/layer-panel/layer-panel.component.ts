@@ -100,7 +100,7 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
       for (const group of this.sgroupLayers) {
         group.layers.forEach(layer => {
 
-          if (layer.wfs) {
+          if (layer.wfs || layer.sketch) {
             // console.log('layer', layer);
             if (layer.layerName.toLowerCase() === layerName.toLowerCase() && layer.onEdit) {
               layer.onEdit = false;

@@ -28,6 +28,12 @@ export class QuestionService {
     /**
      * forms the question from a list of fields;
      */
+    // action plan layer treated in a different way
+    if (layerName.toLowerCase() === 'massnahmen_laute'){
+      return (this.setLayerQuestionsActionPlanNoise(layerName, qgisFieldList));
+    }
+
+
   let order = 0;
   let layerQuestions: QuestionBase<any>[]=[];
   let question = null;
@@ -101,6 +107,44 @@ export class QuestionService {
   return layerQuestions;
  }
 
+  setLayerQuestionsActionPlanNoise(layerName: string, qgisFieldList: any) {
+    /**
+     * forms the question from a list of fields;
+     */
+    // action plan layer treated in a different way
+    let order = 0;
+    let layerQuestions: QuestionBase<any>[]=[];
+    let question = null;
+    let orderInLayer = false;
+    // check if there is an specific order
+    // console.log(' no la consigue + typeof(AppConfiguration.fieldsOrder[layerName])',layerName, typeof(AppConfiguration.fieldsOrder[layerName]));
+    if (typeof(AppConfiguration.fieldsOrder[layerName]) !== 'undefined'){
+      orderInLayer = true;
+    }
+
+    qgisFieldList.forEach(attr => {
+      if (!(attr.name === 'id' || attr.name === 'fid' || attr.name === 'picfilepath' || attr.name === 'linkqrfile')){
+        // #TODO add the code for the QR thing
+        order = order + 1;
+        // possibility to use comment as label for the field
+        const label = (attr.comment === '') ? (attr.name) : (attr.comment);
+        const required = true;
+        // only boolean fields, those are the measures
+        if (attr.type === 'bool') {
+            question = new CheckBoxQuestion({
+              key: attr.name,
+              label,
+              value: 'true',  // if checked then it will get the true value
+              required,
+              order: orderInLayer ? this.findOrder(layerName, attr.name) : order,
+              type: 'checkbox'
+            });
+            layerQuestions.push(question);
+        }
+      }
+    });
+    return layerQuestions;
+  }
   findOrder(layerName: string, attrName: any){
     // console.log('attrName + layerName', layerName, attrName);
     let order = 0;
@@ -149,10 +193,11 @@ export class QuestionService {
         if (layer.wfs) {
          const questions = this.setLayerQuestions(layer.layerName, layer.fields);
          this.questions[layer.layerName] = questions; // no estoy segura de esto, es un dic...
-         // console.log('this.questions[\'layer.layerName\'] in QG service', layer.layerName, this.questions['layer.layerName']);
         }
       });
     });
+    console.log('this.question in QG service', this.questions);
+
   }
 
   getQuestions(layerName: any){

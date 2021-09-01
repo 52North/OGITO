@@ -251,6 +251,9 @@ export class MapQgsStyleService {
                 if (layerName.toLowerCase() === 'leise_orte' ) {
                   symbolLabel = 'Leiser Ort';
                 }
+                if (layerName.toLowerCase() === 'massnahmen_laute' ) {
+                  symbolLabel = 'Massnahmen Laute';
+                }
                 // this.layerStyles[layerName] = {symbolType: styleType, style: theStyle};
                 this.layerStyles[layerName] = {
                   symbolType: styleType,
@@ -470,11 +473,11 @@ export class MapQgsStyleService {
      if (layerNameLong.indexOf('tagesstatten')>=0){
        layerName = 'tagesstatten';
      }
-     if (layerNameLong.indexOf('hospitals')>=0){
-       layerName = 'hospitals';
+     if (layerNameLong.indexOf('krankenhaus')>=0){
+       layerName = 'krankenhaus';
      }
 
-     const colors = {schulen: '#67a9cf', tagesstatten : '#ef8a62', hospitals: '#d7191c' };
+     const colors = {schulen: '#67a9cf', tagesstatten : '#ef8a62', krankenhaus: '#d7191c' };
      const svgs = {
       schulen: 'PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjxzdmcKICAgaGVpZ2h0PSIyNHB4IgogICB2aWV3Qm94PSIw' +
        'IDAgMjQgMjQiCiAgIHdpZHRoPSIyNHB4IgogICBmaWxsPSIjMDAwMDAwIgogICB2ZXJzaW9uPSIxLjEiCiAgIGlkPSJzdmcyNDkiCiAgIHNvZGlwb2RpOmRvY25hbWU' +
@@ -561,7 +564,7 @@ export class MapQgsStyleService {
          'yAxNy44NDk2MDkgQyAxNC4yNzkyOTcgMTguMDIyMTA5IDE0LjQxOTI5NyAxOC4xNjIxMDkgMTQuNTkxNzk3IDE4LjE2MjEwOSBDIDE0Ljc2NDI5NyAxOC4xNjIxMD' +
          'kgMTQuOTA0Mjk3IDE4LjAyMjEwOSAxNC45MDQyOTcgMTcuODQ5NjA5IEMgMTQuOTA0Mjk3IDE3LjY3NzEwOSAxNC43NjQyOTcgMTcuNTM3MTA5IDE0LjU5MTc5Ny' +
          'AxNy41MzcxMDkgeiAiCiAgICAgc3R5bGU9ImZpbGw6cGFyYW0oZmlsbCkjZmZmZmZmIiAvPgo8L3N2Zz4K' ,
-       hospitals: 'PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMjRweCIgdmlld0JveD0iMCAwIDI0IDI0IiB3aWR0aD0iMjRweCIgZm' +
+       krankenhaus: 'PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMjRweCIgdmlld0JveD0iMCAwIDI0IDI0IiB3aWR0aD0iMjRweCIgZm' +
          'lsbD0iZmlsbDpwYXJhbShmaWxsKSNmZmZmZmYiPg0KPHBhdGggZD0iTTAgMGgyNHYyNEgweiIgZmlsbD0ibm9uZSIvPg0KPHBhdGggZD0iTTE5IDNINWMtMS4xIDAtM' +
          'S45OS45LTEuOTkgMkwzIDE5YzAgMS4xLjkgMiAyIDJoMTRjMS4xIDAgMi0uOSAyLTJWNWMwLTEuMS0uOS0yLTItMnptLTEgMTFoLTR2NGgtNHYtNEg2di00aDRWNmg0' +
          'djRoNHY0eiIgc3R5bGU9ImZpbGw6cGFyYW0oZmlsbCkjZmZmZmZmIi8+PC9zdmc+'
@@ -571,9 +574,7 @@ export class MapQgsStyleService {
      }
      if (svgs.hasOwnProperty(layerName)) {
      svg = svgs[layerName];
-     }
-
-     console.log('color in createStyleExposedOrg', color, colors[layerName] );
+     }  // #TODO a default option
 
      const newIcon = new Icon({
        opacity: 1,

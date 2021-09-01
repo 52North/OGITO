@@ -48,7 +48,7 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
     data => {
       // console.log('que viene de ol service data:', data);
       this.styles = this.mapQgsStyleService.getLayerStyle(data.layerName);
-      console.log('que viene en this.styles:', this.styles);
+      // console.log('que viene en this.styles:', this.styles);
       this.symbols$ = this.getJsonSymbolList(this.styles);
       this.symbolsLength = Object.keys(this.symbols$).length;
       this.geometryTypeSymbols = data.layerGeom;
@@ -127,7 +127,7 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
           canvas.nativeElement.height = height;
           // console.log('width and height', height, width, canvas.nativeElement.width , devicePixelRatio  );
           const render = toContext(canvas.nativeElement.getContext('2d'));
-          console.log('key', key, 'que llega a this.symbols$', this.symbols$[key], this.symbols$ );
+          // console.log('key', key, 'que llega a this.symbols$', this.symbols$[key], this.symbols$ );
           const stylelayer = this.symbols$[key];
           const stylelayerClone = [];   // clone the style hopefully deep copy
           const olStyle = stylelayer.style;

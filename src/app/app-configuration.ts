@@ -75,16 +75,17 @@ export class AppConfiguration{
   // static rankingLayers = ['massnahmen_laute', 'massnahmen_leise'];
   // indicate which layers contain measures
   static ratingMeasureLayers = {
-    massnahmen_laute: ['geschwindigkeitsreduzierung', 'fluesterasphalt', 'schallschutzfenster', 'park&ride', 'fahrspurreduzierung'],
+    massnahmen_laute: ['geschwindigkeitsreduzierung', 'fluesterasphalt', 'schallschutzfenster', 'park_ride', 'fahrspurreduzierung'],
    // massnahmen_leise: ['schutz', 'visuelle _verbesserung', 'zuganglichkeit_verbessern', 'sicherheit']
   };
-  static noAddingFeatsLayers = ['massnahmen_laute', 'massnahmen_leise'];
+  // configure layers to add more features or not.
+  static noAddingFeatsLayers = [ 'massnahmen_leise']; //'massnahmen_laute',
   /* layers below will have a default style for LDEN noise map taken from train_LDEN*/
   static urlLegendLDEN = {
     'GECCO Noise Munster': {'IVU_LDEN': '', 'SCH_Bund_LDEN': '', 'SCH_Sonstige_LDEN': '', 'STR_LDEN': ''}
   };
   static totalPopBochumArea =  64966.73;  // Result of the SQL query: select sum(population.value) as Sum   from population
   static noiseGroupName = 'Laermkarten';  // in lower case
-  static institutionsGroupName = 'oeffentliche Einrichtungen';  // in lower case
+  static institutionsGroupName = 'oeffentliche_einrichtungen';  // in lower case
   static nameSessionGroup = 'sessionGroup';
 }

@@ -93,8 +93,8 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
     sanitizer.bypassSecurityTrustResourceUrl('assets/img/add_location_attr-24px.svg')
   );
   iconRegistry.addSvgIcon(
-    'ratingActionPlan',
-    sanitizer.bypassSecurityTrustResourceUrl('assets/img/rate_action_plan.svg')
+    'ratingQuietArea',
+    sanitizer.bypassSecurityTrustResourceUrl('assets/img/rate_quiet_area.svg')
   );
   iconRegistry.addSvgIcon(
     'ratingActionPlan',

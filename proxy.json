@@ -2,6 +2,9 @@
   "/graphql": {
     "target": "https://ogito.itc.utwente.nl/graphql",
     "secure": true,
+    "pathRewrite": {
+      "^/graphql": ""
+    },
     "logLevel": "debug",
     "changeOrigin": true
   }

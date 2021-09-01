@@ -29,13 +29,13 @@ export class QueryDBService {
     const layerNames = {straassenlaerm_lden: 'StraassenlaermLden',
                         straassenlaerm_lnight: 'StraassenlaermLnight',
                         gesamtlarm_lden: 'GesamtlarmLden',
-                        Industrielaerm_lden: 'IndustrielaermLden',
-                        Industrielaerm_lnight: 'IndustrielaermLnight',
-                        Zuglaerm_bogestra_lden: 'ZuglaermBogestraLden',
-                        Zuglaerm_bogestra_lnight: 'ZuglaermBogestraLnight',
-                        Zuglaerm_db_lden: 'ZuglaermDbLden'
+                        industrielaerm_lden: 'IndustrielaermLden',
+                        industrielaerm_lnight: 'IndustrielaermLnight',
+                        iuglaerm_bogestra_lden: 'ZuglaermBogestraLden',
+                        zuglaerm_bogestra_lnight: 'ZuglaermBogestraLnight',
+                        zuglaerm_db_lden: 'ZuglaermDbLden'
     };
-    const queryName =  selectedLayer + bezirke + layerNames[selectedNoiseLayer];
+    const queryName =  selectedLayer + bezirke + layerNames[selectedNoiseLayer.toLowerCase()];
     const  query = gql`
       query { ` +
       queryName + ` (dblow: ` + lowLevel + `, dbhigh:` + highLevel + `) {
@@ -52,15 +52,13 @@ export class QueryDBService {
     }
     `;
 
-    console.log('query', query, 'queryName', queryName);
-    // http://localhost:4200/graphql--> by proxy diverted to http://130.89.6.97:5000/graphql
-    //request('https://ogito.itc.utwente.nl/graphql', query)
-    // queryResult = request('https://ogito.itc.utwente.nl/graphql', query)
-
+    // console.log('query', query, 'queryName', queryName);
     // for debug
+    // http://localhost:4200/graphql--> by proxy diverted to http://130.89.6.97:5000/graphql
     queryResult = request('http://localhost:4200/graphql', query)
+   //  queryResult = request('https://ogito.itc.utwente.nl/graphql', query)
         .then(result => {
-            console.log('data', result,  result[queryName]);
+            // console.log('data', result,  result[queryName]);
             queryResult = result[queryName];
             return queryResult;
           })
