@@ -4,6 +4,7 @@ import {QuestionService} from '../question-service.service';
 import {FormGroup, Validators} from '@angular/forms';
 import { QuestionBase } from '../question-base';
 import {MatSnackBar} from '@angular/material/snack-bar';
+import {consoleTestResultHandler} from 'tslint/lib/test';
 
 @Component({
   selector: 'app-dynamic-form',
@@ -111,11 +112,19 @@ export class DynamicFormComponent implements OnInit {
       controlIntensity.updateValueAndValidity();
       console.log('controlIntensity after', controlIntensity);
     } */
+    // peers for validation, laermquelle_auto and intensitaet_auto
+    const prefix_intensity = 'intensitaet_';
+    const prefix_source = 'laermquelle_';
     const peersToCheck = ['auto', 'schiene', 'sonstiges'];
-    const subFix = questionKey.substring(7, questionKey.length);
-    if (peersToCheck.findIndex(x => x === subFix) >= 0) {
-        let controlIntensity = this.form.get('intensity_'.concat(subFix));
-        let controlSource = this.form.get('source_'.concat(subFix));
+    const questions_source = peersToCheck.map(x => prefix_source.concat(x));
+    console.log('subFix', questions_source);
+    const questions_intensity = peersToCheck.map(x => prefix_intensity.concat(x));
+    console.log('subFix', questions_intensity);
+    const subFix = questionKey.substring(prefix_intensity.length, questionKey.length);
+    console.log('subFix', subFix);
+    if (questions_source.findIndex(x => x === questionKey) >= 0) {
+        let controlIntensity = this.form.get(prefix_intensity.concat(subFix));
+        let controlSource = this.form.get(prefix_source.concat(subFix));
         // add code to
         if (value){
           // controlIntensity.setValidators(Validators.required);
@@ -130,7 +139,7 @@ export class DynamicFormComponent implements OnInit {
         if (!value){
           // reset the slider
           controlIntensity.setValue(0);
-          this.showQuestionValue('intensity_'.concat(subFix), 0);
+          this.showQuestionValue(prefix_intensity.concat(subFix), 0);
           // update the mat-slider
           controlIntensity.clearValidators();
           controlIntensity.updateValueAndValidity();

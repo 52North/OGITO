@@ -784,8 +784,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         verticalPosition: 'top',
         duration: 3000});
     // http://localhost:4200/graphql--> by proxy diverted to http://130.89.6.97:5000/graphql
-    // request('https://ogito.itc.utwente.nl/graphql', query)
-    request('http://localhost:4200/graphql', query)   // debug time
+    //request('https://ogito.itc.utwente.nl/graphql', query)
+     request('http://localhost:4200/graphql', query)   // debug time
       .then(result => {
         // console.log('data', result[queryName]);
         this.processPopLden(result[queryName], layerName );
@@ -925,7 +925,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       source: vectorSource,
       name: layerName,
       style: this.popExposedStyle,
-      visible: false,
+      visible: true,  // visible by default
       opacity: 0.5
     });
     // add the layer to the map
@@ -972,7 +972,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       source: vectorSource,
       name: layerName,
       style: orgStyle,
-      visible: false,
+      visible: true,
       opacity: 0.5
     });
     // add the layer to the map
@@ -996,7 +996,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     const newVector = new VectorLayer({
       source : newSource,
       name: sketchLayerName,
-      zIndex : 101,   // this.zIndex
+      zIndex : 101,   // check this #TODO
       visible: false,
       // getting default style
       style(feature) {    // this equiv to style: function(feature)
@@ -1049,16 +1049,17 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     onEdit: false,
     onIdentify: false,
     onRanking: false,
-    visible: false,
-    wfs: false ,
+    visible: true,   // visible by default
+    wfs: false ,    // #TODO add forremove..
     sketch  };  // sketch will be used to activate editing mode.. #TODO
     // add the item to an array;
     layers.push(layerItem);
     // group does not exist in the variable
     if (!(this.groupsLayers.findIndex(x => x.groupName === AppConfiguration.nameSessionGroup) >= 0 )){
-      this.groupsLayers.push({groupName: AppConfiguration.nameSessionGroup,
+      // add the group at the beginning
+      this.groupsLayers.unshift({groupName: AppConfiguration.nameSessionGroup,
         groupTittle: AppConfiguration.nameSessionGroup,
-        visible: false,
+        visible: true,  // group visible by default.. less clicks
         layers});
         // ('GROUP session did not exist this.groupsLayers', this.groupsLayers);
       this.groupsLayersSubject.next(this.groupsLayers);
@@ -1088,25 +1089,43 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       const newGroup = new LayerGroup({
         name: AppConfiguration.nameSessionGroup,
         layers: [],
-        visible: false,
-        zIndex: 100
+        visible: true,    // visible by default
+        zIndex: 100 // at the end of the layers by default
       });
       this.map.addLayer(newGroup);
+      console.log('Zindex of the sessionGroup', newGroup.getZIndex());
+      layer.setZIndex(newGroup.getZIndex() + 1);
+      console.log('group does not exist: indexes of the layers', this.map.getLayers().getArray());
       newGroup.getLayers().push(layer);
       this.addLayerGroupLayerPanel(layer.get('name'), fieldstoShow, sketch);
       return;
     }
-  let group: any;
-  this.map.getLayers().forEach(
+  // group does exist
+  try{
+    let group: any;
+    this.map.getLayers().forEach(
       grp => {
-       if (grp.get('name').toLowerCase()  === AppConfiguration.nameSessionGroup.toLowerCase()){
-         group = grp;
-       }
+        if (grp.get('name').toLowerCase()  === AppConfiguration.nameSessionGroup.toLowerCase()){
+          group = grp;
+        }
       });
     // add the layer
-  group.getLayers().push(layer);
-  this.addLayerGroupLayerPanel(layer.get('name'), fieldstoShow, sketch);
+    // find an index for the layer
+    const layerIndex = group.getLayers().length;
+    console.log('group does exist: indexes of the layers', this.map.getLayers().getArray());
+    layer.setZIndex(group.getZIndex() + layerIndex);
+    group.getLayers().push(layer);
+    this.addLayerGroupLayerPanel(layer.get('name'), fieldstoShow, sketch);
   }
+  catch (e) {
+    this.snackBar.open('Error adding results', 'ok',
+      { horizontalPosition: 'center',
+        verticalPosition: 'top',
+        duration: 5000});
+    return;
+  }
+  }
+
 
   saveRating(layerName: string, feature: any){
     // update the database
@@ -1653,7 +1672,7 @@ workQgsProject() {
 
 
 reorderingGroupsLayers() {
-    // #TODO here maybe delete layers tha were not published
+    // #TODO here maybe delete layers that were not published
 
     /*
      *  Moves the groups and allocate layers on it according to the order in the project
@@ -2678,7 +2697,12 @@ startEditing(layer: any) {
       // this.cacheFeatures = [];
       this.currentClass = null;  // forcing the user to pick and style and cleaning previous style? check
     } catch (e) {
-    alert('Error starting editing...' + e);
+      console.log('Error starting editing...' + e);
+      this.snackBar.open('Error starting drawing', 'ok',
+        { horizontalPosition: 'center',
+          verticalPosition: 'top',
+          duration: 5000});
+      return;
     }
   }
 removeFeatEditBuffer(feat: any) {
