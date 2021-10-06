@@ -29,7 +29,7 @@ export class QuestionService {
      * forms the question from a list of fields;
      */
     // action plan layer treated in a different way
-    if (layerName.toLowerCase() === 'massnahmen_laute'){
+    if (layerName.toLowerCase() === AppConfiguration.actionPlanLayerName){
       return (this.setLayerQuestionsActionPlanNoise(layerName, qgisFieldList));
     }
 
@@ -40,7 +40,7 @@ export class QuestionService {
   let orderInLayer = false;
   // check if there is an specific order
   // console.log(' no la consigue + typeof(AppConfiguration.fieldsOrder[layerName])',layerName, typeof(AppConfiguration.fieldsOrder[layerName]));
-  if (typeof(AppConfiguration.fieldsOrder[layerName]) !== 'undefined'){
+  if (typeof(AppConfiguration.fieldsOrder[layerName.toLowerCase()]) !== 'undefined'){
      orderInLayer = true;
    }
 
@@ -147,10 +147,12 @@ export class QuestionService {
   }
   findOrder(layerName: string, attrName: any){
     // console.log('attrName + layerName', layerName, attrName);
+    layerName = layerName.toLowerCase(); // ensure lower case
     let order = 0;
     if (typeof (AppConfiguration.fieldsOrder[layerName]) !== 'undefined'){
       // console.log('AppConfiguration.fieldsOrder[layerName][attrName]', AppConfiguration.fieldsOrder[layerName][attrName]);
       if (typeof(AppConfiguration.fieldsOrder[layerName][attrName]) !== 'undefined'){
+         // console.log('que consigue', AppConfiguration.fieldsOrder[layerName][attrName]);
          return(AppConfiguration.fieldsOrder[layerName][attrName]);
        }
     }
@@ -196,7 +198,7 @@ export class QuestionService {
         }
       });
     });
-    console.log('this.question in QG service', this.questions);
+    // console.log('this.question in QG service', this.questions);
 
   }
 
@@ -217,7 +219,7 @@ export class QuestionService {
       group[question.key] = question.required ? new FormControl(question.value || '', Validators.required)
         : new FormControl(question.value || '');
     });
-    console.log('from group un Question Service', new FormGroup(group));
+    // console.log('from group un Question Service', new FormGroup(group));
     return new FormGroup(group);
   }
 

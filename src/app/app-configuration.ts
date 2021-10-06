@@ -46,7 +46,7 @@ export class AppConfiguration{
      'intensity_bus': {min: 0, max: 10},
   };
   static fieldsOrder = {
-    'laute_Orte': {
+    'laute_orte': {
        'name': 1,
        'laermquelle_auto': 2,
        'intensitaet_auto': 3,
@@ -54,10 +54,10 @@ export class AppConfiguration{
        'intensitaet_schiene': 5,
        'laermquelle_sonstiges': 6,
        'intensitaet_sonstiges': 7,
-       'noise_morgens': 8,
-       'noise_tagsuber': 9,    // noise must be changed to laerm
-       'noise_abends': 10,
-       'noise_nachts': 11
+       'laerm_morgens': 8,
+       'laerm_tagsuber': 9,    // noise must be changed to laerm
+       'laerm_abends': 10,
+       'laerm_nachts': 11
     }
     };
   static ratingPrex = {
@@ -75,9 +75,10 @@ export class AppConfiguration{
   // static rankingLayers = ['massnahmen_laute', 'massnahmen_leise'];
   // indicate which layers contain measures
   static ratingMeasureLayers = {
-    massnahmen_laute: ['geschwindigkeitsreduzierung', 'fluesterasphalt', 'schallschutzfenster', 'park_ride', 'fahrspurreduzierung'],
+    massnahmen: ['geschwindigkeitsreduzierung', 'fluesterasphalt', 'schallschutzfenster', 'park_ride', 'fahrspurreduzierung'],
    // massnahmen_leise: ['schutz', 'visuelle _verbesserung', 'zuganglichkeit_verbessern', 'sicherheit']
   };
+  static actionPlanLayerName = 'massnahmen';
   // configure layers to add more features or not.
   static noAddingFeatsLayers = [ 'massnahmen_leise']; //'massnahmen_laute',
   /* layers below will have a default style for LDEN noise map taken from train_LDEN*/

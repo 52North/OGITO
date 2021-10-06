@@ -22,6 +22,8 @@ export class OpenLayersService {
   currentSymbol$ = this.currentSymbolSource.asObservable();
   private saveCurrentLayerSource = new Subject<boolean>();
   saveCurrentLayer$ = this.saveCurrentLayerSource.asObservable();
+  private saveAllLayersSource = new Subject<boolean>();
+  saveAllLayers$ = this.saveAllLayersSource.asObservable();
   private deleteFeatsSource = new Subject<any>();
   deleteFeats$ = this.deleteFeatsSource.asObservable();
   private editActionSource = new Subject<any>();
@@ -80,8 +82,14 @@ export class OpenLayersService {
     /** Updates the observable to the next value
      * visible: boolean; true or false to show/hide the editing toolbar
      */
-    console.log('what...XXX');
     this.saveCurrentLayerSource.next(save);
+  }
+
+  updateSaveAllLayers(save: boolean){
+    /** Updates the observable to the next value
+     * visible: boolean; true or false to save all edits in all layers
+     */
+    this.saveAllLayersSource.next(save);
   }
 
   updateShowEditToolbar(visible: boolean) {

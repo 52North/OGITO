@@ -74,12 +74,12 @@
               [ngClass]="actionActive['showSymbols'] ? 'active': 'normal'">
         <mat-icon   aria-label="">category</mat-icon>
       </button>
-      <button [disabled]="stopSave" mat-icon-button (click)="saveLayer()" matTooltip = "Save edits into the layers">
+      <button [disabled]="stopSave" mat-icon-button (click)="saveLayer()" matTooltip = "Save edits into the active layer">
         <mat-icon>save_alt</mat-icon>
       </button>
-      <!--<button  [disabled]="stopSaveAll" mat-icon-button (click)="saveAllLayer()" matTooltip = "Save all edits in all layers">
+      <button  [disabled]="stopSaveAll" mat-icon-button (click)="saveAllLayer()" matTooltip = "Save all edits in all layers">
         <mat-icon>save</mat-icon>
-      </button> -->
+      </button>
 
 
      </mat-toolbar>

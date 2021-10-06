@@ -41,7 +41,7 @@
                         </div>
                          <div class = 'selectLayer'>
                            <span class="spacer"></span>
-                          <button  *ngIf="layer.wfs || layer.sketch" mat-icon-button matTooltip="Edit layer"
+                          <button  *ngIf="layer.wfs || layer.sketch" mat-icon-button matTooltip="Start drawing"
                                   (click)="onEditLayerClick($event, layer, group)"
                                   [ngClass]="layer.onEdit ? 'activeAction': 'normal'">
                             <mat-icon>edit</mat-icon>
@@ -59,9 +59,10 @@
                             <mat-icon>info_outline</mat-icon>
                           </button>
                            <span class="spacer"></span>
-                          <!-- <button mat-icon-button (click)="onOpacityLayerClick($event, layer)">
-                             <mat-icon  class= "editIcon">opacity</mat-icon>
-                           </button> -->
+                           <button *ngIf="layer.removable"  mat-icon-button matTooltip="Remove layer"
+                                   (click)="onRemoveLayerClick($event,layer,group.groupName)">
+                             <mat-icon>delete</mat-icon>
+                           </button>
                       </div>
                       </div>
                     </mat-list-option>

@@ -18,6 +18,7 @@ import { DynamicFormQuestionComponent } from './dynamic-form-question/dynamic-fo
 import { DialogPopulationExposedComponent } from './dialog-population-exposed/dialog-population-exposed.component';
 import { DialogOrgExposedComponent } from './dialog-org-exposed/dialog-org-exposed.component';
 import { DialogResultExposedComponent } from './dialog-result-exposed/dialog-result-exposed.component';
+import {MatKeyboardModule} from '@ngx-material-keyboard/core';
 
 @NgModule({
   declarations: [
@@ -38,16 +39,16 @@ import { DialogResultExposedComponent } from './dialog-result-exposed/dialog-res
     DialogResultExposedComponent,
     DialogLayerNameDialog
   ],
-  imports: [
-    BrowserModule,
-    AppRoutingModule,
-    BrowserAnimationsModule,
-    DemoMaterialModule,
-    FormsModule,
-    HammerModule,
-    HttpClientModule,
-    ReactiveFormsModule
-  ],
+    imports: [
+        BrowserModule,
+        AppRoutingModule,
+        BrowserAnimationsModule,
+        DemoMaterialModule,
+        FormsModule,
+        HammerModule,
+        HttpClientModule,
+        ReactiveFormsModule,
+    ],
   providers: [LayerPanelComponent],
   bootstrap: [AppComponent]
 })

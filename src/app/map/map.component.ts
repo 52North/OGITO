@@ -19,6 +19,7 @@ import {platformModifierKeyOnly} from 'ol/events/condition';
 import WFS from 'ol/format/WFS';
 import GML from 'ol/format/GML';
 import WMSCapabilities from 'ol/format/WMScapabilities.js';
+// import Keyboard from 'simple-keyboard';
 
 import {click} from 'ol/events/condition.js';
 import Overlay from 'ol/Overlay';
@@ -169,6 +170,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
   subsToFindOrgExposed: Subscription;
   subsToSelectProject: Subscription;
   subsToAddSketchLayer: Subscription;
+  subsToSaveAllLayers: Subscription;
 
   constructor(private mapQgsStyleService: MapQgsStyleService,
               private  openLayersService: OpenLayersService,
@@ -198,13 +200,22 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       },
       error => {
         console.log('Error changing the style for drawing elements', error);
-        alert('Error changing the style, select a symbol');
+        // alert('Error changing the style, select a symbol');
       }
     );
     this.subsToSaveCurrentLayer = this.openLayersService.saveCurrentLayer$.subscribe(
       data => {
         if (data) {                                    // (data) is equivalent to (data === true)
           this.saveEdits(this.curEditingLayer);
+        }
+      }
+      ,
+      error => alert('Error saving layers' + error)
+    );
+    this.subsToSaveAllLayers = this.openLayersService.saveAllLayers$.subscribe(
+      data => {
+        if (data) {                                    // (data) is equivalent to (data === true)
+          this.saveAllEdits();
         }
       }
       ,
@@ -275,7 +286,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
             break;
           }
           case 'Rating': {
-            this.startRating();
+          // this.startRating();
+            console.log ('rating quiet areas hidden');
             break;
           }
           case 'Rotate': {
@@ -339,12 +351,12 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
      * @params layerName
      * @params @feature the feature selected for ranking (represents a location with predefined measures)
      */
-    const ratingName =  layerName === 'massnahmen_laute' ? 'Massnahmen Laute Orte' : 'Massnahmen Leise Orte';
+    const ratingName =  layerName === 'massnahmen' ? 'Massnahmen Laute Orte' : 'Massnahmen Leise Orte';
     // # TODO modify this
     const fieldsNames =  AppConfiguration.ratingMeasureLayers[layerName];
     let fieldsToRank = []; // select those that have a true value
     fieldsNames.forEach(field  => {
-      console.log(feature, field, feature.get(field));
+      // console.log(feature, field, feature.get(field));
      if (feature.get(field) === true) {
        fieldsToRank.push(field);
      }
@@ -362,7 +374,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       this.select.getFeatures().clear();
       if (result){
         // result is different to undefined
-        console.log('result', result);
+        // console.log('result', result);  #TODO what happened if nothing is enetered...
         this.saveRatingMeasures(layerName, feature, result);
       }
 
@@ -413,7 +425,9 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     let noiseGroup: any;
     let orgGroup: any;
     // find the layers for institutions
+    console.log('al menos entra?');
     this.map.getLayers().forEach(layer => {
+      // console.log('layer name and group name in conf', layer.get('name').toLowerCase(), AppConfiguration.institutionsGroupName.toLowerCase());
       if (layer.get('name').toLowerCase() === AppConfiguration.institutionsGroupName.toLowerCase())  {
         orgGroup = layer;
         return;
@@ -465,7 +479,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       // do something
       if (data){
         // data is different to undefined
-        console.log('data in findOrgExposed', data);
+        //console.log('data in findOrgExposed', data);
         this.queryOrgExposedNoise(data) // selectedLayer, lowlevel and highlevel
         .then( r => this.processOrgLden(r));
       }
@@ -784,8 +798,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         verticalPosition: 'top',
         duration: 3000});
     // http://localhost:4200/graphql--> by proxy diverted to http://130.89.6.97:5000/graphql
-    //request('https://ogito.itc.utwente.nl/graphql', query)
-     request('http://localhost:4200/graphql', query)   // debug time
+    request('https://ogito.itc.utwente.nl/graphql', query)
+    // request('http://localhost:4200/graphql', query)   // debug time
       .then(result => {
         // console.log('data', result[queryName]);
         this.processPopLden(result[queryName], layerName );
@@ -820,7 +834,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     // load the layer - creates a group if needed
     this.loadJsonPoint(data.nodes, layerName);
     // getting the schools by district
-    const summary = this.summarizeOrgByDistrict(data.nodes, 'bezirkeId');
+   // const summary = this.summarizeOrgByDistrict(data.nodes, 'bezirkeId');
+    const summary = this.summarizeOrgByDistrict(data.nodes, 'bezirkeName'); // try with the new fieldname
     this.openDialogResult(data.totalCount, summary);
     // here no need for this snackbar was replaced by a mat-dialog
    /* this.snackBar.open('Approximated Institutions exposed: ' +
@@ -851,7 +866,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         lookup[name] += 1;
       }
     }
-    // console.log ('items and result', items, lookup, result);
+    console.log ('items and result', items, lookup, result);
     // make an array to show in the dialog
     let arr = [];
     for (const key in lookup) {
@@ -944,10 +959,10 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         geometry: {
           type: geojson.type,
           coordinates: geojson.coordinates,
-          bezirkeId: f.bezirkeId,
+          bezirkeName: f.bezirkeName,
         },
         properties: {
-          bezirkeId: f.bezirkeId,   // value in this case is not used in the style
+          bezirkeName: f.bezirkeName,   // value in this case is not used in the style
           id: f.id
         }
       };
@@ -973,11 +988,13 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       name: layerName,
       style: orgStyle,
       visible: true,
-      opacity: 0.5
+      // opacity: 0.5  more contrast is required
     });
     // add the layer to the map
-    const fieldstoShow = [{name: 'bezirkeId', type: 'QString', typeName: 'varchar', comment: ''},
-                          {name: 'id', type: 'QString', typeName: 'varchar', comment: ''}];
+    const fieldstoShow = [{name: 'id', type: 'QString', typeName: 'varchar', comment: ''},
+                          {name: 'bezirkeName', type: 'QString', typeName: 'varchar', comment: ''},
+                       //   {name: 'bezirkeId', type: 'QString', typeName: 'varchar', comment: ''},
+                          ];
     // console.log('creates the new vector layer', vectorLayer);
     this.addSessionLayer(vectorLayer, fieldstoShow, false);
     // console.log('this.groupsLayers in loadJsonPoint', this.groupsLayers);
@@ -990,6 +1007,14 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
      * multi-geometry --> all
      */
     // set style
+    if (!sketchLayerName) {
+      this.snackBar.open('Enter a valid name for sketch layer', 'ok',
+        { horizontalPosition: 'center',
+          verticalPosition: 'top',
+          duration: 5000});
+      return;
+
+    }
     this.mapQgsStyleService.setSketchStyle(sketchLayerName);
     const self  = this;
     const newSource  = new VectorSource({wrapx: false});
@@ -997,7 +1022,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       source : newSource,
       name: sketchLayerName,
       zIndex : 101,   // check this #TODO
-      visible: false,
+      visible: true,
       // getting default style
       style(feature) {    // this equiv to style: function(feature)
         let layerStyle = self.mapQgsStyleService.findJsonStyle(feature, sketchLayerName);
@@ -1032,9 +1057,11 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     // console.log('layerName and fieldsToShow in addLayerGroupLayerPanel', layerName, fieldsToShow);
     let newFeats = false;
     let geometryType = null;
+    let removable = true;
     if (sketch) {
       newFeats = true;
       geometryType = 'multi';
+      removable = false;  // test
     }
     const layers = [];
     const layerItem = {
@@ -1051,6 +1078,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     onRanking: false,
     visible: true,   // visible by default
     wfs: false ,    // #TODO add forremove..
+    removable,
     sketch  };  // sketch will be used to activate editing mode.. #TODO
     // add the item to an array;
     layers.push(layerItem);
@@ -1076,6 +1104,45 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     return; */
    //  console.log('GROUP session did exist this.groupsLayers', this.groupsLayers);
   }
+
+  removeSessionLayer(layerToRemove: any){
+      const layerName =  layerToRemove.layer.layerName;
+      const groupName = layerToRemove.groupName;
+
+     // remove the layer from the map
+      this.map.getLayers().forEach(group => {
+        if (groupName.toLowerCase() === group.get('name').toLowerCase()) {
+          const layersInGroup = group.getLayers().getArray();
+          const lyr = layersInGroup.find(x => x.get('name').toLowerCase() === layerName.toLowerCase());
+          console.log('lyr?', lyr);
+          if (lyr) {
+            lyr.setVisible(false);
+            this.map.removeLayer(lyr);
+            // layersInGroup.splice(index, 1);
+          }
+        }
+      });
+       /*   console.log('groupName and layers', groupName, layersInGroup);
+          const index = layersInGroup.findIndex(x => x.get('name').toLowerCase() === layerName.toLowerCase());
+          console.log('index', index);
+          if (index > -1) {
+            group.removeLayer()
+            layersInGroup.splice(index, 1);
+          }
+        }
+      }); */
+      // remove the layer from the dict layerPanel
+      // first find the group
+      const group = this.findGroupLayer(layerName);  // find the group of the layer :)
+      console.log('groupName', group);
+      const indexInGroup = group.layers.indexOf(x => x.layerName.toLowerCase() === layerName.toLowerCase());
+      group.layers.splice(indexInGroup, 1);
+      console.log(this.groupsLayers);
+      this.groupsLayersSubject.next(this.groupsLayers);
+      return;
+    }
+
+
 
   addSessionLayer(layer: any, fieldstoShow: any, sketch = false){
   /**
@@ -1146,14 +1213,17 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
      * @rating the rating values as entered in the form
      */
     for (const key in rating) {
-      console.log('key in saveRatingMeasures', feature, rating);
+      // console.log('key in saveRatingMeasures', feature, rating);
       if (key !== 'sonstiges') {
-            console.log(key + '_rank', rating[key]);
+            // console.log(key + '_rank', rating[key]);
             feature.set(key + '_rank', rating[key]);
       }
     }
     if (rating.sonstiges){
-      feature.set('sonstiges', this.replaceNull(feature.get('sonstiges')) + ' & ' + rating.sonstiges);
+      // this accumulate the voting.
+      // feature.set('sonstiges', this.replaceNull(feature.get('sonstiges')) + ' & ' + rating.sonstiges);
+      // This updates the rating... so.. its possible.
+      feature.set('sonstiges', this.replaceNull(rating.sonstiges));
     }
 
     this.saveFeatinBuffer(layerName, feature, 'rating');
@@ -1185,7 +1255,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const lyr = this.findLayer(this.curEditingLayer.layerName);
     if (lyr === null) {
-      this.snackBar.open('Error retrieving current layer', 'ok',
+      this.snackBar.open('Error retrieving layer', 'ok',
         { horizontalPosition: 'center',
           verticalPosition: 'top',
           duration: 5000});
@@ -1962,7 +2032,7 @@ saveFeatinBuffer(layerName: string, feature: any, operation: string){
   if (!tlayer) {
     tlayer = this.findSketchLayer(layerName);
     if (!tlayer) {
-      alert('Layer not found');
+      alert('Layer not found in saving');
     }
   }
   // get data source
@@ -2429,10 +2499,11 @@ loadWFSlayers(XmlCapText) {
             format: new GeoJSON(),
             // getting WFS set to the view extent
             url: extent => {
-              return (urlWFS + '&bbox=' + extent.join(',') + ',' + defaultSRS);
+             // return (urlWFS + '&bbox=' + extent.join(',') + ',' + defaultSRS);
+              return (urlWFS);
             },
             crossOrigin: null,   // gis.stackexchange.com/questions/71715/enabling-cors-in-openlayers
-            strategy: bboxStrategy
+            // strategy: bboxStrategy    // by default will load all of then $TODO apply a filter when a feat is marked to delete...
           });
           const wfsVectorLayer = new VectorLayer({
             source: vectorSource,
@@ -2538,12 +2609,12 @@ findLayerinGroups(layerName: string): any {
 
   findGroupLayer(layerName: string): any {
     /**
-     * finds the group which th layer belongs to
+     * finds the group which the layer belongs to
      */
     for (const group of this.groupsLayers) {
       const lyr = group.layers.find(x => x.layerName.toLowerCase() === layerName.toLowerCase());
       if (lyr) {
-        // console.log ('la consigue en los grupos', lyr);
+        console.log ('la consigue en los grupos', lyr);
         return (group);  // it was lyr
       }
     }
@@ -2559,8 +2630,8 @@ updateEditingLayer(layerOnEdit: any) {
      *  #TODO catch exception
      */
   let layer: any;
-  // console.log('what is inside updateEditingLayer', layerOnEdit);  //no la consigue en las WFS...
-  // console.log('groups', this.loadedSketchLayers, this.loadedWfsLayers);
+  console.log('what is inside updateEditingLayer', layerOnEdit);  //no la consigue en las WFS...
+  console.log('groups', this.loadedSketchLayers, this.loadedWfsLayers);
   if (layerOnEdit === null) {
    if (this.curEditingLayer) {
       // a layer was being edited - ask for saving changes
@@ -2577,7 +2648,7 @@ updateEditingLayer(layerOnEdit: any) {
     if (!layer) {
       layer = this.loadedSketchLayers.find(x => x.layerName === layerOnEdit.layer.layerName);
       if (!layer){
-        alert('Layer not found');
+        alert('Layer not found in starting editing');
         return;
       }
     }
@@ -2594,7 +2665,7 @@ updateEditingLayer(layerOnEdit: any) {
   if (!layer) {
     layer = this.loadedSketchLayers.find(x => x.layerName === layerOnEdit.layer.layerName);
     if (!layer){
-      alert('Layer not found');
+      alert('Layer not found in update editing ');
       return;
     }
   }
@@ -2615,15 +2686,60 @@ stopEditing() {
       this.removeInteractions();
     }
 
+saveAllEdits(){
+  /**
+   * saves all edits in all WFS layers
+   */
+   // console.log('this.loadedWfsLayers', this.loadedWfsLayers);
+    if (!(this.editBuffer.length > 0)) {  // nothing to save
+    this.snackBar.open('Nothing to save', 'ok',
+      { horizontalPosition: 'center',
+        verticalPosition: 'top',
+        duration: 3000});
+    return;
+    }
+    // find all the wfslayers and save edits.
+    console.log(this.loadedWfsLayers);
+    // tlayer = this.loadedWfsLayers.find(x => x.layerName.toLowerCase() === layerName.toLowerCase());
+    // layer = this.loadedSketchLayers.find(x => x.layerName === layerOnEdit.layer.layerName);
+    this.loadedWfsLayers.forEach(
+      layer => {
+        console.log('saving changes in ', layer.layerName);
+        this.saveEdits(layer);
+      });
+    if (this.loadedSketchLayers.length > 0) {
+     if (confirm('Do you want to save changes in all sketch layers')){
+       this.loadedSketchLayers.forEach(
+         layer => {
+           console.log('saving changes in sketch layers', layer.layerName);
+           this.saveEdits(layer);
+         });
+     }
+   }
+
+}
+
+
 saveEdits(editLayer: any) {
-      // save edits in all layers
+  /**
+   * @param editLayer:
+    */
+  // save edits in all layers
        // console.log('editlayer en save', editLayer,'en save', this.editBuffer);
       if (!(this.editBuffer.length > 0)) {  // nothing to save
+        this.snackBar.open('Nothing to save', 'ok',
+          { horizontalPosition: 'center',
+            verticalPosition: 'top',
+            duration: 3000});
         return;
       }
       if (this.editBuffer.findIndex(x => x.layerName ===  editLayer.layerName) === -1)
       { // nothing to save in the editLayer
-      return;
+        this.snackBar.open('Nothing to save in current layer', 'ok',
+          { horizontalPosition: 'center',
+            verticalPosition: 'top',
+            duration: 3000});
+        return;
       }
       if (editLayer.geometryType === 'Point' || editLayer.geometryType === 'Line' || editLayer.geometryType === 'Polygon'
         || editLayer.geometryType === 'MultiPolygon' || editLayer.geometryType === 'MultiPolygonZ' || editLayer.geometryType === 'MultiPoint')
@@ -2631,10 +2747,10 @@ saveEdits(editLayer: any) {
          const result = this.writeTransactWfs(editLayer);
          if (result){
            result.then(() => {
-           this.snackBar.open('Changes saved', 'ok',
+           this.snackBar.open('Changes saved in ' + editLayer.layerName, 'ok',
              { horizontalPosition: 'center',
                verticalPosition: 'top',
-               duration: 3000});
+               duration: 10000});
            console.log('result', result);  // TODO send a message
            return; });
          }
@@ -3592,7 +3708,7 @@ removeInteractions() {
       this.map.removeInteraction(this.snap);
       this.map.removeInteraction(this.dragBox);
       // remove any other interaction
-      console.log('interactions on the map', this.map.getInteractions());
+      // console.log('interactions on the map', this.map.getInteractions());
     }
     catch (e) {
       console.log ('Error removing interactions', e);
@@ -3733,10 +3849,11 @@ export class DialogRatingDialog {
   // tslint:disable-next-line:component-selector
   selector: 'dialog-rating-measure-dialog',
   templateUrl: './dialog-rating-measure-dialog.html',
-  styleUrls: ['./map.component.scss']
+  styleUrls: ['./map.component.scss', '../../../node_modules/simple-keyboard/build/css/index.css']
 })
 // tslint:disable-next-line:component-class-suffix
 export class DialogRatingMeasureDialog {
+
 
   selectedRating = 0;
   fieldNames: any;  // esto debe ir a data.fieldNames..
@@ -3745,7 +3862,6 @@ export class DialogRatingMeasureDialog {
     public dialogRef: MatDialogRef<DialogRatingMeasureDialog>,
     @Inject(MAT_DIALOG_DATA) public data: DialogData) {
     const group: any = {};
-
     data.fieldNames.forEach(question => {
         group[question] = new FormControl(question.value || '', Validators.required);
     });
@@ -3754,6 +3870,7 @@ export class DialogRatingMeasureDialog {
     group.sonstiges = new FormControl( '');  // not required
     this.formGroup = new FormGroup(group);
   }
+
   showQuestionValue(elementID: any, value: any){
   // here code to show the value of the slider
   const label = document.getElementById(elementID);
@@ -3761,8 +3878,10 @@ export class DialogRatingMeasureDialog {
     label.innerHTML = value;
    }
   }
+
   onNoClick(): void {
     this.dialogRef.close();
   }
+
 
 }

@@ -23,7 +23,7 @@ export class LayerPanelComponent implements OnInit, OnDestroy{
   @Output() editLayerClick = new EventEmitter<any>();   // emit an event when the edit button of a layer is clicked
   @Output() layersOrder = new EventEmitter<any>();   // emit an event when layers were reordered (drop)
   @Output() identifyLayerClick = new EventEmitter<any>();  // emit the layer to start identifying
-  // @Output() rankingLayerClick = new EventEmitter<any>();  // #TODO link in maps
+  @Output() removeLayerClick = new EventEmitter<any>();  // #TODO link in maps
   x = 40;
   y = 80;
   startX = 0;
@@ -158,6 +158,14 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
       this.editLayerClick.emit({layer, groupName});
       }
 
+
+  onRemoveLayerClick($event: any, layer: any, groupName: any)
+  {
+    $event.preventDefault();
+    $event.stopImmediatePropagation();
+    console.log('remove the layer from the map and panel');
+    this.removeLayerClick.emit({layer, groupName});
+  }
 
   onIdentifyLayerClick($event: any, layer: any, groupName: any) {
     // TODO identify features

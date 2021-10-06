@@ -167,3 +167,10 @@ th[scope="row"] {
 .star-rating-animation .star-hover:hover{
   transform: scale(1.2);
 }
+.simple-keyboard-hidden{
+  display: none;
+}
+.hide-keyboard {
+  overflow: hidden;
+  height: 0;
+}

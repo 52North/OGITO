@@ -10,7 +10,8 @@
                  (layerVisClick)="updateMapVisibleLayer($event)"
 (editLayerClick)="updateEditingLayer($event)"  (groupLayerVisClick)="updateMapVisibleGroupLayer($event)"
 (layersOrder) = "updateOrderGroupsLayers($event)"
-(identifyLayerClick)="startIdentifying($event)">
+(identifyLayerClick)="startIdentifying($event)"
+(removeLayerClick) = "removeSessionLayer($event)">
 </app-layer-panel>
 </div>
 <app-dynamic-form #dynamicForm  [questions]="questionsSubject.asObservable()"

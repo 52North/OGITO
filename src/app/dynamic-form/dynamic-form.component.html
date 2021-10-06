@@ -5,14 +5,13 @@
      cdkDragBoundary=".parent">
  <mat-card>
       <mat-card-title-group>
-        <mat-card-title>Details</mat-card-title>
+        <mat-card-title>Beschreibung</mat-card-title>
         <!--<button mat-flat-button (click)="closeForm()" class="matCloseWrapper">
           <mat-icon >close</mat-icon>
         </button> -->
 
       </mat-card-title-group>
       <mat-divider class = "toolbarDivider"></mat-divider>
-
   <form (ngSubmit)="onSubmit()" [formGroup]="form">
 
     <div *ngFor="let question of sQuestions" class="form-row">
@@ -22,50 +21,46 @@
         <div class="inputField" [ngSwitch]="question.controlType">
          <mat-form-field *ngSwitchCase="'textbox'" >
            <mat-label>
-             {{question.label}}:
+             {{question.label | titlecase }}:
            </mat-label>
-           <input matInput class="inputText" [formControlName]="question.key" [id]="question.key">
+           <div class = "container">
+           <div>
+           <input  #input matInput  class="input" autocomplete="off"
+                  [formControlName]="question.key" [id]="question.key"
+                  placeholder="Write details here" value= {{value}}
+                   (focusout) = "onInputFocusOut($event, question.key)">
+           </div>
+             <div>
+          <!--     <button type="button" (click)="showKeyboard()" matTooltip="Show/hide virtual keyboard"><mat-icon>keyboard_alt</mat-icon> </button> -->
+             </div>
+           </div>
+
          </mat-form-field>
+
+      <!--    <div  #keyboard class="simple-keyboard" [ngClass]="keyboardVisible? 'simple-keyboard': 'simple-keyboard-hidden'"> </div> -->
+
          <div  *ngSwitchCase="'checkbox'" >
            <mat-checkbox  [formControlName]="question.key"  [checked] = "question.checked" labelPosition='after' color = 'primary'
                           (change)="checkingChecks(question.key, $event.checked)">
-              <label> {{question.label}}  </label>
+              <label> {{question.label | titlecase }}  </label>
            </mat-checkbox>
          </div>
 
 
           <div class="container" *ngSwitchCase="'slider'">
             <div class="sliderLabel">
-              <label >{{question.label | titlecase}}: </label>
+              <label >{{question.label | titlecase}} ({{question.min}} - {{question.max}}): </label>
             </div>
             <div>
+
               <mat-slider  color = 'primary' [formControlName]="question.key" [max]="question.max"
                           [min]="question.min" [thumbLabel]=true  [value]="question.min"
                            (change) = "showQuestionValue(question.key, $event.value)">
               </mat-slider>
+
             </div>
            <div>  <label id={{question.key}}> {{question.value}} </label></div>
           </div>
-
-
-         <!-- <div *ngSwitchCase="'slider'">
-         <span>{{question.min}} </span>
-          <input  [id]="question.key" type="range"  [min]="question.min" [value]="question.min" [max]="question.max" step="1"
-                  [formControlName]="question.key" >
-         <span>{{question.max}} </span>
-          <span></span>
-        </div> -->
-          <!--<mat-form-field  *ngSwitchCase="'slider'">
-            <mat-label>{{question.label}} </mat-label>
-            <input matInput type="number" [id]="question.key"
-                   [formControlName]="question.key" >
-            <mat-slider [max]="question.max" [min]="question.min" [thumbLabel]=true  [value]="question.min"
-            (change) = "setQuestionValue(question.key, $event.value)"></mat-slider>
-
-
-          </mat-form-field> -->
-
-
 
           <!--
           // https://stackoverflow.com/questions/58970793/get-value-of-slider-in-typescript
@@ -90,6 +85,7 @@
   <!-- <div *ngIf="payLoad" class="form-row">
     <strong>Saved the following values</strong><br>{{payLoad}}
   </div> !-->
+
   </mat-card>
 </div>
 

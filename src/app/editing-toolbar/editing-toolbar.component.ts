@@ -108,7 +108,7 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
   );
   this.subsToGeomTypeEditing = this.openLayersService.layerEditing$.subscribe(
     (data: any) => {
-      console.log('data aqui de donde viene esto XXX LOL', data);
+      // console.log('data aqui de donde viene esto XXX LOL', data);
       this.updateLayerTypeRanking(data.layerName);
       this.updateLayerTypeRating(data.layerName);
       this.updateLayerTypeEdit(data.layerGeom);
@@ -189,7 +189,7 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
         this.actionActive[key] = !this.actionActive[key];
       }
     }
-    console.log('this.actionActive[key]', this.actionActive);
+    // console.log('this.actionActive[key]', this.actionActive);
   }
 
   startEditAction(action: string){
@@ -198,7 +198,7 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
      */
     if (true === this.actionActive[action]) {
       // action was active --> it must be stopped
-      console.log('que entra.. action', action);
+      // console.log('que entra.. action', action);
       this.openLayersService.updateEditAction(null);
     }
     else {
@@ -256,7 +256,7 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
     }
     else {
       this.openLayersService.updateDeleteFeats(true);
-      console.log('first time here');
+      // console.log('first time here');
     }
     this.highlightAction('Delete');
     }
@@ -266,7 +266,6 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
     /** Enable user to save edit in the layer being updated the observable to show the editing toolbar and
      */
     // #TODO confirm dialog if (confirm('Do you want to save edits in the current layer:?')){
-      console.log('what is here RRR?');
       this.openLayersService.updateSaveCurrentLayer(true);
 
       // disable the button
@@ -278,11 +277,10 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
    // }
   }
   saveAllLayer(){
-    alert('Add here the code to save all edits in all layers');
     /** Enable user to save edit in all the layers
      */
     if (confirm('Do you want to save all the edits in the all layers:?')){
-     // this.openLayersService.updateSaveCurrentLayer(true);
+      this.openLayersService.updateSaveAllLayers(true);
       // disable the button
       this.stopSaveAll = true;
       // add a timeout to enable the button

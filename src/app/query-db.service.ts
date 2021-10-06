@@ -28,10 +28,10 @@ export class QueryDBService {
     const layerName = selectedNoiseLayer + data.selectedLayer.toLowerCase() + '_' + lowLevel + '_' + highLevel;
     const layerNames = {straassenlaerm_lden: 'StraassenlaermLden',
                         straassenlaerm_lnight: 'StraassenlaermLnight',
-                        gesamtlarm_lden: 'GesamtlarmLden',
+                        gesamtlaerm_lden: 'GesamtlaermLden',
                         industrielaerm_lden: 'IndustrielaermLden',
                         industrielaerm_lnight: 'IndustrielaermLnight',
-                        iuglaerm_bogestra_lden: 'ZuglaermBogestraLden',
+                        zuglaerm_bogestra_lden: 'ZuglaermBogestraLden',
                         zuglaerm_bogestra_lnight: 'ZuglaermBogestraLnight',
                         zuglaerm_db_lden: 'ZuglaermDbLden'
     };
@@ -42,7 +42,7 @@ export class QueryDBService {
        totalCount
        nodes {
         id,
-        bezirkeId,
+        bezirkeName,
         geom {
           geojson
           srid
@@ -55,8 +55,8 @@ export class QueryDBService {
     console.log('query', query, 'queryName', queryName);
     // for debug
     // http://localhost:4200/graphql--> by proxy diverted to http://130.89.6.97:5000/graphql
-    queryResult = request('http://localhost:4200/graphql', query)
-   // queryResult = request('https://ogito.itc.utwente.nl/graphql', query)
+    //queryResult = request('http://localhost:4200/graphql', query)
+    queryResult = request('https://ogito.itc.utwente.nl/graphql', query)
         .then(result => {
             // console.log('data', result,  result[queryName]);
             queryResult = result[queryName];

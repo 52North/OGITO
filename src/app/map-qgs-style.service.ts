@@ -160,7 +160,7 @@ export class MapQgsStyleService {
           opacity: 1,
           crossOrigin: 'anonymous',
           src: 'data:image/svg+xml;base64,' + svg,
-          scale: 0.9,
+          scale: 1.2, // it was 0.9 -- 06-10
           // size: size,
           color
         });
@@ -251,8 +251,8 @@ export class MapQgsStyleService {
                 if (layerName.toLowerCase() === 'leise_orte' ) {
                   symbolLabel = 'Leiser Ort';
                 }
-                if (layerName.toLowerCase() === 'massnahmen_laute' ) {
-                  symbolLabel = 'Massnahmen Laute';
+                if (layerName.toLowerCase() === 'massnahmen' ) {
+                  symbolLabel = 'Massnahmen';
                 }
                 // this.layerStyles[layerName] = {symbolType: styleType, style: theStyle};
                 this.layerStyles[layerName] = {
@@ -367,7 +367,7 @@ export class MapQgsStyleService {
       opacity: 1,
       crossOrigin: 'anonymous',
       src: 'data:image/svg+xml;base64,' + svgMarkerColor,
-      scale: 0.9,
+      scale: 1,   // it was 0.9
       // size: size,
       color: '#dd1c77'
     });
@@ -580,7 +580,7 @@ export class MapQgsStyleService {
        opacity: 1,
        crossOrigin: 'anonymous',
        src: 'data:image/svg+xml;base64,' + svgs[layerName],
-       scale: 0.9,
+       scale: 1, // it was 0.9
        // size: size,
        color
      });

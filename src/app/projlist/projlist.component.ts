@@ -14,28 +14,47 @@ export class ProjlistComponent implements OnInit {
   showProjectList$: Observable<boolean>;
   projectFolder = '/home/qgis/projects/';
   projects = [
-    { name: 'Noise Action Plan Bochum Pilot',
+    /*{ name: 'Noise Action Plan - ITC',
       url: AppConfiguration.hostname + 'qgs_projects/noisebochum_pilot.qgs',
       file: this.projectFolder + 'noisebochum_pilot.qgs',
       img: AppConfiguration.hostname + 'qgs_projects/noise_pilot.png',
       qGsServerUrl: 'https://ogito.itc.utwente.nl/cgi-bin/qgis_mapserv.fcgi?',
       srsID: 'EPSG:3857'   //EPSG CODE
-    },
-    {
-    name: 'Noise Action Plan Bochum',
+    },*/
+    /*{
+    name: 'Noise Action Plan Bochum - University',
     url: AppConfiguration.hostname + 'qgs_projects/noisebochum.qgs',
     file: this.projectFolder + 'noisebochum.qgs',     // was checking4
     img: AppConfiguration.hostname + 'qgs_projects/noise.png',
     qGsServerUrl: 'https://ogito.itc.utwente.nl/cgi-bin/qgis_mapserv.fcgi?',
     srsID: 'EPSG:3857'   //EPSG CODE
-  },
+  },*/
+    {
+      name: 'Noise Action Plan Bochum - Cityty',
+      url: AppConfiguration.hostname + 'qgs_projects/noisebochumcity.qgs',
+      file: this.projectFolder + 'noisebochumcity.qgs',     // was checking4
+      img: AppConfiguration.hostname + 'qgs_projects/noise.png',
+      qGsServerUrl: 'https://ogito.itc.utwente.nl/cgi-bin/qgis_mapserv.fcgi?',
+      srsID: 'EPSG:3857'   //EPSG CODE
+    }
+    ,
+    /*
+    {
+      name: 'Noise Action Plan Bochum - Municipality',
+      url: AppConfiguration.hostname + 'qgs_projects/noisebochum_municipal.qgs',
+      file: this.projectFolder + 'noisebochum_municipal.qgs',     // was checking4
+      img: AppConfiguration.hostname + 'qgs_projects/noise.png',
+      qGsServerUrl: 'https://ogito.itc.utwente.nl/cgi-bin/qgis_mapserv.fcgi?',
+      srsID: 'EPSG:3857'   //EPSG CODE
+    } */
+  /*,
     { name: 'GECCO Noise Munster',
       url: AppConfiguration.hostname + 'qgs_projects/noisemunster4.qgz',  // wrokaround while solving thw WMS problem
       file: this.projectFolder + 'noisemunster4.qgz',
       img: AppConfiguration.hostname + 'qgs_projects/imgMunster.png',
       qGsServerUrl: 'https://ogito.itc.utwente.nl/cgi-bin/qgis_mapserv.fcgi?',
       srsID: 'EPSG:25832'  //EPSG CODE
-    }
+    }*/
   ];
 
   constructor( private  openLayersService: OpenLayersService, private sanitizer: DomSanitizer) {

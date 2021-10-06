@@ -1,12 +1,12 @@
 /* You can add global styles to this file, and also import other style files */
 //@import '@angular/material/prebuilt-themes/deeppurple-amber.css';
 @import "../node_modules/ol/ol.css";
-
+@import '../node_modules/simple-keyboard/build/css/index.css';
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; overflow: hidden;}
 .example-list {
   // width: 13%;
-  max-width: 23%;
+  max-width: 30%;
   border: solid 1px #ccc;
   min-height: 40px;
   display: block; // este esta bien

@@ -18,8 +18,17 @@
         <mat-label>
           Sonstiges:
         </mat-label>
-        <input matInput class="inputText" [formControlName]="'sonstiges'" [id]="'sonstiges'">
+        <div class = "container">
+          <div>
+            <input  matInput class="input" [formControlName]="'sonstiges'" [id]="'sonstiges'" autocomplete="off"
+                   placeholder="Write description here">
+          </div>
+        </div>
       </mat-form-field>
+      <!--<button type="button" (click)="showKeyboard()" matTooltip="Show/hide virtual  keyboard">
+        <mat-icon>keyboard_alt</mat-icon>
+      </button>
+      <div class="simple-keyboard"></div> -->
     </div>
   </div>
 

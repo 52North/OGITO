@@ -8,9 +8,10 @@
   padding: 0 5px !important;
 }
 .example-list{
-  left: 70% !important;
+ // left: 70% !important;
+  margin-left: 30% !important; // to have at the same left than the editnig toolbar
   max-width: 20%;
-  top: 10% !important;
+  top: 22% !important;
 }
 
 .toolbarDivider {

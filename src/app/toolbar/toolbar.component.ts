@@ -56,11 +56,11 @@ export class ToolbarComponent implements OnInit {
       width: '250px'
     });
     dialogRef.afterClosed().subscribe(result => {
-      if (result.length > 2){
-        console.log('the dialog layerName was closed', result, result.length);
-        this.openLayersService.updateAddSketchLayer(result);
-        // console.log('the dialog layerName was closed', result);
-      }
+      if (result){
+          console.log('the dialog layerName was closed', result, result.length);
+          this.openLayersService.updateAddSketchLayer(result);
+          // console.log('the dialog layerName was closed', result);
+        }
       });
     }
   /*createScratchLayer(){

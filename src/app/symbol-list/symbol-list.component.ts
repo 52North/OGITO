@@ -67,7 +67,7 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
 
 
   ngOnInit(): void {
-    this.displaySymbolList$ = observableOf(true);  // #Only for development purposes, #TODO put in fs
+   // this.displaySymbolList$ = observableOf(true);  // #Only for development purposes, #TODO put in fs
   }
 
   ngAfterViewInit(){
