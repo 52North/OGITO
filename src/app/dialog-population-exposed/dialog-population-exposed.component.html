@@ -17,13 +17,13 @@
         </mat-select>
       </mat-form-field> -->
       <mat-form-field appearance="fill">
-        <mat-label>Select low noise level (>=)</mat-label>
+        <mat-label>Untere Laermgrenze auswaehlen (>=)</mat-label>
         <mat-select class="form-control" id = "lowLevel" formControlName="lowLevel" required>
             <mat-option *ngFor= "let level of noiseLevels"  [value]="level"> {{level}} </mat-option>
         </mat-select>
       </mat-form-field>
       <mat-form-field appearance="fill">
-        <mat-label>Select high noise level (<)</mat-label>
+        <mat-label>Obere Laermgrenze auswaehlen (<)</mat-label>
         <mat-select class="form-control" id = "highLevel" formControlName="highLevel" required>
             <mat-option *ngFor= "let level of noiseLevels" [value]="level"> {{level}} </mat-option>
         </mat-select>

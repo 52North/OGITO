@@ -7,28 +7,31 @@
  <div #editToolbar>
     <mat-toolbar>
       <button   *ngIf= " (layerTypeEdit$ == 'Point' || layerTypeEdit$ == 'Multi'|| layerTypeEdit$ == 'MultiPoint') " mat-icon-button
-                (click)="drawingShapes('Point')" matTooltip="Add point/marker" [ngClass]="actionActive['Point'] ? 'active': 'normal'">
+                (click)="drawingShapes('Point')" matTooltip="Punkt hinzufuegen" aria-label= "Add point/marker" [ngClass]="actionActive['Point'] ? 'active': 'normal'">
         <mat-icon>add_location</mat-icon>
       </button>
 
       <button mat-icon-button *ngIf="(layerTypeEdit$ == 'Line' || layerTypeEdit$ =='Multi' || layerTypeEdit$ == 'Polygon'|| layerTypeEdit$ == 'MultiPolygon'|| layerTypeEdit$ == 'MultiPolygonZ') "
-              (click)="drawingShapes('LineString')" matTooltip="Add line" [ngClass]="actionActive['LineString'] ? 'active': 'normal'">
+              (click)="drawingShapes('LineString')" matTooltip="Linie hinzufuegen" aria-label="Add line" [ngClass]="actionActive['LineString'] ? 'active': 'normal'">
         <mat-icon    svgIcon="add_line"></mat-icon>
       </button>
       <button *ngIf="(layerTypeEdit$ == 'Polygon' || layerTypeEdit$ == 'Multi'|| layerTypeEdit$ == 'MultiPolygon'|| layerTypeEdit$ == 'MultiPolygonZ') " mat-icon-button
-              (click)="drawingShapes('Polygon')" matTooltip="Add polygon" [ngClass]="actionActive['Polygon'] ? 'active': 'normal'">
+              (click)="drawingShapes('Polygon')" matTooltip="Flaeche hinzufuegen" aria-label="Add polygon" [ngClass]="actionActive['Polygon'] ? 'active': 'normal'">
         <mat-icon svgIcon="add_poly"></mat-icon>
       </button>
-         <button mat-icon-button (click)="startEditAction('ModifyBox');showSymbolPanel(false);" matTooltip="Select element(s) to move"
+         <button mat-icon-button (click)="startEditAction('ModifyBox');showSymbolPanel(false);"
+                 matTooltip="Elemente verschieben" aria-label="Select element(s) to move"
               [ngClass]="actionActive['ModifyBox'] ? 'active': 'normal'" >
         <mat-icon svgIcon="selectBoxFeature"></mat-icon>
       </button>
 
-      <button *ngIf="(layerTypeRate$)" mat-icon-button (click)="startEditAction('Rating');showSymbolPanel(false);" matTooltip="Rate element"
+      <button *ngIf="(layerTypeRate$)" mat-icon-button (click)="startEditAction('Rating');showSymbolPanel(false);"
+              matTooltip="Rate element"
               [ngClass]="actionActive['Rating'] ? 'active': 'normal'" >
         <mat-icon svgIcon="ratingQuietArea"></mat-icon>
       </button>
-      <button  *ngIf="(layerTypeRateMeasures$)" mat-icon-button (click)="startEditAction('RankingMeasures');showSymbolPanel(false);" matTooltip="Rate actions"
+      <button  *ngIf="(layerTypeRateMeasures$)" mat-icon-button (click)="startEditAction('RankingMeasures');showSymbolPanel(false);"
+               matTooltip="Priorisiere Massnahmen" aria-label= "Rate measures action-plan"
               [ngClass]="actionActive['RankingMeasures'] ? 'active': 'normal'" >
         <mat-icon svgIcon="ratingActionPlan"></mat-icon>
       </button>
@@ -46,16 +49,19 @@
               [ngClass]="actionActive['Rotate'] ? 'active': 'normal'" >
         <mat-icon>rotate_right</mat-icon>
       </button> -->
-      <button mat-icon-button (click)="startEditAction('MeasureLine');showSymbolPanel(false)" matTooltip="Measure lineal distance"
+      <button mat-icon-button (click)="startEditAction('MeasureLine');showSymbolPanel(false)"
+              matTooltip="Entfernung messen" aria-label= "Measure lineal distance"
               [ngClass]="actionActive['MeasureLine'] ? 'active': 'normal'" >
         <mat-icon svgIcon="measureLine"></mat-icon>
       </button>
-      <button mat-icon-button (click)="startEditAction('MeasureArea');showSymbolPanel(false)" matTooltip="Measure areal distance"
+      <button mat-icon-button (click)="startEditAction('MeasureArea');showSymbolPanel(false)"
+              matTooltip="Flaeche messen" aria-label="Measure areal distance"
               [ngClass]="actionActive['MeasureArea'] ? 'active': 'normal'" >
         <mat-icon svgIcon="measureArea"></mat-icon>
       </button>
 
-      <button mat-icon-button (click)="startEditAction('Delete'); showSymbolPanel(false)"  aria-label="delete" matTooltip="Delete element"
+      <button mat-icon-button (click)="startEditAction('Delete'); showSymbolPanel(false)"
+              aria-label="delete a element" matTooltip="Elemnt loeschen"
               [ngClass]="actionActive['Delete'] ? 'active': 'normal'">
         <mat-icon>delete_forever</mat-icon>
       </button>
@@ -67,17 +73,19 @@
               [ngClass]="actionActive['Search'] ? 'active': 'normal'">
         <mat-icon>search</mat-icon>
       </button> -->
-      <button mat-icon-button aria-label="UndoLastEdit" (click)="startEditAction('Undo');" matTooltip="Undo">
+      <button mat-icon-button aria-label="UndoLastEdit" (click)="startEditAction('Undo');" matTooltip="ungeschehen machen">
         <mat-icon>undo</mat-icon>
       </button>
-      <button mat-icon-button (click)="showSymbolPanel(true)" matTooltip="Open symbol list"
+      <button mat-icon-button (click)="showSymbolPanel(true)" matTooltip="List der Symbole oeffnen" aria-label="Open symbol list"
               [ngClass]="actionActive['showSymbols'] ? 'active': 'normal'">
-        <mat-icon   aria-label="">category</mat-icon>
+        <mat-icon>category</mat-icon>
       </button>
-      <button [disabled]="stopSave" mat-icon-button (click)="saveLayer()" matTooltip = "Save edits into the active layer">
+      <button [disabled]="stopSave" mat-icon-button (click)="saveLayer()"  aria-label="Save edits into the active layer"
+      matTooltip ="Anderungen im aktiven layer speichern">
         <mat-icon>save_alt</mat-icon>
       </button>
-      <button  [disabled]="stopSaveAll" mat-icon-button (click)="saveAllLayer()" matTooltip = "Save all edits in all layers">
+      <button  [disabled]="stopSaveAll" mat-icon-button (click)="saveAllLayer()"  aria-label="Save all edits in all layers"
+               matTooltip ="alle Aenderungen speichern">
         <mat-icon>save</mat-icon>
       </button>
 

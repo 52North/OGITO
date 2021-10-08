@@ -8,7 +8,7 @@
     <mat-card-title-group>
       <mat-card-title class="panelTitle">Layers  </mat-card-title>
       <button mat-flat-button   (click)="closeLayerPanel(false)" >
-        <mat-icon class="matCloseWrapper" matTooltip="Close layer Panel">close</mat-icon>
+        <mat-icon class="matCloseWrapper" aria-label="Close layer Panel">close</mat-icon>
       </button>
     </mat-card-title-group>
     <mat-divider class = "toolbarDivider"></mat-divider>
@@ -41,7 +41,7 @@
                         </div>
                          <div class = 'selectLayer'>
                            <span class="spacer"></span>
-                          <button  *ngIf="layer.wfs || layer.sketch" mat-icon-button matTooltip="Start drawing"
+                          <button  *ngIf="layer.wfs || layer.sketch" mat-icon-button matTooltip="Mit dem zeichnen beginnen" aria-label="Start drawing"
                                   (click)="onEditLayerClick($event, layer, group)"
                                   [ngClass]="layer.onEdit ? 'activeAction': 'normal'">
                             <mat-icon>edit</mat-icon>
@@ -53,13 +53,13 @@
                           </button> -->
 
                          <!-- the identify button to the layer panel needed for WMS layers -->
-                          <button mat-icon-button matTooltip="Identify elements in the layer"
+                          <button mat-icon-button matTooltip="Elemente identifizieren" aria-label="Identify elements in the layer"
                                   (click)="onIdentifyLayerClick($event, layer, group.groupName)"
                                   [ngClass]="layer.onIdentify ? 'activeAction': 'normal'">
                             <mat-icon>info_outline</mat-icon>
                           </button>
                            <span class="spacer"></span>
-                           <button *ngIf="layer.removable"  mat-icon-button matTooltip="Remove layer"
+                           <button *ngIf="layer.removable"  mat-icon-button matTooltip="Layer loeschen" aria-label ="Remove layer"
                                    (click)="onRemoveLayerClick($event,layer,group.groupName)">
                              <mat-icon>delete</mat-icon>
                            </button>

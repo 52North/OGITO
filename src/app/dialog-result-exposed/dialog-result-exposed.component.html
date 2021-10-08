@@ -1,8 +1,8 @@
 <h2 mat-dialog-title>Zusammenfassung</h2>
 <mat-dialog-content>
   <div>
-    There are {{ data.totalCount }} found.
-    Results can be explored in the layer panel.<br>
+    Wurden gefunden: {{ data.totalCount }}
+    Raeumliche Ergebnisse sind in der Kartenuebersicht zu sehen.<br>
     <table border="0" width="100%">
       <th>BezirkeId</th><th>Institutionen</th>
       <tr *ngFor= "let item of data.summary">

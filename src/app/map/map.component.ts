@@ -891,8 +891,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       // load the layer - creates a group if needed
       this.loadJson(data.nodes, layerName);
       // here no need for a dialog, use  instead  a snackbar
-      this.snackBar.open('Approximated Population exposed: ' +
-        popExposed + '. This is a share of: ' + popShare + '%. Result can be explored in the layer Panel', 'ok',
+      this.snackBar.open('Ungefaehre Bevoelkerung betroffen: ' +
+        popExposed + 'Dies entspricht einem Anteil von: ' + popShare + '%. Raeumliche Ergebnisse sind in der Kartenuebersicht zu sehen ', 'ok',
         { horizontalPosition: 'center',
           verticalPosition: 'bottom',
           duration: 60000});   // 60 seconds
@@ -2747,7 +2747,7 @@ saveEdits(editLayer: any) {
          const result = this.writeTransactWfs(editLayer);
          if (result){
            result.then(() => {
-           this.snackBar.open('Changes saved in ' + editLayer.layerName, 'ok',
+           this.snackBar.open('Aenderungen gespeichert ', 'ok',
              { horizontalPosition: 'center',
                verticalPosition: 'top',
                duration: 10000});
