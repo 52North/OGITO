@@ -31,7 +31,7 @@
         <mat-icon svgIcon="ratingQuietArea"></mat-icon>
       </button>
       <button  *ngIf="(layerTypeRateMeasures$)" mat-icon-button (click)="startEditAction('RankingMeasures');showSymbolPanel(false);"
-               matTooltip="Priorisiere Massnahmen" aria-label= "Rate measures action-plan"
+               matTooltip="Prioritiere Massnahmen" aria-label= "Rate measures action-plan"
               [ngClass]="actionActive['RankingMeasures'] ? 'active': 'normal'" >
         <mat-icon svgIcon="ratingActionPlan"></mat-icon>
       </button>
@@ -61,7 +61,7 @@
       </button>
 
       <button mat-icon-button (click)="startEditAction('Delete'); showSymbolPanel(false)"
-              aria-label="delete a element" matTooltip="Elemnt loeschen"
+              aria-label="delete a element" matTooltip="Element loeschen"
               [ngClass]="actionActive['Delete'] ? 'active': 'normal'">
         <mat-icon>delete_forever</mat-icon>
       </button>

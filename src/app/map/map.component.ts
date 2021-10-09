@@ -531,7 +531,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     }
     // execute the query
-    this.snackBar.open('Sending request to a service.. please wait', 'ok',
+    this.snackBar.open('Berechnung wird ausgefuehrt - bitte warten', 'ok',
       { horizontalPosition: 'center',
         verticalPosition: 'top',
         duration: 3000});
@@ -649,12 +649,12 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     `;
       break;
    }
-    case 'gesamtlarm_lden': {
+    case 'gesamtlaerm_lden': {
         // Gesamtlarm_LDEN
-      queryName = 'populationGesamtlarmLden';
+      queryName = 'populationGesamtlaermLden';
       query = gql`
       query {
-      populationGesamtlarmLden (dblow: ` + lowLevel + `, dbhigh:` + highLevel + `) {
+      populationGesamtlaermLden (dblow: ` + lowLevel + `, dbhigh:` + highLevel + `) {
        totalCount
        nodes {
         id
@@ -793,7 +793,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
      }
     }
 
-    this.snackBar.open('Sending request to a service.. please wait', 'ok',
+    this.snackBar.open('Berechnung wird ausgefuehrt - bitte warten', 'ok',
       { horizontalPosition: 'center',
         verticalPosition: 'top',
         duration: 3000});
@@ -823,7 +823,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 
 
     if (data.totalCount === 0) {
-      this.snackBar.open('No records to report', 'ok',
+      this.snackBar.open('Keine Institution gefunden.', 'ok',
         { horizontalPosition: 'center',
           verticalPosition: 'top',
           duration: 10000});
@@ -879,7 +879,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     processPopLden(data, layerName: string) {
      // initialize the popExposedStyle
      if (data.totalCount === 0) {
-       this.snackBar.open('No records to report', 'ok',
+       this.snackBar.open('Nichts gefunden.', 'ok',
          { horizontalPosition: 'center',
            verticalPosition: 'top',
            duration: 10000});
@@ -892,7 +892,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       this.loadJson(data.nodes, layerName);
       // here no need for a dialog, use  instead  a snackbar
       this.snackBar.open('Ungefaehre Bevoelkerung betroffen: ' +
-        popExposed + 'Dies entspricht einem Anteil von: ' + popShare + '%. Raeumliche Ergebnisse sind in der Kartenuebersicht zu sehen ', 'ok',
+        popExposed + '. Dies entspricht einem Anteil von: ' + popShare + '%. Raeumliche Ergebnisse sind in der Kartenuebersicht zu sehen.', 'ok',
         { horizontalPosition: 'center',
           verticalPosition: 'bottom',
           duration: 60000});   // 60 seconds
@@ -1112,13 +1112,17 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
      // remove the layer from the map
       this.map.getLayers().forEach(group => {
         if (groupName.toLowerCase() === group.get('name').toLowerCase()) {
+          // console.log('Encuentra el grupo', group.get('name'));
           const layersInGroup = group.getLayers().getArray();
           const lyr = layersInGroup.find(x => x.get('name').toLowerCase() === layerName.toLowerCase());
-          console.log('lyr?', lyr);
           if (lyr) {
             lyr.setVisible(false);
             this.map.removeLayer(lyr);
-            // layersInGroup.splice(index, 1);
+            console.log('Encuentra la capa y borrada', lyr.get('name'));
+            // check if it has to be removed?
+            const index = layersInGroup.findIndex(x => x.get('name').toLowerCase() === layerName.toLowerCase());
+            layersInGroup.splice(index, 1);
+            console.log('Capa borrada',  lyr.get('name'), 'layersInGroup', layersInGroup);
           }
         }
       });
@@ -1134,10 +1138,11 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       // remove the layer from the dict layerPanel
       // first find the group
       const group = this.findGroupLayer(layerName);  // find the group of the layer :)
-      console.log('groupName', group);
-      const indexInGroup = group.layers.indexOf(x => x.layerName.toLowerCase() === layerName.toLowerCase());
+      console.log('group', group.layers, 'layerName', layerName);
+      const indexInGroup = group.layers.findIndex(x => x.layerName.toLowerCase() === layerName.toLowerCase());
+      console.log('layername', layerName, 'indexInGroup antes', indexInGroup, 'grouplayers', this.groupsLayers);
       group.layers.splice(indexInGroup, 1);
-      console.log(this.groupsLayers);
+      console.log('indexInGroup despues', indexInGroup, 'grouplayers', this.groupsLayers);
       this.groupsLayersSubject.next(this.groupsLayers);
       return;
     }
@@ -1160,9 +1165,9 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         zIndex: 100 // at the end of the layers by default
       });
       this.map.addLayer(newGroup);
-      console.log('Zindex of the sessionGroup', newGroup.getZIndex());
+      // console.log('Zindex of the sessionGroup', newGroup.getZIndex());
       layer.setZIndex(newGroup.getZIndex() + 1);
-      console.log('group does not exist: indexes of the layers', this.map.getLayers().getArray());
+      // console.log('group does not exist: indexes of the layers', this.map.getLayers().getArray());
       newGroup.getLayers().push(layer);
       this.addLayerGroupLayerPanel(layer.get('name'), fieldstoShow, sketch);
       return;
@@ -1179,7 +1184,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     // add the layer
     // find an index for the layer
     const layerIndex = group.getLayers().length;
-    console.log('group does exist: indexes of the layers', this.map.getLayers().getArray());
+    // console.log('group does exist: indexes of the layers', this.map.getLayers().getArray());
     layer.setZIndex(group.getZIndex() + layerIndex);
     group.getLayers().push(layer);
     this.addLayerGroupLayerPanel(layer.get('name'), fieldstoShow, sketch);
@@ -1588,10 +1593,10 @@ initializeMap() {
     // #TODO put here the intercation pinch and check.
     this.pinchZoom = this.map.getInteractions().getArray().find(interaction => interaction instanceof PinchZoom );
     this.pinchZoom.on('change', () => {
-      console.log('event capture by which component');
+      // console.log('event capture by which component');
     });
     this.pinchZoom.on('change', () => {
-     console.log('event capture by change which component');
+     // console.log('event capture by change which component');
   });
   }
 
@@ -1962,7 +1967,7 @@ updateShowForm(showForm: boolean) {
 }
 
 getFormData(data: any) {
-  console.log('llega payload? in getFormData', data);
+  // console.log('llega payload? in getFormData', data);
   // this.payload = payload;
   // this.payloadSource.next(payload);
   this.updateShowForm(false);
@@ -1982,7 +1987,7 @@ addingAttrFeature(layerName: string, feature: any,  attr: any){
   // find the layer in groups to get the editable fields
   const tlayer = this.findLayerinGroups(layerName);
   const fields = tlayer.fields;
-  console.log('fields in addingAttFeature', fields);
+  // console.log('fields in addingAttFeature', fields);
   if (attr !== 'undefined') {
     for (const key in attr) {
       const type = fields.find(x => x.name === key).type;
@@ -2189,7 +2194,7 @@ enableAddShape(shape: string) {
         if (this.currentClass == null){
           // modified 02 03 2021 other atts will be required.
           // e.feature.set('class', this.currentClass);
-          alert('Select a symbol');
+          alert('Waehlen Sie ein Symbol');
           this.draw.abortDrawing();
           return;  // #TODO check this
         }
@@ -2295,7 +2300,7 @@ enableAddShape(shape: string) {
        * so far no difference in the code for sketch and WFS layers..
        */
       const tlayer = this.findLayer(this.curEditingLayer.layerName);
-      console.log('this.curEditingLayer in DeletingV0', this.curEditingLayer);
+      // ('this.curEditingLayer in DeletingV0', this.curEditingLayer);
       if (tlayer === null) {
         alert('Error retrieving current layer in deleting features');
         return;
@@ -2313,7 +2318,7 @@ enableAddShape(shape: string) {
       this.select.getFeatures().clear();
       this.map.addInteraction(this.select);
       const dirty = true;
-      console.log('interactions in the map', this.map.getInteractions());
+      // console.log('interactions in the map', this.map.getInteractions());
       if (this.curEditingLayer.geometryType === 'Point' || this.curEditingLayer.geometryType === 'MultiPoint' ){
         this.dragBox = new DragBox({
           className: 'boxSelect',
@@ -2346,7 +2351,6 @@ enableAddShape(shape: string) {
         if (self.curEditingLayer.geometryType === 'Point' || self.curEditingLayer.geometryType === 'Line'
           || self.curEditingLayer.geometryType === 'MultiPoint' || self.curEditingLayer.geometryType === 'Polygon') {
 
-         console.log('Lllega aqui on select XXX');
          selectedFeatures.forEach(f => {
             const lastFeat = f.clone();
             lastFeat.setId(f.getId()); // to enable adding the feat again?
@@ -2366,9 +2370,7 @@ enableAddShape(shape: string) {
          self.select.getFeatures().clear();
           // update the possibility to undo and the cache for that
          self.canBeUndo = true;
-          // self.cacheFeatures.push(cacheFeatures); // this keep open the possibility to delete several an undo several actions
-        // console.log('cache', self.cacheFeatures);
-         console.log('editBuffer', self.editBuffer);
+         // console.log('editBuffer', self.editBuffer);
          return;
         }
         else {
@@ -2405,7 +2407,7 @@ removeDragPinchInteractions() {
             interaction.setActive(false);
           }
         });
-      console.log('after setting to false', this.map.getInteractions());
+      // console.log('after setting to false', this.map.getInteractions());
 
       /*if (this.pinchZoom) {
         this.map.removeInteraction(this.pinchZoom); // check if is there
@@ -2614,7 +2616,7 @@ findLayerinGroups(layerName: string): any {
     for (const group of this.groupsLayers) {
       const lyr = group.layers.find(x => x.layerName.toLowerCase() === layerName.toLowerCase());
       if (lyr) {
-        console.log ('la consigue en los grupos', lyr);
+        // console.log ('la consigue en los grupos', lyr);
         return (group);  // it was lyr
       }
     }
@@ -2630,8 +2632,8 @@ updateEditingLayer(layerOnEdit: any) {
      *  #TODO catch exception
      */
   let layer: any;
-  console.log('what is inside updateEditingLayer', layerOnEdit);  //no la consigue en las WFS...
-  console.log('groups', this.loadedSketchLayers, this.loadedWfsLayers);
+  // console.log('what is inside updateEditingLayer', layerOnEdit);  //no la consigue en las WFS...
+  // console.log('groups', this.loadedSketchLayers, this.loadedWfsLayers);
   if (layerOnEdit === null) {
    if (this.curEditingLayer) {
       // a layer was being edited - ask for saving changes
@@ -2699,7 +2701,7 @@ saveAllEdits(){
     return;
     }
     // find all the wfslayers and save edits.
-    console.log(this.loadedWfsLayers);
+    // console.log(this.loadedWfsLayers);
     // tlayer = this.loadedWfsLayers.find(x => x.layerName.toLowerCase() === layerName.toLowerCase());
     // layer = this.loadedSketchLayers.find(x => x.layerName === layerOnEdit.layer.layerName);
     this.loadedWfsLayers.forEach(
@@ -2708,7 +2710,7 @@ saveAllEdits(){
         this.saveEdits(layer);
       });
     if (this.loadedSketchLayers.length > 0) {
-     if (confirm('Do you want to save changes in all sketch layers')){
+     if (confirm('Wollen Sie alle Aenderungen speichern?')){
        this.loadedSketchLayers.forEach(
          layer => {
            console.log('saving changes in sketch layers', layer.layerName);
@@ -2727,7 +2729,7 @@ saveEdits(editLayer: any) {
   // save edits in all layers
        // console.log('editlayer en save', editLayer,'en save', this.editBuffer);
       if (!(this.editBuffer.length > 0)) {  // nothing to save
-        this.snackBar.open('Nothing to save', 'ok',
+        this.snackBar.open('Nichts zu speichern', 'ok',   //Nothing to save
           { horizontalPosition: 'center',
             verticalPosition: 'top',
             duration: 3000});
@@ -2735,7 +2737,7 @@ saveEdits(editLayer: any) {
       }
       if (this.editBuffer.findIndex(x => x.layerName ===  editLayer.layerName) === -1)
       { // nothing to save in the editLayer
-        this.snackBar.open('Nothing to save in current layer', 'ok',
+        this.snackBar.open('NNichts zu speichern', 'ok',   //Nothing to save in current layer
           { horizontalPosition: 'center',
             verticalPosition: 'top',
             duration: 3000});
@@ -2751,7 +2753,6 @@ saveEdits(editLayer: any) {
              { horizontalPosition: 'center',
                verticalPosition: 'top',
                duration: 10000});
-           console.log('result', result);  // TODO send a message
            return; });
          }
       }
@@ -2767,7 +2768,7 @@ saveSketchLayer(editLayer: any) {
      * @param editLayer: name of the layer to be saved.
      */
     if (!(this.editBuffer.length > 0)){
-      this.snackBar.open('No features to save in current sketch layer', 'ok',
+      this.snackBar.open('Nichts zu speichern', 'ok',  //No features to save in current sketch layer
         { horizontalPosition: 'center',
           verticalPosition: 'top',
           duration: 5000});
@@ -2777,7 +2778,6 @@ saveSketchLayer(editLayer: any) {
         return;
     }
     try {
-      console.log('editLayer', editLayer);
       const tsource = editLayer.source;
       if (!tsource) {
         this.snackBar.open('No source found in current sketch layer', 'ok',
@@ -2793,7 +2793,7 @@ saveSketchLayer(editLayer: any) {
       saveAs(blob, editLayer.layerName);
     }
     catch (e){
-      console.log('write the code to save sketchLayer' + e);
+      console.log('Error saving sketchLayer' + e);
     }
   }
 

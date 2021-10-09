@@ -30,7 +30,7 @@ export class ProjlistComponent implements OnInit {
     srsID: 'EPSG:3857'   //EPSG CODE
   },*/
     {
-      name: 'Noise Action Plan Bochum - Cityty',
+      name: 'Noise Action Plan Bochum - City',
       url: AppConfiguration.hostname + 'qgs_projects/noisebochumcity.qgs',
       file: this.projectFolder + 'noisebochumcity.qgs',     // was checking4
       img: AppConfiguration.hostname + 'qgs_projects/noise.png',

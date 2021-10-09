@@ -41,7 +41,7 @@
                         </div>
                          <div class = 'selectLayer'>
                            <span class="spacer"></span>
-                          <button  *ngIf="layer.wfs || layer.sketch" mat-icon-button matTooltip="Mit dem zeichnen beginnen" aria-label="Start drawing"
+                          <button  *ngIf="layer.wfs || layer.sketch" mat-icon-button matTooltip="Mit dem Kartieren beginnen" aria-label="Start drawing"
                                   (click)="onEditLayerClick($event, layer, group)"
                                   [ngClass]="layer.onEdit ? 'activeAction': 'normal'">
                             <mat-icon>edit</mat-icon>

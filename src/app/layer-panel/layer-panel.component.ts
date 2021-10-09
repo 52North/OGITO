@@ -30,25 +30,12 @@ export class LayerPanelComponent implements OnInit, OnDestroy{
   startY = 0;
   selectedOptions = [];
   layerActive: any = null;
- // preSelection = AppConfiguration.layerBaseList2.base_img.name; // ['name']];// 'OSM' The name
-//  editLayers = [['0'], ['1']];
   baseLayers = []; // WMS layers as background; layers; too ?
   showLayerPanel$: Observable<boolean>;
   selectedLayersOptions$: Observable<any>;   // to keep the status of the layers in the layer panel
 
- /* actionActiveLayer = {
-    Identify: false,
-    Edit: false};*/
-
 constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private openLayersService: OpenLayersService) {
- /* iconRegistry.addSvgIcon(
-    'getInfo',
-    sanitizer.bypassSecurityTrustResourceUrl('assets/img/identify-24px2.svg')
-  );
-  iconRegistry.addSvgIcon(
-    'ratingActionPlan',
-    sanitizer.bypassSecurityTrustResourceUrl('assets/img/rate_action_plan2.svg')
-  );*/
+
 }
 
 
@@ -56,6 +43,7 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
    // console.log(this.layerAccordion.nativeElement.children);
    moveItemInArray(this.sgroupLayers, event.previousIndex, event.currentIndex);
    this.layersOrder.emit(this.sgroupLayers);
+   console.log('event layersOrder emmited', this.sgroupLayers );
    }
 
   ngOnInit(): void {
@@ -71,7 +59,7 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
         this.sgroupLayers = data;
        //  console.log ('que tiene this.featureLayer en questionSubscription', data);
       },
-      error => console.log ('Error in subscription to questions ', error)    );
+      error => console.log ('Error in subscription to groupLayers', error)    );
   }
 
   updateIdentifyActionInLayers(layerName: string){
@@ -80,7 +68,7 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
      * @param layerName: layerName for exception
      * #TODO declarar layer as a class and use setters and getters
      */
-    console.log('layerName in updateEditActioninLayers', layerName);
+    // console.log('layerName in updateEditActioninLayers', layerName);
     for (const group of this.sgroupLayers) {
       group.layers.forEach(layer => {
           if (layer.layerName.toLowerCase() === layerName.toLowerCase() && layer.onIdentify) {
@@ -163,7 +151,7 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
   {
     $event.preventDefault();
     $event.stopImmediatePropagation();
-    console.log('remove the layer from the map and panel');
+    console.log('remove the layer from the map and panel $event:', $event, layer, groupName);
     this.removeLayerClick.emit({layer, groupName});
   }
 
@@ -181,11 +169,12 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
     if (this.layerActive === null) {
       this.layerActive = layer.layerName;
       layer.onIdentify = true;
+      console.log('{layer, groupName} in onIdentifyLayerClick', layer, groupName)
       this.identifyLayerClick.emit({layer, groupName});
       return;
     }
     // there is layer Active and its the same
-    console.log ('this.layerActive y layer.layerName iguales?', this.layerActive, layer.layerName, this.layerActive === layer.layerName);
+    // console.log ('this.layerActive y layer.layerName iguales?', this.layerActive, layer.layerName, this.layerActive === layer.layerName);
     if (this.layerActive === layer.layerName){
       // the layer was in identifying
       if (layer.onIdentify) {
@@ -198,7 +187,6 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
         return;
       }
       // the layer was active in editing
-      console.log('PASA AQUI.. 221, onIdentifyLayerClick');
       layer.onEdit = false;
       this.editLayerClick.emit(null);
       this.openLayersService.updateShowEditToolbar(false);

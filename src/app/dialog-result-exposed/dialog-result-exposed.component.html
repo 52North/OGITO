@@ -1,10 +1,10 @@
 <h2 mat-dialog-title>Zusammenfassung</h2>
 <mat-dialog-content>
   <div>
-    Wurden gefunden: {{ data.totalCount }}
+    Wurden gefunden: {{ data.totalCount }},
     Raeumliche Ergebnisse sind in der Kartenuebersicht zu sehen.<br>
     <table border="0" width="100%">
-      <th>BezirkeId</th><th>Institutionen</th>
+      <th>Bezirke</th><th>Institutionen</th>
       <tr *ngFor= "let item of data.summary">
         <td>{{item.key}}</td> <td>{{ item.value }}</td>
         </tr>
