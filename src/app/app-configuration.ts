@@ -58,6 +58,15 @@ export class AppConfiguration{
        'laerm_tagsuber': 9,    // noise must be changed to laerm
        'laerm_abends': 10,
        'laerm_nachts': 11
+    },
+    'massnahmen': {
+      beschreibung: 1,
+      fahrspurreduzierung: 2,
+      fluesterasphalt: 3,
+      geschwindigkeitsreduzierung: 4,
+      park_ride: 5,
+      schallschutzfenster: 6,
+      sonstiges: 7
     }
     };
   static ratingPrex = {
@@ -75,8 +84,14 @@ export class AppConfiguration{
   // static rankingLayers = ['massnahmen_laute', 'massnahmen_leise'];
   // indicate which layers contain measures
   static ratingMeasureLayers = {
-    massnahmen: ['geschwindigkeitsreduzierung', 'fluesterasphalt', 'schallschutzfenster', 'park_ride', 'fahrspurreduzierung'],
+    massnahmen: ['geschwindigkeitsreduzierung', 'fluesterasphalt', 'schallschutzfenster', 'park_ride', 'fahrspurreduzierung', 'sonstiges'],
    // massnahmen_leise: ['schutz', 'visuelle _verbesserung', 'zuganglichkeit_verbessern', 'sicherheit']
+  };
+  static fieldDesc = {
+    massnahmen: 'beschreibung'
+  };
+  static fieldOther = {
+    massnahmen: 'sonstiges'
   };
   static actionPlanLayerName = 'massnahmen';
   // configure layers to add more features or not.

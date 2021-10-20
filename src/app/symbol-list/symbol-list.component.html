@@ -13,7 +13,7 @@
   <mat-divider class = "toolbarDivider"></mat-divider>
   <span *ngIf= "symbolsLength == 0"> ..creating List of Symbols</span>
   <span>{{variable}}</span>
-  <div class="symbol" *ngFor="let symbol of symbols$ | keyvalue">
+  <div #symbol class="symbol" *ngFor="let symbol of symbols$ | keyvalue">
      <div id = "+{{symbol.key}}"  (click)="updateActivesymbol(symbol)"
       [ngClass]="symbolActiveKey == symbol.key? 'active': 'normal'" >
       <canvas id ={{symbol.key}} class="canvasSymbol" #cmp></canvas>

@@ -19,7 +19,7 @@ import {extend} from 'ol/extent';
 })
 export class SymbolListComponent implements OnInit, AfterViewInit {
   @ViewChild('symbolList', {static: false}) symbolList: ElementRef <HTMLCanvasElement>;   // to access the properties of canvas
-  // @ViewChildren('canvas') myCanvas: ElementRef<HTMLCanvasElement>;   // to access the properties of canvas
+  @ViewChild('symbol', {static: false}) symboldivs: ElementRef <HTMLCanvasElement>;  // to access the properties of canvas
   @ViewChildren('cmp') myCanvas: QueryList<ElementRef<HTMLCanvasElement>>; // it works
   variable = '';
   symbolActiveKey: any = null;
@@ -60,6 +60,9 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
 
   showSymbolList(visible: any){
     if (visible === false){
+      // unsets the ng-class for the symbol list
+      this.symbolActiveKey = null;
+      // updates the selected symbol
       this.openLayersService.updateCurrentSymbol(null);
     }
     this.displaySymbolList$ = observableOf(visible);
@@ -223,7 +226,6 @@ catch (e) {
     /**
      * unsets any symbol from the symbol list
      */
-    // console.log('this.symbolActiveKey in unsetActiveSymbol', this.symbolActiveKey);
     this.symbolActiveKey = null;
   }
 

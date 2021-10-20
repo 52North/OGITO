@@ -1,20 +1,21 @@
 <h2 mat-dialog-title>Bewertung {{data.layerNameDialog}}</h2>
 <mat-dialog-content>
   Geben Sie Ihre Bewertung für die Maßnahmen ein:<br>
-  ein 0-Wert bedeutet, dass keine Bewertung vorliegt<br>
+  ein 0-Wert bedeutet, dass keine Bewertung vorliegt<br><br>
+  Massnahmen: {{ measureDesc }} <br>
   <!--Enter your rating for the measures:-->
  <!-- enter here a container, prepare the data for an array and double loop-->
   <div class="star-rating-container star-rating-animation" fxLayout="row" fxLayoutAlign="start center" >
     <div [formGroup]="formGroup">
     <div *ngFor="let field of data.fieldNames" >
 
-      <label >{{field | titlecase }}: </label>
+      <label >{{field | titlecase }} (0-5): </label>
       <mat-slider  color = 'primary' [formControlName]="field" [max]= 5
                    [min]=0 [thumbLabel]=true  [value]="field.min"
                    (change) = "showQuestionValue(field, $event.value)">{{field.value}}</mat-slider>
       <label id={{field}}> 0 </label>
     </div>
-      <mat-form-field>
+      <!--<mat-form-field>
         <mat-label>
           Sonstiges:
         </mat-label>
@@ -24,11 +25,7 @@
                    placeholder="Beschreibung">
           </div>
         </div>
-      </mat-form-field>
-      <!--<button type="button" (click)="showKeyboard()" matTooltip="Show/hide virtual  keyboard">
-        <mat-icon>keyboard_alt</mat-icon>
-      </button>
-      <div class="simple-keyboard"></div> -->
+      </mat-form-field>  -->
     </div>
   </div>
 

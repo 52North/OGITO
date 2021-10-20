@@ -69,6 +69,7 @@ export interface DialogData {
   layerNameDialog: string;
   rating: number;
   fieldNames: any;
+  desc: string;
 }
 
 
@@ -354,18 +355,23 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     const ratingName =  layerName === 'massnahmen' ? 'Massnahmen Laute Orte' : 'Massnahmen Leise Orte';
     // # TODO modify this
     const fieldsNames =  AppConfiguration.ratingMeasureLayers[layerName];
+    console.log('fieldsNames in openDialogRankingMeasures', fieldsNames);
     let fieldsToRank = []; // select those that have a true value
     fieldsNames.forEach(field  => {
-      // console.log(feature, field, feature.get(field));
      if (feature.get(field) === true) {
        fieldsToRank.push(field);
      }
     });
-    // console.log('fieldsNames in openDialogRankingMeasures in ' + layerName, fieldsNames,fieldsToRank );
-
+    // add sonstiges
+    if (feature.get(AppConfiguration.fieldOther[layerName]) && feature.get(AppConfiguration.fieldOther[layerName]).length > 0){
+        fieldsToRank.push(AppConfiguration.fieldOther[layerName]);
+      }
+    console.log('fieldsNames and fieldstorank in openDialogRankingMeasures', fieldsNames, fieldsToRank);
+    console.log('feature.get(AppConfiguration.fieldDesc[layerName]) ' + layerName, feature.get(AppConfiguration.fieldDesc[layerName]));
+    const measureDesc = feature.get(AppConfiguration.fieldDesc[layerName]);
     const dialogRef = this.dialog.open(DialogRatingMeasureDialog, {
-      width: '400px',
-      data: {layerNameDialog: ratingName, fieldNames: fieldsToRank, ranking: this.ranking}
+      width: '24vw',
+      data: {layerNameDialog: ratingName, fieldNames: fieldsToRank, desc: measureDesc, ranking: this.ranking}
     });
     dialogRef.afterClosed().subscribe(result => {
       // console.log('the ranking measures selected was', result);
@@ -609,7 +615,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
     // the layer already exist
-    // console.log('layerName in queryDBPopNoise', layerName, data.selectedLayer.toLowerCase(), this.map.getLayers().getArray());
+    console.log('data in queryDBPopNoise', data);
     // first get the group
     // alternatively --> this.searchLayer(layerName, AppConfiguration.nameSessionGroup.toLowerCase());
     const groupSession = this.map.getLayers().getArray()
@@ -629,12 +635,12 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     //
     switch (data.selectedLayer.toLowerCase()) {
-     case 'straassenlaerm_lden': {
+     case 'strassenlaerm_lden': {
        //
-      queryName = 'populationStraassenlaermLden';
+      queryName = 'populationStrassenlaermLden';
       query = gql`
       query {
-      populationStraassenlaermLden (dblow: ` + lowLevel + `dbhigh:` + highLevel + `) {
+      populationStrassenlaermLden (dblow: ` + lowLevel + `dbhigh:` + highLevel + `) {
        totalCount
        nodes {
         id
@@ -709,12 +715,12 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     `;
       break;
       }
-      case 'straassenlaerm_lnight': {
+      case 'strassenlaerm_lnight': {
         // Straassenlaerm_LNight
-      queryName = 'populationStraassenlaermLnight';
+      queryName = 'populationStrassenlaermLnight';
       query = gql`
       query {
-      populationStraassenlaermLnight (dblow: ` + lowLevel + `, dbhigh:` + highLevel + `) {
+      populationStrassenlaermLnight (dblow: ` + lowLevel + `, dbhigh:` + highLevel + `) {
        totalCount
        nodes {
         id
@@ -797,6 +803,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       { horizontalPosition: 'center',
         verticalPosition: 'top',
         duration: 3000});
+    console.log('query data pop',query);
     // http://localhost:4200/graphql--> by proxy diverted to http://130.89.6.97:5000/graphql
     request('https://ogito.itc.utwente.nl/graphql', query)
     // request('http://localhost:4200/graphql', query)   // debug time
@@ -1063,6 +1070,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       geometryType = 'multi';
       removable = false;  // test
     }
+    const legend = this.mapQgsStyleService.getLegendSessionLayer(layerName);
+    console.log('legend in addLayerGroupLayerPanel', legend);
     const layers = [];
     const layerItem = {
     layerName,
@@ -1072,7 +1081,9 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     layerForNewFeatures: newFeats,
     layerForRanking: false,
     layerLegendUrl: null,   // que hacer aqui?
-    legendLayer: null,
+    // legendLayer: null,
+    legendLayer: legend,
+    // legendLayer: [{iconSrc: '', title: 'Population Exposed'}],
     onEdit: false,
     onIdentify: false,
     onRanking: false,
@@ -1431,6 +1442,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     // update the observable for layerPanel
     this.groupsLayersSubject.next(this.groupsLayers);
     this.questionService.setQuestions(this.groupsLayers);
+    this.mapQgsStyleService.createLegendSessionLayers();
   }
 
   updateMap(qgsfile: string) {
@@ -1440,6 +1452,10 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
   sanitizeImageUrl(imageUrl: string): SafeUrl {
     return this.sanitizer.bypassSecurityTrustUrl(imageUrl);
   }
+
+
+
+
 
   createIconSymbols(iconSymbols: any, layerName: any): any{
     // return something for raster
@@ -1457,6 +1473,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
           // it has one element
           if (icon.icon !== ''){
             symbolList.push({iconSrc: 'data:image/png;base64,' + icon.icon, title: icon.title});
+            // console.log('icon.icon in createIconSymbols', icon.icon);
           }
           else {
             // workaround issue with OSM in GECCO
@@ -3405,7 +3422,8 @@ startIdentifying(layerOnIdentifying: any)
     }
     // this.snackBar.open('que viene ' + Rankinglayer.layer.layerName + 'group:' + Rankinglayer.groupName, 'ok', { duration: 2000});
     // checking that layer can be ranked.. this is in AppConfiguration, seems not necessary
-    if (Object.keys(AppConfiguration.ratingMeasureLayers).findIndex(x => x === this.curEditingLayer.layerName)  === -1){
+    if (Object.keys(AppConfiguration.ratingMeasureLayers)
+      .findIndex(x => x.toLowerCase() === this.curEditingLayer.layerName.toLowerCase())  === -1){
       // The layer is not available for rating
       this.snackBar.open('Current layer is not available for rating in Action Plan', 'ok',
         { horizontalPosition: 'center',
@@ -3444,7 +3462,7 @@ startIdentifying(layerOnIdentifying: any)
             duration: 3000});
         return;
       }
-      this.openDialogRankingMeasures(this.curEditingLayer.layerName, selectedFeatures[0]);
+      this.openDialogRankingMeasures(this.curEditingLayer.layerName.toLowerCase(), selectedFeatures[0]);
     });
   }
 
@@ -3854,7 +3872,7 @@ export class DialogRatingDialog {
 // tslint:disable-next-line:component-class-suffix
 export class DialogRatingMeasureDialog {
 
-
+  measureDesc: string;
   selectedRating = 0;
   fieldNames: any;  // esto debe ir a data.fieldNames..
   formGroup: FormGroup;
@@ -3865,10 +3883,11 @@ export class DialogRatingMeasureDialog {
     data.fieldNames.forEach(question => {
         group[question] = new FormControl(question.value || '', Validators.required);
     });
-    // console.log('from group un Question Service', new FormGroup(group));
-    // add the sonstiges question
-    group.sonstiges = new FormControl( '');  // not required
+    console.log('data.fieldNames ', data.fieldNames);
+    // add the sonstiges rating question
+    group.sonstiges = new FormControl( false || '');  // ranking question
     this.formGroup = new FormGroup(group);
+    this.measureDesc = data.desc;
   }
 
   showQuestionValue(elementID: any, value: any){

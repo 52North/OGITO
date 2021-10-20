@@ -133,14 +133,14 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
     // console.log('Object.keys(AppConfiguration.ratingMeasureLayers)', Object.keys(AppConfiguration.ratingMeasureLayers));
     // console.log('layerName, Object.keys(AppConfiguration.ratingMeasureLayers).findIndex(x => x === layerName));
     this.layerTypeRateMeasures$ = false;
-    if (Object.keys(AppConfiguration.ratingMeasureLayers).findIndex(x => x === layerName)  > -1) {
+    if (Object.keys(AppConfiguration.ratingMeasureLayers).findIndex(x => x.toLowerCase() === layerName.toLowerCase())  > -1) {
       this.layerTypeRateMeasures$ = true;
     }
   }
 
   updateLayerTypeRating(layerName: string) {
     this.layerTypeRate$ = false;
-    if (Object.keys(AppConfiguration.ratingPrex).findIndex(x => x === layerName) > -1) {
+    if (Object.keys(AppConfiguration.ratingPrex).findIndex(x => x.toLowerCase() === layerName.toLowerCase()) > -1) {
       this.layerTypeRate$ = true;
     }
   }

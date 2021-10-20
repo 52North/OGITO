@@ -13,7 +13,7 @@
       </mat-card-title-group>
       <mat-divider class = "toolbarDivider"></mat-divider>
   <form (ngSubmit)="onSubmit()" [formGroup]="form">
-
+  <div>
     <div *ngFor="let question of sQuestions" class="form-row">
      <!-- <app-question [question]="question" [form]="form"></app-question> -->
       <div [formGroup]="form">
@@ -80,6 +80,7 @@
     <div class="closingButton">
       <button mat-flat-button color="primary" type="submit" [disabled]="!form.valid">Ok</button>
     </div>
+  </div>
   </form>
 
   <!-- <div *ngIf="payLoad" class="form-row">

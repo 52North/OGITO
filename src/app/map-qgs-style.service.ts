@@ -4,7 +4,7 @@ import {Fill, RegularShape, Stroke, Style, Icon, Text, Circle} from 'ol/style';
 import {DEVICE_PIXEL_RATIO} from 'ol/has.js';
 import {AppConfiguration} from './app-configuration';
 import {Parser} from 'xml2js';
-import {SwitchMarkerAnalyses} from '@angular/compiler-cli/ngcc/src/analysis/switch_marker_analyzer';
+import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
 
 
 @Injectable({
@@ -17,6 +17,7 @@ export class MapQgsStyleService {
   svgFolder = AppConfiguration.svgFolder;
   nodes = {};   // dictionary to store the layer styles
   layerStyles = {};
+  sessionLayerLegend = {};
   canvas = document.createElement('canvas');
   context = this.canvas.getContext('2d');
   svgToOlParam = {
@@ -26,7 +27,7 @@ export class MapQgsStyleService {
     'stroke-linejoin': 'lineJoin'
   };
 
-  constructor() { }
+  constructor(  private sanitizer: DomSanitizer) { }
 
   findJsonStyle(feature: any, layerName: any): any {
     /** Given a feature and the layerName it returns the corresponding style
@@ -204,6 +205,9 @@ export class MapQgsStyleService {
     });
     return style;
   }
+
+
+
 
 
   createWFSlayerStyles(xmlTextStyle: any){
@@ -399,6 +403,79 @@ export class MapQgsStyleService {
       return(this.defineSketchStyle());
     }
   }
+
+
+  sanitizeImageUrl(imageUrl: string): SafeUrl {
+    return this.sanitizer.bypassSecurityTrustUrl(imageUrl);
+  }
+
+  getLegendSessionLayer( layerName: string) {
+    console.log("layerName, index sessionLayerLegend['pop']", layerName, layerName.toLowerCase().indexOf('pop'), this.sessionLayerLegend['pop']);
+    let legend = [{iconSrc: '', title: 'Population Exposed'}];
+    if ( layerName.toLowerCase().indexOf('pop') >= 0 && this.sessionLayerLegend['pop']) {
+     legend = this.sessionLayerLegend['pop'];
+    }
+    return legend;
+  }
+
+  createLegendSessionLayers(): any{
+    let symbolList = [];
+    // '1.6 - 5.6'
+    const PopLev1 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAWCAYAAADTlvzyAAAACXBIWXMAABcRAAAXEQHKJvM/AAAAGXRFWHRTb2' +
+      'Z0d2FyZQB3d3cuaW5rc2NhcGUub3Jnm+48GgAAAClJREFUSIlj/P3z738GOgImelo2auGohaMWjlo4auGohaMWjlo4XCwEABRjBBwEN+HZAAAAAElFTkSuQmCC';
+    // '5.6 - 9.5'
+    const PopLev2 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAWCAYAAADTlvzyAAAACXBIWXMAABcRAAAXEQHKJvM/AAAAGXRFWHRTb2Z0' +
+      'd2FyZQB3d3cuaW5rc2NhcGUub3Jnm+48GgAAAClJREFUSIljvHPnzX8GOgImelo2auGohaMWjlo4auGohaMWjlo4XCwEACkEA89t4W+GAAAAAElFTkSuQmCC';
+   // '9.5 - 13.5'
+    const PopLev3 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAWCAYAAADTlvzyAAAACXBIWXMAABcRAAAXEQHKJvM/AAAAGXRFWHRTb2' +
+      'Z0d2FyZQB3d3cuaW5rc2NhcGUub3Jnm+48GgAAAClJREFUSIljXLzg9H8GOgImelo2auGohaMWjlo4auGohaMWjlo4XCwEAHkaAznXdxYzAAAAAElFTkSuQmCC' ;
+    // 13.5 - 17.5
+    const PopLev4 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAWCAYAAADTlvzyAAAACXBIWXMAABcRAAAXEQHKJvM/AAAAGXRFWHRTb2Z0' +
+      'd2FyZQB3d3cuaW5rc2NhcGUub3Jnm+48GgAAAChJREFUSIljzApc/J+BjoCJnpaNWjhq4aiFoxaOWjhq4aiFoxYOFwsBzOACiRSWSXsAAAAASUVORK5CYII=';
+     // ' >= 17.5'
+     const PopLev5 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAWCAYAAADTlvzyAAAACXBIWXMAABcRAAAXEQHKJvM/AAAAGXRFWHRTb' +
+       '2Z0d2FyZQB3d3cuaW5rc2NhcGUub3Jnm+48GgAAAChJREFUSIljtGeo/c9AR8BET8tGLRy1cNTCUQtHLRy1cNTCUQuHi4UAqJkB5+FF58MAAAAASUVORK5CYII=' ;
+
+    /*const PopLev1SVG = 'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+Cjxzdmc' +
+      'KICAgaGVpZ2h0PSIyNHB4IgogICB2aWV3Qm94PSIwIDAgMjQgMjQiCiAgIHdpZHRoPSIyNHB4IgogICBmaWxsPSIjMDAwMDAwIgogICB2ZXJzaW9uPSIxLjEiCiAg' +
+      'IGlkPSJzdmc4MzgiCiAgIHNvZGlwb2RpOmRvY25hbWU9InBvcGxldi5zdmciCiAgIGlua3NjYXBlOnZlcnNpb249IjEuMSAoYzY4ZTIyYzM4NywgMjAyMS0wNS0y' +
+      'MykiCiAgIHhtbG5zOmlua3NjYXBlPSJodHRwOi8vd3d3Lmlua3NjYXBlLm9yZy9uYW1lc3BhY2VzL2lua3NjYXBlIgogICB4bWxuczpzb2RpcG9kaT0iaHR0cDovL' +
+      '3NvZGlwb2RpLnNvdXJjZWZvcmdlLm5ldC9EVEQvc29kaXBvZGktMC5kdGQiCiAgIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIKICAgeG1sbnM6c3Z' +
+      'nPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPGRlZnMKICAgICBpZD0iZGVmczg0MiIgLz4KICA8c29kaXBvZGk6bmFtZWR2aWV3CiAgICAgaWQ9Im5hbW' +
+      'Vkdmlldzg0MCIKICAgICBwYWdlY29sb3I9IiNmZmZmZmYiCiAgICAgYm9yZGVyY29sb3I9IiM2NjY2NjYiCiAgICAgYm9yZGVyb3BhY2l0eT0iMS4wIgogICAgIGlua' +
+      '3NjYXBlOnBhZ2VzaGFkb3c9IjIiCiAgICAgaW5rc2NhcGU6cGFnZW9wYWNpdHk9IjAuMCIKICAgICBpbmtzY2FwZTpwYWdlY2hlY2tlcmJvYXJkPSIwIgogICAgIHNo' +
+      'b3dncmlkPSJmYWxzZSIKICAgICBpbmtzY2FwZTp6b29tPSIzMC44NzUiCiAgICAgaW5rc2NhcGU6Y3g9IjEwLjI5OTU5NSIKICAgICBpbmtzY2FwZTpjeT0iMTIiCi' +
+      'AgICAgaW5rc2NhcGU6d2luZG93LXdpZHRoPSIxOTIwIgogICAgIGlua3NjYXBlOndpbmRvdy1oZWlnaHQ9IjEwMDEiCiAgICAgaW5rc2NhcGU6d2luZG93LXg9Ii05Ig' +
+      'ogICAgIGlua3NjYXBlOndpbmRvdy15PSItOSIKICAgICBpbmtzY2FwZTp3aW5kb3ctbWF4aW1pemVkPSIxIgogICAgIGlua3NjYXBlOmN1cnJlbnQtbGF5ZXI9InN2Zzg' +
+      'zOCIgLz4KICA8cGF0aAogICAgIGQ9Ik0wIDBoMjR2MjRIMHoiCiAgICAgZmlsbD0ibm9uZSIKICAgICBpZD0icGF0aDgzNCIgLz4KICA8cGF0aAogICAgIGQ9Ik0gMjE' +
+      'sMTkuMDEgSCAzIFYgNC45OSBoIDE4IHoiCiAgICAgaWQ9InBhdGg4MzYiCiAgICAgc29kaXBvZGk6bm9kZXR5cGVzPSJjY2NjYyIKICAgICBzdHlsZT0iZmlsbDojZmJ' +
+      'mOWZkO2ZpbGwtb3BhY2l0eToxIgogICAgIGlua3NjYXBlOmV4cG9ydC1maWxlbmFtZT0iQzpcVXNlcnNcQWd1aWxhcmRlQXJjaGlsYVJNXERvd25sb2Fkc1xwb3BMZXYx' +
+      'LnBuZyIKICAgICBpbmtzY2FwZTpleHBvcnQteGRwaT0iMTUwIgogICAgIGlua3NjYXBlOmV4cG9ydC15ZHBpPSIxNTAiIC8+Cjwvc3ZnPgo=';*/
+
+    symbolList.push({iconSrc: this.sanitizeImageUrl(PopLev1), title: '1.6 - 5.6'});
+    symbolList.push({iconSrc: this.sanitizeImageUrl(PopLev2), title: '5.6 - 9.5'});
+    symbolList.push({iconSrc: this.sanitizeImageUrl(PopLev3), title: '9.5 - 13.5'});
+    symbolList.push({iconSrc: this.sanitizeImageUrl(PopLev4), title: '13.5 - 17.5'});
+    symbolList.push({iconSrc: this.sanitizeImageUrl(PopLev5), title: ' >= 17.5'});
+
+
+    /*
+    const newIcon = new Icon({opacity: 1, crossOrigin: 'anonymous', src:  PopLevGen, scale: 1, color: '#fbf9fd'});
+    newIcon.load();
+    // symbolList.push({iconSrc: this.sanitizeImageUrl(AppConfiguration.rasterIcon), title: 'Population Exposed'});
+   // symbolList.push({iconSrc: this.sanitizeImageUrl(PopLev1), title: 'Population Exposed'});
+    // tslint:disable-next-line:forin
+    for (let label in labelsColors) {
+      let popIcon = new Icon({opacity: 1, crossOrigin: 'anonymous', src:  PopLevGen, scale: 1, color: labelsColors[label]});
+      console.log('color', labelsColors[label]);
+      popIcon.load();
+      symbolList.push({iconSrc: this.sanitizeImageUrl(PopLevGen), title: label});
+    }
+   */
+    this.sessionLayerLegend['pop'] = symbolList;
+    // console.log('this.sessionLayerLegend in createIconSymbolsPopExposed', this.sessionLayerLegend);
+  }
+
 
   createStyleExposedPop(){
     /** set the style function for the population exposed

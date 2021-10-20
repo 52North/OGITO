@@ -30,7 +30,7 @@ export class QuestionService {
      */
     // action plan layer treated in a different way
     if (layerName.toLowerCase() === AppConfiguration.actionPlanLayerName){
-      return (this.setLayerQuestionsActionPlanNoise(layerName, qgisFieldList));
+      return (this.setLayerQuestionsActionPlanNoise(layerName.toLowerCase(), qgisFieldList));
     }
 
 
@@ -120,6 +120,7 @@ export class QuestionService {
     // console.log(' no la consigue + typeof(AppConfiguration.fieldsOrder[layerName])',layerName, typeof(AppConfiguration.fieldsOrder[layerName]));
     if (typeof(AppConfiguration.fieldsOrder[layerName]) !== 'undefined'){
       orderInLayer = true;
+      // console.log('la consigue en orden in layers', AppConfiguration.fieldsOrder[layerName], typeof(AppConfiguration.fieldsOrder[layerName]));
     }
 
     qgisFieldList.forEach(attr => {
@@ -134,15 +135,27 @@ export class QuestionService {
             question = new CheckBoxQuestion({
               key: attr.name,
               label,
-              value: 'true',  // if checked then it will get the true value
-              required,
+             // value: 'false',  // if checked then it will get the true value
+              required:false,
               order: orderInLayer ? this.findOrder(layerName, attr.name) : order,
               type: 'checkbox'
             });
             layerQuestions.push(question);
         }
+        if (attr.type === 'QString') {
+          question = new TextboxQuestion({
+            key: attr.name,
+            label,
+            value: '',  // if checked then it will get the true value
+            required: false,
+            order: orderInLayer ? this.findOrder(layerName, attr.name) : order,
+          //  type: 'checkbox'
+          });
+          layerQuestions.push(question);
+        }
       }
     });
+    // console.log('layerQuestions', layerQuestions);
     return layerQuestions;
   }
   findOrder(layerName: string, attrName: any){

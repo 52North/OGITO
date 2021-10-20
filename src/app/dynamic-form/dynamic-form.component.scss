@@ -1,7 +1,7 @@
 .example-list{
   left: 40% !important;
-  max-width: 35%;
-  width: 28%;
+  max-width: 28%;
+  width: 22%;
   top: 40% !important;
   opacity:0.9;
   background-color: white;
@@ -15,7 +15,7 @@
   // padding-left: 5px;
   padding: 0 10px;
   display:inline-block;
-  max-width: 80%;
+  // max-width: 80%;
  // line-height: 14px !important;;   // scale with the exten view
 }
 .tittle{
@@ -35,7 +35,7 @@
 }
 .closingButton{
   text-align: right;
-  // float: left;
+  //float: left;
 }
 
 input[type="range"] {
