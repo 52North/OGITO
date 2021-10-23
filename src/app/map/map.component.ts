@@ -805,8 +805,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         duration: 3000});
     console.log('query data pop',query);
     // http://localhost:4200/graphql--> by proxy diverted to http://130.89.6.97:5000/graphql
-    request('https://ogito.itc.utwente.nl/graphql', query)
-    // request('http://localhost:4200/graphql', query)   // debug time
+   // request('https://ogito.itc.utwente.nl/graphql', query)
+     request('http://localhost:4200/graphql', query)   // debug time
       .then(result => {
         // console.log('data', result[queryName]);
         this.processPopLden(result[queryName], layerName );
