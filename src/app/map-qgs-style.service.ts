@@ -6,7 +6,6 @@ import {AppConfiguration} from './app-configuration';
 import {Parser} from 'xml2js';
 import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
 
-
 @Injectable({
   providedIn: 'root'
 })
@@ -35,17 +34,13 @@ export class MapQgsStyleService {
      * @param { feature } the feature for which to find a rendering style  -- no needed apparently
      * @param { layerName } the name of a WFS layer to be rendered
      */
-      // como hacer para saber si es single symbol and so on...
-    // console.log('this.layerStyles  in findJsonStyle', this.layerStyles);
-    const styleLyr = this.layerStyles[layerName];
+   const styleLyr = this.layerStyles[layerName];
     if (styleLyr.symbolType === 'Single symbol'){
-     // console.log('estilo conseguido para layerName', styleLyr.style);
-     return (styleLyr.style['default'].style);
+    return (styleLyr.style['default'].style);
     }
     // #TODO
     // categorized style or by rule ;)
   }
-
 
   findStyle(feature: any, layerName: any) {
     /** Given a feature and the layerName it returns the corresponding style
@@ -53,18 +48,14 @@ export class MapQgsStyleService {
      * @param { feature } the feature for which to find a rendering style  -- no needed apparently
      * @param { layerName } the name of a WFS layer to be rendered
      */
-    // const featType = feature.getGeometry().getType();
-    // here include a default value and styling for # resolution or just something reasonable
-
-    const styleLyr = this.nodes[layerName];
+   const styleLyr = this.nodes[layerName];
     if (Object.keys(styleLyr).length > 0){
       const attr = styleLyr[Object.keys(styleLyr)[0]].attr; // Which is the attribute used in the simbology
       const featValue = feature.get(attr);
       for (const key of Object.getOwnPropertyNames(styleLyr))
       {
         if (styleLyr[key].value == featValue){
-         // console.log ("encontrado",styleLyr[key]['style']);
-          return (styleLyr[key].style);    // and array of style is ok too
+         return (styleLyr[key].style);    // and array of style is ok too
         }
       }
     }
@@ -150,9 +141,7 @@ export class MapQgsStyleService {
     const fill = new Fill({
       color
     });
-    // #TODO change the above line and get all params of the fill
-    // console.log('mark color', color );
-    let newStyle: any;
+   let newStyle: any;
     switch (format) {
       case 'image/svg+xml': {
         let svg = onlineResource.$['xlink:href'];
@@ -166,14 +155,10 @@ export class MapQgsStyleService {
           color
         });
         newIcon.load();
-        // Load not yet loaded URI. When rendering a feature with an icon style, the vector renderer will automatically call this method;
-        // ypu might want to call this method for preloading or other purposes
-        // console.log('svg', onlineResource, svg);
         newStyle = new Style({
           image: newIcon,
           fill
         });
-        // console.log('svgMarker in newStyle', newStyle);
         break;
       }
     }
@@ -187,14 +172,10 @@ export class MapQgsStyleService {
      * @param svgParamStroke the style for the stroke
      */
     const fillColor = svgParamFill['se:SvgParameter'][0]._;
-    // console.log('fillColor', fillColor);
-    // #TODO Does the fill have more params?
-    const olStrokeParam = {};
+   const olStrokeParam = {};
     for (let i = 0; i < svgParamStroke['se:SvgParameter'].length; i++) {
-     // console.log(svgParamStroke['se:SvgParameter'][i]['$']['name'], svgParamStroke['se:SvgParameter'][i]['_']);
       olStrokeParam[svgParamStroke['se:SvgParameter'][i].$.name] = svgParamStroke['se:SvgParameter'][i]._;
     }
-    //  console.log(olStrokeParam);
     const fill = new Fill({
       color: fillColor
     });
@@ -206,47 +187,31 @@ export class MapQgsStyleService {
     return style;
   }
 
-
-
-
-
   createWFSlayerStyles(xmlTextStyle: any){
     /**
      * Creates symbols
      */
-    // console.log('xmlStyle', xmlStyle);
-    /*const xmlParser = new DOMParser();
     const xmlStyle= xmlParser.parseFromString(xmlTextStyle, 'text/xml');
-    console.log ('xmlStyle', xmlStyle);
     let layers =  xmlStyle.getElementsByTagName('NamedLayer')[0];
-    console.log('layers', layers); */
     const parser = new Parser();
-    // let layerStyles = [];
     parser.parseString(xmlTextStyle, (err, result) => {
       const jsonStyle = result;
-      //console.log('que sale', jsonStyle);
-      // console.log(jsonStyle.StyledLayerDescriptor.NamedLayer);
-      //  console.log('lenght', jsonStyle.StyledLayerDescriptor.NamedLayer.length);
       for (let i = 0; i < jsonStyle.StyledLayerDescriptor.NamedLayer.length; i++) {
         const layerStyle = jsonStyle.StyledLayerDescriptor.NamedLayer[i];
         const layerName = layerStyle['se:Name'][0];
         for (let j = 0; j < layerStyle.UserStyle[0]['se:FeatureTypeStyle'][0]['se:Rule'].length; j++) {
           const featureStyleRule = layerStyle.UserStyle[0]['se:FeatureTypeStyle'][0]['se:Rule'][j];
-          // here to ask for name and if polygonSymbolizer or point Symbolizer
-          // console.log('layerName,featureStyle', layerName, featureStyleRule);
           const styleType = featureStyleRule['se:Name'][0];
           if (styleType === 'Single symbol') {
             if (featureStyleRule.hasOwnProperty('se:PointSymbolizer')) {
               // it is a point
               const seGraphic = featureStyleRule['se:PointSymbolizer'][0]['se:Graphic'][0];
-              // console.log('seGraphic',seGraphic);
               if (seGraphic.hasOwnProperty('se:ExternalGraphic')) {
                 // the online resource with PARAM is in the pos 1
                 const format = seGraphic['se:ExternalGraphic'][1]['se:Format'][0];
                 const onlineResource = seGraphic['se:ExternalGraphic'][1]['se:OnlineResource'][0];
                 const mark = seGraphic['se:Mark'][0];
                 const size = seGraphic['se:Size'][0];
-                // console.log('format pasa x aqui', seGraphic['se:ExternalGraphic'][1]['se:OnlineResource'][0]);
                 const theStyle = this.mapQsJsonPointSymbol(format, onlineResource, mark, size);
                 let symbolLabel = 'default';
                 if (layerName.toLowerCase() === 'laute_orte' ) {
@@ -258,7 +223,6 @@ export class MapQgsStyleService {
                 if (layerName.toLowerCase() === 'massnahmen' ) {
                   symbolLabel = 'Massnahmen';
                 }
-                // this.layerStyles[layerName] = {symbolType: styleType, style: theStyle};
                 this.layerStyles[layerName] = {
                   symbolType: styleType,
                   style: {
@@ -276,9 +240,7 @@ export class MapQgsStyleService {
               if (featureStyleRule.hasOwnProperty('se:PolygonSymbolizer')) {
                 // it is a point
                 const seFill = featureStyleRule['se:PolygonSymbolizer'][0]['se:Fill'][0];
-                // console.log('seFill', seFill);
                 const seStroke = featureStyleRule['se:PolygonSymbolizer'][0]['se:Stroke'][0];
-                // console.log('seStroke', seStroke);
                 const theStyle = this.mapQsJsonPolygonSymbol(seFill, seStroke);
                 this.layerStyles[layerName] = {
                   symbolType: styleType,
@@ -296,7 +258,6 @@ export class MapQgsStyleService {
             }
           else {
               if (featureStyleRule['ogc:Filter'].length > 0) {
-                // there are filter -- categorized symbology
                 console.log('TODO categorized symbol');
               }
             }
@@ -304,22 +265,17 @@ export class MapQgsStyleService {
         }
 
     });
-    // lets parse a JSON
-    // #TODO create a default symbol for everything :)
-    // console.log('this.layerStyles', this.layerStyles);
-  }
+ }
 
   createAllLayerStyles(qGsServerUrl: any, qgsProjectFile: any, layerList: any){
     const qGsProject = '&map=' + qgsProjectFile;
     const capRequest = '&REQUEST=GetStyles';
     const wmsVersion = 'SERVICE=WMS&VERSION=' + AppConfiguration.wmsVersion;
     const urlStyle = qGsServerUrl + wmsVersion + capRequest + qGsProject + '&LAYERS=' + layerList;
-    // console.log('urlStyle in createAllLayerStyles', urlStyle);
     const xmlStyles = fetch(urlStyle)
       .then(response => response.text())
       .then(text => {
         this.createWFSlayerStyles(text);
-        // self.layerPanel.updateLayerList(self.loadedWfsLayers);   // trying another approach with input
       })
       .catch(error => console.error(error));
   }
@@ -372,7 +328,6 @@ export class MapQgsStyleService {
       crossOrigin: 'anonymous',
       src: 'data:image/svg+xml;base64,' + svgMarkerColor,
       scale: 1,   // it was 0.9
-      // size: size,
       color: '#dd1c77'
     });
     newIcon.load();
@@ -384,33 +339,26 @@ export class MapQgsStyleService {
         fill,
         image: newIcon,
       });
-
     return(style);
   }
-
 
   getLayerStyle(layerName: string){
     /** return the style for a layer
      * @param layername: string, the name of the layer
      */
-    // console.log('this.layerStyles', this.layerStyles);
-    // 01-03 this. nodes  --> this.layerStyles
     if (this.layerStyles[layerName]){
        return this.layerStyles[layerName];
     }
     else {
-      // return the sketch style
       return(this.defineSketchStyle());
     }
   }
-
 
   sanitizeImageUrl(imageUrl: string): SafeUrl {
     return this.sanitizer.bypassSecurityTrustUrl(imageUrl);
   }
 
   getLegendSessionLayer( layerName: string) {
-    console.log("layerName, index sessionLayerLegend['pop']", layerName, layerName.toLowerCase().indexOf('pop'), this.sessionLayerLegend['pop']);
     let legend = [{iconSrc: '', title: 'Institutions Exposed'}];
     if ( layerName.toLowerCase().indexOf('pop') >= 0 && this.sessionLayerLegend['pop']) {
      legend = this.sessionLayerLegend['pop'];
@@ -450,24 +398,7 @@ export class MapQgsStyleService {
     symbolList.push({iconSrc: this.sanitizeImageUrl(PopLev3), title: '9.5 - 13.5'});
     symbolList.push({iconSrc: this.sanitizeImageUrl(PopLev4), title: '13.5 - 17.5'});
     symbolList.push({iconSrc: this.sanitizeImageUrl(PopLev5), title: ' >= 17.5'});
-    /*
-    const newIcon = new Icon({opacity: 1, crossOrigin: 'anonymous', src:  PopLevGen, scale: 1, color: '#fbf9fd'});
-    newIcon.load();
-    // symbolList.push({iconSrc: this.sanitizeImageUrl(AppConfiguration.rasterIcon), title: 'Population Exposed'});
-   // symbolList.push({iconSrc: this.sanitizeImageUrl(PopLev1), title: 'Population Exposed'});
-    // tslint:disable-next-line:forin
-    for (let label in labelsColors) {
-      let popIcon = new Icon({opacity: 1, crossOrigin: 'anonymous', src:  PopLevGen, scale: 1, color: labelsColors[label]});
-      console.log('color', labelsColors[label]);
-      popIcon.load();
-      symbolList.push({iconSrc: this.sanitizeImageUrl(PopLevGen), title: label});
-    }
-   */
     this.sessionLayerLegend['pop'] = symbolList;
-    // console.log('this.sessionLayerLegend in createIconSymbolsPopExposed', this.sessionLayerLegend);
-
-    // legend kinderganden
-
     let color = '#3f007d';
     let svg = '';
     const colors = {schulen: '#67a9cf', tagesstatten : '#ef8a62', krankenhaus: '#d7191c' };
@@ -572,9 +503,7 @@ export class MapQgsStyleService {
    // legend hospitals
     this.sessionLayerLegend['krankenhaus'] = [{iconSrc: this.sanitizeImageUrl('data:image/svg+xml;base64,' + svgs['krankenhaus']),
       title: 'Krankenhaus'}];
-
   }
-
 
   createStyleExposedPop(){
     /** set the style function for the population exposed
@@ -750,14 +679,12 @@ export class MapQgsStyleService {
      }
      if (svgs.hasOwnProperty(layerName)) {
      svg = svgs[layerName];
-     }  // #TODO a default option
-
+     }  
      const newIcon = new Icon({
        opacity: 1,
        crossOrigin: 'anonymous',
        src: 'data:image/svg+xml;base64,' + svgs[layerName],
        scale: 1, // it was 0.9
-       // size: size,
        color
      });
      newIcon.load();
@@ -765,15 +692,7 @@ export class MapQgsStyleService {
        image: newIcon,
        fill: new Fill({ color })
      });
-
      return orgExposedStyle;
   }
-
-
-
-
-
-
-
 
 }
