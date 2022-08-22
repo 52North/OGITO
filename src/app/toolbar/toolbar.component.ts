@@ -6,17 +6,10 @@ import {DomSanitizer} from '@angular/platform-browser';
 import {request, gql} from 'graphql-request';
 import {AppConfiguration} from '../app-configuration';
 import {MatDialog, MatDialogRef} from '@angular/material/dialog';
-// import {MatDialog, MatDialogRef, MAT_DIALOG_DATA} from '@angular/material/dialog';
-
-/*export interface DialogData {
-  name: string;
-}*/
-
 @Component({
   selector: 'app-toolbar',
   templateUrl: './toolbar.component.html',
   styleUrls: ['./toolbar.component.scss']
- // animations: IndicatorAnimations
 })
 export class ToolbarComponent implements OnInit {
   x = 0;
@@ -63,13 +56,7 @@ export class ToolbarComponent implements OnInit {
         }
       });
     }
-  /*createScratchLayer(){
 
-    this.openDialog();
-    if (this.layerSketchName) {  this.openLayersService.updateAddSketchLayer(this.layerSketchName); }
-  }
-
-   */
   openLayerPanel(){
     this.openLayersService.updateShowLayerPanel(true);
   }
@@ -80,63 +67,15 @@ export class ToolbarComponent implements OnInit {
 
   findExposedPeople() {
     this.openLayersService.updateFindPopExposed(true);
-   /* const query = gql`
-    query {
-      leiseOrteById (id:17) {
-        id
-        detail
-      }
-    }
-    `*/
-
-    /* const query = gql`
-    query {
-      populationStraassenlaermLden (dblow:70, dbhigh: 75) {
-       totalCount
-       nodes {
-        id
-        value
-        geom {
-          geojson
-          srid
-        }
-       }
-      }
-    }
-    `
-
-     // http://localhost:4200/graphql--> by proxy diverted to http://130.89.6.97:5000/graphql
-    request('http://localhost:4200/graphql', query)
-      .then (data => { console.log('data', data);
-                    //   this.openLayersService.updatePopExposedSource(data.populationStraassenlaermLden);
-                       this.processPopLden(data.populationStraassenlaermLden);
-                       });
-
-     */
   }
 
   processPopLden(data){
-    /*totalCount
-    nodes {
-      id
-      value
-      geom {
-        geojson
-        srid
-      }
-    }*/
-   // start to process the data, get the sum
-   console.log ('data.nodes[2]', data.nodes);
+    // to process the data, get the sum
    const popExposed = data.nodes.reduce((sum, current) => sum + Number(current.value), 0);
-   console.log('Sum Pop in query', Math.round(popExposed * 100) / 100 , 'Share =', popExposed/ AppConfiguration.totalPopBochumArea );
   }
-
-
   findExposedInstitutions() {
     this.openLayersService.updateFindInstitutionsExposed(true);
   }
-
-
   ngOnInit(): void {
     this.subscriptionExistingProject = this.openLayersService.existingProject$.subscribe(
       (data: any) => this.existingProject = true,
@@ -149,17 +88,14 @@ export class ToolbarComponent implements OnInit {
     /**
      *  Sends an action (not edit to the openlayersService)
      */
-    // this.openLayersService.updateNoEditAction(action);
   }
 
 }
 
 @Component({
-  // tslint:disable-next-line:component-selector
   selector: 'dialog-layer-name-dialog',
   templateUrl: 'dialog-layer-name-dialog.html',
 })
-// tslint:disable-next-line:component-class-suffix
 export class DialogLayerNameDialog {
   sketchName: string;
   constructor( public dialogRef: MatDialogRef<DialogLayerNameDialog>) {
