@@ -40,7 +40,6 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
 
 
   dropExpansion(event: CdkDragDrop<string[]>) {
-   // console.log(this.layerAccordion.nativeElement.children);
    moveItemInArray(this.sgroupLayers, event.previousIndex, event.currentIndex);
    this.layersOrder.emit(this.sgroupLayers);
    console.log('event layersOrder emmited', this.sgroupLayers );
@@ -57,7 +56,6 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
   this.groupLayersSubscription = this.groupLayers.subscribe(
       data => {
         this.sgroupLayers = data;
-       //  console.log ('que tiene this.featureLayer en questionSubscription', data);
       },
       error => console.log ('Error in subscription to groupLayers', error)    );
   }
@@ -68,7 +66,6 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
      * @param layerName: layerName for exception
      * #TODO declarar layer as a class and use setters and getters
      */
-    // console.log('layerName in updateEditActioninLayers', layerName);
     for (const group of this.sgroupLayers) {
       group.layers.forEach(layer => {
           if (layer.layerName.toLowerCase() === layerName.toLowerCase() && layer.onIdentify) {
@@ -84,13 +81,11 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
        * @param layerName: layerName for exception
        * #TODO declare layer as a class and use setters and getters
        */
-      // console.log('layerName in updateEditActioninLayers', layerName);
       for (const group of this.sgroupLayers) {
         group.layers.forEach(layer => {
 
           if (layer.wfs || layer.sketch) {
-            // console.log('layer', layer);
-            if (layer.layerName.toLowerCase() === layerName.toLowerCase() && layer.onEdit) {
+             if (layer.layerName.toLowerCase() === layerName.toLowerCase() && layer.onEdit) {
               layer.onEdit = false;
             }
           }
@@ -105,7 +100,6 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
       */
       $event.preventDefault();
       $event.stopImmediatePropagation();
-      // console.log('que entra..getting better layer and this.layerActive',$event, layer, this.layerActive);
       // not layer active
       if (this.layerActive === null){
         // set the clicked layer as active
@@ -151,7 +145,6 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
   {
     $event.preventDefault();
     $event.stopImmediatePropagation();
-    console.log('remove the layer from the map and panel $event:', $event, layer, groupName);
     this.removeLayerClick.emit({layer, groupName});
   }
 
@@ -163,8 +156,6 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
      */
     $event.preventDefault();
     $event.stopImmediatePropagation();
-    // console.log('to start identify layer, check the layer active thing', layer);
-    // with this the map should act accordingly to stop/start identifying.
     // there is not layerActive
     if (this.layerActive === null) {
       this.layerActive = layer.layerName;
@@ -174,7 +165,6 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
       return;
     }
     // there is layer Active and its the same
-    // console.log ('this.layerActive y layer.layerName iguales?', this.layerActive, layer.layerName, this.layerActive === layer.layerName);
     if (this.layerActive === layer.layerName){
       // the layer was in identifying
       if (layer.onIdentify) {
@@ -213,7 +203,6 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
   /** Updates the value of the observable $showLayerPanel$ that controls the layer Panel visibility
    * @param value, type boolean
    */
-  // console.log(value);
   this.showLayerPanel$ = observableOf(value);
   }
 
@@ -224,7 +213,6 @@ ngOnDestroy(){
 
 
   onSelectedChanged($event: any){
-    // console.log('probando esto a lo loco $event.option.value', $event.option.value, $event );
     if ($event.option.value.isChecked) {
         $event.option.selected = true;
         $event.stopImmediatePropagation();
@@ -236,7 +224,6 @@ ngOnDestroy(){
     for (const group of this.sgroupLayers) {
       const lyr = group.layers.find(x => x.layerName.toLowerCase() === layerName.toLowerCase());
       if (lyr) {
-        // console.log ('la consigue en los grupos', lyr);
         return (lyr);
       }
     }
