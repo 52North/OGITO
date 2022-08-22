@@ -3,8 +3,6 @@ import {Observable, Subscription, of as observableOf} from 'rxjs';
 import {OpenLayersService} from '../open-layers.service';
 import { MatIconRegistry } from "@angular/material/icon";
 import {DomSanitizer} from "@angular/platform-browser";
-// import {FocusMonitor, FocusOrigin} from '@angular/cdk/a11y';
-// import {MapQgsStyleService} from '../map-qgs-style.service';
 import {AppConfiguration} from '../app-configuration';
 
 
@@ -130,8 +128,6 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
   }
 
   updateLayerTypeRanking(layerName: string) {
-    // console.log('Object.keys(AppConfiguration.ratingMeasureLayers)', Object.keys(AppConfiguration.ratingMeasureLayers));
-    // console.log('layerName, Object.keys(AppConfiguration.ratingMeasureLayers).findIndex(x => x === layerName));
     this.layerTypeRateMeasures$ = false;
     if (Object.keys(AppConfiguration.ratingMeasureLayers).findIndex(x => x.toLowerCase() === layerName.toLowerCase())  > -1) {
       this.layerTypeRateMeasures$ = true;
@@ -189,23 +185,15 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
         this.actionActive[key] = !this.actionActive[key];
       }
     }
-    // console.log('this.actionActive[key]', this.actionActive);
   }
 
   startEditAction(action: string){
-    /**
-     * Select with a rectangle
-     */
     if (true === this.actionActive[action]) {
-      // action was active --> it must be stopped
-      // console.log('que entra.. action', action);
       this.openLayersService.updateEditAction(null);
     }
     else {
       this.openLayersService.updateEditAction(action);
     }
-    // add an observable to control enable
-    // this.openLayersService.updateEditAction(action);
     this.highlightAction(action);
    }
 
@@ -238,25 +226,20 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
     /**
      * Updates the observable that allows to show/hide the symbolPanel
      */
-    // #TODO add a validation to know if is visible or not?
-
     this.openLayersService.updateShowSymbolPanel(visible);
    }
 
   deleteFeat(action: 'Delete'){
-    // #TODO remove the code was change to emit one event.
     /**
      * Updates the observable that allows to start deleting in the map,
      * highlight the button and unselect the others
      */
     if (true === this.actionActive.Delete ) {
-      // The deleting was active
-      // console.log ("stop interaction de delete", this.actionActive['delete']);
-      this.openLayersService.updateDeleteFeats(false); //
+          this.openLayersService.updateDeleteFeats(false); //
     }
     else {
       this.openLayersService.updateDeleteFeats(true);
-      // console.log('first time here');
+ 
     }
     this.highlightAction('Delete');
     }
@@ -265,16 +248,14 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
   saveLayer(){
     /** Enable user to save edit in the layer being updated the observable to show the editing toolbar and
      */
-    // #TODO confirm dialog if (confirm('Do you want to save edits in the current layer:?')){
+   
       this.openLayersService.updateSaveCurrentLayer(true);
-
       // disable the button
       this.stopSave = true;
       // add a timeout to enable the button
       setTimeout(() => {
         this.stopSave = false;
       }, 10000);
-   // }
   }
   saveAllLayer(){
     /** Enable user to save edit in all the layers
@@ -300,15 +281,12 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
      *  @param visible: boolean
      */
   this.isVisible$ = observableOf(visible);
-  // console.log ('showing Toolbar', visible);
-  // hide the symboloanel
+  // hide the symbol panel
   if (!visible){
    this.showSymbolPanel(false);
   }
-  // desactivar todas las actions??
   for (let key in this.actionActive ) {
-      // console.log("showing fresh tool ]",key,this.actionActive[key]);
-      if (true === this.actionActive[key])
+     if (true === this.actionActive[key])
       {
         this.actionActive[key] = !this.actionActive[key];
       }
