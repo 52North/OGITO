@@ -9,7 +9,6 @@ export class OpenLayersService {
   existingProject$ = this.existingProject.asObservable();
   private showEditToolbarSource = new Subject<boolean>();
   showEditToolbar$ = this.showEditToolbarSource.asObservable();
- // object: {[key: string]: string};
   private layerEditingSource = new Subject <{layerName: any; layerGeom: any; }>();
   layerEditing$ = this.layerEditingSource.asObservable();
   private shapeEditTypeSource = new Subject<string>();
