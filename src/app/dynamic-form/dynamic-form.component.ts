@@ -12,8 +12,6 @@ import Keyboard from 'simple-keyboard';
 })
 export class DynamicFormComponent implements OnInit, AfterViewInit {
   showForm$: Observable<boolean>;
-  // @Input() questions: QuestionBase<string>[] = [];
-  // new approach
   @Input() questions: Observable<QuestionBase<string>[]>;
   @Input() showForm: Observable<boolean>;
   @Input() featureLayer: any;
@@ -45,7 +43,6 @@ export class DynamicFormComponent implements OnInit, AfterViewInit {
       data => {
         this.sQuestions = data;
         this.form = this.questionService.toFormGroup(data);
-        // console.log ('que tiene this.featureLayer en questionSubscription', data , this.featureLayer );
 
       },
       error => console.log ('Error in subscription to questions ', error)    );
@@ -69,16 +66,11 @@ export class DynamicFormComponent implements OnInit, AfterViewInit {
 
   showKeyboard(){
     // make the keyboard visible
-    // initialize the virtual keyboard
-    //console.log('this.keyboard', this.keyboard);
     if (this.keyboardVisible) {
-      // console.log('keyboard is Visible', this.keyboardVisible, 'style', this.elRef.nativeElement.className);
       this.keyboardVisible = false;
-      // this.keyboard = null;
       this.elRef.nativeElement.innerHTML = ''; // remove the keyboard
       return;
     }
-    // console.log('make keyboard visible', this.keyboardVisible, 'style', this.elRef.nativeElement.className);
     this.keyboardVisible = true;
     this.keyboard = new Keyboard({
       onChange: input => this.onChange(input),
@@ -88,14 +80,10 @@ export class DynamicFormComponent implements OnInit, AfterViewInit {
 
   onChange = (input: string) => {
     this.value = input;
-    // here emit the event (https://stackoverflow.com/questions/62981935/change-event-is-not-firing)...
-   //  console.log('Input changed', input);
   };
 
 
   onKeyPress = (button: string) => {
-    // console.log('Button pressed', button);
-
     /**
      * If you want to handle the shift and caps lock buttons
      */
@@ -103,16 +91,12 @@ export class DynamicFormComponent implements OnInit, AfterViewInit {
   };
 
   onInputFocusOut(event: any, questionKey: any){
-    // workaround to set the value of the control form
-    // get the control and set the value
+    // workaround to set the value of the control form, get the control and set the value
     this.controlInput = this.form.get(questionKey);
-    // console.log(this.controlInput);
   }
 
   onInputChange = (event: any, questionKey: any) => {
-  // this event is not being fired when the user add the value with the keyboard
     try {
-      // console.log('event and target', event.target, event.target.value);
       if (this.keyboard){
         this.keyboard.setInput(event.target.value);
       }
@@ -137,14 +121,9 @@ export class DynamicFormComponent implements OnInit, AfterViewInit {
 
 
   onSubmit() {
-    // this.payLoad = JSON.stringify(this.form.getRawValue());
-    // here add workaround fot the virtual keyboard
     if (this.input && this.input.nativeElement.value.length > 0){
-      // set the value to the input control, this should work for both manual entry and by keyboard
-      // this can be used just for keyboard -->  let this.controlInput.setValue(this.keyboard.getInput());
       this.controlInput.setValue( this.input.nativeElement.value);
     }
-    // console.log('it was submited', this.payLoad, this.featureLayer);
     // prepare and submit the event
     this.payLoad = this.form.getRawValue(); // get the values in JSON
     this.dataForm = this.payLoad;
@@ -155,56 +134,42 @@ export class DynamicFormComponent implements OnInit, AfterViewInit {
   }
 
   showQuestionValue(elementID: any, value: any){
-    //console.log('showing value of slider', elementID, value);
     const label = document.getElementById(elementID);
-    // console.log('label', label);
     if (label)
-    { // console.log('label', label);
+    { 
        label.innerHTML = value; }
   }
   stopMoving($event: any){
     $event.stopImmediatePropagation();
-    // console.log('deja de moverse?');
   }
 
 
   checkingChecks(questionKey: any, value: any){
-    // console.log('showing value of questionKey', questionKey, value);
     // change here the requirement of 'required'?
     // peers for validation, laermquelle_auto and intensitaet_auto
     const prefix_intensity = 'intensitaet_';
     const prefix_source = 'laermquelle_';
     const peersToCheck = ['auto', 'schiene', 'sonstiges'];
     const questions_source = peersToCheck.map(x => prefix_source.concat(x));
-    // console.log('subFix', questions_source);
     const questions_intensity = peersToCheck.map(x => prefix_intensity.concat(x));
-    // console.log('subFix', questions_intensity);
     const subFix = questionKey.substring(prefix_intensity.length, questionKey.length);
-    // console.log('subFix', subFix);
     if (questions_source.findIndex(x => x === questionKey) >= 0) {
         let controlIntensity = this.form.get(prefix_intensity.concat(subFix));
         let controlSource = this.form.get(prefix_source.concat(subFix));
-        // add code to
         if (value){
-          // controlIntensity.setValidators(Validators.required);
-          controlIntensity.setValidators(Validators.compose(
+         controlIntensity.setValidators(Validators.compose(
              [Validators.min(1),
               Validators.required]
             ));
           controlIntensity.updateValueAndValidity();
-          // console.log('controlIntensity after', controlIntensity);
           return;
         }
         if (!value){
-          // reset the slider
           controlIntensity.setValue(0);
           this.showQuestionValue(prefix_intensity.concat(subFix), 0);
           // update the mat-slider
           controlIntensity.clearValidators();
           controlIntensity.updateValueAndValidity();
-          // console.log('controlIntensity after', controlIntensity);
-          // console.log('controlSource after', controlSource);
-
         }
       }
 
