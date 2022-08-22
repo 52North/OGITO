@@ -8,15 +8,10 @@ import { SliderQuestion } from './slider-question';
 import {of, Subject} from 'rxjs';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 
-
 @Injectable({
   providedIn: 'root'
 })
 export class QuestionService {
-  // #TODO no estoy segura de esta definicion
-/*  questions = { layerName: string,
-               QuestionBase [] }; */
-
  questions = {};
   private showEditFormSource = new Subject<boolean>();
   showEditForm$ = this.showEditFormSource.asObservable();
@@ -33,22 +28,18 @@ export class QuestionService {
       return (this.setLayerQuestionsActionPlanNoise(layerName.toLowerCase(), qgisFieldList));
     }
 
-
   let order = 0;
   let layerQuestions: QuestionBase<any>[]=[];
   let question = null;
   let orderInLayer = false;
   // check if there is an specific order
-  // console.log(' no la consigue + typeof(AppConfiguration.fieldsOrder[layerName])',layerName, typeof(AppConfiguration.fieldsOrder[layerName]));
   if (typeof(AppConfiguration.fieldsOrder[layerName.toLowerCase()]) !== 'undefined'){
      orderInLayer = true;
    }
 
   qgisFieldList.forEach(attr => {
    if (!(attr.name === 'id' || attr.name === 'fid' || attr.name === 'picfilepath' || attr.name === 'linkqrfile')){
-     // #TODO add the code for the QR thing
      order = order + 1;
-    // possibility to use comment as label for the field
     let label = (attr.comment === '') ? (attr.name) : (attr.comment);
     const required = false;
     switch (attr.type) {
@@ -56,7 +47,7 @@ export class QuestionService {
         question = new CheckBoxQuestion({
           key: attr.name,
           label,
-          value: 'true',  // if checked then it will get the true value
+          value: 'true',  
           required,
           order: orderInLayer ? this.findOrder(layerName, attr.name) : order,
           type: 'checkbox'
@@ -86,7 +77,7 @@ export class QuestionService {
         break;
       }
       case 'double': {
-        // #TODO change the double type to int in the table for noise intensity
+        // Noise intensity must be int in the table
         question = new TextboxQuestion ({
           key: attr.name,
           label,
@@ -97,11 +88,7 @@ export class QuestionService {
         break;
       }
     }
-
-     // id are reserved to be serial and PK in the DB
-     // console.log('question in setLayerQuestions', question);
-
-     layerQuestions.push(question);
+ layerQuestions.push(question);
    }
   });
   return layerQuestions;
@@ -117,17 +104,12 @@ export class QuestionService {
     let question = null;
     let orderInLayer = false;
     // check if there is an specific order
-    // console.log(' no la consigue + typeof(AppConfiguration.fieldsOrder[layerName])',layerName, typeof(AppConfiguration.fieldsOrder[layerName]));
     if (typeof(AppConfiguration.fieldsOrder[layerName]) !== 'undefined'){
       orderInLayer = true;
-      // console.log('la consigue en orden in layers', AppConfiguration.fieldsOrder[layerName], typeof(AppConfiguration.fieldsOrder[layerName]));
     }
-
     qgisFieldList.forEach(attr => {
       if (!(attr.name === 'id' || attr.name === 'fid' || attr.name === 'picfilepath' || attr.name === 'linkqrfile')){
-        // #TODO add the code for the QR thing
         order = order + 1;
-        // possibility to use comment as label for the field
         const label = (attr.comment === '') ? (attr.name) : (attr.comment);
         const required = true;
         // only boolean fields, those are the measures
@@ -135,7 +117,6 @@ export class QuestionService {
             question = new CheckBoxQuestion({
               key: attr.name,
               label,
-             // value: 'false',  // if checked then it will get the true value
               required:false,
               order: orderInLayer ? this.findOrder(layerName, attr.name) : order,
               type: 'checkbox'
@@ -149,32 +130,25 @@ export class QuestionService {
             value: '',  // if checked then it will get the true value
             required: false,
             order: orderInLayer ? this.findOrder(layerName, attr.name) : order,
-          //  type: 'checkbox'
           });
           layerQuestions.push(question);
         }
       }
     });
-    // console.log('layerQuestions', layerQuestions);
     return layerQuestions;
   }
   findOrder(layerName: string, attrName: any){
-    // console.log('attrName + layerName', layerName, attrName);
     layerName = layerName.toLowerCase(); // ensure lower case
     let order = 0;
     if (typeof (AppConfiguration.fieldsOrder[layerName]) !== 'undefined'){
-      // console.log('AppConfiguration.fieldsOrder[layerName][attrName]', AppConfiguration.fieldsOrder[layerName][attrName]);
-      if (typeof(AppConfiguration.fieldsOrder[layerName][attrName]) !== 'undefined'){
-         // console.log('que consigue', AppConfiguration.fieldsOrder[layerName][attrName]);
+     if (typeof(AppConfiguration.fieldsOrder[layerName][attrName]) !== 'undefined'){
          return(AppConfiguration.fieldsOrder[layerName][attrName]);
        }
     }
     return null;
   }
 
-
   findMinRange(attrName: any){
-    // console.log('attrName',attrName);
   let min = AppConfiguration.range.min;
   if (typeof (AppConfiguration.ranges[attrName]) !== 'undefined') {
       min = AppConfiguration.ranges[attrName].min;
@@ -189,7 +163,6 @@ export class QuestionService {
     }
     return max;
   }
-
 
   setSketchQuestions(sketchName: string, fields: any) {
     // set the questions for a new Sketch layer
@@ -211,28 +184,22 @@ export class QuestionService {
         }
       });
     });
-    // console.log('this.question in QG service', this.questions);
-
-  }
+    }
 
   getQuestions(layerName: any){
     return (this.questions[layerName].sort((a, b) => a.order - b.order));
   }
   toFormGroup(questions: QuestionBase<string>[] ) {
     const group: any = {};
-
-    questions.forEach(question => {
-
-      if (question.controlType === 'checkbox') {
+   questions.forEach(question => {
+    if (question.controlType === 'checkbox') {
         group[question.key] = question.required ? new FormControl(question.value || '', Validators.required)
           : new FormControl( false); // workaround...
         return;
       }
-
-      group[question.key] = question.required ? new FormControl(question.value || '', Validators.required)
+    group[question.key] = question.required ? new FormControl(question.value || '', Validators.required)
         : new FormControl(question.value || '');
     });
-    // console.log('from group un Question Service', new FormGroup(group));
     return new FormGroup(group);
   }
 
