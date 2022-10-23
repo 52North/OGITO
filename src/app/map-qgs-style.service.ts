@@ -191,8 +191,8 @@ export class MapQgsStyleService {
     /**
      * Creates symbols
      */
-    const xmlStyle= xmlParser.parseFromString(xmlTextStyle, 'text/xml');
-    let layers =  xmlStyle.getElementsByTagName('NamedLayer')[0];
+    //const xmlStyle= xmlParser.parseFromString(xmlTextStyle, 'text/xml');
+    //let layers =  xmlStyle.getElementsByTagName('NamedLayer')[0];
     const parser = new Parser();
     parser.parseString(xmlTextStyle, (err, result) => {
       const jsonStyle = result;
@@ -679,7 +679,7 @@ export class MapQgsStyleService {
      }
      if (svgs.hasOwnProperty(layerName)) {
      svg = svgs[layerName];
-     }  
+     }
      const newIcon = new Icon({
        opacity: 1,
        crossOrigin: 'anonymous',
