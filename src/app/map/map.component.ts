@@ -2557,7 +2557,7 @@ saveSketchLayer(editLayer: any) {
       const featJSON = JSON.parse(data);
       data = JSON.stringify(featJSON, null, 4);
       const blob = new Blob([data], {type: 'text/json;charset=UTF-8'});
-      saveAs(blob, editLayer.layerName);
+      saveAs(blob, editLayer.layerName + ".geojson");
     }
     catch (e){
       console.log('Error saving sketchLayer' + e);
