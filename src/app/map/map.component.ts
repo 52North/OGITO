@@ -104,7 +104,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
   projectTitle: string;
   mapCanvasExtent: any;
   BBOX: any;
-  mapCenterXY: number[] = [0, 0];   // the center of the map in the project EPSG coordinates
+  mapCenterXY: number[] = [376987, 5710901];   // the center of the map in the project EPSG coordinates
   projectProjection: Projection;
   mapZoom: number = AppConfiguration.mapZoom;
   selectStyle: any;
@@ -180,7 +180,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         if (data != null) {
           this.enableAddShape(data);
         } else {
-          this.removeInteractions();   
+          this.removeInteractions();
         }
 
       },
@@ -199,7 +199,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     );
     this.subsToSaveCurrentLayer = this.openLayersService.saveCurrentLayer$.subscribe(
       data => {
-        if (data) {                                   
+        if (data) {
           this.saveEdits(this.curEditingLayer);
         }
       }
@@ -208,7 +208,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     );
     this.subsToSaveAllLayers = this.openLayersService.saveAllLayers$.subscribe(
       data => {
-        if (data) {                                   
+        if (data) {
           this.saveAllEdits();
         }
       }
@@ -590,13 +590,13 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 
       }
     }
-   
+
     switch (data.selectedLayer.toLowerCase()) {
      case 'strassenlaerm_lden': {
       queryName = 'populationStrassenlaermLden';
       query = gql`
       query {
-      populationStrassenlaermLden (dblow: ` + lowLevel + `dbhigh:` + highLevel + `) {
+      populationStrassenlaermLden (dblow:` + lowLevel + ` dbhigh:` + highLevel + `) {
        totalCount
        nodes {
         id
@@ -636,7 +636,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       queryName = 'populationIndustrielaermLden';
       query = gql`
       query {
-      populationIndustrielaermLden (dblow: ` + lowLevel + `dbhigh:` + highLevel + `) {
+      populationIndustrielaermLden (dblow:` + lowLevel + ` dbhigh:` + highLevel + `) {
        totalCount
        nodes {
         id
@@ -656,7 +656,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       queryName = 'populationIndustrielaermLnight';
       query = gql`
       query {
-      populationIndustrielaermLnight (dblow: ` + lowLevel + `dbhigh:` + highLevel + `) {
+      populationIndustrielaermLnight (dblow:` + lowLevel + ` dbhigh:` + highLevel + `) {
        totalCount
        nodes {
         id
@@ -676,7 +676,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       queryName = 'populationStrassenlaermLnight';
       query = gql`
       query {
-      populationStrassenlaermLnight (dblow: ` + lowLevel + `, dbhigh:` + highLevel + `) {
+      populationStrassenlaermLnight (dblow:` + lowLevel + `, dbhigh:` + highLevel + `) {
        totalCount
        nodes {
         id
@@ -761,7 +761,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         duration: 3000});
     console.log('query data pop',query);
     // http://localhost:4200/graphql--> by proxy diverted to http://130.89.6.97:5000/graphql
-     request('https://ogito.itc.utwente.nl/graphql', query)
+     request('http://localhost:5000/graphql', query)
      // request('http://localhost:4200/graphql', query)   // debug time
       .then(result => {
         // console.log('data', result[queryName]);
@@ -790,7 +790,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
           duration: 10000});
       return;
     }
-   
+
     const orgExposed = data.totalCount;
     // load the layer - creates a group if needed
     this.loadJsonPoint(data.nodes, layerName);
@@ -1055,7 +1055,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
             }
         }
       });
-  
+
       // remove the layer from the dict layerPanel
       const group = this.findGroupLayer(layerName);  // find the group of the layer :)
       console.log('group', group.layers, 'layerName', layerName);
@@ -1237,17 +1237,32 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     }
     const rootLayer = xmlText.getElementsByTagName('Layer')[0];
-    let crs: string;
     // get the CRS in EPSG format, there might be several CRS, look for the BBOX defined for the prefered EPSG define in the projlist
     // Projected Bounding box
     if (rootLayer.getElementsByTagName('CRS').length > 1) {
       // the epsg code comes in the second place in the list
-      crs = rootLayer.getElementsByTagName('CRS')[1].childNodes[0].nodeValue;
-      // Projected Bounding box
-      const projBBOX = rootLayer.getElementsByTagName('BoundingBox')[0];
+
+      let projBBOX : Element = null;
+      const projectSRID = AppConfiguration.srsName.toUpperCase();
+
+      for (let i = 0; rootLayer.getElementsByTagName('BoundingBox').length ; i++){
+        const bbox = rootLayer.getElementsByTagName('BoundingBox')[i];
+        const crs = bbox.getAttribute('CRS').toUpperCase()
+        if( crs === projectSRID){
+          projBBOX = bbox;
+          break;
+        }
+      }
+      if(projBBOX === null ){
+        throw new Error("no bbox definition for CRS " + this.srsID + " found in WMS project description")
+      }
+
       this.mapCanvasExtent = [Number(projBBOX.getAttribute('minx')), Number(projBBOX.getAttribute('maxx')),
         Number(projBBOX.getAttribute('miny') ), Number(projBBOX.getAttribute('maxy'))];
       this.srsID = projBBOX.getAttribute('CRS');
+
+      //this.mapCanvasExtent = [370299.727 , 381831.667,
+      //5707535.077, 5715063.531];
       proj4.defs(this.srsID, AppConfiguration.projDefs[this.srsID.replace(/\D/g, '')]);
       register(proj4);
     }
@@ -1971,7 +1986,7 @@ enableAddShape(shape: string) {
             condition: olBrowserEvent => {
               if (olBrowserEvent.originalEvent.touches) {   // #T
                 return olBrowserEvent.originalEvent.touches.length < 2;
-              }  
+              }
               return false;
             }
           });
@@ -1982,18 +1997,18 @@ enableAddShape(shape: string) {
             source: tsource,
             type: shape,
             freehand: true,
-            stopClick: true,    
+            stopClick: true,
             style: this.getEditingStyle(),
             condition: olBrowserEvent => {
               if (olBrowserEvent.originalEvent.touches) {
                 return olBrowserEvent.originalEvent.touches.length < 2;
-              }  
+              }
               return false;
             }
           });
           break;
         }
-        case 'Circle': {  
+        case 'Circle': {
           this.draw = new Draw({
             source: tsource,
             type: shape,
@@ -2185,7 +2200,7 @@ enableAddShape(shape: string) {
             // insert feature in a cache --> for undo
             self.editBuffer.push({
               layerName: self.curEditingLayer.layerName,
-              transaction: 'delete',  
+              transaction: 'delete',
               feats: lastFeat,
               dirty,
               source: self.curEditingLayer.source
@@ -2444,7 +2459,7 @@ stopEditing() {
        *  asks to save changes in the layer if any and call the function for it.
        *  @param editLayer, the layer that was edited / #TODO editLayer is not required
        */
-      // stop interactions, clear current class and symbol 
+      // stop interactions, clear current class and symbol
       this.currentClass = null;
       this.currentStyle = null;
       this.removeInteractions();
@@ -2633,8 +2648,8 @@ writeTransactWfs(editLayer: any) {
     /** saves changes on a wfs layer
      * @param editLayer: layer to save changes stored in the editBuffer
      */
-    const layerTrs = [];  
-    layerTrs[editLayer.layerName] = [];     
+    const layerTrs = [];
+    layerTrs[editLayer.layerName] = [];
     layerTrs[editLayer.layerName].insert = [];
     layerTrs[editLayer.layerName].delete = [];
     layerTrs[editLayer.layerName].update = [];
@@ -2666,7 +2681,7 @@ writeTransactWfs(editLayer: any) {
         }
       }
     });
-    
+
     // configure nodes.
     const strService = 'SERVICE=WFS&VERSION=' + AppConfiguration.wfsVersion + '&REQUEST=DescribeFeatureType';
     const strUrl = this.qGsServerUrl + strService + '&map=' + this.qgsProjectFile;
