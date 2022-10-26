@@ -21,15 +21,17 @@
     <button mat-icon-button aria-labelledby="Add a sketch layer" matTooltip="Einen Sketch layer hinzufuegen" (click)="createScratchLayer()" >
     <mat-icon class="svgIconToolbar" svgIcon="layerScratch"></mat-icon>
     </button>
-   <!-- <button mat-icon-button (click)="startAction('Identify')"  aria-label="identify" matTooltip="Identify element">
+   <!-- disable noise related queries for Herne Case Study
+    <button mat-icon-button (click)="startAction('Identify')"  aria-label="identify" matTooltip="Identify element">
       <mat-icon svgIcon="identify"></mat-icon>
     </button> -->
-    <button mat-icon-button (click)="findExposedPeople()"  aria-label="identify" matTooltip="Von Laerm betroffene Bevoelkerung ermitteln">
+    <!--<button mat-icon-button (click)="findExposedPeople()"  aria-label="identify" matTooltip="Von Laerm betroffene Bevoelkerung ermitteln">
       <mat-icon class="svgIconToolbar" svgIcon="noiseAnnoyance"></mat-icon>
     </button>
     <button mat-icon-button (click)="findExposedInstitutions()"  aria-label="identify" matTooltip="Von Laerm betroffene Einrichtungen ermitteln">
       <mat-icon class="svgIconToolbar" svgIcon="noiseOrgAnnoyance"></mat-icon>
     </button>
+  -->
 
     <!--<button mat-icon-button (click)="searchOnMap()"  aria-label="identify" matTooltip="Search in map">
       <mat-icon >search</mat-icon>
