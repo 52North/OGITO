@@ -13,13 +13,14 @@ export class AppConfiguration{
   static svgUrl =  AppConfiguration.hostname + 'svg/';
   static qgsProjectFolder =  '/home/qgis/projects/'
   // Path to use from to use with the qgis server
-  static QgsFileProject = AppConfiguration.qgsProjectFolder + AppConfiguration.qgsProject; // 
+  static QgsFileProject = AppConfiguration.qgsProjectFolder + AppConfiguration.qgsProject; //
   static mapZoom = 14;
   static maxZoom = 20 ;
   static minZoom = 8 ;
   static threshold = 1000; // Distance in meter to close a polygon being drawn with a line.
   static projDefs = {
     25832: '+proj=utm +zone=32 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs',
+    28992: 'proj=sterea +lat_0=52.1561605555556 +lon_0=5.38763888888889 +k=0.9999079 +x_0=155000 +y_0=463000 +ellps=bessel +towgs84=565.4171,50.3319,465.5524,1.9342,-1.6677,9.1019,4.0725 +units=m +no_defs +type=crs'
   };
   // raster icon used as symbol for WMS layers
   static rasterIcon =  'data:image/png;base64,' + 'iVBORw0KGgoAAAANSUhEUgAAACYAAAAmCAYAAACoPemuAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAXE' +
