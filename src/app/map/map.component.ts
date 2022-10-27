@@ -873,7 +873,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       crs: {
         type: 'name',
         properties: {
-          name: 'EPSG:25832',
+          name: 'EPSG:28992',
         },
       },
       features
@@ -919,7 +919,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       crs: {
         type: 'name',
         properties: {
-          name: 'EPSG:25832',
+          name: 'EPSG:28992',
         },
       },
       features
