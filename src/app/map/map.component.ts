@@ -61,6 +61,7 @@ import {request, gql} from 'graphql-request';
 import {QueryDBService} from '../query-db.service';
 import {DialogOrgExposedComponent} from '../dialog-org-exposed/dialog-org-exposed.component';
 import {saveAs} from 'file-saver';
+import { ThrowStmt } from '@angular/compiler';
 
 // To use rating dialogs
 export interface DialogData {
@@ -873,7 +874,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       crs: {
         type: 'name',
         properties: {
-          name: 'EPSG:28992',
+          name: this.srsID,
         },
       },
       features
@@ -919,7 +920,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       crs: {
         type: 'name',
         properties: {
-          name: 'EPSG:28992',
+          name: this.srsID,
         },
       },
       features
