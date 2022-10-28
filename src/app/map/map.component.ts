@@ -1,3 +1,4 @@
+import { SettingsService } from './../settings.service';
 import {AfterViewInit, Component, ElementRef, EventEmitter, Inject, OnDestroy, OnInit, Output, ViewChild} from '@angular/core';
 import {MatSnackBar, MatSnackBarHorizontalPosition, MatSnackBarVerticalPosition} from '@angular/material/snack-bar';
 import {MatDialog, MatDialogRef, MAT_DIALOG_DATA} from '@angular/material/dialog';
@@ -174,7 +175,9 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
               public auth: AuthService,
               private snackBar: MatSnackBar,
               public dialog: MatDialog,
-              private sanitizer: DomSanitizer) {
+              private sanitizer: DomSanitizer,
+              private settings: SettingsService)
+              {
 
     this.subsToShapeEdit = this.openLayersService.shapeEditType$.subscribe(
       data => {
@@ -1244,7 +1247,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       // the epsg code comes in the second place in the list
 
       let projBBOX : Element = null;
-      const projectSRID = AppConfiguration.srsName.toUpperCase();
+      const projectSRID = this.settings.getSettings().project.srsID
 
       for (let i = 0; rootLayer.getElementsByTagName('BoundingBox').length ; i++){
         const bbox = rootLayer.getElementsByTagName('BoundingBox')[i];
@@ -1262,9 +1265,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         Number(projBBOX.getAttribute('miny') ), Number(projBBOX.getAttribute('maxy'))];
       this.srsID = projBBOX.getAttribute('CRS');
 
-      //this.mapCanvasExtent = [370299.727 , 381831.667,
-      //5707535.077, 5715063.531];
-      proj4.defs(this.srsID, AppConfiguration.projDefs[this.srsID.replace(/\D/g, '')]);
+      proj4.defs(this.srsID, this.settings.getSettings().project.proj4Def);
       register(proj4);
     }
     else {
