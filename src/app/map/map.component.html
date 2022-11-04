@@ -1,21 +1,24 @@
+
 <div id="map" class="map">
-</div>
-<div id="popup" #popup class="ol-popup">
-  <a href="#" #closer class="ol-popup-closer"></a>
-  <div id="popup-content" #content></div>
-</div>
-<div *ngIf="loadedWfsLayers">
-  <!--[groupLayers] = "groupsLayers"-->
-<app-layer-panel   [groupLayers] = "groupsLayersSubject.asObservable()"
-                 (layerVisClick)="updateMapVisibleLayer($event)"
-(editLayerClick)="updateEditingLayer($event)"  (groupLayerVisClick)="updateMapVisibleGroupLayer($event)"
-(layersOrder) = "updateOrderGroupsLayers($event)"
-(identifyLayerClick)="startIdentifying($event)"
-(removeLayerClick) = "removeSessionLayer($event)">
-</app-layer-panel>
-</div>
+  </div>
+  <div id="popup" #popup class="ol-popup">
+    <a href="#" #closer class="ol-popup-closer"></a>
+    <div id="popup-content" #content></div>
+  </div>
+  <div *ngIf="loadedWfsLayers">
+    <!--[groupLayers] = "groupsLayers"-->
+  <app-layer-panel   [groupLayers] = "groupsLayersSubject.asObservable()"
+                  (layerVisClick)="updateMapVisibleLayer($event)"
+  (editLayerClick)="updateEditingLayer($event)"  (groupLayerVisClick)="updateMapVisibleGroupLayer($event)"
+  (layersOrder) = "updateOrderGroupsLayers($event)"
+  (identifyLayerClick)="startIdentifying($event)"
+  (removeLayerClick) = "removeSessionLayer($event)">
+  </app-layer-panel>
+  </div>
+
+
 <app-dynamic-form #dynamicForm  [questions]="questionsSubject.asObservable()"
-                   [showForm]="showFormSubject.asObservable()"
+                  [showForm]="showFormSubject.asObservable()"
 
                     (formSubmitted) = "getFormData($event)"
                     [featureLayer] = "featureLayerForm"> <!--[questions]="formQuestions" -->  <!-- from parent to Child) -->

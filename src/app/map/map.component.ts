@@ -38,8 +38,7 @@ import { platformModifierKeyOnly } from 'ol/events/condition';
 import WFS from 'ol/format/WFS';
 import GML from 'ol/format/GML';
 import WMSCapabilities from 'ol/format/WMSCapabilities.js';
-
-import { click } from 'ol/events/condition.js';
+import {click} from 'ol/events/condition.js';
 import Overlay from 'ol/Overlay';
 import {
   defaults as defaultInteractions,
@@ -61,26 +60,26 @@ import CircleStyle from 'ol/style/Circle';
 import { GeoJSON, KML } from 'ol/format';
 import ZoomSlider from 'ol/control/ZoomSlider';
 import ScaleLine from 'ol/control/ScaleLine';
-import { fromCircle } from 'ol/geom/Polygon';
-import { touchOnly } from 'ol/events/condition';
-import { OpenLayersService } from '../open-layers.service';
-import { MapQgsStyleService } from '../map-qgs-style.service';
-import { AuthService } from '../auth.service';
-import { unByKey } from 'ol/Observable';
-import { bbox as bboxStrategy } from 'ol/loadingstrategy';
-import { toStringHDMS } from 'ol/coordinate';
-import { QuestionService } from '../question-service.service';
-import { QuestionBase } from '../question-base';
-import { DynamicFormComponent } from '../dynamic-form/dynamic-form.component';
-import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
-import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { DialogPopulationExposedComponent } from '../dialog-population-exposed/dialog-population-exposed.component';
-import { DialogResultExposedComponent } from '../dialog-result-exposed/dialog-result-exposed.component';
-import { request, gql } from 'graphql-request';
-import { QueryDBService } from '../query-db.service';
-import { DialogOrgExposedComponent } from '../dialog-org-exposed/dialog-org-exposed.component';
-import { saveAs } from 'file-saver';
-import { ThrowStmt } from '@angular/compiler';
+import {fromCircle} from 'ol/geom/Polygon';
+import {touchOnly} from 'ol/events/condition';
+import {FullScreen} from 'ol/control';
+import {OpenLayersService} from '../open-layers.service';
+import {MapQgsStyleService} from '../map-qgs-style.service';
+import {AuthService} from '../auth.service';
+import {unByKey} from 'ol/Observable';
+import {bbox as bboxStrategy} from 'ol/loadingstrategy';
+import {toStringHDMS} from 'ol/coordinate';
+import {QuestionService} from '../question-service.service';
+import {QuestionBase} from '../question-base';
+import {DynamicFormComponent} from '../dynamic-form/dynamic-form.component';
+import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
+import {FormControl, FormGroup, Validators} from '@angular/forms';
+import {DialogPopulationExposedComponent} from '../dialog-population-exposed/dialog-population-exposed.component';
+import {DialogResultExposedComponent} from '../dialog-result-exposed/dialog-result-exposed.component';
+import {request, gql} from 'graphql-request';
+import {QueryDBService} from '../query-db.service';
+import {DialogOrgExposedComponent} from '../dialog-org-exposed/dialog-org-exposed.component';
+import {saveAs} from 'file-saver';
 
 // To use rating dialogs
 export interface DialogData {
@@ -1905,7 +1904,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     this.map.setView(this.view);
     this.map.addControl(new ZoomSlider());
     this.map.addControl(new ScaleLine());
-  }
+    this.map.addControl(new FullScreen({source: 'app-content'}));
+   }
 
   ngAfterViewInit() {
     /**
