@@ -90,6 +90,13 @@ export class ToolbarComponent implements OnInit {
      */
   }
 
+  toggleFullScreen(){
+  if(!document.fullscreenElement){ //if not in fullscreen mode
+      document.getElementById("app-content-container").requestFullscreen()
+    }else{
+      document.exitFullscreen()
+    }
+  }
 }
 
 @Component({

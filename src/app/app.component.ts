@@ -13,9 +13,13 @@ export class AppComponent {
   keyEvent(event: KeyboardEvent) {
     if(event.key === 'F11'){
       console.log("hit f11")
-      document.getElementById("app-content-container").focus()
-      document.getElementById("app-content-container").requestFullscreen()
-      event.stopPropagation()
+      event.preventDefault()
+      if(!document.fullscreenElement) {
+        document.getElementById("app-content-container").focus()
+        document.getElementById("app-content-container").requestFullscreen()
+      }else{
+        document.exitFullscreen()
+      }
     }
   }
 

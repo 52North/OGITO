@@ -1904,7 +1904,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     this.map.setView(this.view);
     this.map.addControl(new ZoomSlider());
     this.map.addControl(new ScaleLine());
-    this.map.addControl(new FullScreen({source: 'app-content'}));
+    //this.map.addControl(new FullScreen({source: 'app-content'}));
    }
 
   ngAfterViewInit() {
