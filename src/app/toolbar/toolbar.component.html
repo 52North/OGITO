@@ -9,26 +9,26 @@
   </mat-card-title-group> -->
   <mat-divider class = "toolbarDivider"></mat-divider>  <!-- to provide a space to drag -->
   <mat-toolbar color="primary">
-    <button matTooltip="Gesamtgebiet zeigen" aria-labelledby="Zoom to the study area" mat-icon-button (click)="zoomHome()">
+    <button matTooltip="Toon totale oppervlakte" aria-labelledby="Zoom to the study area" mat-icon-button (click)="zoomHome()">
       <mat-icon>home</mat-icon>
     </button>
-    <button mat-icon-button aria-labelledby="Show list of layers" matTooltip="Zeige Kartenuebersicht" (click)="openLayerPanel()" >
+    <button mat-icon-button aria-labelledby="Show list of layers" matTooltip="Toon kaartoverzicht" (click)="openLayerPanel()" >
       <mat-icon class="svgIconToolbar">layers</mat-icon>
     </button>
     <!--<button mat-icon-button aria-labelledby="Edit layers" matTooltip="Edit layers" (click)="layerEditingChange()">
       <mat-icon>edit</mat-icon>
     </button> !-->
-    <button mat-icon-button aria-labelledby="Add a sketch layer" matTooltip="Einen Sketch layer hinzufuegen" (click)="createScratchLayer()" >
+    <button mat-icon-button aria-labelledby="Add a sketch layer" matTooltip="Een schetslaag toevoegen" (click)="createScratchLayer()" >
     <mat-icon class="svgIconToolbar" svgIcon="layerScratch"></mat-icon>
     </button>
    <!-- disable noise related queries for Herne Case Study
     <button mat-icon-button (click)="startAction('Identify')"  aria-label="identify" matTooltip="Identify element">
       <mat-icon svgIcon="identify"></mat-icon>
     </button> -->
-    <!--<button mat-icon-button (click)="findExposedPeople()"  aria-label="identify" matTooltip="Von Laerm betroffene Bevoelkerung ermitteln">
+    <!--<button mat-icon-button (click)="findExposedPeople()"  aria-label="identify" matTooltip="dentificeer de bevolking die wordt beïnvloed door geluid.">
       <mat-icon class="svgIconToolbar" svgIcon="noiseAnnoyance"></mat-icon>
     </button>
-    <button mat-icon-button (click)="findExposedInstitutions()"  aria-label="identify" matTooltip="Von Laerm betroffene Einrichtungen ermitteln">
+    <button mat-icon-button (click)="findExposedInstitutions()"  aria-label="identify" matTooltip="Identificeer de faciliteiten die worden beïnvloed door geluid.">
       <mat-icon class="svgIconToolbar" svgIcon="noiseOrgAnnoyance"></mat-icon>
     </button>
   -->
