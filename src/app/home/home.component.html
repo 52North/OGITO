@@ -1,64 +1,67 @@
 
-<div class="toolbarWrapper">
-<!-- Toolbar -->
+  <div class="toolbarWrapper">
+  <!-- Toolbar -->
 
-  <div class="toolbar" role="banner">
-    <mat-toolbar color = "primary">
+    <div class="toolbar" role="banner">
+      <mat-toolbar color = "primary">
 
-    <button mat-icon-button   [matMenuTriggerFor]="myMenu" aria-label="Menu">
-      <mat-icon>menu</mat-icon>
-    </button>
-    <mat-menu  #myMenu="matMenu">
-     <!-- <button mat-menu-item  (click)="openProject()">
-        <mat-icon>folder_open</mat-icon>
-        <span>Open project</span>
-      </button> -->
-      <button mat-menu-item disabled (click) = "editSettings()">
-        <mat-icon>settings </mat-icon>
-        <span>Instellingen</span>
+      <button mat-icon-button   [matMenuTriggerFor]="myMenu" aria-label="Menu">
+        <mat-icon>menu</mat-icon>
       </button>
-      <button mat-menu-item (click)="showInfo()">
-        <mat-icon>info </mat-icon>
-        <span>Over</span>
+      <mat-menu  #myMenu="matMenu">
+      <!-- <button mat-menu-item  (click)="openProject()">
+          <mat-icon>folder_open</mat-icon>
+          <span>Open project</span>
+        </button> -->
+        <button mat-menu-item disabled (click) = "editSettings()">
+          <mat-icon>settings </mat-icon>
+          <span>Instellingen</span>
+        </button>
+        <button mat-menu-item (click)="showInfo()">
+          <mat-icon>info </mat-icon>
+          <span>Over</span>
+        </button>
+      </mat-menu>
+      <span class="title">&nbsp;OGITO </span>
+      <span class="spacer"></span>
+      <span class = "userNickName" *ngIf="auth.userProfile$ | async as profile">
+      <code>{{ profile["nickname"] }}</code>
+      </span> <pre>  </pre>
+      <button mat-button (click)="auth.login()" *ngIf="!auth.loggedIn"> Log In</button>
+      <button mat-button (click)="auth.logout()" *ngIf="auth.loggedIn"> Log uit</button>
+      <button mat-icon-button (click)="exitToApp()">
+          <mat-icon> exit_to_app</mat-icon>
       </button>
-     </mat-menu>
-     <span class="title">&nbsp;OGITO </span>
-     <span class="spacer"></span>
-     <span class = "userNickName" *ngIf="auth.userProfile$ | async as profile">
-     <code>{{ profile["nickname"] }}</code>
-     </span> <pre>  </pre>
-     <button mat-button (click)="auth.login()" *ngIf="!auth.loggedIn"> Log In</button>
-     <button mat-button (click)="auth.logout()" *ngIf="auth.loggedIn"> Log uit</button>
-     <button mat-icon-button (click)="exitToApp()">
-        <mat-icon> exit_to_app</mat-icon>
-     </button>
-     </mat-toolbar>
-   </div>
-<!--// here put the divs/cards and the design-->
+      </mat-toolbar>
+    </div>
+  <!--// here put the divs/cards and the design-->
 
 
 
-  <!--
-  <div class="terminal" >
-    <span> Keeping alive to copy the style</span>
+    <!--
+    <div class="terminal" >
+      <span> Keeping alive to copy the style</span>
+    </div>
+  -->
   </div>
--->
-</div>
-<!-- uncomment to enable authentication  25/11/2020 -->
-<div id="app-content" class="app-content">
-<app-map *ngIf="auth.loggedIn"></app-map>
-<app-toolbar *ngIf="auth.loggedIn"></app-toolbar>
-<app-editing-toolbar *ngIf="auth.loggedIn"></app-editing-toolbar>
-<app-symbol-list *ngIf="auth.loggedIn"></app-symbol-list>
-<app-projlist *ngIf="auth.loggedIn"></app-projlist>
-</div>
-<!-- colocar algo para cuando no este autenticado -->
-<!-- bypassing Auth0 -->
+  <!-- uncomment to enable authentication  25/11/2020 -->
+  <div id="app-content" class="app-content">
+    <div id="app-content-container" class="app-content-container">
+      <app-map *ngIf="auth.loggedIn"></app-map>
+      <app-toolbar *ngIf="auth.loggedIn"></app-toolbar>
+      <app-editing-toolbar *ngIf="auth.loggedIn"></app-editing-toolbar>
+      <app-symbol-list *ngIf="auth.loggedIn"></app-symbol-list>
+      <app-projlist *ngIf="auth.loggedIn"></app-projlist>
+    </div>
+  </div>
+  <!-- colocar algo para cuando no este autenticado -->
+  <!-- bypassing Auth0 -->
 
-<!-- for testing purpose
+  <!-- for testing purpose
 <app-map></app-map>
 <app-toolbar></app-toolbar>
 <app-editing-toolbar></app-editing-toolbar>
 <app-symbol-list></app-symbol-list>
 <app-projlist></app-projlist>
 -->
+
