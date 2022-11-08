@@ -35,6 +35,10 @@ export class ToolbarComponent implements OnInit {
        'noiseOrgAnnoyance',
        sanitizer.bypassSecurityTrustResourceUrl('assets/img/organnoyance-24px.svg')
      );
+     iconRegistry.addSvgIcon(
+      'fullscreen',
+      sanitizer.bypassSecurityTrustResourceUrl('assets/img/fullscreen.svg')
+    );
   }
 
   zoomHome(){
@@ -96,6 +100,38 @@ export class ToolbarComponent implements OnInit {
     }else{
       document.exitFullscreen()
     }
+  }
+
+  async switchScreenOrientation(){
+    var changedFullscreenMode = false;
+
+    if(!document.fullscreenElement){ //check if already in fullscreen
+      await document.getElementById("app-content-container").requestFullscreen(); // <-- Use wait, app has to be in fullscreen
+      changedFullscreenMode = true;
+    }
+
+    window.screen.orientation.unlock()
+
+    var current_mode = window.screen.orientation
+    var orientationPromise;
+    console.log("current screen orientation: " + current_mode.type)
+    if(current_mode.type === "landscape-primary"){
+      orientationPromise = current_mode.lock("portrait-primary")
+    }else if(current_mode.type === "portrait-primary"){
+      orientationPromise = current_mode.lock("landscape-secondary")
+    }else if(current_mode.type === "landscape-secondary"){
+      orientationPromise = current_mode.lock("portrait-secondary")
+    }else if(current_mode.type === "portrait-secondary"){
+      orientationPromise = current_mode.lock("portrait-primary")
+      current_mode.unlock()
+    }
+
+    orientationPromise.catch(function(error){
+      if(changedFullscreenMode){
+         document.exitFullscreen()
+      }
+      alert("orientation switch not available on this device")
+    })
   }
 }
 
