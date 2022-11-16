@@ -3,6 +3,12 @@
   color: blue;
 } */
 
+@media  (orientation:portrait) {
+  .layer-panel{
+    left: 10%;
+    max-width: 40%;
+  }
+}
 
 .spacer {
   flex: 1 1 auto;
@@ -24,7 +30,21 @@
   position: relative;
   padding-left: 0.1vw !important;
   align-self: center;
+  white-space: nowrap;
 }
+
+@media  (orientation:portrait) {
+  .example-box{
+    font-size: 1.6vw !important;
+  }
+}
+
+@media  (orientation:portrait) {
+  .panelTitle{
+    font-size: 2vw !important;
+  }
+}
+
 .example-box:last-child {
   border: none;
 }
@@ -42,8 +62,15 @@
   position: relative;
   padding-top: 1px !important;
   padding-bottom: 0px !important;
-  height:1.2vw !important;
 }
+
+@media  (orientation:portrait) {
+  .group{
+    font-size: 1.8vw;
+  }
+}
+
+
 .selectLayer{
   display:flex;
   justify-content:space-between;
@@ -77,16 +104,17 @@
   transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
 }
 
-.example-list.cdk-drop-list-dragging .example-box:not(.cdk-drag-placeholder) {
+.layer-panel-list.cdk-drop-list-dragging .example-box:not(.cdk-drag-placeholder) {
   transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
 }
 
 .mat-list-option {
-  height:1.3vw !important;
+  height: 100% !important;
   vertical-align:middle !important;
   padding-top: 1px !important;  // #TODO hacerlo differente responsive design
  // border-bottom: solid 1px #ccc;
 }
+
 :host ::ng-deep  .mat-pseudo-checkbox {
   border: solid 1px;
   width: 14px;
@@ -129,9 +157,6 @@
 //  margin-top: -1.3vw !important;
  // width: 1vw !important;
   //height: 1vw !important;
-}
-.mat-expansion-panel-header-title {
-  height: 40px;
 }
 
 /*
@@ -185,3 +210,11 @@
 :host ::ng-deep  .mat-button  {
   vertical-align: top !important;
 }
+
+.mat-list-text{
+  height: 100%;
+}
+
+
+
+

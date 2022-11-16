@@ -10,7 +10,15 @@
   background-color: #ad1457;   //same that primary color
   // test for gecco
   // background-color: blue;
+  min-width: 40px;
 }
+
+@media  (orientation:portrait) {
+  .mapToolbar{
+    margin-top: 20%
+  }
+}
+
 .mapToolbar:hover {
   cursor:pointer;
  }

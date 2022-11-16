@@ -133,7 +133,18 @@ export class ToolbarComponent implements OnInit {
       alert("orientation switch not available on this device")
     })
   }
+
+  isOrientationSwitchSupported() : boolean{
+    /*if('orientation' in window.screen){
+      return true;
+    }else{
+      return false;
+    }*/
+    return false;
+  }
 }
+
+
 
 @Component({
   selector: 'dialog-layer-name-dialog',

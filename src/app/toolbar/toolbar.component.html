@@ -15,8 +15,8 @@
     <button mat-icon-button aria-labelledby="Add a sketch layer" matTooltip="Omschakelen van volledig scherm" (click)="toggleFullScreen()" >
       <mat-icon class="svgIconToolbar" svgIcon="fullscreen"></mat-icon>
     </button>
-    <button mat-icon-button aria-labelledby="Add a sketch layer" matTooltip="Schermoriëntatie veranderen" (click)="switchScreenOrientation()" >
-      <mat-icon class="svgIconToolbar" svgIcon="fullscreen"></mat-icon>
+    <button *ngIf="isOrientationSwitchSupported()" aria-labelledby="Switch screen orientation" matTooltip="Schermoriëntatie veranderen" (click)="switchScreenOrientation()" >
+      <mat-icon class="svgIconToolbar" svgIcon="layerScratch"></mat-icon>
     </button>
     <button mat-icon-button aria-labelledby="Show list of layers" matTooltip="Toon kaartoverzicht" (click)="openLayerPanel()" >
       <mat-icon class="svgIconToolbar">layers</mat-icon>

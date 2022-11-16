@@ -1,5 +1,5 @@
 <!--suppress AngularUndefinedBinding -->  <!-- to fix a bug in webstorm -->
-<div id='third' class ="example-list"   *ngIf="showLayerPanel$ | async"
+<div id='third' class ="example-list layer-panel"   *ngIf="showLayerPanel$ | async"
      cdkDrag
      cdkDragBoundary=".app-content">
   <!-- <div class ="example-list"   *ngIf="showLayerPanel$ | async" [style.left.px]="x" [style.top.px]="y"
@@ -15,7 +15,7 @@
     <mat-accordion #groupsAccordion cdkDropList (cdkDropListDropped)="dropExpansion($event)">
       <mat-expansion-panel *ngFor= "let group of sgroupLayers" cdkDrag>
         <!--togglePosition='before'-->
-        <mat-expansion-panel-header [collapsedHeight]="'2.1vw'" [expandedHeight]="'2.1vw'">
+        <mat-expansion-panel-header>
           <mat-panel-title>
             <mat-selection-list [id]="group.groupName">
               <mat-list-option class = "group" checkboxPosition="before" (click)="onGroupLayerVisClick($event,group)"
@@ -29,7 +29,7 @@
         <mat-accordion>
           <ng-container  *ngFor= "let layer of group.layers" >
             <mat-expansion-panel>
-              <mat-expansion-panel-header [collapsedHeight]="'2.5vw'" [expandedHeight]="'2.5vw'">
+              <mat-expansion-panel-header>
                 <mat-panel-title>
                   <mat-selection-list (selectionChange)="onSelectedChanged($event)">
                     <mat-list-option class="example-box mat-primary" [value]="layer.layerName"
