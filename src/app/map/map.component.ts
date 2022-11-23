@@ -80,6 +80,7 @@ import {request, gql} from 'graphql-request';
 import {QueryDBService} from '../query-db.service';
 import {DialogOrgExposedComponent} from '../dialog-org-exposed/dialog-org-exposed.component';
 import {saveAs} from 'file-saver';
+import { APP_BASE_HREF } from '@angular/common';
 
 // To use rating dialogs
 export interface DialogData {
@@ -2245,7 +2246,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         break;
       }
       case 'QString': {
-        tvalue = value.trim().toLowerCase();
+        tvalue = value.trim();
         break;
       }
       case 'int': {
@@ -2673,8 +2674,15 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         node.getElementsByTagName('Name')[0].childNodes[0].nodeValue;
       const layerTitle =
         node.getElementsByTagName('Title')[0].childNodes[0].nodeValue;
-      const defaultSRS =
-        node.getElementsByTagName('DefaultSRS')[0].childNodes[0].nodeValue;
+      const defaultSRSNode =
+        node.getElementsByTagName('DefaultSRS')
+
+      let defaultSRS;
+      if(defaultSRSNode[0].childNodes.length > 0){
+        defaultSRS = defaultSRSNode[0].childNodes[0].nodeValue;
+      }else{
+        defaultSRS = AppConfiguration.srsName;
+      }
       // validation or warning
       if (defaultSRS !== AppConfiguration.srsName) {
         alert(
