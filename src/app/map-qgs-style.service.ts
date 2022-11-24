@@ -5,6 +5,7 @@ import {DEVICE_PIXEL_RATIO} from 'ol/has.js';
 import {AppConfiguration} from './app-configuration';
 import {Parser} from 'xml2js';
 import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
+import { valueFromAST } from 'graphql';
 
 @Injectable({
   providedIn: 'root'
@@ -34,12 +35,26 @@ export class MapQgsStyleService {
      * @param { feature } the feature for which to find a rendering style  -- no needed apparently
      * @param { layerName } the name of a WFS layer to be rendered
      */
-   const styleLyr = this.layerStyles[layerName];
-    if (styleLyr.symbolType === 'Single symbol'){
-    return (styleLyr.style['default'].style);
+   const styleLyr = this.getLayerStyle(layerName);
+    if (styleLyr.symbolType === 'Single Symbol'){
+      return (styleLyr.style['default'].style);
+    }else{ //rule base style
+      const property = styleLyr.symbolType;
+      const props = feature.getProperties();
+      const value = props[property];
+
+      if(!value){
+        throw new Error("unable to select rule-based style, feature has no attribute " + property)
+      }
+
+
+      const style = styleLyr.style[value];
+      if(!style){
+        throw new Error("style for property " + property + " and value " + value + " is undefined")
+      }
+
+      return (style.style);
     }
-    // #TODO
-    // categorized style or by rule ;)
   }
 
   findStyle(feature: any, layerName: any) {
@@ -204,61 +219,51 @@ export class MapQgsStyleService {
           const styleType = featureStyleRule['se:Name'][0];
           if (styleType === 'Single symbol') {
             if (featureStyleRule.hasOwnProperty('se:PointSymbolizer')) {
-              // it is a point
-              const seGraphic = featureStyleRule['se:PointSymbolizer'][0]['se:Graphic'][0];
-              if (seGraphic.hasOwnProperty('se:ExternalGraphic')) {
-                // the online resource with PARAM is in the pos 1
-                const format = seGraphic['se:ExternalGraphic'][1]['se:Format'][0];
-                const onlineResource = seGraphic['se:ExternalGraphic'][1]['se:OnlineResource'][0];
-                const mark = seGraphic['se:Mark'][0];
-                const size = seGraphic['se:Size'][0];
-                const theStyle = this.mapQsJsonPointSymbol(format, onlineResource, mark, size);
-                let symbolLabel = 'default';
-                if (layerName.toLowerCase() === 'laute_orte' ) {
-                  symbolLabel = 'Lauter Ort';
-                }
-                if (layerName.toLowerCase() === 'leise_orte' ) {
-                  symbolLabel = 'Leiser Ort';
-                }
-                if (layerName.toLowerCase() === 'massnahmen' ) {
-                  symbolLabel = 'Massnahmen';
-                }
                 this.layerStyles[layerName] = {
                   symbolType: styleType,
-                  style: {
-                    'default': {
-                      style: theStyle,      // style is a list
-                      label: symbolLabel,
-                      value: 'default',
-                      attr: 'default',
-                      symbol: 'default'
-                    }
-                  }
+                  style: {default: this.parsePointSymbolizer(layerName, featureStyleRule)}
                 };
-              }
             }
-              if (featureStyleRule.hasOwnProperty('se:PolygonSymbolizer')) {
-                // it is a point
-                const seFill = featureStyleRule['se:PolygonSymbolizer'][0]['se:Fill'][0];
-                const seStroke = featureStyleRule['se:PolygonSymbolizer'][0]['se:Stroke'][0];
-                const theStyle = this.mapQsJsonPolygonSymbol(seFill, seStroke);
+            else if (featureStyleRule.hasOwnProperty('se:PolygonSymbolizer')) {
+
                 this.layerStyles[layerName] = {
                   symbolType: styleType,
-                  style: {
-                    'default': {
-                      style: theStyle,      // style is a list
-                      label: 'default',
-                      value: 'default',
-                      attr: 'default',
-                      symbol: 'default'
-                    }
-                  }
+                  style: {default: this.parsePolygonSymbolizer(layerName, featureStyleRule)}
                 };
-              }
+            }else{
+              throw new Error("can only parse point and polygon style definitions, unable to parse style for wfs layer " + layerName)
             }
+          }
           else {
-              if (featureStyleRule['ogc:Filter'].length > 0) {
+              if (featureStyleRule['ogc:Filter'].length > 0 ) {
+                for(let i = 0 ; i < featureStyleRule['ogc:Filter'].length; i++){
+                  const filter = featureStyleRule['ogc:Filter'][0];
+                  if(filter['ogc:PropertyIsEqualTo'].length == 0){
+                    throw new Error("unable to parse rule-based style for wfs layer " + layerName)
+                  }
+                  const property : string = filter['ogc:PropertyIsEqualTo'][0]['ogc:PropertyName'][0];
+                  const literal : string = filter['ogc:PropertyIsEqualTo'][0]['ogc:Literal'][0];
+
+                  if(!this.layerStyles[layerName]){
+                    this.layerStyles[layerName] = {
+                      symbolType : property,
+                      style: {}
+                    }
+                  }
+
+                  if (featureStyleRule.hasOwnProperty('se:PointSymbolizer')) {
+                     const style = this.parsePointSymbolizer(layerName, featureStyleRule, property, literal);
+                     this.layerStyles[layerName]['style'][literal] = style
+                  }else if(featureStyleRule.hasOwnProperty('se:PolygonSymbolizer')){
+                    const style = this.parsePolygonSymbolizer(layerName, featureStyleRule, property, literal);
+                    this.layerStyles[layerName]['style'][literal] = style
+                  }else{
+                    throw new Error("can only parse point and polygon style definitions, unable to parse style for wfs layer " + layerName)
+                  }
+                }
                 console.log('TODO categorized symbol');
+              }else{
+                throw new Error("unable to parse rule-based style for wfs layer " + layerName)
               }
             }
           }
@@ -266,6 +271,47 @@ export class MapQgsStyleService {
 
     });
  }
+
+
+  private parsePointSymbolizer(layerName: string, featureStyleRule: any, attr : string = 'default', value: string = 'default' ){
+      // it is a point
+      const seGraphic = featureStyleRule['se:PointSymbolizer'][0]['se:Graphic'][0];
+      if (seGraphic.hasOwnProperty('se:ExternalGraphic')) {
+        // the online resource with PARAM is in the pos 1
+        const format = seGraphic['se:ExternalGraphic'][1]['se:Format'][0];
+        const onlineResource = seGraphic['se:ExternalGraphic'][1]['se:OnlineResource'][0];
+        const mark = seGraphic['se:Mark'][0];
+        const size = seGraphic['se:Size'][0];
+        const theStyle = this.mapQsJsonPointSymbol(format, onlineResource, mark, size);
+        let symbolLabel: string =  (value !== 'default') ? value : layerName;
+
+        let styledef = {
+            style: theStyle,      // style is a list
+            label: symbolLabel,
+            value: value,
+            attr: attr,
+            symbol: 'default'
+          }
+        return styledef
+      }else{
+        throw new Error("only parse point style with extnal graphic, unnable to parse style for layer " + layerName);
+      }
+  }
+
+  private parsePolygonSymbolizer(layerName: string, featureStyleRule: any, attr : string = 'default', value: string = 'default' ){
+      // it is a polygon
+      const seFill = featureStyleRule['se:PolygonSymbolizer'][0]['se:Fill'][0];
+      const seStroke = featureStyleRule['se:PolygonSymbolizer'][0]['se:Stroke'][0];
+      const theStyle = this.mapQsJsonPolygonSymbol(seFill, seStroke);
+      let styledef = {
+          style: theStyle,      // style is a list
+          label: 'default',
+          value: value,
+          attr: attr,
+          symbol: 'default'
+      }
+      return styledef;
+  }
 
   createAllLayerStyles(qGsServerUrl: any, qgsProjectFile: any, layerList: any){
     const qGsProject = '&map=' + qgsProjectFile;

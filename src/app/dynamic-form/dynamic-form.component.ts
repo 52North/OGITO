@@ -136,7 +136,7 @@ export class DynamicFormComponent implements OnInit, AfterViewInit {
   showQuestionValue(elementID: any, value: any){
     const label = document.getElementById(elementID);
     if (label)
-    { 
+    {
        label.innerHTML = value; }
   }
   stopMoving($event: any){
