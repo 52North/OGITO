@@ -1,3 +1,4 @@
+import { SelectedSymbol } from './../open-layers.service';
 import { SettingsService } from './../settings.service';
 import {
   AfterViewInit,
@@ -162,6 +163,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
   featId = 1000; // to have an internal identifier for features when editing
   private currentStyle: any;
   private currentClass: any;
+  private currentSelectedValue: any;
   measureTooltipElement: any; // The measure tooltip element.  * @type {HTMLElement}
   measureTooltip: any;
   /** Overlay to show the measurement. * @type {Overlay}  */
@@ -1769,20 +1771,21 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  changeSymbol(style: any) {
+  changeSymbol(style: SelectedSymbol) {
     /**
      *  updates the class style and class (not being use now for the element being edited)
      *  @param style: the symbol (value) in OL style format and the key (class - not being used now?)
      *
      */
-    if (style === null) {
+    if (style.symbol === null) {
       this.currentStyle = null;
       this.currentClass = null;
       return;
     }
 
-    this.currentStyle = style.value;
-    this.currentClass = style.key;
+    this.currentSelectedValue = style.selectedValue;
+    this.currentStyle = style.symbol.value;
+    this.currentClass = style.symbol.key
   }
 
   initializeMap() {
@@ -2173,9 +2176,23 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  updateFormQuestions(questionsData: any, layerName: any, feature: any) {
+  updateFormQuestions(questionsData: any, layerName: string, feature: any) {
     this.featureLayerForm = { layerName, feature };
+
+    if(this.currentSelectedValue){
+      this.setCurrentValuesToFormData(questionsData);
+    }
+
     this.questionsSubject.next(questionsData);
+  }
+
+  private setCurrentValuesToFormData(questionsData: any){
+    for(let i = 0; i < questionsData.length; i++){
+      const question = questionsData[i];
+      if(question.key === this.currentSelectedValue.property){
+        question.value = this.currentSelectedValue.value;
+      }
+    }
   }
 
   popAttrForm(layer: any, feature: any) {
@@ -2201,10 +2218,18 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       this.formQuestions = this.questionService.getQuestions(layer.layerName);
       this.updateFormQuestions(this.formQuestions, layer.layerName, feature);
       this.updateShowForm(true);
+
+      if(this.currentSelectedValue){
+        let properties = {};
+        properties[this.currentSelectedValue.property] = this.currentSelectedValue.value;
+        feature.setProperties(properties);
+      }
+
     } catch (e) {
       alert('Error initializing form' + e);
     }
   }
+
 
   updateShowForm(showForm: boolean) {
     this.showFormSubject.next(showForm);

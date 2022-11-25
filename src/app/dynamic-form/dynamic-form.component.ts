@@ -43,7 +43,6 @@ export class DynamicFormComponent implements OnInit, AfterViewInit {
       data => {
         this.sQuestions = data;
         this.form = this.questionService.toFormGroup(data);
-
       },
       error => console.log ('Error in subscription to questions ', error)    );
     this.showFormSubscription = this.showForm.subscribe(
@@ -61,7 +60,6 @@ export class DynamicFormComponent implements OnInit, AfterViewInit {
   ngAfterViewInit() {
     this.payLoadSource.next(true);  // it should be drawn..
     this.keyboardVisible = false; // after rendering the div it must be invisible;
-
   }
 
   showKeyboard(){
@@ -121,9 +119,10 @@ export class DynamicFormComponent implements OnInit, AfterViewInit {
 
 
   onSubmit() {
-    if (this.input && this.input.nativeElement.value.length > 0){
+    //What is this for?
+    /*if (this.input && this.input.nativeElement.value.length > 0){
       this.controlInput.setValue( this.input.nativeElement.value);
-    }
+    }*/
     // prepare and submit the event
     this.payLoad = this.form.getRawValue(); // get the values in JSON
     this.dataForm = this.payLoad;

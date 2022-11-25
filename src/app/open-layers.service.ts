@@ -1,3 +1,4 @@
+
 import { Injectable } from '@angular/core';
 import {Subject} from 'rxjs';
 
@@ -17,7 +18,7 @@ export class OpenLayersService {
   showSymbolPanel$ = this.showSymbolPanelSource.asObservable();
   private showEditLayerPanelSource = new Subject <boolean>();
   showEditLayerPanel$ = this.showEditLayerPanelSource.asObservable();
-  private currentSymbolSource = new Subject<any>();
+  private currentSymbolSource = new Subject<SelectedSymbol>();
   currentSymbol$ = this.currentSymbolSource.asObservable();
   private saveCurrentLayerSource = new Subject<boolean>();
   saveCurrentLayer$ = this.saveCurrentLayerSource.asObservable();
@@ -123,11 +124,11 @@ export class OpenLayersService {
     this.showSymbolPanelSource.next(visible);
   }
 
-  updateCurrentSymbol(symbol: any) {
+  updateCurrentSymbol(selectedSymbol : SelectedSymbol) {
     /** Updates the observable ShowSymbolPanel to the next value
      * @param symbol: style to be used to draw current feature
      */
-    this.currentSymbolSource.next(symbol);
+    this.currentSymbolSource.next(selectedSymbol);
   }
   updateFindPopExposed(data: any) {
     /** Updates the observable popExposed to the next value
@@ -142,4 +143,14 @@ export class OpenLayersService {
      */
     this.findInstitutionsExposedSource.next(data);
   }
+
+
+}
+
+export interface SelectedSymbol{
+    symbol: any,
+    selectedValue: {
+      property: string,
+      value: string
+    }
 }

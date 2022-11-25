@@ -28,10 +28,12 @@
            <input  #input matInput  class="input" autocomplete="off"
                   [formControlName]="question.key" [id]="question.key"
                   placeholder="Details" value= {{value}}
-                   (focusout) = "onInputFocusOut($event, question.key)">
-           </div>
-             <div>
-          <!--     <button type="button" (click)="showKeyboard()" matTooltip="Show/hide virtual keyboard"><mat-icon>keyboard_alt</mat-icon> </button> -->
+                   (focusout) = "onInputFocusOut($event, question.key)" *ngIf="question.value === ''"/>
+                   <input  #input matInput  class="input" autocomplete="off"
+                   [formControlName]="question.key" [id]="question.key"
+                   placeholder="Details" value= {{value}}
+                    (focusout) = "onInputFocusOut($event, question.key)" *ngIf="question.value !== ''" readonly/>
+
              </div>
            </div>
 

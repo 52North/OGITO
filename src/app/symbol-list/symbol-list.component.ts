@@ -1,17 +1,15 @@
-import {AfterViewInit, Component, Directive, ElementRef, Input, OnInit, QueryList, ViewChild, ViewChildren} from '@angular/core';
+import { SelectedSymbol } from './../open-layers.service';
+import {AfterViewInit, Component, ElementRef, OnInit, QueryList, ViewChild, ViewChildren} from '@angular/core';
 import { Observable, Subscription,  of as observableOf } from 'rxjs';
 import {OpenLayersService} from '../open-layers.service';
 import {MapQgsStyleService} from '../map-qgs-style.service';
-import { DEVICE_PIXEL_RATIO } from 'ol/has.js';
 import {toContext} from 'ol/render';
 import Feature from 'ol/Feature';
 import Polygon from 'ol/geom/Polygon';
 import Point from 'ol/geom/Point';
 import LineString from 'ol/geom/LineString';
-import {AppConfiguration} from '../app-configuration';
-import {Fill, Stroke, Style, Icon, Circle, RegularShape} from 'ol/style';
-import {style} from '@angular/animations';
-import {extend} from 'ol/extent';
+import { Style} from 'ol/style';
+
 @Component({
   selector: 'app-symbol-list',
   templateUrl: './symbol-list.component.html',
@@ -35,6 +33,7 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
   editLayerName$: Observable<string>;
   subscriptionToLayerEditing: Subscription;
   styles: any;   // parece un dict
+  attribute: string
   constructor(private openLayersService: OpenLayersService, private mapQgsStyleService: MapQgsStyleService) {
   this.subscriptionToShowSymbols = this.openLayersService.showSymbolPanel$.subscribe(
     data => {
@@ -185,6 +184,10 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
               break;
             }
           }
+          let props = {};
+          props[this.styles.symbolType] = key;
+          feature.setProperties(props)
+
           render.drawFeature(feature, cloneStyle);
         }
       }
@@ -211,7 +214,10 @@ catch (e) {
     this.symbolActiveKey = symbol.key;
     const curDiv = document.getElementById('+' + symbol.key );
     curDiv.className = ' active';
-    this.openLayersService.updateCurrentSymbol(symbol);
+    const selectedValue = {property: this.styles.style[symbol.key]['attr'], value: this.styles.style[symbol.key]['value']};
+    //add corresponding value for rule-based style
+    const selectedSymbol : SelectedSymbol = (this.styles.ruleBased) ? {symbol: symbol, selectedValue: selectedValue} : {symbol: symbol, selectedValue: null};
+    this.openLayersService.updateCurrentSymbol(selectedSymbol);
   }
 
 

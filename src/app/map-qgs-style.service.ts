@@ -44,7 +44,7 @@ export class MapQgsStyleService {
       const value = props[property];
 
       if(!value){
-        throw new Error("unable to select rule-based style, feature has no attribute " + property)
+        return this.defineSketchStyle()
       }
 
 
@@ -247,7 +247,8 @@ export class MapQgsStyleService {
                   if(!this.layerStyles[layerName]){
                     this.layerStyles[layerName] = {
                       symbolType : property,
-                      style: {}
+                      style: {},
+                      ruleBased: true
                     }
                   }
 
@@ -260,8 +261,8 @@ export class MapQgsStyleService {
                   }else{
                     throw new Error("can only parse point and polygon style definitions, unable to parse style for wfs layer " + layerName)
                   }
+
                 }
-                console.log('TODO categorized symbol');
               }else{
                 throw new Error("unable to parse rule-based style for wfs layer " + layerName)
               }
