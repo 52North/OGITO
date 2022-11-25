@@ -1777,9 +1777,13 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
      *  @param style: the symbol (value) in OL style format and the key (class - not being used now?)
      *
      */
-    if (style.symbol === null) {
+    if (style === null || style.symbol === null) {
       this.currentStyle = null;
       this.currentClass = null;
+      if(style === null){
+        this.currentSelectedValue = null;
+      }
+
       return;
     }
 
