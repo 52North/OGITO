@@ -39,6 +39,21 @@
 
          </mat-form-field>
 
+         <mat-form-field *ngSwitchCase="'datetime'" >
+          <mat-label>
+            {{question.label | titlecase }}:
+          </mat-label>
+          <div class = "container">
+          <div>
+          <input  #input matInput  class="input" type="date"
+                 [formControlName]="question.key" [id]="question.key"
+                 placeholder="Datum" value="new Date().toLocaleDateString()"
+                  (focusout) = "onInputFocusOut($event, question.key)" />
+            </div>
+          </div>
+
+        </mat-form-field>
+
       <!--    <div  #keyboard class="simple-keyboard" [ngClass]="keyboardVisible? 'simple-keyboard': 'simple-keyboard-hidden'"> </div> -->
 
          <div  *ngSwitchCase="'checkbox'" >

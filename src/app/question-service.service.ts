@@ -1,3 +1,4 @@
+import { DateTimeQuestion } from './datetime-question';
 import { Injectable } from '@angular/core';
 import {AppConfiguration} from './app-configuration';
 import { DropdownQuestion } from './dropdown-question';
@@ -47,7 +48,7 @@ export class QuestionService {
         question = new CheckBoxQuestion({
           key: attr.name,
           label,
-          value: 'true',  
+          value: 'true',
           required,
           order: orderInLayer ? this.findOrder(layerName, attr.name) : order,
           type: 'checkbox'
@@ -82,6 +83,17 @@ export class QuestionService {
           key: attr.name,
           label,
           value: '',
+          required,
+          order: orderInLayer ? this.findOrder(layerName, attr.name) : order,
+        });
+        break;
+      }
+      case 'QDate':
+      case 'QDateTime': {
+        question = new DateTimeQuestion ({
+          key: attr.name,
+          label,
+          value: new Date(),
           required,
           order: orderInLayer ? this.findOrder(layerName, attr.name) : order,
         });

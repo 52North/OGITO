@@ -2286,6 +2286,11 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         tvalue = +value; // parse to int https://stackoverflow.com/questions/14667713/how-to-convert-a-string-to-number-in-typescript
         break;
       }
+      case 'QDate':
+      case 'QDateTime':{
+        tvalue = new Date(value).toISOString();
+        break;
+      }
     }
     return tvalue;
   }
