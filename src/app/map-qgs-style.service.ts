@@ -36,7 +36,7 @@ export class MapQgsStyleService {
      * @param { layerName } the name of a WFS layer to be rendered
      */
    const styleLyr = this.getLayerStyle(layerName);
-    if (styleLyr.symbolType === 'Single Symbol'){
+    if (styleLyr.symbolType.toLowerCase() === 'single symbol'){
       return (styleLyr.style['default'].style);
     }else{ //rule base style
       const property = styleLyr.symbolType;
