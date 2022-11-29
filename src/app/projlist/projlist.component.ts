@@ -12,14 +12,14 @@ import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
 export class ProjlistComponent implements OnInit {
   @Output() selectProject = new EventEmitter<any>();
   showProjectList$: Observable<boolean>;
-  projectFolder = '/etc/qgisserver/';
+  projectFolder = '/home/qgis/projects/';
   projects = [
     {
       name: 'OGITO Zwolle Case Study',
       url: AppConfiguration.hostname + 'qgs_projects/noisebochumcity.qgs',
       file: this.projectFolder + 'ogito_zwolle.qgs',     // was checking4
       img: AppConfiguration.hostname + 'qgs_projects/noise.png',
-      qGsServerUrl: 'http://localhost:8380/?',
+      qGsServerUrl: 'https://ogito.itc.utwente.nl/cgi-bin/qgis_mapserv.fcgi?',
       srsID: 'EPSG:3857'   //EPSG CODE
     }
    ];
