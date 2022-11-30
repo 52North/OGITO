@@ -2151,11 +2151,11 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     const editingstyle = [
       new Style({
         fill: new Fill({
-          color: 'rgba(153, 202, 255, 0.5)',
+          color: 'rgba(255,165,0, 0.8)',
         }),
         stroke: new Stroke({
-          color: 'blue',
-          width: 2,
+          color: 'orange',
+          width: 5,
           lineDash: [8, 10],
         }),
         image: this.imageCircle(15),
@@ -2173,7 +2173,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
   imageCircle(radius) {
     return new CircleStyle({
       stroke: new Stroke({
-        color: 'red',
+        color: 'orange',
         width: 2,
       }),
       radius, // equivale a radius: radius
