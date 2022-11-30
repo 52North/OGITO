@@ -9,6 +9,7 @@ Compressed Imagery_Denai Lama/
 # Only exists if Bazel was run
 /bazel-out
 /dist
+/src/assets/img/userimg/
 
 # dependencies
 /node_modules
