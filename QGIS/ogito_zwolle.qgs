@@ -1,5 +1,5 @@
 <!DOCTYPE qgis PUBLIC 'http://mrcc.com/qgis.dtd' 'SYSTEM'>
-<qgis saveUserFull="Arne" version="3.18.1-Zürich" saveDateTime="2022-11-28T19:06:20" projectname="" saveUser="Arne">
+<qgis saveUserFull="Arne" version="3.18.1-Zürich" saveDateTime="2022-11-29T21:31:09" projectname="" saveUser="Arne">
   <homePath path=""/>
   <title></title>
   <autotransaction active="0"/>
@@ -22,7 +22,7 @@
     <customproperties/>
     <layer-tree-group checked="Qt::Checked" name="Observaties" expanded="1">
       <customproperties/>
-      <layer-tree-layer source="dbname='ogito_zwolle' host=localhost port=5432 user='postgres' sslmode=disable key='id' srid=28992 type=Point checkPrimaryKeyUnicity='1' table=&quot;public&quot;.&quot;user_observations&quot; (geom)" legend_exp="" patch_size="-1,-1" providerKey="postgres" checked="Qt::Checked" id="user_observations_cc50b49e_8b7a_4ed3_8613_1e66f93e9cd6" name="Observaties" expanded="0" legend_split_behavior="0">
+      <layer-tree-layer source="dbname='ogito_zwolle' host=localhost port=5432 user='postgres' sslmode=disable key='id' srid=28992 type=Point checkPrimaryKeyUnicity='1' table=&quot;public&quot;.&quot;user_observations&quot; (geom)" legend_exp="" patch_size="-1,-1" providerKey="postgres" checked="Qt::Checked" id="user_observations_191c0b68_b5e4_4291_88c5_3b086f37dfe8" name="Observaties" expanded="0" legend_split_behavior="0">
         <customproperties/>
       </layer-tree-layer>
       <layer-tree-layer source="dbname='ogito_zwolle' host=localhost port=5432 user='postgres' sslmode=disable key='id' srid=28992 type=Point checkPrimaryKeyUnicity='1' table=&quot;(SELECT \&quot;imagetest\&quot;.\&quot;id\&quot;, \&quot;imagetest\&quot;.\&quot;comment\&quot;, encode(\&quot;imagetest\&quot;.\&quot;imagedata\&quot;, 'base64') as imagedata, \&quot;imagetest\&quot;.\&quot;geom\&quot;  FROM \&quot;public\&quot;.\&quot;imagetest\&quot;  &#xa;)&quot; (geom)" legend_exp="" patch_size="-1,-1" providerKey="postgres" checked="Qt::Checked" id="imagetest_cf98e0d7_ae61_490a_a614_09ee91ba04d0" name="Fotos" expanded="1" legend_split_behavior="0">
@@ -79,14 +79,14 @@
       <item>Wijk_3b18c0d1_92a7_4aa0_882e_e517c076a9e8</item>
       <item>Buurt_b31e669a_ee11_40a3_94db_93e08a72d203</item>
       <item>imagetest_cf98e0d7_ae61_490a_a614_09ee91ba04d0</item>
-      <item>user_observations_cc50b49e_8b7a_4ed3_8613_1e66f93e9cd6</item>
+      <item>user_observations_191c0b68_b5e4_4291_88c5_3b086f37dfe8</item>
     </custom-order>
   </layer-tree-group>
   <snapping-settings self-snapping="0" tolerance="12" enabled="0" minScale="0" intersection-snapping="0" maxScale="0" mode="2" unit="1" scaleDependencyMode="0" type="1">
     <individual-layer-settings>
       <layer-setting tolerance="12" enabled="0" minScale="0" maxScale="0" id="Wijk_3b18c0d1_92a7_4aa0_882e_e517c076a9e8" type="1" units="1"/>
+      <layer-setting tolerance="12" enabled="0" minScale="0" maxScale="0" id="user_observations_191c0b68_b5e4_4291_88c5_3b086f37dfe8" type="1" units="1"/>
       <layer-setting tolerance="12" enabled="0" minScale="0" maxScale="0" id="zwolle_buurt_49ac46fd_791c_452f_b951_131a7ffed3af" type="1" units="1"/>
-      <layer-setting tolerance="12" enabled="0" minScale="0" maxScale="0" id="user_observations_cc50b49e_8b7a_4ed3_8613_1e66f93e9cd6" type="1" units="1"/>
       <layer-setting tolerance="12" enabled="0" minScale="0" maxScale="0" id="imagetest_cf98e0d7_ae61_490a_a614_09ee91ba04d0" type="1" units="1"/>
       <layer-setting tolerance="12" enabled="0" minScale="0" maxScale="0" id="Buurt_b31e669a_ee11_40a3_94db_93e08a72d203" type="1" units="1"/>
       <layer-setting tolerance="12" enabled="0" minScale="0" maxScale="0" id="zwolle_boundary_0411c32c_2b59_4b53_b216_8a8b1bf08c00" type="1" units="1"/>
@@ -98,10 +98,10 @@
   <mapcanvas annotationsVisible="1" name="theMapCanvas">
     <units>meters</units>
     <extent>
-      <xmin>199002.74129760568030179</xmin>
-      <ymin>501636.08743709104601294</ymin>
-      <xmax>201251.69472676631994545</xmax>
-      <ymax>503727.68743708881083876</ymax>
+      <xmin>199530.95965489587979391</xmin>
+      <ymin>502117.40743709052912891</ymin>
+      <xmax>200655.43636947619961575</xmax>
+      <ymax>503163.20743708941154182</ymax>
     </extent>
     <rotation>0</rotation>
     <destinationsrs>
@@ -125,7 +125,7 @@
     <legendgroup open="true" checked="Qt::Checked" name="Observaties">
       <legendlayer drawingOrder="-1" open="false" showFeatureCount="0" checked="Qt::Checked" name="Observaties">
         <filegroup open="false" hidden="false">
-          <legendlayerfile isInOverview="0" layerid="user_observations_cc50b49e_8b7a_4ed3_8613_1e66f93e9cd6" visible="1"/>
+          <legendlayerfile isInOverview="0" layerid="user_observations_191c0b68_b5e4_4291_88c5_3b086f37dfe8" visible="1"/>
         </filegroup>
       </legendlayer>
       <legendlayer drawingOrder="-1" open="true" showFeatureCount="0" checked="Qt::Checked" name="Fotos">
@@ -191,18 +191,6 @@
   </legend>
   <mapViewDocks/>
   <mapViewDocks3D/>
-  <mapcanvas annotationsVisible="1" name="">
-    <units>unknown</units>
-    <extent>
-      <xmin>0</xmin>
-      <ymin>0</ymin>
-      <xmax>0</xmax>
-      <ymax>0</ymax>
-    </extent>
-    <rotation>0</rotation>
-    <rendermaptile>0</rendermaptile>
-    <expressionContextScope/>
-  </mapcanvas>
   <main-annotation-layer refreshOnNotifyEnabled="0" refreshOnNotifyMessage="" autoRefreshTime="0" autoRefreshEnabled="0" type="annotation">
     <id>Annotations_237c0429_b2c3_4dac_8c1f_23e85e91a013</id>
     <datasource></datasource>
@@ -2072,7 +2060,7 @@ def my_form_open(dialog, layer, feature):
         <xmax>202616.01915789901977405</xmax>
         <ymax>503472.43734581861644983</ymax>
       </extent>
-      <id>user_observations_cc50b49e_8b7a_4ed3_8613_1e66f93e9cd6</id>
+      <id>user_observations_191c0b68_b5e4_4291_88c5_3b086f37dfe8</id>
       <datasource>dbname='ogito_zwolle' host=localhost port=5432 user='postgres' password='postgres' sslmode=disable key='id' srid=28992 type=Point checkPrimaryKeyUnicity='1' table="public"."user_observations" (geom)</datasource>
       <keywordList>
         <value></value>
@@ -2165,6 +2153,7 @@ def my_form_open(dialog, layer, feature):
           <rule symbol="6" label="Lighting" filter="&quot;category&quot; = 'Lighting'" key="{daddc363-c904-47db-9b23-786fe2e3d77e}"/>
           <rule symbol="7" label="Sounds" filter="&quot;category&quot; = 'Sounds'" key="{0b65fa93-1517-451b-b07a-89ba2533b94a}"/>
           <rule symbol="8" label="Parking" filter="&quot;category&quot; = 'Parking'" key="{bf8d2269-36bb-4313-a225-cc3d1e6ac49a}"/>
+          <rule symbol="9" label="Misc." filter="&quot;category&quot; = 'Misc.'" key="{a55bd6ef-025a-4788-8caf-e2a5737bde7c}"/>
         </rules>
         <symbols>
           <symbol alpha="1" clip_to_extent="1" force_rhr="0" type="marker" name="0">
@@ -2671,6 +2660,62 @@ def my_form_open(dialog, layer, feature):
               </data_defined_properties>
             </layer>
           </symbol>
+          <symbol alpha="1" clip_to_extent="1" force_rhr="0" type="marker" name="9">
+            <data_defined_properties>
+              <Option type="Map">
+                <Option value="" type="QString" name="name"/>
+                <Option name="properties"/>
+                <Option value="collection" type="QString" name="type"/>
+              </Option>
+            </data_defined_properties>
+            <layer class="SvgMarker" enabled="1" locked="0" pass="0">
+              <Option type="Map">
+                <Option value="0" type="QString" name="angle"/>
+                <Option value="255,158,23,255" type="QString" name="color"/>
+                <Option value="0" type="QString" name="fixedAspectRatio"/>
+                <Option value="1" type="QString" name="horizontal_anchor_point"/>
+                <Option value="base64:PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGVuYWJsZS1iYWNrZ3JvdW5kPSJuZXcgMCAwIDI0IDI0IiBoZWlnaHQ9IjI0cHgiIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0cHgiIGZpbGw9IiMwMDAwMDAiPjxnPjxyZWN0IGZpbGw9Im5vbmUiIGhlaWdodD0iMjQiIHdpZHRoPSIyNCIvPjwvZz4KPGcgc3R5bGU9ImZpbGw6I2ZmZmZmZiI+IAogIDxwYXRoCiAgICAgZD0iTSAzLjk1MTcyNjMsMTMuOTc1MjEyIDUuNDkyNjAzMSwxMy41NjIzMzUgQyA1LjA3NDk0MTgsMTEuOTgxNzQ2IDUuMjUxNDAzNSwxMC4yMzYxMDYgNi4xMzU0MDM1LDguNzA0OTcyNyA3LjkwMzQwMzUsNS42NDI3MDY4IDExLjgxNTcwMSw0LjU5NDQxIDE0Ljg3Nzk2Nyw2LjM2MjQxIGMgMy4wNjIyNjYsMS43NjggNC4xMTA1NjIsNS42ODAyOTYgMi4zNDI1NjIsOC43NDI1NjIgLTEuNjMyLDIuODI2NzA3IC01LjA4OTEwMiwzLjkzNDU4MyAtOC4wMjE3NDMsMi42OTQwNjYgbCAwLjgwODAwMSwtMS4zOTk0OTcgYyAyLjE1OTYxLDAuODAzNDQ1IDQuNjQwMTAyLC0wLjAzNjkgNS44MjgxMDIsLTIuMDk0NTY5IDEuMzI0LC0yLjI5MzIzNSAwLjUzNjMxMywtNS4yMzI5MjE0IC0xLjc1NjkyMiwtNi41NTY5MjE0IC0yLjI5MzIzNiwtMS4zMjQgLTUuMjMyOTIzLC0wLjUzNjMxMzMgLTYuNTU2OTIyOSwxLjc1NjkyMjEgLTAuNjY0LDEuMTUwMDgxMyAtMC43OTk4MTA0LDIuNDU3MzEyMyAtMC40NzY2MzYyLDMuNjQxNTU3MyBMIDguNTg1Mjg1LDEyLjczMzY1NCBjIC0wLjIwNjgzMSwtMC43OTM3NTkgLTAuMTE4NiwtMS42NjY1OCAwLjMyMTQsLTIuNDI4NjgyIDAuODg0LC0xLjUzMTEzMjQgMi44NDAxNDgsLTIuMDU1MjgwNyA0LjM3MTI4MiwtMS4xNzEyODA3IDEuNTMxMTMzLDAuODgzOTk5NyAyLjA1NTI4MSwyLjg0MDE0NzcgMS4xNzEyODEsNC4zNzEyODA3IC0wLjc0NCwxLjI4ODY0NiAtMi4yNTA4MSwxLjg1MDUxOCAtMy42MjI0NjEsMS40NzQyODYgLTEuMjQ2NjM1LDIuMTMwNjQ0IC0xLjQxNzcxNiwyLjQyNjc3MiAtMi4zNjI5MDEsNC4xMTk3ODUgNC4wMjY2MDMsMS44MTMxNTQgNy45MzQyODMsMC42MzAyOTggMTAuMTQyMjgzLC0zLjE5NDA3MSAyLjIwODAwMSwtMy44MjQzNjggMC44OTYxNjYsLTguNzIwMjAyNyAtMi45MjgyMDIsLTEwLjkyODIwMjcgLTMuODI0MzY5LC0yLjIwOCAtOC43MjAyMDQxLC0wLjg5NjE2NDkgLTEwLjkyODIwNDIsMi45MjgyMDM0IC0xLjEwNCwxLjkxMjE4MzcgLTEuMzI4MDQxMiw0LjA5MjIzNDMgLTAuNzk4MDM2NSw2LjA3MDIzOTMgeiIKICAgICBpZD0icGF0aDI2NDYiCgkgc3R5bGU9ImZpbGw6cGFyYW0oZmlsbCkjZmZmZmZmIi8+CiAgPHBhdGgKICAgICBkPSJtIDYuOTQ4OTQyMiwxMy41ODQyNDUgMC44OTAzMjY3LDAuODkwMzI2IC0zLjEyMzIsMy4xMjMyIEMgMy42MDY0NzYsMTguNjM1Mjk4IDQuMDk2MDA0MywxOC4xNzU3NzMgMy44OTIzMjA1LDE4LjM2MDIxNyBsIDAuODIzNzQ4NCwxLjA0ODc1NCA0LjAzMjAwMDYsLTQuMDI1NiAwLjkyNDg0MywwLjcyOTI1IDAuNTQwNzU2NSwtMy4xMDM2NSB6IgogICAgIGlkPSJwYXRoMjY0NyIKCSBzdHlsZT0iZmlsbDpwYXJhbShmaWxsKSNmZmZmZmYiLz4KIDwvZz4KIDwvc3ZnPg==" type="QString" name="name"/>
+                <Option value="0,0" type="QString" name="offset"/>
+                <Option value="3x:0,0,0,0,0,0" type="QString" name="offset_map_unit_scale"/>
+                <Option value="MM" type="QString" name="offset_unit"/>
+                <Option value="50,87,128,255" type="QString" name="outline_color"/>
+                <Option value="0.4" type="QString" name="outline_width"/>
+                <Option value="3x:0,0,0,0,0,0" type="QString" name="outline_width_map_unit_scale"/>
+                <Option value="MM" type="QString" name="outline_width_unit"/>
+                <Option name="parameters"/>
+                <Option value="diameter" type="QString" name="scale_method"/>
+                <Option value="8" type="QString" name="size"/>
+                <Option value="3x:0,0,0,0,0,0" type="QString" name="size_map_unit_scale"/>
+                <Option value="MM" type="QString" name="size_unit"/>
+                <Option value="1" type="QString" name="vertical_anchor_point"/>
+              </Option>
+              <prop k="angle" v="0"/>
+              <prop k="color" v="255,158,23,255"/>
+              <prop k="fixedAspectRatio" v="0"/>
+              <prop k="horizontal_anchor_point" v="1"/>
+              <prop k="name" v="base64:PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGVuYWJsZS1iYWNrZ3JvdW5kPSJuZXcgMCAwIDI0IDI0IiBoZWlnaHQ9IjI0cHgiIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0cHgiIGZpbGw9IiMwMDAwMDAiPjxnPjxyZWN0IGZpbGw9Im5vbmUiIGhlaWdodD0iMjQiIHdpZHRoPSIyNCIvPjwvZz4KPGcgc3R5bGU9ImZpbGw6I2ZmZmZmZiI+IAogIDxwYXRoCiAgICAgZD0iTSAzLjk1MTcyNjMsMTMuOTc1MjEyIDUuNDkyNjAzMSwxMy41NjIzMzUgQyA1LjA3NDk0MTgsMTEuOTgxNzQ2IDUuMjUxNDAzNSwxMC4yMzYxMDYgNi4xMzU0MDM1LDguNzA0OTcyNyA3LjkwMzQwMzUsNS42NDI3MDY4IDExLjgxNTcwMSw0LjU5NDQxIDE0Ljg3Nzk2Nyw2LjM2MjQxIGMgMy4wNjIyNjYsMS43NjggNC4xMTA1NjIsNS42ODAyOTYgMi4zNDI1NjIsOC43NDI1NjIgLTEuNjMyLDIuODI2NzA3IC01LjA4OTEwMiwzLjkzNDU4MyAtOC4wMjE3NDMsMi42OTQwNjYgbCAwLjgwODAwMSwtMS4zOTk0OTcgYyAyLjE1OTYxLDAuODAzNDQ1IDQuNjQwMTAyLC0wLjAzNjkgNS44MjgxMDIsLTIuMDk0NTY5IDEuMzI0LC0yLjI5MzIzNSAwLjUzNjMxMywtNS4yMzI5MjE0IC0xLjc1NjkyMiwtNi41NTY5MjE0IC0yLjI5MzIzNiwtMS4zMjQgLTUuMjMyOTIzLC0wLjUzNjMxMzMgLTYuNTU2OTIyOSwxLjc1NjkyMjEgLTAuNjY0LDEuMTUwMDgxMyAtMC43OTk4MTA0LDIuNDU3MzEyMyAtMC40NzY2MzYyLDMuNjQxNTU3MyBMIDguNTg1Mjg1LDEyLjczMzY1NCBjIC0wLjIwNjgzMSwtMC43OTM3NTkgLTAuMTE4NiwtMS42NjY1OCAwLjMyMTQsLTIuNDI4NjgyIDAuODg0LC0xLjUzMTEzMjQgMi44NDAxNDgsLTIuMDU1MjgwNyA0LjM3MTI4MiwtMS4xNzEyODA3IDEuNTMxMTMzLDAuODgzOTk5NyAyLjA1NTI4MSwyLjg0MDE0NzcgMS4xNzEyODEsNC4zNzEyODA3IC0wLjc0NCwxLjI4ODY0NiAtMi4yNTA4MSwxLjg1MDUxOCAtMy42MjI0NjEsMS40NzQyODYgLTEuMjQ2NjM1LDIuMTMwNjQ0IC0xLjQxNzcxNiwyLjQyNjc3MiAtMi4zNjI5MDEsNC4xMTk3ODUgNC4wMjY2MDMsMS44MTMxNTQgNy45MzQyODMsMC42MzAyOTggMTAuMTQyMjgzLC0zLjE5NDA3MSAyLjIwODAwMSwtMy44MjQzNjggMC44OTYxNjYsLTguNzIwMjAyNyAtMi45MjgyMDIsLTEwLjkyODIwMjcgLTMuODI0MzY5LC0yLjIwOCAtOC43MjAyMDQxLC0wLjg5NjE2NDkgLTEwLjkyODIwNDIsMi45MjgyMDM0IC0xLjEwNCwxLjkxMjE4MzcgLTEuMzI4MDQxMiw0LjA5MjIzNDMgLTAuNzk4MDM2NSw2LjA3MDIzOTMgeiIKICAgICBpZD0icGF0aDI2NDYiCgkgc3R5bGU9ImZpbGw6cGFyYW0oZmlsbCkjZmZmZmZmIi8+CiAgPHBhdGgKICAgICBkPSJtIDYuOTQ4OTQyMiwxMy41ODQyNDUgMC44OTAzMjY3LDAuODkwMzI2IC0zLjEyMzIsMy4xMjMyIEMgMy42MDY0NzYsMTguNjM1Mjk4IDQuMDk2MDA0MywxOC4xNzU3NzMgMy44OTIzMjA1LDE4LjM2MDIxNyBsIDAuODIzNzQ4NCwxLjA0ODc1NCA0LjAzMjAwMDYsLTQuMDI1NiAwLjkyNDg0MywwLjcyOTI1IDAuNTQwNzU2NSwtMy4xMDM2NSB6IgogICAgIGlkPSJwYXRoMjY0NyIKCSBzdHlsZT0iZmlsbDpwYXJhbShmaWxsKSNmZmZmZmYiLz4KIDwvZz4KIDwvc3ZnPg=="/>
+              <prop k="offset" v="0,0"/>
+              <prop k="offset_map_unit_scale" v="3x:0,0,0,0,0,0"/>
+              <prop k="offset_unit" v="MM"/>
+              <prop k="outline_color" v="50,87,128,255"/>
+              <prop k="outline_width" v="0.4"/>
+              <prop k="outline_width_map_unit_scale" v="3x:0,0,0,0,0,0"/>
+              <prop k="outline_width_unit" v="MM"/>
+              <prop k="parameters" v=""/>
+              <prop k="scale_method" v="diameter"/>
+              <prop k="size" v="8"/>
+              <prop k="size_map_unit_scale" v="3x:0,0,0,0,0,0"/>
+              <prop k="size_unit" v="MM"/>
+              <prop k="vertical_anchor_point" v="1"/>
+              <data_defined_properties>
+                <Option type="Map">
+                  <Option value="" type="QString" name="name"/>
+                  <Option name="properties"/>
+                  <Option value="collection" type="QString" name="type"/>
+                </Option>
+              </data_defined_properties>
+            </layer>
+          </symbol>
         </symbols>
       </renderer-v2>
       <customproperties>
@@ -2787,10 +2832,20 @@ def my_form_open(dialog, layer, feature):
             </config>
           </editWidget>
         </field>
-        <field name="category" configurationFlags="None">
-          <editWidget type="Enumeration">
+        <field name="helpful" configurationFlags="None">
+          <editWidget type="TextEdit">
             <config>
               <Option/>
+            </config>
+          </editWidget>
+        </field>
+        <field name="catogery" configurationFlags="None">
+          <editWidget type="TextEdit">
+            <config>
+              <Option type="Map">
+                <Option value="false" type="bool" name="IsMultiline"/>
+                <Option value="false" type="bool" name="UseHtml"/>
+              </Option>
             </config>
           </editWidget>
         </field>
@@ -2799,25 +2854,29 @@ def my_form_open(dialog, layer, feature):
         <alias field="id" index="0" name=""/>
         <alias field="text" index="1" name=""/>
         <alias field="date" index="2" name=""/>
-        <alias field="category" index="3" name=""/>
+        <alias field="helpful" index="3" name=""/>
+        <alias field="catogery" index="4" name=""/>
       </aliases>
       <defaults>
         <default expression="" applyOnUpdate="0" field="id"/>
         <default expression="" applyOnUpdate="0" field="text"/>
         <default expression="" applyOnUpdate="0" field="date"/>
-        <default expression="" applyOnUpdate="0" field="category"/>
+        <default expression="" applyOnUpdate="0" field="helpful"/>
+        <default expression="" applyOnUpdate="0" field="catogery"/>
       </defaults>
       <constraints>
         <constraint notnull_strength="1" constraints="3" exp_strength="0" unique_strength="1" field="id"/>
         <constraint notnull_strength="0" constraints="0" exp_strength="0" unique_strength="0" field="text"/>
         <constraint notnull_strength="0" constraints="0" exp_strength="0" unique_strength="0" field="date"/>
-        <constraint notnull_strength="1" constraints="1" exp_strength="0" unique_strength="0" field="category"/>
+        <constraint notnull_strength="1" constraints="1" exp_strength="0" unique_strength="0" field="helpful"/>
+        <constraint notnull_strength="0" constraints="0" exp_strength="0" unique_strength="0" field="catogery"/>
       </constraints>
       <constraintExpressions>
         <constraint exp="" desc="" field="id"/>
         <constraint exp="" desc="" field="text"/>
         <constraint exp="" desc="" field="date"/>
-        <constraint exp="" desc="" field="category"/>
+        <constraint exp="" desc="" field="helpful"/>
+        <constraint exp="" desc="" field="catogery"/>
       </constraintExpressions>
       <expressionfields/>
       <attributeactions>
@@ -2828,7 +2887,8 @@ def my_form_open(dialog, layer, feature):
           <column width="-1" type="field" name="id" hidden="0"/>
           <column width="-1" type="field" name="text" hidden="0"/>
           <column width="-1" type="field" name="date" hidden="0"/>
-          <column width="-1" type="field" name="category" hidden="0"/>
+          <column width="-1" type="field" name="helpful" hidden="0"/>
+          <column width="-1" type="field" name="catogery" hidden="0"/>
           <column width="-1" type="actions" hidden="1"/>
         </columns>
       </attributetableconfig>
@@ -2861,14 +2921,16 @@ def my_form_open(dialog, layer, feature):
       <featformsuppress>0</featformsuppress>
       <editorlayout>generatedlayout</editorlayout>
       <editable>
-        <field editable="1" name="category"/>
+        <field editable="1" name="catogery"/>
         <field editable="1" name="date"/>
+        <field editable="1" name="helpful"/>
         <field editable="1" name="id"/>
         <field editable="1" name="text"/>
       </editable>
       <labelOnTop>
-        <field name="category" labelOnTop="0"/>
+        <field name="catogery" labelOnTop="0"/>
         <field name="date" labelOnTop="0"/>
+        <field name="helpful" labelOnTop="0"/>
         <field name="id" labelOnTop="0"/>
         <field name="text" labelOnTop="0"/>
       </labelOnTop>
@@ -4238,7 +4300,7 @@ def my_form_open(dialog, layer, feature):
     <layer id="Wijk_3b18c0d1_92a7_4aa0_882e_e517c076a9e8"/>
     <layer id="Buurt_b31e669a_ee11_40a3_94db_93e08a72d203"/>
     <layer id="imagetest_cf98e0d7_ae61_490a_a614_09ee91ba04d0"/>
-    <layer id="user_observations_cc50b49e_8b7a_4ed3_8613_1e66f93e9cd6"/>
+    <layer id="user_observations_191c0b68_b5e4_4291_88c5_3b086f37dfe8"/>
   </layerorder>
   <properties>
     <DefaultStyles>
@@ -4303,7 +4365,7 @@ def my_form_open(dialog, layer, feature):
     <WCSUrl type="QString"></WCSUrl>
     <WFSLayers type="QStringList">
       <value>imagetest_cf98e0d7_ae61_490a_a614_09ee91ba04d0</value>
-      <value>user_observations_cc50b49e_8b7a_4ed3_8613_1e66f93e9cd6</value>
+      <value>user_observations_191c0b68_b5e4_4291_88c5_3b086f37dfe8</value>
     </WFSLayers>
     <WFSLayersPrecision>
       <imagetest_cf98e0d7_ae61_490a_a614_09ee91ba04d0 type="int">8</imagetest_cf98e0d7_ae61_490a_a614_09ee91ba04d0>
@@ -4312,19 +4374,20 @@ def my_form_open(dialog, layer, feature):
       <obstacles_da667235_41b9_4fc5_bfff_3145204baeb3 type="int">8</obstacles_da667235_41b9_4fc5_bfff_3145204baeb3>
       <obstaclescoll_8c1f6357_f09b_42ae_a9f9_586e80afc6a9 type="int">8</obstaclescoll_8c1f6357_f09b_42ae_a9f9_586e80afc6a9>
       <obstaclescoll_dd499643_65cb_4f7a_8061_9fbf1f00bafe type="int">8</obstaclescoll_dd499643_65cb_4f7a_8061_9fbf1f00bafe>
+      <user_observations_191c0b68_b5e4_4291_88c5_3b086f37dfe8 type="int">8</user_observations_191c0b68_b5e4_4291_88c5_3b086f37dfe8>
       <user_observations_c67c87d9_6cdb_4657_b15c_9eee35bd7fba type="int">8</user_observations_c67c87d9_6cdb_4657_b15c_9eee35bd7fba>
       <user_observations_cc50b49e_8b7a_4ed3_8613_1e66f93e9cd6 type="int">8</user_observations_cc50b49e_8b7a_4ed3_8613_1e66f93e9cd6>
       <zwolle_boundary_0411c32c_2b59_4b53_b216_8a8b1bf08c00 type="int">8</zwolle_boundary_0411c32c_2b59_4b53_b216_8a8b1bf08c00>
     </WFSLayersPrecision>
     <WFSTLayers>
       <Delete type="QStringList">
-        <value>user_observations_cc50b49e_8b7a_4ed3_8613_1e66f93e9cd6</value>
+        <value>user_observations_191c0b68_b5e4_4291_88c5_3b086f37dfe8</value>
       </Delete>
       <Insert type="QStringList">
-        <value>user_observations_cc50b49e_8b7a_4ed3_8613_1e66f93e9cd6</value>
+        <value>user_observations_191c0b68_b5e4_4291_88c5_3b086f37dfe8</value>
       </Insert>
       <Update type="QStringList">
-        <value>user_observations_cc50b49e_8b7a_4ed3_8613_1e66f93e9cd6</value>
+        <value>user_observations_191c0b68_b5e4_4291_88c5_3b086f37dfe8</value>
       </Update>
     </WFSTLayers>
     <WFSUrl type="QString"></WFSUrl>
@@ -4422,7 +4485,7 @@ def my_form_open(dialog, layer, feature):
   <Bookmarks/>
   <ProjectViewSettings UseProjectScales="0">
     <Scales/>
-    <DefaultViewExtent xmax="202433.01801218354376033" ymin="501636.08743709104601294" ymax="503727.68743708881083876" xmin="197821.41801218845648691">
+    <DefaultViewExtent xmax="201246.09801218481152318" ymin="502117.40743709052912891" ymax="503163.20743708941154182" xmin="198940.29801218726788647">
       <spatialrefsys>
         <wkt>PROJCRS["Amersfoort / RD New",BASEGEOGCRS["Amersfoort",DATUM["Amersfoort",ELLIPSOID["Bessel 1841",6377397.155,299.1528128,LENGTHUNIT["metre",1]]],PRIMEM["Greenwich",0,ANGLEUNIT["degree",0.0174532925199433]],ID["EPSG",4289]],CONVERSION["RD New",METHOD["Oblique Stereographic",ID["EPSG",9809]],PARAMETER["Latitude of natural origin",52.1561605555556,ANGLEUNIT["degree",0.0174532925199433],ID["EPSG",8801]],PARAMETER["Longitude of natural origin",5.38763888888889,ANGLEUNIT["degree",0.0174532925199433],ID["EPSG",8802]],PARAMETER["Scale factor at natural origin",0.9999079,SCALEUNIT["unity",1],ID["EPSG",8805]],PARAMETER["False easting",155000,LENGTHUNIT["metre",1],ID["EPSG",8806]],PARAMETER["False northing",463000,LENGTHUNIT["metre",1],ID["EPSG",8807]]],CS[Cartesian,2],AXIS["easting (X)",east,ORDER[1],LENGTHUNIT["metre",1]],AXIS["northing (Y)",north,ORDER[2],LENGTHUNIT["metre",1]],USAGE[SCOPE["unknown"],AREA["Netherlands - onshore"],BBOX[50.75,3.2,53.7,7.22]],ID["EPSG",28992]]</wkt>
         <proj4>+proj=sterea +lat_0=52.1561605555556 +lon_0=5.38763888888889 +k=0.9999079 +x_0=155000 +y_0=463000 +ellps=bessel +towgs84=565.2369,50.0087,465.658,-0.406857330322398,0.350732676542563,-1.8703473836068,4.0812 +units=m +no_defs</proj4>
