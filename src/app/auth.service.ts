@@ -117,7 +117,7 @@ export class AuthService {
     this.auth0Client$.subscribe((client: Auth0Client) => {
       // Call method to log out
       client.logout({
-        client_id: "pabA2bqVw5O2OdrkLLO2C5h91E7HplMU",
+        client_id: "Ed1hqzqDLEJ05s5oGTv7VzUQHjPVS8mA",
         returnTo: `${window.location.origin}`
       });
     });
