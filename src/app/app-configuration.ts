@@ -10,6 +10,7 @@ export class AppConfiguration{
   // Path to access projects
   static curProject =  AppConfiguration.hostname + 'qgs_projects/' + AppConfiguration.qgsProject;  // to fecth the xml project file
   static svgFolder = '../../assets/svg/';
+  static userImageFolder = '';
   static mapZoom = 14;
   static maxZoom = 20 ;
   static minZoom = 13 ;
