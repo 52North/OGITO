@@ -55,8 +55,18 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; overflow: h
   padding-right: 0;
 }
 
-.imgInfo{
-  width:100%;
-  max-width:100px;
-  max-height:100px;
+
+@media (orientation: landscape){
+  .imgInfo{
+    max-height: 50vh;
+    max-width:70vw;
+  }
 }
+
+@media (orientation: portrait){
+  .imgInfo{
+    max-height: 70vh;
+    max-width: 70vw;
+  }
+}
+

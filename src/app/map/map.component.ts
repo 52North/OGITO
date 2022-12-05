@@ -2151,11 +2151,11 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     const editingstyle = [
       new Style({
         fill: new Fill({
-          color: 'rgba(153, 202, 255, 0.5)',
+          color: 'rgba(255,165,0, 0.8)',
         }),
         stroke: new Stroke({
-          color: 'blue',
-          width: 2,
+          color: 'orange',
+          width: 5,
           lineDash: [8, 10],
         }),
         image: this.imageCircle(15),
@@ -2173,7 +2173,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
   imageCircle(radius) {
     return new CircleStyle({
       stroke: new Stroke({
-        color: 'red',
+        color: 'orange',
         width: 2,
       }),
       radius, // equivale a radius: radius
@@ -3617,17 +3617,11 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         if (featureValues.img) {
           // the property img exists
           // visualize img if any  --> document somewhere that we will look for a field called 'img'
-          console.log('pasa X AQUI');
-          const folder = AppConfiguration.curProject.substring(
-            0,
-            AppConfiguration.curProject.lastIndexOf('/')
-          );
+          const folder = AppConfiguration.userImageFolder;
           text = text.concat(
             '<tr><img class=imgInfo src="' +
-              folder +
-              '/img/' +
-              featureValues.img +
-              '" alt="picture"></tr>'
+              folder + featureValues.img +
+              '" alt="picture unloadable:' + featureValues.img + '"></tr>'
           );
         }
         this.content.nativeElement.innerHTML =
@@ -3815,16 +3809,11 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       if (properties.img) {
         // the property img exists
         // visualize img if any  --> document somewhere that we will look for a field called 'img'
-        const folder = AppConfiguration.curProject.substring(
-          0,
-          AppConfiguration.curProject.lastIndexOf('/')
-        );
+        const folder = AppConfiguration.userImageFolder;
         text = text.concat(
           '<tr><img class=imgInfo src="' +
-            folder +
-            '/img/' +
-            properties.img +
-            '" alt="picture"></tr>'
+            folder + properties.img +
+            '" alt="picture unloadable:' + properties.img + '" ></tr>'
         );
       }
       text =

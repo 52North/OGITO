@@ -375,11 +375,11 @@ export class MapQgsStyleService {
       crossOrigin: 'anonymous',
       src: 'data:image/svg+xml;base64,' + svgMarkerColor,
       scale: 1,   // it was 0.9
-      color: '#dd1c77'
+      color: '#FFA500'
     });
     newIcon.load();
-    const fill = new Fill({color: 'rgba(255,0,255,0.4)'});
-    const stroke = new Stroke({color: '#dd1c77', width: 1.25 });
+    const fill = new Fill({color: 'rgba(255,165,0,0.4)'});
+    const stroke = new Stroke({color: '#FFA500', width: 5 });
     const style =
       new Style({
         stroke,
