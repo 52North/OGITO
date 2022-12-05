@@ -6,7 +6,7 @@
       (panstart)="onPanStart($event)" (panmove)="onPan($event)" cdkDragBoundary=".mapBoundary" cdkDrag >  -->
   <mat-card class = 'layerPanelCard'>
     <mat-card-title-group>
-      <mat-card-title class="panelTitle">Layers  </mat-card-title>
+      <mat-card-title class="panelTitle">Kaartlagen</mat-card-title>
       <button mat-flat-button   (click)="closeLayerPanel(false)" >
         <mat-icon class="matCloseWrapper" aria-label="Close layer Panel">close</mat-icon>
       </button>
@@ -41,7 +41,7 @@
                         </div>
                          <div class = 'selectLayer'>
                            <span class="spacer"></span>
-                          <button  *ngIf="layer.wfs || layer.sketch" mat-icon-button matTooltip="Mit dem Kartieren beginnen" aria-label="Start drawing"
+                          <button  *ngIf="layer.wfs || layer.sketch" mat-icon-button matTooltip="Begin met bewerker (de laag)" aria-label="Start drawing"
                                   (click)="onEditLayerClick($event, layer, group)"
                                   [ngClass]="layer.onEdit ? 'activeAction': 'normal'">
                             <mat-icon>edit</mat-icon>
@@ -53,7 +53,7 @@
                           </button> -->
 
                          <!-- the identify button to the layer panel needed for WMS layers -->
-                          <button mat-icon-button matTooltip="Elemente identifizieren" aria-label="Identify elements in the layer"
+                          <button mat-icon-button matTooltip="Element identificeren" aria-label="Identify elements in the layer"
                                   (click)="onIdentifyLayerClick($event, layer, group.groupName)"
                                   [ngClass]="layer.onIdentify ? 'activeAction': 'normal'">
                             <mat-icon>info_outline</mat-icon>

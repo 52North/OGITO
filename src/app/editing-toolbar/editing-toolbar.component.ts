@@ -239,7 +239,7 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
     }
     else {
       this.openLayersService.updateDeleteFeats(true);
- 
+
     }
     this.highlightAction('Delete');
     }
@@ -248,7 +248,7 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
   saveLayer(){
     /** Enable user to save edit in the layer being updated the observable to show the editing toolbar and
      */
-   
+
       this.openLayersService.updateSaveCurrentLayer(true);
       // disable the button
       this.stopSave = true;
@@ -260,7 +260,7 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
   saveAllLayer(){
     /** Enable user to save edit in all the layers
      */
-    if (confirm('Do you want to save all the edits in the all layers:?')){
+    if (confirm('Wil je alle bewerkingen in alle lagen opslaan?')){
       this.openLayersService.updateSaveAllLayers(true);
       // disable the button
       this.stopSaveAll = true;

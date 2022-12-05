@@ -2455,7 +2455,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         }
 
         if (this.currentClass == null) {
-          alert('Waehlen Sie ein Symbol');
+          alert('Kies een symbool');
           this.draw.abortDrawing();
           return; // #TODO check this
         }
