@@ -49,6 +49,7 @@
     <div id="app-content-container" class="app-content-container">
       <app-map *ngIf="auth.loggedIn"></app-map>
       <app-toolbar *ngIf="auth.loggedIn"></app-toolbar>
+      <app-street-search *ngIf="auth.loggedIn"></app-street-search>
       <app-editing-toolbar *ngIf="auth.loggedIn"></app-editing-toolbar>
       <app-symbol-list *ngIf="auth.loggedIn"></app-symbol-list>
       <app-projlist *ngIf="auth.loggedIn"></app-projlist>

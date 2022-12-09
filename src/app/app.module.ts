@@ -19,6 +19,7 @@ import { DialogPopulationExposedComponent } from './dialog-population-exposed/di
 import { DialogOrgExposedComponent } from './dialog-org-exposed/dialog-org-exposed.component';
 import { DialogResultExposedComponent } from './dialog-result-exposed/dialog-result-exposed.component';
 import {MatKeyboardModule} from '@ngx-material-keyboard/core';
+import { StreetSearchComponent } from './street-search/street-search.component';
 
 @NgModule({
   declarations: [
@@ -37,7 +38,8 @@ import {MatKeyboardModule} from '@ngx-material-keyboard/core';
     DialogPopulationExposedComponent,
     DialogOrgExposedComponent,
     DialogResultExposedComponent,
-    DialogLayerNameDialog
+    DialogLayerNameDialog,
+    StreetSearchComponent
   ],
     imports: [
         BrowserModule,

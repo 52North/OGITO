@@ -1,4 +1,4 @@
-
+import { Feature } from 'ol/Feature';
 import { Injectable } from '@angular/core';
 import {Subject} from 'rxjs';
 
@@ -38,6 +38,11 @@ export class OpenLayersService {
   findInstitutionsExposed$ = this.findInstitutionsExposedSource.asObservable();
   private addSketchLayerSource = new Subject<string>();
   addSketchLayer$ = this.addSketchLayerSource.asObservable();
+  private showStreetSearchSource = new Subject<boolean>();
+  showStreetSearch$ = this.showStreetSearchSource.asObservable();
+  private streetSelectedSource = new Subject<Feature>();
+  streetSelected$ = this.streetSelectedSource.asObservable();
+
   constructor() { }
 
   updateExistingProject(projectOpened: boolean){
@@ -110,6 +115,13 @@ export class OpenLayersService {
     this.showEditLayerPanelSource.next(visible);
   }
 
+  updateShowStreetSearch(visible: boolean) {
+    /** Updates the observable to the next value
+     * visible: boolean; true or false to show/hide the street search panel
+     */
+    this.showStreetSearchSource.next(visible);
+  }
+
   updateLayerEditing(layerName, layerGeom){
     /** Updates the observable Geometry type for editing to the next value
      * geom: string; the geometry type: point, line, polygons..
@@ -130,6 +142,14 @@ export class OpenLayersService {
      */
     this.currentSymbolSource.next(selectedSymbol);
   }
+
+  updateSelectedStreet(selectedStreet : Feature) {
+    /** Updates the observable SelecteStreet to the next value
+     * @param selectedStreet: selected street feature
+     */
+    this.streetSelectedSource.next(selectedStreet);
+  }
+
   updateFindPopExposed(data: any) {
     /** Updates the observable popExposed to the next value
      * @param data: the result of the query returned by the API

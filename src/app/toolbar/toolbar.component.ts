@@ -65,6 +65,10 @@ export class ToolbarComponent implements OnInit {
     this.openLayersService.updateShowLayerPanel(true);
   }
 
+  openStreetSearch(){
+    this.openLayersService.updateShowStreetSearch(true);
+  }
+
   searchOnMap(){
     alert('Search elements in a OSM layer #TODO');
   }

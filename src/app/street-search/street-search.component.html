@@ -1,0 +1,28 @@
+<div class="example-box" *ngIf="this.isStreetSearchVisible()"  cdkDrag cdkDragBoundary=".app-content">
+  <mat-form-field>
+    <input
+      matInput
+      type="text"
+      [(ngModel)]="userInput"
+    />
+    <mat-placeholder class="filterPlaceholder">Straatnaam invoeren</mat-placeholder>
+  </mat-form-field>
+  <button
+    class="search-streets"
+    mat-stroked-button
+    (click)="this.searchStreetNames()"
+    [disabled]="userInput.trim().length <= 2"
+  >
+    Zoeken
+  </button>
+  <mat-select [(ngModel)]="this.selectedFeature"   (selectionChange)="onStreetSelected($event)" *ngIf="this.getCurrentFeatures() && this.getCurrentFeatures().length > 0">
+    <mat-option *ngFor="let feature of this.getCurrentFeatures()" [value]="feature">
+      {{this.getOptionsLabel(feature)}}
+    </mat-option>
+  </mat-select>
+  <mat-select [(ngModel)]="this.selectedFeature"  *ngIf="this.getCurrentFeatures() && this.getCurrentFeatures().length === 0">
+    <mat-option [value]="null" disabled>
+      Geen straten gevonden
+    </mat-option>
+  </mat-select>
+</div>

@@ -25,6 +25,7 @@ import { Subject, Subscription } from 'rxjs';
 import { AppConfiguration } from '../app-configuration';
 import 'ol/ol.css';
 import { Map, View } from 'ol';
+import {Feature} from 'ol/Feature'
 import { getArea, getDistance, getLength } from 'ol/sphere';
 import { transform } from 'ol/proj';
 import proj4 from 'proj4';
@@ -164,6 +165,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
   private currentStyle: any;
   private currentClass: any;
   private currentSelectedValue: any;
+  private streetsVectorSource: VectorSource;
   measureTooltipElement: any; // The measure tooltip element.  * @type {HTMLElement}
   measureTooltip: any;
   /** Overlay to show the measurement. * @type {Overlay}  */
@@ -188,6 +190,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
   subsToSelectProject: Subscription;
   subsToAddSketchLayer: Subscription;
   subsToSaveAllLayers: Subscription;
+  subsToStreetSelected: Subscription;
 
   constructor(
     private mapQgsStyleService: MapQgsStyleService,
@@ -287,6 +290,15 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
           console.log('Error creating sketch layer', error);
         }
       );
+
+    this.subsToStreetSelected =  this.openLayersService.streetSelected$.subscribe(
+      (data) => {
+        if (data) this.updateStreetSource(data);
+      },
+      (error) => {
+        console.error('Error while adding street feature to map', error);
+      }
+    );
 
     this.openLayersService.editAction$.subscribe(
       // starts an action and stop the others..is this ready with stop interactions?
@@ -631,6 +643,14 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         this.queryDBPopNoise(data); // selectedLayer, lowlevel and highlevel
       }
     });
+  }
+
+  private updateStreetSource(feature: Feature){
+    this.streetsVectorSource.clear();
+    if(feature){
+      this.streetsVectorSource.addFeature(feature);
+      this.map.getView().fit(this.streetsVectorSource.getExtent());
+    }
   }
 
   queryDBPopNoise(data: any) {
@@ -1832,6 +1852,26 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       .find((interaction) => interaction instanceof PinchZoom);
     this.pinchZoom.on('change', () => {});
     this.pinchZoom.on('change', () => {});
+
+    this.streetsVectorSource = new VectorSource();
+    const streetsLayer = new VectorLayer({
+      source: this.streetsVectorSource,
+      zIndex: 1000,
+      name: "streetslayer",
+      style: new Style({
+        stroke: new Stroke({
+          color: 'rgba(255, 0, 0,0, 1.0)',
+          width: 2
+        }),
+        fill: new Fill({ color: 'rgba(255, 0, 0, 1.0)' }),
+        image: new CircleStyle({
+          radius: 10,
+          fill: new Fill({ color: 'rgba(255, 0, 0, 1)' }),
+        }),
+      })
+    });
+
+    this.map.addLayer(streetsLayer);
   }
 
   createHelpTooltip() {
