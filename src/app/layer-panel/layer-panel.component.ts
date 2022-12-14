@@ -240,8 +240,15 @@ ngOnDestroy(){
     $event.stopImmediatePropagation();
     // update visible of the layer in the variable
     const tlayer = this.findLayerinGroups(layer.layerName);
-    tlayer.visible = true;
+    tlayer.visible = !layer.visible;
     this.layerVisClick.emit({layer, groupName});
+
+
+    const layerGroup = this.findGroupByName(groupName); //make group visible automatically
+    if(tlayer.visible && !layerGroup.visible){
+      layerGroup.visible = true;
+      this.groupLayerVisClick.emit(layerGroup)
+    }
 }
 
 onGroupLayerVisClick(  $event: any, layer: any){
@@ -252,9 +259,20 @@ onGroupLayerVisClick(  $event: any, layer: any){
     $event.preventDefault();
     $event.stopImmediatePropagation();
     // update visible of the group in the global variable groupLayers
-    const tgroup = this.sgroupLayers.find(x => x.groupName === layer.groupName);
-    tgroup.visible = true;
+    const tgroup = this.findLayerGroup(layer);
+    tgroup.visible = !layer.visible;
      // emit the event to update the group visibility in the map
     this.groupLayerVisClick.emit(layer);  // emit the change
+  }
+
+
+  private findLayerGroup(layer: any) : any{
+    const layerGroup = this.sgroupLayers.find(x => x.groupName === layer.groupName);
+    return layerGroup;
+  }
+
+  private findGroupByName(groupName: string) : any {
+    const layerGroup = this.sgroupLayers.find(x => x.groupName === groupName);
+    return layerGroup;
   }
 }
