@@ -293,7 +293,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.subsToStreetSelected =  this.openLayersService.streetSelected$.subscribe(
       (data) => {
-        if (data) this.updateStreetSource(data);
+        this.updateStreetSource(data);
       },
       (error) => {
         console.error('Error while adding street feature to map', error);
@@ -1496,9 +1496,12 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         k < WFSLayers.getElementsByTagName('WFSLayer').length;
         k++
       ) {
-        wfsLayerList.push(
-          WFSLayers.getElementsByTagName('WFSLayer')[k].getAttribute('name')
-        );
+        const layerName = WFSLayers.getElementsByTagName('WFSLayer')[k].getAttribute('name');
+          if(!AppConfiguration.hiddenLayers.includes(layerName)){
+          wfsLayerList.push(
+            layerName
+          );
+        }
       }
     }
     const rootLayer = xmlText.getElementsByTagName('Layer')[0];
@@ -1587,6 +1590,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
           const geometryType = layer.getAttribute('geometryType');
           const layerName =
             layer.getElementsByTagName('Name')[0].childNodes[0].nodeValue;
+
           const layerTittle =
             layer.getElementsByTagName('Title')[0].childNodes[0].nodeValue;
           const urlResource = layer
@@ -1647,12 +1651,14 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
           });
         }
         // get url for wms, wfs, getLegend and getStyles
-        this.groupsLayers.push({
-          groupName,
-          groupTittle,
-          visible: false,
-          layers: listLayersinGroup,
-        });
+        if(listLayersinGroup.length > 0){
+          this.groupsLayers.push({
+            groupName,
+            groupTittle,
+            visible: false,
+            layers: listLayersinGroup,
+          });
+        }
       }
     }
 
@@ -1860,14 +1866,9 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       name: "streetslayer",
       style: new Style({
         stroke: new Stroke({
-          color: 'rgba(255, 0, 0,0, 1.0)',
-          width: 2
-        }),
-        fill: new Fill({ color: 'rgba(255, 0, 0, 1.0)' }),
-        image: new CircleStyle({
-          radius: 10,
-          fill: new Fill({ color: 'rgba(255, 0, 0, 1)' }),
-        }),
+          color: 'yellow',
+          width: 6.5
+        })
       })
     });
 
@@ -2074,6 +2075,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
           this.loadedWfsLayers.findIndex(
             (x) => x.layerName.toLowerCase() === layer.Name.toLowerCase()
           ) === -1
+          &&
+          !AppConfiguration.hiddenLayers.includes(layer.Name)
         ) {
           if (!layer.hasOwnProperty('Layer')) {
             // it is a simple WMS layer without a group
@@ -2802,12 +2805,12 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         upperCorner.split(' ')[1] === '0'
       ) {
       }
-      if (layerName.length > 0) {
+      if (layerName.length > 0 && !AppConfiguration.hiddenLayers.includes(layerName)) {
         // store layer properties to use later
         const geom = this.findGeometryType(layerName);
         const qGsProject = '&map=' + this.qgsProjectFile;
         const qGsServerUrl = this.qGsServerUrl;
-        const outputFormat = '&outputFormat=GeoJSON';
+        const outputFormat = '&outputFormat=GML3';
         const loadedLayers = [];
         const wfsVersion = 'SERVICE=WFS&VERSION=' + AppConfiguration.wfsVersion;
         const urlWFS =
@@ -2821,7 +2824,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
           qGsProject;
         try {
           const vectorSource = new VectorSource({
-            format: new GeoJSON(),
+            format: new GML(),
             // getting WFS set to the view extent
             url: (extent) => {
               return urlWFS;

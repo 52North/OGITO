@@ -1,5 +1,10 @@
-<div class="example-box" *ngIf="this.isStreetSearchVisible()"  cdkDrag cdkDragBoundary=".app-content">
-  <mat-form-field>
+<div class="street-search-panel" *ngIf="this.isStreetSearchVisible()"  cdkDrag cdkDragBoundary=".app-content">
+  <div class="close-button-container">
+    <button mat-flat-button   (click)="this.setStreetSearchVisible(false)" class="close-button">
+      <mat-icon class="matCloseWrapper" aria-label="Close Street Search Panel">close</mat-icon>
+    </button>
+</div>
+  <mat-form-field class="street-input">
     <input
       matInput
       type="text"
@@ -15,14 +20,16 @@
   >
     Zoeken
   </button>
-  <mat-select [(ngModel)]="this.selectedFeature"   (selectionChange)="onStreetSelected($event)" *ngIf="this.getCurrentFeatures() && this.getCurrentFeatures().length > 0">
+  <div class="select-street-container">
+  <mat-select [(ngModel)]="this.selectedFeature"   (selectionChange)="onStreetSelected($event)"  (multiple) = 'false'  class="select-street" *ngIf="this.getCurrentFeatures() && this.getCurrentFeatures().length > 0" #streetSelect>
     <mat-option *ngFor="let feature of this.getCurrentFeatures()" [value]="feature">
       {{this.getOptionsLabel(feature)}}
     </mat-option>
   </mat-select>
-  <mat-select [(ngModel)]="this.selectedFeature"  *ngIf="this.getCurrentFeatures() && this.getCurrentFeatures().length === 0">
+  <mat-select [(ngModel)]="this.selectedFeature"  *ngIf="this.getCurrentFeatures() && this.getCurrentFeatures().length === 0" #streetSelect>
     <mat-option [value]="null" disabled>
       Geen straten gevonden
     </mat-option>
   </mat-select>
+</div>
 </div>

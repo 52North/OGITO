@@ -1,15 +1,49 @@
-.example-box {
-  width: 200px;
-  height: 200px;
+.street-search-panel {
+  max-width: 30%;
   border: solid 1px #ccc;
-  color: rgba(0, 0, 0, 0.87);
-  cursor: move;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  background: #fff;
+  min-height: 40px;
+  display: block;
   border-radius: 4px;
-  position: relative;
-  z-index: 200;
+  overflow: auto;
+  margin-left: 0;   // 4%
+  margin-top: 0;    // 5%
+  z-index: 300;
+  position: absolute;
+  left: 4%;
+  top: 10%;
+  opacity: 1;
+  background: white;
+
+  margin-left: 40%;  //margin controls init positon
+  margin-top: 1%;
+}
+
+
+.close-button-container{
+  width: 100%;
+  .close-button{
+    display: block;
+    margin-left:auto;
+    margin-right: 0;
+    padding-right: 0px;
+  }
+}
+
+.street-input{
+  margin-left: 10px;
+  margin-right: 5px;
+}
+
+.search-streets{
+  margin-right: 10px;
+  margin-left: 5px;
+}
+
+
+.select-street-container{
+  width: 100%;
+  .select-street{
+    width: calc(100% - 20px);
+    margin: 10px;
+  }
 }

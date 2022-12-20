@@ -36,7 +36,10 @@ export class MapQgsStyleService {
      * @param { layerName } the name of a WFS layer to be rendered
      */
    const styleLyr = this.getLayerStyle(layerName);
-    if (styleLyr.symbolType.toLowerCase() === 'single symbol'){
+    if(!styleLyr){
+      return this.defineSketchStyle();
+    }
+    else if (styleLyr.symbolType.toLowerCase() === 'single symbol'){
       return (styleLyr.style['default'].style);
     }else{ //rule base style
       const property = styleLyr.symbolType;
@@ -44,7 +47,7 @@ export class MapQgsStyleService {
       const value = props[property];
 
       if(!value){
-        return this.defineSketchStyle()
+        return this.defineSketchStyle();
       }
 
 
@@ -206,14 +209,18 @@ export class MapQgsStyleService {
     /**
      * Creates symbols
      */
-    //const xmlStyle= xmlParser.parseFromString(xmlTextStyle, 'text/xml');
-    //let layers =  xmlStyle.getElementsByTagName('NamedLayer')[0];
     const parser = new Parser();
     parser.parseString(xmlTextStyle, (err, result) => {
       const jsonStyle = result;
       for (let i = 0; i < jsonStyle.StyledLayerDescriptor.NamedLayer.length; i++) {
         const layerStyle = jsonStyle.StyledLayerDescriptor.NamedLayer[i];
         const layerName = layerStyle['se:Name'][0];
+
+        if(AppConfiguration.hiddenLayers.includes(layerName)){
+          console.log("do not parse style for hidden layer " + layerName)
+          return;
+        }
+
         for (let j = 0; j < layerStyle.UserStyle[0]['se:FeatureTypeStyle'][0]['se:Rule'].length; j++) {
           const featureStyleRule = layerStyle.UserStyle[0]['se:FeatureTypeStyle'][0]['se:Rule'][j];
           const styleType = featureStyleRule['se:Name'][0];

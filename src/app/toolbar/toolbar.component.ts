@@ -39,6 +39,10 @@ export class ToolbarComponent implements OnInit {
       'fullscreen',
       sanitizer.bypassSecurityTrustResourceUrl('assets/img/fullscreen.svg')
     );
+    iconRegistry.addSvgIcon(
+      'magnifier',
+      sanitizer.bypassSecurityTrustResourceUrl('assets/img/magnifier.svg')
+    );
   }
 
   zoomHome(){

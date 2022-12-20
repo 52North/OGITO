@@ -1,7 +1,9 @@
+import { AppComponent } from './../app.component';
+import { catchError } from 'rxjs/operators';
 import { AppConfiguration } from './../app-configuration';
 import { OpenLayersService } from './../open-layers.service';
 import { Subscription } from 'rxjs';
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ChangeDetectorRef, Input } from '@angular/core';
 import {
   and as AndFilter,
   equalTo as EqualToFilter,
@@ -9,8 +11,10 @@ import {
 } from 'ol/format/filter';
 import VectorSource from 'ol/source/Vector'
 import Feature from 'ol/Feature';
-import {GeoJSON, WFS} from 'ol/format';
+import { GeoJSON, WFS } from 'ol/format';
+import {GML} from 'ol/format'
 import { HttpClient } from '@angular/common/http';
+import { MatSelect } from '@angular/material/select';
 
 @Component({
   selector: 'app-street-search',
@@ -28,8 +32,11 @@ export class StreetSearchComponent implements OnInit, OnDestroy {
   private currentFeatures : Feature[];
   private isVisible: boolean = false;
   private showStreetSourceSubscription: Subscription;
+  private projectSelectedSubscription: Subscription;
+  private qgisServerUrl : string;
+  @ViewChild ('streetSelect', {static: false}) streetSelect : MatSelect;  
 
-  constructor(private openLayersService: OpenLayersService, private http: HttpClient,) { }
+  constructor(private openLayersService: OpenLayersService, private http: HttpClient, private changeDetectorRef: ChangeDetectorRef) { }
 
   ngOnInit(): void {
     this.showStreetSourceSubscription = this.openLayersService.showStreetSearch$.subscribe(
@@ -38,10 +45,21 @@ export class StreetSearchComponent implements OnInit, OnDestroy {
       },
       (error) => {console.log('Error in subscription to openLayersService.showStreetSearch$'); console.error(error) }
     )
+    this.projectSelectedSubscription = this.openLayersService.qgsProjectUrl$.subscribe(
+      (data) => {
+        if (data) {
+          this.updateSelectedProject(data);
+        }
+      },
+      (error) => {
+        console.error('error on project selection', error);
+      }
+    );
   }
 
   ngOnDestroy(): void {
-    this.showStreetSourceSubscription.unsubscribe()
+    this.showStreetSourceSubscription.unsubscribe();
+    this.projectSelectedSubscription.unsubscribe();
   }
 
 
@@ -51,6 +69,12 @@ export class StreetSearchComponent implements OnInit, OnDestroy {
 
   public setStreetSearchVisible(isVisible: boolean){
     this.isVisible = isVisible;
+    if(!isVisible){
+      this.currentFeatures = [];
+      this.userInput = '';
+      this.selectedFeature = null;
+      this.fireStreetSelected();
+    }
   }
 
   public getCurrentFeatures() : Feature[]{
@@ -69,25 +93,36 @@ export class StreetSearchComponent implements OnInit, OnDestroy {
   }
 
   public onStreetSelected(event){
-    this.fireStreetSelected(event.value); //event.value is feature
+    this.selectedFeature = event.value; //event.value is feature
+    this.fireStreetSelected();
   }
 
   private postGetFeatureRequest(body: string){
     //post request
-    this.http.post<any>('http://localhost:8380', body).subscribe(jsonData => {
+    this.http.post<string>(this.qgisServerUrl, body, {responseType: 'text' as any}).subscribe(
+      (jsonData) => {
         //geojson to ol features
         const features = this.parseFeaturesFromGeoJson(jsonData)
         this.currentFeatures = this.sortFeatures(features);
-        const selectedFeature = (features && features.length > 0) ? features[0] : null;
-        //auto select first hit
+        const selectedFeature = (features && features.length === 1) ? features[0] : null;
+        //auto select first hit if only one hit
         this.selectedFeature = selectedFeature;
-        this.fireStreetSelected(selectedFeature);
+        this.fireStreetSelected();
 
-    })
+        this.openSelectOptions(true);
+    },
+    (error) => {
+        console.log("error while retrieving data for street search")
+        console.error(error)
+        this.currentFeatures = [];
+        this.selectedFeature = null;
+        this.fireStreetSelected();
+      }
+    )
   }
 
   private parseFeaturesFromGeoJson(geojson: string) : Feature[]{
-    const features = new GeoJSON().readFeatures(geojson, {dataProjection: 'EPSG:4326', featureProjection: StreetSearchComponent.SRS});
+    const features = new GML().readFeatures(geojson, {dataProjection: StreetSearchComponent.SRS, featureProjection: StreetSearchComponent.SRS});
     return features;
   }
 
@@ -97,7 +132,7 @@ export class StreetSearchComponent implements OnInit, OnDestroy {
       //featureNS: 'http://openstreemap.org',
       //featurePrefix: 'osm',
       featureTypes: [StreetSearchComponent.FEATURETYPE],
-      outputFormat: 'application/json',
+      outputFormat: 'test/xml',
       filter: this.createFilterExpression()
     });
 
@@ -111,15 +146,31 @@ export class StreetSearchComponent implements OnInit, OnDestroy {
     return filter;
   }
 
-  private fireStreetSelected(feature : Feature){
-    console.log("street selected");
-    console.log(feature);
+  private fireStreetSelected(){
+    console.log("fire street selected");
+    console.log(this.selectedFeature);
 
-    this.openLayersService.updateSelectedStreet(feature);
+    this.openLayersService.updateSelectedStreet(this.selectedFeature);
   }
 
   private sortFeatures(features : Feature[]){
     return features.sort((a, b) => a.getProperties()[StreetSearchComponent.FEATUREPROPERTY].localeCompare(b.getProperties()[StreetSearchComponent.FEATUREPROPERTY]))
+  }
+
+  private updateSelectedProject(qgisProject: any) {
+    // get the var from the selection List
+    if (qgisProject.file.length > 0) {
+      this.qgisServerUrl = qgisProject.qGsServerUrl + "SERVICE=WFS&REQUEST=GetFeature&OUTPUTFORMAT=GML3&SRSNAME="+ StreetSearchComponent.SRS +"&VERSION=" + AppConfiguration.wfsVersion + "&map=" + qgisProject.file + "&TYPENAME=" + StreetSearchComponent.FEATURETYPE;
+    }
+  }
+
+  private openSelectOptions(open: boolean){
+    this.changeDetectorRef.detectChanges(); //detect changes first because streetselect Element is conditional (*ngIf)
+    if(open){
+      this.streetSelect.open();
+    }else{
+      this.streetSelect.close();
+    }
   }
 
 }
