@@ -1,8 +1,6 @@
 <div class="parent">
 <div class ="example-list"  *ngIf="showForm$ | async"
-     cdkDrag
-     cdkDragRootElement=".cdk-overlay-pane"
-     cdkDragBoundary=".parent">
+cdkDrag cdkDragBoundary=".app-content" >
  <mat-card>
       <mat-card-title-group>
         <mat-card-title>Beschrijving</mat-card-title>
