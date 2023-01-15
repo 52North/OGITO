@@ -2698,7 +2698,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
               dirty: true,
               source: self.curEditingLayer.source,
             });
-            self.curEditingLayer.removeFeature(f);
+            self.curEditingLayer.source.removeFeature(f);
           });
         }
       });
