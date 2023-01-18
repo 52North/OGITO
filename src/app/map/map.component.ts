@@ -1,5 +1,4 @@
 import { SelectedSymbol } from './../open-layers.service';
-import { SettingsService } from './../settings.service';
 import {
   AfterViewInit,
   Component,
@@ -200,8 +199,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     public auth: AuthService,
     private snackBar: MatSnackBar,
     public dialog: MatDialog,
-    private sanitizer: DomSanitizer,
-    private settings: SettingsService
+    private sanitizer: DomSanitizer
   ) {
     this.subsToShapeEdit = this.openLayersService.shapeEditType$.subscribe(
       (data) => {
@@ -1511,7 +1509,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       // the epsg code comes in the second place in the list
 
       let projBBOX: Element = null;
-      const projectSRID = this.settings.getSettings().project.srsID;
+      const projectSRID = AppConfiguration.srsName;
 
       for (
         let i = 0;
@@ -1541,7 +1539,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       ];
       this.srsID = projBBOX.getAttribute('CRS');
 
-      proj4.defs(this.srsID, this.settings.getSettings().project.proj4Def);
+      proj4.defs(this.srsID, AppConfiguration.projDefs[this.srsID.split(":")[1]]);
       register(proj4);
     } else {
       const BBOX = rootLayer.getElementsByTagName(
