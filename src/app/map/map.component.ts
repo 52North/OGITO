@@ -3676,7 +3676,9 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     } else {
       this.content.nativeElement.innerHTML = '<p>Not elements found :</p>';
     }
+    this.overlay.panIntoView(); //adjust map view so that the popup is visible completely
   }
+
   displayFeatureInfoWMS(evt) {
     /* shows a popup when the user pres click
      * @param evt, the event containing pixel and coordinates
@@ -3711,11 +3713,15 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         .catch((error) => {
           console.log('Error retrieving info', error);
           this.content.nativeElement.innerHTML = '<p>Not elements found :</p>';
+        })
+        .finally(() => {
+          this.overlay.panIntoView(); //adjust map view so that the popup is visible completely
         });
       // TODO also like wfs filtering the fields to show..
     } else {
       this.content.nativeElement.innerHTML = '<p>Not elements found :</p>';
     }
+
   }
 
   searchLayer(layerName: any, groupName: any) {
