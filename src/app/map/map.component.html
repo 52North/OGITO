@@ -3,7 +3,9 @@
   </div>
   <div id="popup" #popup class="ol-popup">
     <a href="#" #closer class="ol-popup-closer"></a>
-    <div id="popup-content" #content></div>
+    <div id="popup-content" #content>
+      <img (load)="adjustMapView()" #popupImage>
+    </div>
   </div>
   <div *ngIf="loadedWfsLayers">
     <!--[groupLayers] = "groupsLayers"-->

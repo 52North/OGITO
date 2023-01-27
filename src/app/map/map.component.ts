@@ -103,6 +103,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   @Output() updateLayerList = new EventEmitter<any>();
   @ViewChild('popup', { static: false }) container: ElementRef; // the variable here is container, popup the html element
+  @ViewChild('popupImage', {static: false}) popupImage : ElementRef;
   @ViewChild('content', { static: false }) content: ElementRef;
   @ViewChild('closer', { static: false }) closer: ElementRef;
 
@@ -3676,7 +3677,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     } else {
       this.content.nativeElement.innerHTML = '<p>Not elements found :</p>';
     }
-    this.overlay.panIntoView(); //adjust map view so that the popup is visible completely
+    this.adjustMapView()
   }
 
   displayFeatureInfoWMS(evt) {
@@ -3715,7 +3716,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
           this.content.nativeElement.innerHTML = '<p>Not elements found :</p>';
         })
         .finally(() => {
-          this.overlay.panIntoView(); //adjust map view so that the popup is visible completely
+          this.adjustMapView()
         });
       // TODO also like wfs filtering the fields to show..
     } else {
@@ -3858,10 +3859,11 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         // visualize img if any  --> document somewhere that we will look for a field called 'img'
         const folder = AppConfiguration.userImageFolder;
         text = text.concat(
-          '<tr><img class=imgInfo src="' +
+          '<tr><img class=imgInfo src=" ' +
             folder + properties.img +
             '" alt="picture unloadable:' + properties.img + '" ></tr>'
         );
+        this.popupImage.nativeElement.src = folder + properties.img
       }
       text =
         '<table border=0 width=92%>' +
@@ -4139,6 +4141,11 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     } catch (e) {
       console.log('Error readding Drag/Pinch interactions', e);
     }
+  }
+
+  adjustMapView(){
+    console.log("adjust map view")
+    this.overlay.panIntoView();
   }
 
   ngOnDestroy() {
