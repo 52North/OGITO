@@ -56,12 +56,14 @@
   flex-direction: column;
   align-items: baseline;
   background: white;
-  font-size: 0.8vw;
+  font-size: 1.0vw;
+  font-weight:bold;
   width: 100%;
   //max-width: 20%;
   position: relative;
   padding-top: 1px !important;
   padding-bottom: 0px !important;
+  overflow: visible !important;
 }
 
 @media  (orientation:portrait) {
@@ -74,6 +76,8 @@
 .selectLayer{
   display:flex;
   justify-content:space-between;
+  font-size: 0.9vw !important;
+  font-weight:bold !important;
   // align-items: left; //center;
 }
 
@@ -84,6 +88,8 @@
 .iconTitle{
   display:inline-block;
   padding-left: 5px;
+  font-weight: bold;
+  font-size: 18px;
 }
 .iconImage{
   display:inline-block;
@@ -117,9 +123,10 @@
 
 :host ::ng-deep  .mat-pseudo-checkbox {
   border: solid 1px;
-  width: 14px;
-  height: 14px;
+  margin-right: 4px;
+  transform: scale(1.4);
 }
+
 :host ::ng-deep .mat-pseudo-checkbox::after {
   color: darkred !important;
 }
@@ -141,6 +148,7 @@
 :host ::ng-deep .mat-list-text {
   padding-left: 4px !important;  // rigth left
   padding-top: 0px !important;  // rigth left
+  overflow: visible !important;
 }
 
 :host ::ng-deep .mat-list-base {
@@ -185,10 +193,18 @@
   background: #fff2e1;
 }
 .activeAction {
-  background: #e35183;   //green;
+  background: #ad1457;
+  border-color: #ad1457;
+  border-style: solid;
+  border-width: 4px;
+  height: 48px;
+  width: 48px;
 }
 .onEdit{
-  background: #d6c0c8;
+  background: #ad1457;
+  border-color: #ad1457;
+  border-width: 4px;
+  border-style: solid;
   // padding-top: -0.3vw;
 }
 
@@ -198,6 +214,7 @@
   border-bottom-style: solid;
   border-bottom-color: #e9e9e9;
   flex: 1 1 auto;
+  align-items: normal;
 }
 
 :host ::ng-deep  .mat-expansion-panel:not([class*=mat-elevation-z]) {
@@ -213,8 +230,5 @@
 
 .mat-list-text{
   height: 100%;
+  font-weight: bold;
 }
-
-
-
-
