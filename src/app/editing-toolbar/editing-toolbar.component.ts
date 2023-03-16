@@ -170,7 +170,6 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
       }
       else {
         this.openLayersService.updateShapeEditType(shapeType);
-        this.showSymbolPanel(true);
       }
      this.highlightAction(shapeType);
    }

@@ -166,6 +166,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
   private currentClass: any;
   private currentSelectedValue: any;
   private streetsVectorSource: VectorSource;
+  private addedFeature: Feature;
   measureTooltipElement: any; // The measure tooltip element.  * @type {HTMLElement}
   measureTooltip: any;
   /** Overlay to show the measurement. * @type {Overlay}  */
@@ -191,6 +192,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
   subsToAddSketchLayer: Subscription;
   subsToSaveAllLayers: Subscription;
   subsToStreetSelected: Subscription;
+  subsToShowSymbolList: Subscription;
 
   constructor(
     private mapQgsStyleService: MapQgsStyleService,
@@ -215,8 +217,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     );
     this.subsTocurrentSymbol = this.openLayersService.currentSymbol$.subscribe(
-      (style) => {
-        this.changeSymbol(style);
+      (selectedEntry) => {
+        this.handleSymbolSelected(selectedEntry)
       },
       (error) => {
         console.log('Error changing the style for drawing elements', error);
@@ -1796,27 +1798,6 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  changeSymbol(style: SelectedSymbol) {
-    /**
-     *  updates the class style and class (not being use now for the element being edited)
-     *  @param style: the symbol (value) in OL style format and the key (class - not being used now?)
-     *
-     */
-    if (style === null || style.symbol === null) {
-      this.currentStyle = null;
-      this.currentClass = null;
-      if(style === null){
-        this.currentSelectedValue = null;
-      }
-
-      return;
-    }
-
-    this.currentSelectedValue = style.selectedValue;
-    this.currentStyle = style.symbol.value;
-    this.currentClass = style.symbol.key
-  }
-
   initializeMap() {
     // customized pinch interactions
     this.pinchZoom = new PinchZoom({ constrainResolution: true });
@@ -2261,6 +2242,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       selectedFeatures.push(feature);
       this.select.dispatchEvent('select');
       // triggering the form
+
       this.formQuestions = this.questionService.getQuestions(layer.layerName);
       this.updateFormQuestions(this.formQuestions, layer.layerName, feature);
       this.updateShowForm(true);
@@ -2496,11 +2478,11 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
           return;
         }
 
-        if (this.currentClass == null) {
+        /*if (this.currentClass == null) {
           alert('Kies een symbool');
           this.draw.abortDrawing();
           return; // #TODO check this
-        }
+        }*/
         const sketch = evt.feature;
         let tooltipCoord = evt.coordinate;
         listener = sketch.getGeometry().on('change', (evt) => {
@@ -2595,12 +2577,49 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         // unset tooltip so that a new one can be created
         this.unsetMeasureToolTip();
         // prompting for attributes and finishing that
-        this.popAttrForm(this.curEditingLayer, e.feature);
+        this.afterdrawFeature(this.curEditingLayer, e.feature);
       });
     } catch (e) {
       console.log('Error adding draw interactions', e);
     }
   }
+
+  private afterdrawFeature(layer, feature){
+    this.addedFeature = feature;
+    this.curEditingLayer = layer;
+    this.showSymbolPanel(true) //handySymbolSelected called after user selected symbol from list
+  }
+
+  private handleSymbolSelected(listEntry){
+    if(this.addedFeature && listEntry){ //only if user drew feature before
+      this.currentSelectedValue = listEntry.selectedValue;
+      this.currentStyle = listEntry.symbol.value;
+      this.currentClass = listEntry.symbol.key
+      this.popAttrForm(this.curEditingLayer, this.addedFeature)
+
+      this.addedFeature = null;
+      this.showSymbolPanel(false)
+    }else{
+      if (listEntry === null || listEntry.symbol === null) {
+        this.currentStyle = null;
+        this.currentClass = null;
+        if(listEntry === null){
+          this.currentSelectedValue = null;
+        }
+
+        if(this.addedFeature){
+          this.curEditingLayer.source.removeFeature(this.addedFeature) //clean feature if user closed symbol list before selecting list item
+        }
+      }
+    }
+  }
+
+  private showSymbolPanel(visible: boolean): void{
+    /**
+     * Updates the observable that allows to show/hide the symbolPanel
+     */
+    this.openLayersService.updateShowSymbolPanel(visible);
+   }
 
   unsetMeasureToolTip() {
     this.measureTooltipElement.innerHTML = '';

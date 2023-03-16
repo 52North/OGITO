@@ -34,6 +34,9 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
   subscriptionToLayerEditing: Subscription;
   styles: any;   // parece un dict
   attribute: string
+  private header: string = "Symbols"
+
+
   constructor(private openLayersService: OpenLayersService, private mapQgsStyleService: MapQgsStyleService) {
   this.subscriptionToShowSymbols = this.openLayersService.showSymbolPanel$.subscribe(
     data => {
@@ -70,6 +73,14 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
    this.myCanvas.changes.subscribe(() => {
       this.createJsonSymbolsinCanvas();
     });
+  }
+
+  setHeader(header: string){
+    this.header = header;
+  }
+
+  getHeader() : string{
+    return this.header;
   }
 
   getSymbolList(styles: any) {
