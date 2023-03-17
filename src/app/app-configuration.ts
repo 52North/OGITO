@@ -23,6 +23,7 @@ export class AppConfiguration{
     featureType : 'zwolle_streets',
     property: 'name'
   };
+
   static hiddenLayers : string[]=  ["zwolle_streets", "zwolle_streets_wms"] //layers not in layer panel
   // raster icon used as symbol for WMS layers
   static rasterIcon =  'data:image/png;base64,' + 'iVBORw0KGgoAAAANSUhEUgAAACYAAAAmCAYAAACoPemuAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAXE' +
@@ -104,3 +105,5 @@ export class AppConfiguration{
   static institutionsGroupName = 'oeffentliche_einrichtungen';  // in lower case
   static nameSessionGroup = 'sessionGroup';
 }
+
+

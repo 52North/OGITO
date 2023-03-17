@@ -1,4 +1,4 @@
-import { SelectedSymbol } from './../open-layers.service';
+import { SelectedSymbol, SymbolListVisibility } from './../open-layers.service';
 import {AfterViewInit, Component, ElementRef, OnInit, QueryList, ViewChild, ViewChildren} from '@angular/core';
 import { Observable, Subscription,  of as observableOf } from 'rxjs';
 import {OpenLayersService} from '../open-layers.service';
@@ -40,7 +40,13 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
   constructor(private openLayersService: OpenLayersService, private mapQgsStyleService: MapQgsStyleService) {
   this.subscriptionToShowSymbols = this.openLayersService.showSymbolPanel$.subscribe(
     data => {
+      if(!data.optHeader){
+        this.header = null;
+      }else{
+        this.header = data.optHeader;
+      }
       this.showSymbolList(data);
+
     },
       error => {console.log ('Error in subscription to showSymbolPanel', error); }
   );
@@ -56,14 +62,14 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
   );
   }
 
-  showSymbolList(visible: any){
-    if (visible === false){
+  showSymbolList(visibility: SymbolListVisibility){
+    if (visibility.visible === false){
       // unsets the ng-class for the symbol list
       this.symbolActiveKey = null;
       // updates the selected symbol
       this.openLayersService.updateCurrentSymbol(null);
     }
-    this.displaySymbolList$ = observableOf(visible);
+    this.displaySymbolList$ = observableOf(visibility.visible);
   }
 
   ngOnInit(): void {

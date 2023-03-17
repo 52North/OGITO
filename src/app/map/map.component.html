@@ -18,10 +18,12 @@
   </app-layer-panel>
   </div>
 
-
+<!--defaul edit dialog-->
 <app-dynamic-form #dynamicForm  [questions]="questionsSubject.asObservable()"
                   [showForm]="showFormSubject.asObservable()"
 
                     (formSubmitted) = "getFormData($event)"
                     [featureLayer] = "featureLayerForm"> <!--[questions]="formQuestions" -->  <!-- from parent to Child) -->
 </app-dynamic-form>
+<!--custiom meldingen dialog-->
+<app-edit-meldingen (formSubmitted)="getFormData($event)"></app-edit-meldingen>

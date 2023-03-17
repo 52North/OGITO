@@ -3,8 +3,9 @@
      cdkDragBoundary=".app-content" >
 <mat-card class="symbol-list"  #symListCard>
   <mat-card-title-group>
-    <mat-card-title class="panelTitle">{{getHeader()}}</mat-card-title>
-    <button mat-flat-button (click)="showSymbolList(false)" >
+    <mat-card-title class="panelTitle" *ngIf= "getHeader()" >{{getHeader()}}</mat-card-title>
+    <mat-card-title class="panelTitle" *ngIf= "!getHeader()">Symbolen</mat-card-title>
+    <button mat-flat-button (click)="showSymbolList({visible: false})" >
       <mat-icon class="matCloseWrapper" matTooltip="sluiten">close</mat-icon>
     </button>
 

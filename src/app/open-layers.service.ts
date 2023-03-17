@@ -14,7 +14,7 @@ export class OpenLayersService {
   layerEditing$ = this.layerEditingSource.asObservable();
   private shapeEditTypeSource = new Subject<string>();
   shapeEditType$ = this.shapeEditTypeSource.asObservable();
-  private showSymbolPanelSource = new Subject <boolean>();
+  private showSymbolPanelSource = new Subject <SymbolListVisibility>();
   showSymbolPanel$ = this.showSymbolPanelSource.asObservable();
   private showEditLayerPanelSource = new Subject <boolean>();
   showEditLayerPanel$ = this.showEditLayerPanelSource.asObservable();
@@ -129,11 +129,11 @@ export class OpenLayersService {
      this.layerEditingSource.next({layerName, layerGeom});
   }
 
-  updateShowSymbolPanel(visible: boolean) {
+  updateShowSymbolPanel(visibility: SymbolListVisibility) {
     /** Updates the observable ShowSymbolPanel to the next value
      * @param visible: boolean true or false to show/hide the editing toolbar
      */
-    this.showSymbolPanelSource.next(visible);
+    this.showSymbolPanelSource.next(visibility);
   }
 
   updateCurrentSymbol(selectedSymbol : SelectedSymbol) {
@@ -165,6 +165,7 @@ export class OpenLayersService {
   }
 
 
+
 }
 
 export interface SelectedSymbol{
@@ -174,3 +175,9 @@ export interface SelectedSymbol{
       value: string
     }
 }
+
+export interface SymbolListVisibility{
+  visible: boolean,
+  optHeader?: string
+}
+

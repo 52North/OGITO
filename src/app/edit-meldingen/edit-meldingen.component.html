@@ -1,0 +1,58 @@
+<div class="parent">
+  <div class ="example-list"  *ngIf="getVisibility()"
+    cdkDrag cdkDragBoundary=".app-content" >
+    <mat-card>
+          <mat-card-title-group>
+            <mat-card-title>Beschrijving</mat-card-title>
+            <button mat-flat-button (click)="abbortDialog()" class="matCloseWrapper">
+          <mat-icon >close</mat-icon>
+          </button>
+          </mat-card-title-group>
+          <mat-divider></mat-divider>
+      </mat-card>
+      <div class="form">
+        <mat-form-field class="text-input">
+          <input
+            matInput
+            type="text"
+            [(ngModel)]="this.description"
+          />
+          <mat-placeholder class="textPlaceholder">Tekst</mat-placeholder>
+        </mat-form-field>
+        <mat-form-field class="date-input" >
+          <input matInput type="date"
+                 placeholder="Datum" value="new Date().toLocaleDateString()" [(ngModel)]="this.date"  />
+        </mat-form-field>
+        <mat-radio-group [(ngModel)]="this.isGoodExample" #radioGroup="matRadioGroup" classe="radio-input">
+          <mat-radio-button value="true">ja</mat-radio-button>
+          <mat-radio-button value="false">ne</mat-radio-button>
+        </mat-radio-group>
+        <mat-select [(ngModel)]="this.priority"  (multiple) = 'false'  class="select-input" *ngIf="this.isGoodExample === 'false'">
+          <mat-option *ngFor="let priority of priorities" [value]="priority">
+            {{priority}}
+          </mat-option>
+        </mat-select>
+        <input type="file" class="file-input"
+       accept="image/*"
+       (change)="onFileSelected($event)">
+       <mat-form-field class="text-input" *ngIf="this.imageFile !== null">
+        <input
+          matInput
+          type="text"
+          [(ngModel)]="this.imageDescription"
+        />
+        <mat-placeholder class="textPlaceholder">Fotobeschrijving</mat-placeholder>
+      </mat-form-field>
+      </div>
+      <div class="submit">
+        <button
+        class="submit-button"
+        mat-stroked-button
+        (click)="this.submitDialog()"
+        [disabled]="this.isButtonDisabled()"
+      >
+        ok
+      </button>
+    </div>
+  </div>
+</div>

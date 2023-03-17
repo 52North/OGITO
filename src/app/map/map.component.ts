@@ -1,3 +1,4 @@
+import { CustomDialogDescription, CustomDialogService } from './../custom-dialog.service';
 import { SelectedSymbol } from './../open-layers.service';
 import {
   AfterViewInit,
@@ -167,6 +168,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
   private currentSelectedValue: any;
   private streetsVectorSource: VectorSource;
   private addedFeature: Feature;
+  private afterSymbolSelectedHandler: (layer: any, feature: any) => void = this.popAttrForm;
   measureTooltipElement: any; // The measure tooltip element.  * @type {HTMLElement}
   measureTooltip: any;
   /** Overlay to show the measurement. * @type {Overlay}  */
@@ -192,7 +194,6 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
   subsToAddSketchLayer: Subscription;
   subsToSaveAllLayers: Subscription;
   subsToStreetSelected: Subscription;
-  subsToShowSymbolList: Subscription;
 
   constructor(
     private mapQgsStyleService: MapQgsStyleService,
@@ -202,7 +203,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     public auth: AuthService,
     private snackBar: MatSnackBar,
     public dialog: MatDialog,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private customDialogInitializer : CustomDialogService
   ) {
     this.subsToShapeEdit = this.openLayersService.shapeEditType$.subscribe(
       (data) => {
@@ -2230,7 +2232,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
      * @param feature: the feature just added in the map
      */
     try {
-      this.formOpen = true; // test
+      this.formOpen = true;
       // highlight the element
       this.select = new Select({
         condition: click, // check if this work on touch
@@ -2247,11 +2249,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       this.updateFormQuestions(this.formQuestions, layer.layerName, feature);
       this.updateShowForm(true);
 
-      if(this.currentSelectedValue){
-        let properties = {};
-        properties[this.currentSelectedValue.property] = this.currentSelectedValue.value;
-        feature.setProperties(properties);
-      }
+
 
     } catch (e) {
       alert('Error initializing form' + e);
@@ -2268,7 +2266,9 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     // enable adding features
     this.formOpen = false;
     // unselect the feature in the map
-    this.select.getFeatures().clear();
+    if(this.select){
+      this.select.getFeatures().clear();
+    }
     // assign attributes
     this.addingAttrFeature(data.layerName, data.feature, data.payload);
     // save in the buffer
@@ -2587,7 +2587,25 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
   private afterdrawFeature(layer, feature){
     this.addedFeature = feature;
     this.curEditingLayer = layer;
-    this.showSymbolPanel(true) //handySymbolSelected called after user selected symbol from list
+
+    const customHandler = this.getCustomHandlerForLayer(layer.layerName);
+    var customHeader: string;
+    if(customHandler){
+      this.afterSymbolSelectedHandler = customHandler.handler;
+      customHeader = customHandler.header;
+    }else{
+      this.afterSymbolSelectedHandler = this.popAttrForm //use default dynamic form
+    }
+
+    if(customHeader){//handleSymbolSelected called after user selected symbol from list
+      this.showSymbolPanel(true, customHeader)
+    }else{
+      this.showSymbolPanel(true)
+    }
+  }
+
+  private getCustomHandlerForLayer(layerName: string){
+    return this.customDialogInitializer.getCustomHandlerForLayer(layerName)
   }
 
   private handleSymbolSelected(listEntry){
@@ -2595,7 +2613,15 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       this.currentSelectedValue = listEntry.selectedValue;
       this.currentStyle = listEntry.symbol.value;
       this.currentClass = listEntry.symbol.key
-      this.popAttrForm(this.curEditingLayer, this.addedFeature)
+      if(this.currentSelectedValue){ //add selected value to feture properties
+        let properties = {};
+        properties[this.currentSelectedValue.property] = this.currentSelectedValue.value;
+        this.addedFeature.setProperties(properties);
+      }
+
+      if(this.afterSymbolSelectedHandler){ //handle edit e.g. show edit dialog
+        this.afterSymbolSelectedHandler(this.curEditingLayer, this.addedFeature)
+      }
 
       this.addedFeature = null;
       this.showSymbolPanel(false)
@@ -2614,11 +2640,15 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  private showSymbolPanel(visible: boolean): void{
+  showSymbolPanel(visible: boolean, optHeader? : string): void{
     /**
      * Updates the observable that allows to show/hide the symbolPanel
      */
-    this.openLayersService.updateShowSymbolPanel(visible);
+    if(!optHeader){
+      this.openLayersService.updateShowSymbolPanel({visible: visible});
+    }else{
+      this.openLayersService.updateShowSymbolPanel({visible: visible, optHeader: optHeader});
+    }
    }
 
   unsetMeasureToolTip() {

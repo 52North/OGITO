@@ -221,11 +221,15 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
    /* alert("add Code to measure Distance");
   } */
 
-  showSymbolPanel(visible: boolean): void{
+  showSymbolPanel(visible: boolean, optHeader? : string): void{
     /**
      * Updates the observable that allows to show/hide the symbolPanel
      */
-    this.openLayersService.updateShowSymbolPanel(visible);
+    if(optHeader){
+      this.openLayersService.updateShowSymbolPanel({visible: visible});
+    }else{
+      this.openLayersService.updateShowSymbolPanel({visible: visible, optHeader: optHeader});
+    }
    }
 
   deleteFeat(action: 'Delete'){
