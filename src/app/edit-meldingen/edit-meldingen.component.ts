@@ -66,6 +66,8 @@ export class EditMeldingenComponent implements OnInit {
       this.layer.source.removeFeature(this.feature); //clean feature if dialog is abborted
     }
 
+
+    this.customDialogInitializer.raiseCustomDialogClosed(this.layer.layerName, true);
     this.resetValues()
   }
 
@@ -109,6 +111,7 @@ export class EditMeldingenComponent implements OnInit {
     this.formSubmitted.emit({payload: payload, feature: this.feature, layerName: this.layer.layerName});
 
     if(resetForm){
+      this.customDialogInitializer.raiseCustomDialogClosed(this.layer.layerName, false);
       this.resetValues()
     }
   }

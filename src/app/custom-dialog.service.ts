@@ -9,7 +9,8 @@ import { Feature } from 'ol/Feature';
 export class CustomDialogService {
   private editMeldingenSource = new Subject<EditedFeature>();
   editMeldingen$ = this.editMeldingenSource.asObservable();
-
+  private customDialogClosedSource = new Subject<DialogClosedEvent>();
+  dialogClosed$ = this.customDialogClosedSource.asObservable();
 
   private customDialogs: CustomDialogDescription[] = [
     {
@@ -22,18 +23,24 @@ export class CustomDialogService {
     }
   ]
 
+
+
   /**
    * returns null if no handler available for layer
    * @param layerName
    * @returns
    */
-  getCustomHandlerForLayer(layerName: string): CustomDialogDescription {
+  public getCustomHandlerForLayer(layerName: string): CustomDialogDescription {
       for(let customDialog of this.customDialogs){
         if(customDialog.layerName === layerName){
           return customDialog;
         }
       }
       return null;
+  }
+
+  public raiseCustomDialogClosed(layerName: string, isAborted: boolean){
+    this.customDialogClosedSource.next({layerName, isAborted})
   }
 
   private startEditNewMeldigen(data: EditedFeature){
@@ -52,4 +59,9 @@ export interface CustomDialogDescription{
   layerName: string,
   header: string,
   handler: (layer: VectorLayer, feature: Feature) => void
+}
+
+export interface DialogClosedEvent{
+  layerName: string,
+  isAborted: boolean,
 }

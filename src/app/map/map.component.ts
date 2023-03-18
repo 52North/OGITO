@@ -64,12 +64,10 @@ import ZoomSlider from 'ol/control/ZoomSlider';
 import ScaleLine from 'ol/control/ScaleLine';
 import {fromCircle} from 'ol/geom/Polygon';
 import {touchOnly} from 'ol/events/condition';
-import {FullScreen} from 'ol/control';
 import {OpenLayersService} from '../open-layers.service';
 import {MapQgsStyleService} from '../map-qgs-style.service';
 import {AuthService} from '../auth.service';
 import {unByKey} from 'ol/Observable';
-import {bbox as bboxStrategy} from 'ol/loadingstrategy';
 import {toStringHDMS} from 'ol/coordinate';
 import {QuestionService} from '../question-service.service';
 import {QuestionBase} from '../question-base';
@@ -82,7 +80,6 @@ import {request, gql} from 'graphql-request';
 import {QueryDBService} from '../query-db.service';
 import {DialogOrgExposedComponent} from '../dialog-org-exposed/dialog-org-exposed.component';
 import {saveAs} from 'file-saver';
-import { APP_BASE_HREF } from '@angular/common';
 
 // To use rating dialogs
 export interface DialogData {
@@ -194,6 +191,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
   subsToAddSketchLayer: Subscription;
   subsToSaveAllLayers: Subscription;
   subsToStreetSelected: Subscription;
+  subsToCustomDialogClosed: Subscription
 
   constructor(
     private mapQgsStyleService: MapQgsStyleService,
@@ -302,6 +300,17 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         console.error('Error while adding street feature to map', error);
       }
     );
+
+    this.subsToCustomDialogClosed = this.customDialogInitializer.dialogClosed$.subscribe(
+      (data) =>{
+        console.log("received dialog closed event" + data)
+        this.formOpen = false;
+      },
+      (error) => {
+        console.error('Error while closing custom dialog', error);
+      }
+    )
+
 
     this.openLayersService.editAction$.subscribe(
       // starts an action and stop the others..is this ready with stop interactions?
@@ -2591,7 +2600,10 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     const customHandler = this.getCustomHandlerForLayer(layer.layerName);
     var customHeader: string;
     if(customHandler){
-      this.afterSymbolSelectedHandler = customHandler.handler;
+      this.afterSymbolSelectedHandler = (layer: VectorLayer, feature: Feature) => {
+        this.formOpen = true
+        customHandler.handler(layer, feature);
+      }
       customHeader = customHandler.header;
     }else{
       this.afterSymbolSelectedHandler = this.popAttrForm //use default dynamic form
