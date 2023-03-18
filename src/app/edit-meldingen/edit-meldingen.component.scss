@@ -5,4 +5,40 @@
   top: 40% !important;
   opacity:0.9;
   background-color: white;
+  display: flex;
+  flex-direction: column;
+}
+
+.radio-input{
+  padding-bottom: 0.9em;
+
+  ::ng-deep .mat-radio-inner-circle{
+    background-color: black !important;
+  }
+
+  ::ng-deep .mat-radio-checked .mat-radio-outer-circle{
+    border-color: black !important;
+  }
+}
+
+.select-input{
+  padding-bottom: 0.9em;
+  mat-label{
+      padding-bottom: 0.45em;
+      color: rgba(0, 0, 0, 0.54);
+    }
+}
+
+.file-input{
+  padding-bottom: 0.45em;
+  .file-input-label{
+    padding-bottom: 0.45em;
+    mat-label{
+      color: rgba(0, 0, 0, 0.54);
+    }
+  }
+}
+
+.submit-button{
+  text-align: right;
 }

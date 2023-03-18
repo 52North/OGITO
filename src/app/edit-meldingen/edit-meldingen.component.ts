@@ -25,7 +25,7 @@ export class EditMeldingenComponent implements OnInit {
   public priorities = ["geen", "laag", "medium", "hoog"]
   private nonePriority = this.priorities[0];
   public description: string;
-  public date: Date = new Date();
+  public date: string = new Date().toISOString().slice(0, 10);
   public imageDescription: string;
   public isGoodExample: string = "true";
   public priority: string = this.nonePriority;
@@ -58,7 +58,7 @@ export class EditMeldingenComponent implements OnInit {
     this.layer = newFeature.layer;
     this.isVisible = true;
 
-    this.date = new Date(); //current datetime
+    this.date = new Date().toISOString().slice(0, 10); //today
   }
 
   public abbortDialog(){
@@ -98,7 +98,7 @@ export class EditMeldingenComponent implements OnInit {
     var goodExampleBool = JSON.parse(this.isGoodExample.trim()) //convert to bool
     var payload = {
       tekst: (this.description) ? this.description.trim() : "",
-      datum: this.date,
+      datum: new Date(this.date),
       behulpzaamheid: goodExampleBool,
       //prioriteit: (goodExampleBool) ? this.nonePriority : this.priority,
       //img: this.imageFile.name,

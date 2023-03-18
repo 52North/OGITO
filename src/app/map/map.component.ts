@@ -303,7 +303,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.subsToCustomDialogClosed = this.customDialogInitializer.dialogClosed$.subscribe(
       (data) =>{
-        console.log("received dialog closed event" + data)
+        console.log("received dialog closed event")
+        console.log(data);
         this.formOpen = false;
       },
       (error) => {
