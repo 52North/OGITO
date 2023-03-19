@@ -100,7 +100,7 @@ export class EditMeldingenComponent implements OnInit {
       tekst: (this.description) ? this.description.trim() : "",
       datum: new Date(this.date),
       behulpzaamheid: goodExampleBool,
-      //prioriteit: (goodExampleBool) ? this.nonePriority : this.priority,
+      prioriteit: (goodExampleBool) ? this.nonePriority : this.priority,
       //img: this.imageFile.name,
       //alt_text: (this.imageFile) ? this.imageDescription : null,
       categorie: this.feature.getProperties()[this.categoryAttr]
