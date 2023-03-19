@@ -2610,10 +2610,14 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       this.afterSymbolSelectedHandler = this.popAttrForm //use default dynamic form
     }
 
-    if(customHeader){//handleSymbolSelected called after user selected symbol from list
-      this.showSymbolPanel(true, customHeader)
+    if(this.draw.type_ === 'Point'){ //only show symbol list for points
+      if(customHeader){//handleSymbolSelected called after user selected symbol from list
+        this.showSymbolPanel(true, customHeader)
+      }else{
+        this.showSymbolPanel(true)
+      }
     }else{
-      this.showSymbolPanel(true)
+      this.afterSymbolSelectedHandler(layer, feature); //show edit dialog
     }
   }
 
