@@ -2650,7 +2650,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
           this.currentSelectedValue = null;
         }
 
-        if(this.addedFeature){
+        if(this.addedFeature && this.curEditingLayer){
           this.curEditingLayer.source.removeFeature(this.addedFeature) //clean feature if user closed symbol list before selecting list item
         }
       }
