@@ -10,7 +10,8 @@
           </mat-card-title-group>
           <mat-divider></mat-divider>
       <div class="form">
-        <mat-form-field class="text-input">
+      <div class="text-input">
+        <mat-form-field >
           <input
             matInput
             type="text"
@@ -18,10 +19,13 @@
           />
           <mat-placeholder class="textPlaceholder">Tekst</mat-placeholder>
         </mat-form-field>
-        <mat-form-field class="date-input" >
-          <input matInput type="date"
-                 placeholder="Datum" [(ngModel)]="this.date"  />
-        </mat-form-field>
+      </div>
+      <div class="date-input">
+          <mat-form-field  >
+            <input matInput type="date"
+                  placeholder="Datum" [(ngModel)]="this.date"  />
+          </mat-form-field>
+        </div>
         <div class="radio-input">
           <mat-radio-group [(ngModel)]="this.isGoodExample" #radioGroup="matRadioGroup" >
             <mat-label>
