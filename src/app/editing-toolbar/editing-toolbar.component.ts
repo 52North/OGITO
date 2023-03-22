@@ -110,6 +110,10 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
       this.updateLayerTypeRanking(data.layerName);
       this.updateLayerTypeRating(data.layerName);
       this.updateLayerTypeEdit(data.layerGeom);
+
+      if(data.layerGeom.toLowerCase() !== 'multi'){ //auto enable draw shape mode for single geom layers
+        this.drawingShapes(data.layerGeom);
+      }
     },
     error => {
       console.log('Error in subscription openLayersService.geomTypeEditing$');
