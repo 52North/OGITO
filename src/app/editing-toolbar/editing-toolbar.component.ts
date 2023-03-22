@@ -112,6 +112,7 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
       this.updateLayerTypeEdit(data.layerGeom);
 
       if(data.layerGeom.toLowerCase() !== 'multi'){ //auto enable draw shape mode for single geom layers
+        console.log("auto enable draw " + data.layerGeom + " mode for layer " + data.layerName);
         this.drawingShapes(data.layerGeom);
       }
     },
