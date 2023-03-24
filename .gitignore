@@ -54,3 +54,6 @@ src/**/*.ecw
 src/**/*.tif
 src/**/*.tiff
 src/**/*.rrd
+
+/Upload/images
+Upload/node_modules

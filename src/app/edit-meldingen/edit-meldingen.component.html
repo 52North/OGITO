@@ -1,4 +1,4 @@
-<div class="parent">
+<div class="parent" [ngStyle]="{'cursor': this.isUploadPending() ? 'wait' : 'auto'}">
   <div class ="example-list"  *ngIf="getVisibility()"
     cdkDrag cdkDragBoundary=".app-content" >
     <mat-card>
@@ -54,17 +54,30 @@
         <input type="file"
         accept="image/*"
         (change)="onFileSelected($event)" />
+        <mat-progress-bar *ngIf="this.isUploadPending()" [value]="this.getUploadProgress()" color="primary" mode="determinate"></mat-progress-bar>
       </div>
-       <mat-form-field class="text-input" *ngIf="this.imageFile !== null">
-        <input
-          matInput
-          type="text"
-          [(ngModel)]="this.imageDescription"
-        />
-        <mat-placeholder class="textPlaceholder">Fotobeschrijving</mat-placeholder>
-      </mat-form-field>
+      <div class="text-input" *ngIf="this.imageFile !== null">
+        <mat-form-field >
+          <input
+            matInput
+            type="text"
+            [(ngModel)]="this.imageDescription"
+          />
+          <mat-placeholder class="textPlaceholder">Fotobeschrijving</mat-placeholder>
+        </mat-form-field>
+      </div>
+      <div class="text-input" *ngIf="this.imageFile !== null">
+        <mat-form-field class="text-input" *ngIf="this.imageFile !== null">
+          <input
+            matInput
+            type="text"
+            [(ngModel)]="this.address"
+          />
+          <mat-placeholder class="textPlaceholder">Adres</mat-placeholder>
+        </mat-form-field>
+      </div>
       <div class="submit-button">
-        <button mat-flat-button color="primary" type="submit" (click)="this.submitDialog()" [disabled]="this.isButtonDisabled()">Ok</button>
+        <button mat-flat-button color="primary" type="submit" (click)="this.submitDialog()" [disabled]="this.isButtonDisabled()" [ngStyle]="{'cursor': this.isButtonDisabled() ? 'not-allowed' : 'auto'}">Ok</button>
       </div>
     </div>
   </mat-card>

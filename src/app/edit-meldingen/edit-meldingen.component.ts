@@ -1,11 +1,11 @@
-import { catchError } from 'rxjs/operators';
+import { map, catchError } from "rxjs/operators";
 import { AppConfiguration } from './../app-configuration';
 import { VectorLayer } from 'ol/layer/Vector';
 import { Feature } from 'ol/Feature';
 import { Observable, Subscription } from 'rxjs';
 import { CustomDialogService, EditedFeature } from './../custom-dialog.service';
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpEvent, HttpEventType } from '@angular/common/http';
 
 @Component({
   selector: 'app-edit-meldingen',
@@ -20,19 +20,21 @@ export class EditMeldingenComponent implements OnInit {
   private isVisible: boolean = false;
   private feature : Feature;
   private layer: VectorLayer;
-  private userimageFolder: string =  AppConfiguration.userImageFolder;
+  private userimageFolder: string =  "./assets/img/userimg/zwolle/";
   //form values
   public priorities = ["geen", "laag", "medium", "hoog"]
   private nonePriority = this.priorities[0];
   public description: string;
   public date: string = new Date().toISOString().slice(0, 10);
   public imageDescription: string;
+  public address: string;
   public isGoodExample: string = "true";
   public priority: string = this.nonePriority;
   private categoryAttr = "categorie";
   public imageFile: File = null;
-  private uploadedImagePath: string;
+  private serverImageFileName: string;
   private uploadPending = false;
+  private uploadProgress = 0;
 
   constructor(private customDialogInitializer: CustomDialogService, private http: HttpClient) {
 
@@ -51,6 +53,14 @@ export class EditMeldingenComponent implements OnInit {
 
   public getVisibility() : boolean {
     return this.isVisible;
+  }
+
+  public isUploadPending() : boolean {
+    return this.uploadPending;
+  }
+
+  public getUploadProgress() : Number {
+    return this.uploadProgress;
   }
 
   public startDialog(newFeature: EditedFeature): void{
@@ -77,18 +87,26 @@ export class EditMeldingenComponent implements OnInit {
     if(this.imageFile){ //upload image before submit
       console.log("start upload of file " + this.imageFile.name)
       this.uploadPending = true;
-      this.uploadImage(this.imageFile, this.userimageFolder).subscribe(
-        el => {
-          console.log("successfully uploaded image " + this.imageFile.name);
-          //wait for upload finished
-          this.publishData()
+      this.uploadImage(this.imageFile, "http://localhost:5001/images").subscribe(
+        resp => {
+          if (resp.type === HttpEventType.Response) { //complete
+              console.log("successfully uploaded image " + this.imageFile.name);
+              this.serverImageFileName = AppConfiguration.userImageFolder + "/assets/img/userimg/zwolle/uploads/" + resp.body["filename"];
+
+              this.publishData()
+          }
+          if (resp.type === HttpEventType.UploadProgress) { //progress update
+              const percentDone = Math.round(100 * resp.loaded / resp.total);
+              console.log('upload progress ' + percentDone + '%');
+              this.uploadProgress = percentDone;
+          }
         },
         err => {
           console.log("Error while uploading file  " + this.imageFile.name);
           console.error(err);
-          alert("De foto kon niet worden geüpload.")
+          alert("De foto kon niet worden geüpload. \n " + err["error"]["error"])
         }
-      ).add(() => { this.uploadPending = false})
+      ).add(() => {this.uploadPending = false, this.uploadProgress = 0})
     }else{
       this.publishData()
     }
@@ -101,8 +119,9 @@ export class EditMeldingenComponent implements OnInit {
       datum: new Date(this.date),
       behulpzaamheid: goodExampleBool,
       prioriteit: (goodExampleBool) ? this.nonePriority : this.priority,
-      //img: this.imageFile.name,
-      //alt_text: (this.imageFile) ? this.imageDescription : null,
+      img: this.serverImageFileName,
+      alt_img: (this.imageFile) ? this.imageDescription : null,
+      adres: (this.imageFile) ? this.address : null,
       categorie: this.feature.getProperties()[this.categoryAttr]
     }
 
@@ -143,18 +162,19 @@ export class EditMeldingenComponent implements OnInit {
     this.priority = this.nonePriority;
     this.isGoodExample = "true";
     this.imageDescription = null;
-    this.imageFile = null
-    this.uploadedImagePath = null;
+    this.imageFile = null;
+    this.address = null;
+    this.serverImageFileName = null;
     this.uploadPending = false;
+    this.uploadProgress = 0;
   }
 
-  private uploadImage(file: File, destPath: string) : Observable<Object>{
+  private uploadImage(file: File, destPath: string) : Observable<any>{
     const formData = new FormData();
-    const serverFilename = "userimage_" + new Date().getTime().toString()
-    formData.append("img", file, serverFilename);
-    this.uploadedImagePath = destPath + serverFilename;
-
+    formData.append("image", file, file.name);
+    //post image to backend server
     return this.http
-    .post(destPath , formData)
+    .post(destPath , formData ,  {reportProgress: true, observe: 'events'});
+
   }
 }

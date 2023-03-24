@@ -2291,8 +2291,10 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     const fields = tlayer.fields;
     if (attr !== 'undefined') {
       for (const key in attr) {
-        const type = fields.find((x) => x.name === key).type;
-        feature.set(key, this.mapAttribute(type, attr[key]));
+        if(attr[key] !== undefined && attr[key] !== null){
+          const type = fields.find((x) => x.name === key).type;
+          feature.set(key, this.mapAttribute(type, attr[key]));
+        }
       }
     }
     return feature;
@@ -2616,6 +2618,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       }else{
         this.showSymbolPanel(true)
       }
+      this.formOpen = true;
     }else{
       this.afterSymbolSelectedHandler(layer, feature); //show edit dialog
     }
@@ -3707,17 +3710,13 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       else {
         for (const key in featureValues) {
           if (key !== 'img') {
-            if (featureValues[key]) {
+            if (featureValues[key] !== undefined) {
               text = text.concat(
                 '<tr><td>' +
                   key +
                   '</td><td>' +
                   featureValues[key] +
                   '</td></tr>'
-              );
-            } else {
-              text = text.concat(
-                '<tr><td>' + key + '</td><td>' + '' + '</td></tr>'
               );
             }
           }
@@ -3726,10 +3725,10 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
           // the property img exists
           // visualize img if any  --> document somewhere that we will look for a field called 'img'
           const folder = AppConfiguration.userImageFolder;
+          const alt = (featureValues.alt_img) ? featureValues.alt_img : "image unloadable " + featureValues.img;
           text = text.concat(
             '<tr><img class=imgInfo src="' +
-              folder + featureValues.img +
-              '" alt="picture unloadable:' + featureValues.img + '"></tr>'
+              folder + featureValues.img +'" alt="' + alt + '"/></tr>'
           );
         }
         this.content.nativeElement.innerHTML =
