@@ -1,0 +1,15 @@
+{
+  "name": "image_upload",
+  "version": "1.0.0",
+  "description": "backend for OGITO Zwolle image upload",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Arne Vogt",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "multer": "^1.4.5-lts.1"
+  }
+}
