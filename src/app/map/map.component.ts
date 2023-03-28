@@ -3710,7 +3710,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       else {
         for (const key in featureValues) {
           if (key !== 'img') {
-            if (featureValues[key] !== undefined) {
+            if (featureValues[key] && !featureValues[key]["xsi:nil"] /* check database null */) {
               text = text.concat(
                 '<tr><td>' +
                   key +
