@@ -146,7 +146,7 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
                 image: imageClone,
                 fill: olStyle.getFill()
               });
-              render.drawFeature(feature, cloneStyle);
+              //render.drawFeature(feature, cloneStyle);
               /* to discuss draw a line
               // clone the style again
               cloneStyle = olStyle.clone();
@@ -164,7 +164,7 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
               const high = height - (height / 4);
               feature = new Feature(new Polygon([[[0, 0], [0, high], [wide, high], [wide, 0], [0, 0]]]));
               render.drawFeature(feature, cloneStyle); */
-              return;
+              break;
             }
             case 'Point': {
               const cx = width / 2;
