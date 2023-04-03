@@ -62,12 +62,13 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
   );
   }
 
-  showSymbolList(visibility: SymbolListVisibility){
+  showSymbolList(visibility: SymbolListVisibility, isCanceled : boolean = false){
     if (visibility.visible === false){
       // unsets the ng-class for the symbol list
       this.symbolActiveKey = null;
       // updates the selected symbol
       this.openLayersService.updateCurrentSymbol(null);
+      this.openLayersService.raiseSymbolPanelClosed(isCanceled)
     }
     this.displaySymbolList$ = observableOf(visibility.visible);
   }

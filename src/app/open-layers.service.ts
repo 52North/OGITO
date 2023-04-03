@@ -42,6 +42,8 @@ export class OpenLayersService {
   showStreetSearch$ = this.showStreetSearchSource.asObservable();
   private streetSelectedSource = new Subject<Feature>();
   streetSelected$ = this.streetSelectedSource.asObservable();
+  private symbolPanelClosed = new Subject<boolean>();
+  symbolPanelClosed$ = this.symbolPanelClosed.asObservable();
 
   constructor() { }
 
@@ -164,7 +166,9 @@ export class OpenLayersService {
     this.findInstitutionsExposedSource.next(data);
   }
 
-
+  raiseSymbolPanelClosed(isAborted: boolean){
+    this.symbolPanelClosed.next(isAborted)
+  }
 
 }
 

@@ -5,7 +5,7 @@
   <mat-card-title-group>
     <mat-card-title class="panelTitle" *ngIf= "getHeader()" >{{getHeader()}}</mat-card-title>
     <mat-card-title class="panelTitle" *ngIf= "!getHeader()">Symbolen</mat-card-title>
-    <button mat-flat-button (click)="showSymbolList({visible: false})" >
+    <button mat-flat-button (click)="showSymbolList({visible: false}, true)" >
       <mat-icon class="matCloseWrapper" matTooltip="sluiten">close</mat-icon>
     </button>
 

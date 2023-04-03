@@ -191,7 +191,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
   subsToAddSketchLayer: Subscription;
   subsToSaveAllLayers: Subscription;
   subsToStreetSelected: Subscription;
-  subsToCustomDialogClosed: Subscription
+  subsToCustomDialogClosed: Subscription;
+  subsToSymbolPanelClosed: Subscription;
 
   constructor(
     private mapQgsStyleService: MapQgsStyleService,
@@ -296,6 +297,16 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       (data) => {
         this.updateStreetSource(data);
       },
+      (error) => {
+        console.error('Error while adding street feature to map', error);
+      }
+    );
+    this.subsToSymbolPanelClosed=  this.openLayersService.symbolPanelClosed$.subscribe(
+      (isCanceled) => {
+          if(isCanceled && this.formOpen){
+            this.formOpen = false;
+          }
+        },
       (error) => {
         console.error('Error while adding street feature to map', error);
       }
