@@ -76,7 +76,6 @@ function uploadFileHandler(req, res) {
       message: "successfully uploaded file",
       mimetype: req.file["mimetype"],
       filename: req.file["filename"],
-      path: toUnixPath(req.file["path"]),
       date: new Date().toISOString()
     });
   }catch(err){
