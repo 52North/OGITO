@@ -91,11 +91,11 @@ export class EditMeldingenComponent implements OnInit {
     if(this.imageFile){ //upload image before submit
       console.log("start upload of file " + this.imageFile.name)
       this.uploadPending = true;
-      this.uploadImage(this.imageFile, "http://localhost:5001/images").subscribe(
+      this.uploadImage(this.imageFile, AppConfiguration.imageUploadService).subscribe(
         resp => {
           if (resp.type === HttpEventType.Response) { //complete
               console.log("successfully uploaded image " + this.imageFile.name);
-              this.serverImageFileName = AppConfiguration.userImageFolder + "/assets/img/userimg/zwolle/uploads/" + resp.body["filename"];
+              this.serverImageFileName = AppConfiguration.imageUploadFolder + resp.body["filename"];
 
               this.publishData()
           }

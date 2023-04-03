@@ -23,6 +23,8 @@ export class AppConfiguration{
     featureType : 'zwolle_streets',
     property: 'name'
   };
+  static imageUploadService = "http://localhost:5001/" + "images/"
+  static imageUploadFolder = "/assets/img/userimg/zwolle/uploads/"
 
   static hiddenLayers : string[]=  ["zwolle_streets", "zwolle_streets_wms"] //layers not in layer panel
   // raster icon used as symbol for WMS layers
