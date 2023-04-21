@@ -20,7 +20,6 @@ export class EditMeldingenComponent implements OnInit {
   private isVisible: boolean = false;
   private feature : Feature;
   private layer: VectorLayer;
-  private userimageFolder: string =  "./assets/img/userimg/zwolle/";
   //form values
   public priorities = ["geen", "laag", "medium", "hoog"]
   private nonePriority = this.priorities[0];
