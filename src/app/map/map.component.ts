@@ -3732,7 +3732,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
             }
           }
         }
-        if (featureValues.img) {
+        if (featureValues.img && featureValues.img.toString().length > 0 && !featureValues.img["xsi:nil"]/* check database null */) {
           // the property img exists
           // visualize img if any  --> document somewhere that we will look for a field called 'img'
           const folder = AppConfiguration.userImageFolder;
