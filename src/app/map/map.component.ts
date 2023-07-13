@@ -120,6 +120,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
   featureLayerForm: {};
   payload: any;
   formOpen = false;
+  symbolPanelOpen = false;
   public existingProject = true;
   map: Map;
   view: View;
@@ -196,6 +197,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
   subsToStreetSelected: Subscription;
   subsToCustomDialogClosed: Subscription;
   subsToSymbolPanelClosed: Subscription;
+  subsToEditAborted: Subscription;
 
   constructor(
     private mapQgsStyleService: MapQgsStyleService,
@@ -306,9 +308,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     );
     this.subsToSymbolPanelClosed=  this.openLayersService.symbolPanelClosed$.subscribe(
       (isCanceled) => {
-          if(isCanceled && this.formOpen){
-            this.formOpen = false;
-          }
+        console.log(isCanceled)
+          this.symbolPanelOpen = !isCanceled;
         },
       (error) => {
         console.error('Error while adding street feature to map', error);
@@ -325,6 +326,17 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         console.error('Error while closing custom dialog', error);
       }
     )
+    /*this.subsToEditAborted = this.openLayersService.editAborted$.subscribe(
+        (isAborted) => {
+          if(isAborted && this.formOpen){
+            this.formOpen = false;
+          }
+        },
+      (error) => {
+        console.error('Error while adding street feature to map', error);
+      }
+    )*/
+
 
 
     this.openLayersService.editAction$.subscribe(
@@ -2504,7 +2516,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       const verticalPosition: MatSnackBarVerticalPosition = 'bottom';
       this.draw.on('drawstart', (evt) => {
         // console.log('this.formOpen in drawstart', this.formOpen);
-        if (this.formOpen) {
+        if (this.formOpen || this.symbolPanelOpen) {
           this.snackBar.open('There is a form open, close it first', 'ok', {
             horizontalPosition: 'center',
             verticalPosition: 'top',
@@ -2642,7 +2654,6 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       }else{
         this.showSymbolPanel(true)
       }
-      this.formOpen = true;
     }else{
       this.afterSymbolSelectedHandler(layer, feature); //show edit dialog
     }
@@ -2693,6 +2704,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     }else{
       this.openLayersService.updateShowSymbolPanel({visible: visible, optHeader: optHeader});
     }
+    this.symbolPanelOpen = visible;
    }
 
   unsetMeasureToolTip() {

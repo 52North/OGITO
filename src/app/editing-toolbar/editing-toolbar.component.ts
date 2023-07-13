@@ -149,7 +149,6 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
 
   closeEditingToolbar(){
     this.isVisible$ = observableOf(false);
-    this.showSymbolPanel(false);
   }
 
   updateLayerTypeEdit(geomType){
@@ -226,7 +225,7 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
    /* alert("add Code to measure Distance");
   } */
 
-  showSymbolPanel(visible: boolean, optHeader? : string): void{
+  showSymbolPanel(visible: boolean, canceled: boolean = true, optHeader? : string): void{
     /**
      * Updates the observable that allows to show/hide the symbolPanel
      */
@@ -234,6 +233,10 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
       this.openLayersService.updateShowSymbolPanel({visible: visible});
     }else{
       this.openLayersService.updateShowSymbolPanel({visible: visible, optHeader: optHeader});
+    }
+
+    if(canceled){
+      this.openLayersService.raiseSymbolPanelClosed(true)
     }
    }
 
