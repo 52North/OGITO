@@ -6,6 +6,7 @@ import {OpenLayersService} from '../open-layers.service';
 import {MatIconRegistry} from '@angular/material/icon';
 import {DomSanitizer} from '@angular/platform-browser';
 import {QuestionBase} from '../question-base';
+import { AppConfiguration } from '../app-configuration';
 
 @Component({
   selector: 'app-layer-panel',
@@ -230,6 +231,9 @@ ngOnDestroy(){
 
   }
 
+  isLayerQueryable(layerName: string): boolean {
+    return !AppConfiguration.backgroundLayers.includes(layerName)
+  }
 
   onLayerVisClick(  $event: any, layer: any, groupName: any){
     /** This function emit an event to allow the map component to know that a layer was clicked
@@ -275,4 +279,5 @@ onGroupLayerVisClick(  $event: any, layer: any){
     const layerGroup = this.sgroupLayers.find(x => x.groupName === groupName);
     return layerGroup;
   }
+
 }

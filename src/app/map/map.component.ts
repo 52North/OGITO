@@ -1,3 +1,4 @@
+
 import { CustomDialogDescription, CustomDialogService } from './../custom-dialog.service';
 import { SelectedSymbol } from './../open-layers.service';
 import {
@@ -34,7 +35,9 @@ import Projection from 'ol/proj/Projection';
 import VectorSource from 'ol/source/Vector';
 import VectorLayer from 'ol/layer/Vector';
 import ImageLayer from 'ol/layer/Image';
+import TileLayer from 'ol/layer/Tile';
 import ImageWMS from 'ol/source/ImageWMS';
+import TileWMS from  'ol/source/TileWMS';
 import { Group as LayerGroup } from 'ol/layer';
 import { platformModifierKeyOnly } from 'ol/events/condition';
 import WFS from 'ol/format/WFS';
@@ -2083,22 +2086,12 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         ) {
           if (!layer.hasOwnProperty('Layer')) {
             // it is a simple WMS layer without a group
-            const WMSSource = new ImageWMS({
-              url: urlWMS,
-              params: { LAYERS: layer.Name },
-              serverType: 'qgis',
-              crossOrigin: null,
-            });
-            const WMSLayer = new ImageLayer({
-              source: WMSSource,
-              name: layer.Title,
-            });
-
-            this.addWebServLayer(layer.Title, WMSLayer);
+            const wmsLayer = this.createWMSLayer(layer.title,layer.Name, urlWMS)
+            this.addWebServLayer(layer.Title, wmsLayer);
             this.loadedWmsLayers.push({
               layerName: layer.Name,
               layerTitle: layer.Title,
-              source: WMSSource,
+              source: wmsLayer.getSource()
             });
             return;
           }
@@ -2110,22 +2103,12 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
                   (x) => x.layerName.toLowerCase() === lyr.Name.toLowerCase()
                 ) === -1
               ) {
-                const WMSSource = new ImageWMS({
-                  url: urlWMS,
-                  params: { LAYERS: lyr.Name },
-                  serverType: 'qgis',
-                  crossOrigin: null,
-                });
-                const WMSLayer = new ImageLayer({
-                  source: WMSSource,
-                  name: lyr.Title,
-                  visible: false,
-                });
-                this.addWebServLayer(lyr.Title, WMSLayer);
+                const wmsLayer = this.createWMSLayer(lyr.Title, lyr.Name, urlWMS)
+                this.addWebServLayer(lyr.Title, wmsLayer);
                 this.loadedWmsLayers.push({
                   layerName: lyr.Name,
                   layerTitle: lyr.Title,
-                  source: WMSSource,
+                  source: wmsLayer.getSource()
                 });
               }
             });
@@ -2136,6 +2119,36 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       alert(
         'Error loading WMS layers, please check the QGIS project configuration'
       );
+    }
+  }
+
+  createWMSLayer(title: string, name: string,  urlWMS: string){
+    if(AppConfiguration.backgroundLayers.includes(title)){
+      const wmsSource = new TileWMS({
+        url: urlWMS,
+        params: { LAYERS: name },
+        serverType: 'qgis',
+        crossOrigin: null,
+      });
+      const wmsLayer = new TileLayer({
+        source: wmsSource,
+        name: title,
+        visible: false,
+      });
+      return wmsLayer;
+    }else{
+      const wmsSource = new ImageWMS({
+        url: urlWMS,
+        params: { LAYERS: name },
+        serverType: 'qgis',
+        crossOrigin: null,
+      });
+      const wmsLayer = new ImageLayer({
+        source: wmsSource,
+        name: title,
+        visible: false,
+      });
+      return wmsLayer;
     }
   }
 
