@@ -36,7 +36,7 @@ export class OpenLayersService {
   findPopExposed$ = this.findPopExposedSource.asObservable();
   private findInstitutionsExposedSource = new Subject<any>();  // Population exposed to certain level of noise
   findInstitutionsExposed$ = this.findInstitutionsExposedSource.asObservable();
-  private addSketchLayerSource = new Subject<string>();
+  private addSketchLayerSource = new Subject<SketchLayerDescriptor>();
   addSketchLayer$ = this.addSketchLayerSource.asObservable();
   private showStreetSearchSource = new Subject<boolean>();
   showStreetSearch$ = this.showStreetSearchSource.asObservable();
@@ -53,11 +53,11 @@ export class OpenLayersService {
      */
     this.existingProject.next(projectOpened);
   }
-  updateAddSketchLayer(value: string){
+  updateAddSketchLayer(value: string, showDefaultFields = true, editable = true){
     /**
      * @param value: name of the sketch layer
      */
-    this.addSketchLayerSource.next(value);
+    this.addSketchLayerSource.next({name: value, editable: editable, showDefaultFields: showDefaultFields});
   }
 
   updateZoomHome(value= true){
@@ -183,5 +183,11 @@ export interface SelectedSymbol{
 export interface SymbolListVisibility{
   visible: boolean,
   optHeader?: string
+}
+
+export interface SketchLayerDescriptor{
+  name: string,
+  editable: boolean
+  showDefaultFields: boolean
 }
 

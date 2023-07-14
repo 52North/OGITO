@@ -1,6 +1,5 @@
 
 import { CustomDialogDescription, CustomDialogService } from './../custom-dialog.service';
-import { SelectedSymbol } from './../open-layers.service';
 import {
   AfterViewInit,
   Component,
@@ -149,6 +148,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
   dragZoom: any;
   dragBox: any;
   dragAndDropInteraction: any;
+  dragAndDropLayerCount = 0;
+  dragAndDropLayerPrefix = 'Drag & Drop Layer ';
   // the project selected by the user
   selectedProject: any;
   loadedWfsLayers = []; // [{layerName: 'uno', layerTitle: 'Layer 1'}, {layerName: 'dos', layerTitle: 'layer 2'}];
@@ -291,7 +292,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     this.subsToAddSketchLayer =
       this.openLayersService.addSketchLayer$.subscribe(
         (data) => {
-          if (data) this.addNewSketchLayer(data);
+          if (data) this.addNewSketchLayer(data.name, data.showDefaultFields, data.editable);
         },
         (error) => {
           console.log('Error creating sketch layer', error);
@@ -326,16 +327,6 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         console.error('Error while closing custom dialog', error);
       }
     )
-    /*this.subsToEditAborted = this.openLayersService.editAborted$.subscribe(
-        (isAborted) => {
-          if(isAborted && this.formOpen){
-            this.formOpen = false;
-          }
-        },
-      (error) => {
-        console.error('Error while adding street feature to map', error);
-      }
-    )*/
 
 
 
@@ -1182,9 +1173,9 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     this.addSessionLayer(vectorLayer, fieldstoShow, false);
   }
 
-  addNewSketchLayer(sketchLayerName: string) {
+  addNewSketchLayer(sketchLayerName: string, showDefaultFields = true, editable = true) {
     /**
-     * Adds a sketch layer to the panel to allow people "anotate noise map..."
+     * Adds a sketch layer to the panel"
      * multi-geometry --> all
      */
     // set style
@@ -1221,15 +1212,22 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       },
     });
     // add the layer to the map
-    const fieldstoShow = [
-      { name: 'detail', type: 'QString', typeName: 'varchar', comment: '' },
-      { name: 'id', type: 'QString', typeName: 'varchar', comment: '' },
-    ];
+
+    var fieldsToShow;
+    if(showDefaultFields){
+      fieldsToShow = [
+          { name: 'detail', type: 'QString', typeName: 'varchar', comment: '' },
+          { name: 'id', type: 'QString', typeName: 'varchar', comment: '' },
+        ];
+    }else{
+      fieldsToShow = null;
+    }
+
     // fields to edit
     const fieldsToEdit = [
       { name: 'detail', type: 'QString', typeName: 'varchar', comment: '' },
     ];
-    this.addSessionLayer(newVector, fieldstoShow, true);
+    this.addSessionLayer(newVector, fieldsToShow, editable);
     // add tp the group of sketch layers
     this.loadedSketchLayers.push({
       layerName: sketchLayerName,
@@ -1844,8 +1842,13 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     this.dragRotate = new DragRotate();
     this.dragZoom = new DragZoom();
     this.dragAndDropInteraction = new DragAndDrop({
-      formatConstructors: [GeoJSON, KML],
+      formatConstructors: [new GeoJSON({dataProjection: AppConfiguration.srsName, featureProjection: AppConfiguration.srsName})],
     });
+    this.dragAndDropInteraction.on('addfeatures', (event) => {
+        this.dragAndDropHandler(event);
+      }
+    );
+
     this.map = new Map({
       interactions: defaultInteractions({ constrainResolution: true }), // , pinchZoom: false, pinchRotate: false})
       target: 'map',
@@ -1855,6 +1858,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         zoom: 3,
       }),
     });
+    this.map.addInteraction(this.dragAndDropInteraction)
     // initialize the select style
     this.selectStyle = new Style({
       stroke: new Stroke({
@@ -2706,6 +2710,16 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     this.symbolPanelOpen = visible;
    }
+
+   private dragAndDropHandler(event){
+    this.dragAndDropLayerCount++;
+    const layerName = this.dragAndDropLayerPrefix + this.dragAndDropLayerCount;
+    console.log(layerName)
+    this.openLayersService.updateAddSketchLayer(layerName, false, false); //drag & drop layers are not editable
+    const newDragAndDropLayer = this.findLayer(layerName);
+    const vectorSource = newDragAndDropLayer.getSource();
+    vectorSource.addFeatures(event.features)
+  }
 
   unsetMeasureToolTip() {
     this.measureTooltipElement.innerHTML = '';
@@ -3715,9 +3729,14 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     const featureValues = this.map.forEachFeatureAtPixel(
       evt.pixel,
       (feature) => {
-        const valuesToShow = {};
-        for (const field of fieldsToShow) {
-          valuesToShow[field.name] = feature.get(field.name);
+        var valuesToShow = {};
+        if(fieldsToShow){
+          for (const field of fieldsToShow) {
+            valuesToShow[field.name] = feature.get(field.name);
+          }
+        }else{//if not specifies show all attributes
+          const properties = feature.getProperties();
+          valuesToShow = (({ geometry, ...o }) => o)(properties) // clone without geometry property
         }
         return valuesToShow; // here return all the values available
       },
@@ -4243,6 +4262,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       console.log('Error readding Drag/Pinch interactions', e);
     }
   }
+
 
   adjustMapView(){
     console.log("adjust map view")
