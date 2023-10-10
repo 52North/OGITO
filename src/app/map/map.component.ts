@@ -2146,10 +2146,11 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   createWMSLayer(title: string, name: string,  urlWMS: string){
-    if(AppConfiguration.backgroundLayers.includes(title)){
+    const baselayerConfig = AppConfiguration.backgroundLayers.find( (layer) =>   title.toLowerCase() === layer.title.toLowerCase()) //check if is configured as baselayer
+    if(baselayerConfig){ //use tile wms for baselayers
       const wmsSource = new TileWMS({
         url: urlWMS,
-        params: { LAYERS: name },
+        params: { LAYERS: name, FORMAT: baselayerConfig.format },
         serverType: 'qgis',
         crossOrigin: null,
       });

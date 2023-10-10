@@ -27,7 +27,7 @@ export class AppConfiguration{
   static imageUploadFolder = "/assets/img/userimg/zwolle/uploads/"
 
   static hiddenLayers : string[] =  ["zwolle_streets", "zwolle_streets_wms"] //layers not in layer panel
-  static backgroundLayers : string[] = ["Luchtfoto", "Topografische Kaart"] //create as tiled wms layer
+  static backgroundLayers : any[] = [{title: "Luchtfoto", format: "image/jpeg"}, {title: "Topografische Kaart", format: "image/jpeg"}] //create as tiled wms layer
   // raster icon used as symbol for WMS layers
   static rasterIcon =  'data:image/png;base64,' + 'iVBORw0KGgoAAAANSUhEUgAAACYAAAAmCAYAAACoPemuAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAXE' +
     'gAAFxIBZ5/SUgAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAIJSURBVFiF7dfNSxVhFMfxz71zkd40X1KzrZgmQRQF/Qkt2oSLWvive' +
