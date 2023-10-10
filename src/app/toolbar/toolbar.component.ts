@@ -3,9 +3,9 @@ import {Subscription} from 'rxjs';
 import {OpenLayersService} from '../open-layers.service';
 import {MatIconRegistry} from '@angular/material/icon';
 import {DomSanitizer} from '@angular/platform-browser';
-import {request, gql} from 'graphql-request';
 import {AppConfiguration} from '../app-configuration';
 import {MatDialog, MatDialogRef} from '@angular/material/dialog';
+
 @Component({
   selector: 'app-toolbar',
   templateUrl: './toolbar.component.html',
@@ -43,7 +43,12 @@ export class ToolbarComponent implements OnInit {
       'magnifier',
       sanitizer.bypassSecurityTrustResourceUrl('assets/img/magnifier.svg')
     );
+    iconRegistry.addSvgIcon(
+      'geolocation',
+      sanitizer.bypassSecurityTrustResourceUrl('assets/img/geolocation.svg')
+    );
   }
+
 
   zoomHome(){
     this.openLayersService.updateZoomHome(true);
@@ -110,45 +115,8 @@ export class ToolbarComponent implements OnInit {
     }
   }
 
-  async switchScreenOrientation(){
-    var changedFullscreenMode = false;
-
-    if(!document.fullscreenElement){ //check if already in fullscreen
-      await document.getElementById("app-content-container").requestFullscreen(); // <-- Use wait, app has to be in fullscreen
-      changedFullscreenMode = true;
-    }
-
-    window.screen.orientation.unlock()
-
-    var current_mode = window.screen.orientation
-    var orientationPromise;
-    console.log("current screen orientation: " + current_mode.type)
-    if(current_mode.type === "landscape-primary"){
-      orientationPromise = current_mode.lock("portrait-primary")
-    }else if(current_mode.type === "portrait-primary"){
-      orientationPromise = current_mode.lock("landscape-secondary")
-    }else if(current_mode.type === "landscape-secondary"){
-      orientationPromise = current_mode.lock("portrait-secondary")
-    }else if(current_mode.type === "portrait-secondary"){
-      orientationPromise = current_mode.lock("portrait-primary")
-      current_mode.unlock()
-    }
-
-    orientationPromise.catch(function(error){
-      if(changedFullscreenMode){
-         document.exitFullscreen()
-      }
-      alert("orientation switch not available on this device")
-    })
-  }
-
-  isOrientationSwitchSupported() : boolean{
-    /*if('orientation' in window.screen){
-      return true;
-    }else{
-      return false;
-    }*/
-    return false;
+  updateCurrentPosition(){
+    this.openLayersService.updateGeolocation();
   }
 }
 

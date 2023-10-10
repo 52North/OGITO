@@ -66,6 +66,7 @@ import ZoomSlider from 'ol/control/ZoomSlider';
 import ScaleLine from 'ol/control/ScaleLine';
 import {fromCircle} from 'ol/geom/Polygon';
 import {touchOnly} from 'ol/events/condition';
+import Geolocation from 'ol/Geolocation';
 import {OpenLayersService} from '../open-layers.service';
 import {MapQgsStyleService} from '../map-qgs-style.service';
 import {AuthService} from '../auth.service';
@@ -199,6 +200,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
   subsToCustomDialogClosed: Subscription;
   subsToSymbolPanelClosed: Subscription;
   subsToEditAborted: Subscription;
+  subsToGeolocation: Subscription;
 
   constructor(
     private mapQgsStyleService: MapQgsStyleService,
@@ -326,7 +328,12 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       (error) => {
         console.error('Error while closing custom dialog', error);
       }
-    )
+    );
+    this.subsToGeolocation = this.openLayersService.zoomToLocation$.subscribe(
+      () => {
+        this.centerGeolocation()
+      }
+    );
 
 
 
@@ -3048,6 +3055,27 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         return group; // it was lyr
       }
     }
+  }
+
+
+  private centerGeolocation(){
+    const view = this.map.getView()
+    const geolocation = new Geolocation({
+      projection: view.getProjection()
+    });
+    geolocation.setTracking(true);
+    geolocation.once('change:position', function(evt) {
+      const pos = geolocation.getPosition();
+      console.log("current device location: " + pos)
+      geolocation.setTracking(false)
+      if(pos && pos.length == 2){
+        view.setCenter(pos);
+        view.setZoom(view.getMaxZoom());
+      }else{
+        console.log("unable to to get current position")
+        console.log(pos);
+      }
+    });
   }
 
   updateEditingLayer(layerOnEdit: any) {

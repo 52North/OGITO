@@ -44,6 +44,8 @@ export class OpenLayersService {
   streetSelected$ = this.streetSelectedSource.asObservable();
   private symbolPanelClosed = new Subject<boolean>();
   symbolPanelClosed$ = this.symbolPanelClosed.asObservable();
+  private zoomToLocation = new Subject<any>();
+  zoomToLocation$ = this.zoomToLocation.asObservable();
 
   constructor() { }
 
@@ -65,6 +67,13 @@ export class OpenLayersService {
      * sends a request to the map component to go to the Home
      */
     this.zoomHomeSource.next(value);
+  }
+
+  updateGeolocation(){
+    /**
+     * sends a request to the map component  to center on current user location
+     */
+    this.zoomToLocation.next();
   }
 
   updateShapeEditType(shapeEdit: any){

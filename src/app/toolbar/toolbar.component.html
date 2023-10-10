@@ -15,19 +15,19 @@
     <button mat-icon-button aria-labelledby="Add a sketch layer" matTooltip="Omschakelen van volledig scherm" (click)="toggleFullScreen()" >
       <mat-icon class="svgIconToolbar" svgIcon="fullscreen"></mat-icon>
     </button>
-    <button *ngIf="isOrientationSwitchSupported()" aria-labelledby="Switch screen orientation" matTooltip="Schermoriëntatie veranderen" (click)="switchScreenOrientation()" >
-      <mat-icon class="svgIconToolbar" svgIcon="layerScratch"></mat-icon>
-    </button>
     <button mat-icon-button aria-labelledby="Show list of layers" matTooltip="Toon kaartoverzicht" (click)="openLayerPanel()" >
       <mat-icon class="svgIconToolbar">layers</mat-icon>
     </button>
     <!--<button mat-icon-button aria-labelledby="Edit layers" matTooltip="Edit layers" (click)="layerEditingChange()">
       <mat-icon>edit</mat-icon>
     </button> !-->
-    <button mat-icon-button aria-labelledby="Add a sketch layer" matTooltip="Een schetslaag toevoegen" (click)="createScratchLayer()" >
+    <button mat-icon-button aria-labelledby="Add a sketch layer" matTooltip="Add a sketch layer" (click)="createScratchLayer()" >
     <mat-icon class="svgIconToolbar" svgIcon="layerScratch"></mat-icon>
     </button>
-    <button mat-icon-button aria-labelledby="Open Street Search" matTooltip="Zoeken op straatnaam" (click)="openStreetSearch()" >
+    <button mat-icon-button aria-labelledby="Show your location" matTooltip="Show your location" (click)="updateCurrentPosition()" >
+      <mat-icon class="svgIconToolbar" svgIcon="geolocation"></mat-icon>
+    </button>
+    <button mat-icon-button aria-labelledby="Open search by street name" matTooltip="Search by street name" (click)="openStreetSearch()" >
       <mat-icon class="svgIconToolbar" svgIcon="magnifier"></mat-icon>
     </button>
    <!-- disable noise related queries for Herne and Zwolle Case Study
