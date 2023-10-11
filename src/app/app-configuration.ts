@@ -11,9 +11,9 @@ export class AppConfiguration{
   static curProject =  AppConfiguration.hostname + 'qgs_projects/' + AppConfiguration.qgsProject;  // to fecth the xml project file
   static svgFolder = '../../assets/svg/';
   static userImageFolder = '';
-  static mapZoom = 14;
+  static mapZoom = 15;
   static maxZoom = 20 ;
-  static minZoom = 13 ;
+  static minZoom = 14 ;
   static threshold = 1000; // Distance in meter to close a polygon being drawn with a line.
   static projDefs = {
     25832: '+proj=utm +zone=32 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs',
@@ -24,10 +24,10 @@ export class AppConfiguration{
     property: 'name'
   };
   static imageUploadService = "http://localhost:5001/" + "images/"
-  static imageUploadFolder = "/assets/img/userimg/zwolle/uploads/"
+  static imageUploadFolder = "/assets/img/userimg/enschede/uploads/"
 
   static hiddenLayers : string[] =  ["zwolle_streets", "zwolle_streets_wms"] //layers not in layer panel
-  static backgroundLayers : any[] = [{title: "Luchtfoto", format: "image/jpeg"}, {title: "Topografische Kaart", format: "image/jpeg"}] //create as tiled wms layer
+  static backgroundLayers : any[] = [{title: "Aerial photo", format: "image/jpeg"}, {title: "Topographic map", format: "image/jpeg"}] //create as tiled wms layer
   // raster icon used as symbol for WMS layers
   static rasterIcon =  'data:image/png;base64,' + 'iVBORw0KGgoAAAANSUhEUgAAACYAAAAmCAYAAACoPemuAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAXE' +
     'gAAFxIBZ5/SUgAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAIJSURBVFiF7dfNSxVhFMfxz71zkd40X1KzrZgmQRQF/Qkt2oSLWvive' +

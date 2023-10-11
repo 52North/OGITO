@@ -20,7 +20,7 @@ import { DialogOrgExposedComponent } from './dialog-org-exposed/dialog-org-expos
 import { DialogResultExposedComponent } from './dialog-result-exposed/dialog-result-exposed.component';
 import {MatKeyboardModule} from '@ngx-material-keyboard/core';
 import { StreetSearchComponent } from './street-search/street-search.component';
-import { EditMeldingenComponent } from './edit-meldingen/edit-meldingen.component';
+import { EditReportingComponent } from './edit-reporting/edit-reporting.component';
 
 @NgModule({
   declarations: [
@@ -41,7 +41,7 @@ import { EditMeldingenComponent } from './edit-meldingen/edit-meldingen.componen
     DialogResultExposedComponent,
     DialogLayerNameDialog,
     StreetSearchComponent,
-    EditMeldingenComponent
+    EditReportingComponent
   ],
     imports: [
         BrowserModule,

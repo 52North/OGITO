@@ -15,9 +15,9 @@ export class ProjlistComponent implements OnInit {
   projectFolder = '/etc/qgisserver/';
   projects = [
     {
-      name: 'OGITO Zwolle Case Study',
+      name: 'OGITO Enschede Case Study',
       url: AppConfiguration.hostname + 'qgs_projects/noisebochumcity.qgs',
-      file: this.projectFolder + 'ogito_zwolle.qgs',     // was checking4
+      file: this.projectFolder + 'ogito_enschede.qgs',     // was checking4
       img: AppConfiguration.hostname + 'qgs_projects/noise.png',
       qGsServerUrl: 'http://localhost:8380/?',
       srsID: 'EPSG:28992'   //EPSG CODE

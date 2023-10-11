@@ -1,18 +1,18 @@
 import { map, catchError } from "rxjs/operators";
-import { AppConfiguration } from './../app-configuration';
+import { AppConfiguration } from '../app-configuration';
 import { VectorLayer } from 'ol/layer/Vector';
 import { Feature } from 'ol/Feature';
 import { Observable, Subscription } from 'rxjs';
-import { CustomDialogService, EditedFeature } from './../custom-dialog.service';
+import { CustomDialogService, EditedFeature } from '../custom-dialog.service';
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { HttpClient, HttpEvent, HttpEventType } from '@angular/common/http';
 
 @Component({
-  selector: 'app-edit-meldingen',
-  templateUrl: './edit-meldingen.component.html',
-  styleUrls: ['./edit-meldingen.component.scss']
+  selector: 'app-edit-reporting',
+  templateUrl: './edit-reporting.component.html',
+  styleUrls: ['./edit-reporting.component.scss']
 })
-export class EditMeldingenComponent implements OnInit {
+export class EditReportingComponent implements OnInit {
 
   @Output() formSubmitted = new EventEmitter<any>();
 
@@ -21,7 +21,7 @@ export class EditMeldingenComponent implements OnInit {
   private feature : Feature;
   private layer: VectorLayer;
   //form values
-  public priorities = ["geen", "laag", "medium", "hoog"]
+  public priorities = ["none", "low", "medium", "high"]
   private nonePriority = this.priorities[0];
   public description: string;
   public date: string = new Date().toISOString().slice(0, 10);
@@ -29,7 +29,7 @@ export class EditMeldingenComponent implements OnInit {
   public address: string;
   public isGoodExample: string = "true";
   public priority: string = this.nonePriority;
-  private categoryAttr = "categorie";
+  private categoryAttr = "category";
   public imageFile: File = null;
   private serverImageFileName: string;
   private uploadPending = false;
@@ -118,17 +118,17 @@ export class EditMeldingenComponent implements OnInit {
   private publishData(resetForm : boolean = true){
     var goodExampleBool = JSON.parse(this.isGoodExample.trim()) //convert to bool
     var payload = {
-      tekst: (this.description) ? this.description.trim() : "",
-      datum: new Date(this.date),
-      behulpzaamheid: goodExampleBool,
-      prioriteit: (goodExampleBool) ? this.nonePriority : this.priority,
+      text: (this.description) ? this.description.trim() : "", //attributes must match database table columns
+      date: new Date(this.date),
+      helpfulness: goodExampleBool,
+      priority: (goodExampleBool) ? this.nonePriority : this.priority,
       img: this.serverImageFileName,
       alt_img: (this.imageFile) ? this.imageDescription : null,
-      adres: (this.imageFile) ? this.address : null,
-      categorie: this.feature.getProperties()[this.categoryAttr]
+      address: (this.imageFile) ? this.address : null,
+      category: this.feature.getProperties()[this.categoryAttr]
     }
 
-    console.log("submit meldingen: ");
+    console.log("submit reporting: ");
     console.log(payload)
     this.formSubmitted.emit({payload: payload, feature: this.feature, layerName: this.layer.layerName});
 

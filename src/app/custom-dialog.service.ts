@@ -14,10 +14,10 @@ export class CustomDialogService {
 
   private customDialogs: CustomDialogDescription[] = [
     {
-      layerName: "Meldingen",
-      header: "Categorie",
+      layerName: "Reporting",
+      header: "Category",
       handler: (layer: VectorLayer, feature: Feature) => {
-        console.log("request custom edit dialag for Meldingen")
+        console.log("request custom edit dialag for Reporting")
         this.startEditNewMeldigen({layer, feature})
      }
     }
