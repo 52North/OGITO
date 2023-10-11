@@ -1,11 +1,11 @@
-<h2 mat-dialog-title>Voer een naam in voor de nieuwe schetslaag</h2>
+<h2 mat-dialog-title>Enter a name for the new sketch layer</h2>
 <mat-dialog-content>
   <mat-form-field appearance="fill">
-    <mat-label>Laag naam?</mat-label>
+    <mat-label>Layer Name</mat-label>
     <input matInput [(ngModel)]="sketchName">
   </mat-form-field>
 </mat-dialog-content>
 <mat-dialog-actions>
   <button mat-button color="primary" [mat-dialog-close]="sketchName" cdkFocusInitial>Ok</button>
-  <button mat-button color="primary"  (click)="onNoClick()">Annuleren</button>
+  <button mat-button color="primary"  (click)="onNoClick()">Cancel</button>
 </mat-dialog-actions>

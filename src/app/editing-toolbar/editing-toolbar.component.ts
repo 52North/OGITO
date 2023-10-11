@@ -271,7 +271,7 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
   saveAllLayer(){
     /** Enable user to save edit in all the layers
      */
-    if (confirm('Wil je alle bewerkingen in alle lagen opslaan?')){
+    if (confirm('Do you want to save all edits in  all layers?')){
       this.openLayersService.updateSaveAllLayers(true);
       // disable the button
       this.stopSaveAll = true;

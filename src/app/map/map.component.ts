@@ -2539,7 +2539,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         }
 
         /*if (this.currentClass == null) {
-          alert('Kies een symbool');
+          alert('Choose a symbol');
           this.draw.abortDrawing();
           return; // #TODO check this
         }*/
