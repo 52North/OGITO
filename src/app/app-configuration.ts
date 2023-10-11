@@ -12,7 +12,7 @@ export class AppConfiguration{
   static svgFolder = '../../assets/svg/';
   static userImageFolder = '';
   static mapZoom = 15;
-  static maxZoom = 20 ;
+  static maxZoom = 21 ;
   static minZoom = 14 ;
   static threshold = 1000; // Distance in meter to close a polygon being drawn with a line.
   static projDefs = {
