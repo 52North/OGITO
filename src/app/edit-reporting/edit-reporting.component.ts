@@ -107,7 +107,7 @@ export class EditReportingComponent implements OnInit {
         err => {
           console.log("Error while uploading file  " + this.imageFile.name);
           console.error(err);
-          alert("De foto kon niet worden geüpload. \n " + err["error"]["error"])
+          alert("Could not upload image to the server. \n " + err["error"]["error"])
         }
       ).add(() => {this.uploadPending = false, this.uploadProgress = 0})
     }else{
