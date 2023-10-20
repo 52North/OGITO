@@ -3161,7 +3161,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       this.saveEdits(layer);
     });
     if (this.loadedSketchLayers.length > 0) {
-      if (confirm('Wollen Sie alle Aenderungen speichern?')) {
+      if (confirm('Do you want to save all cahnges?')) {
         this.loadedSketchLayers.forEach((layer) => {
           console.log('saving changes in sketch layers', layer.layerName);
           this.saveEdits(layer);
@@ -3177,7 +3177,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!(this.editBuffer.length > 0)) {
       // nothing to save
       this.snackBar.open(
-        'Nichts zu speichern',
+        'no changes',
         'ok', //Nothing to save
         {
           horizontalPosition: 'center',
@@ -3193,7 +3193,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     ) {
       // nothing to save in the editLayer
       this.snackBar.open(
-        'NNichts zu speichern',
+        'no changes',
         'ok', //Nothing to save in current layer
         {
           horizontalPosition: 'center',
@@ -3234,7 +3234,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
      */
     if (!(this.editBuffer.length > 0)) {
       this.snackBar.open(
-        'Nichts zu speichern',
+        'no changes',
         'ok', //No features to save in current sketch layer
         {
           horizontalPosition: 'center',
