@@ -10,7 +10,7 @@
       type="text"
       [(ngModel)]="userInput"
     />
-    <mat-placeholder class="filterPlaceholder">Straatnaam invoeren</mat-placeholder>
+    <mat-placeholder class="filterPlaceholder">enter street name</mat-placeholder>
   </mat-form-field>
   <button
     class="search-streets"
@@ -18,7 +18,7 @@
     (click)="this.searchStreetNames()"
     [disabled]="userInput.trim().length <= 2"
   >
-    Zoeken
+    search
   </button>
   <div class="select-street-container">
   <mat-select [(ngModel)]="this.selectedFeature"   (selectionChange)="onStreetSelected($event)"  (multiple) = 'false'  class="select-street" *ngIf="this.getCurrentFeatures() && this.getCurrentFeatures().length > 0" #streetSelect>
@@ -28,7 +28,7 @@
   </mat-select>
   <mat-select [(ngModel)]="this.selectedFeature"  *ngIf="this.getCurrentFeatures() && this.getCurrentFeatures().length === 0" #streetSelect>
     <mat-option [value]="null" disabled>
-      Geen straten gevonden
+      no matching street(s) found
     </mat-option>
   </mat-select>
 </div>
