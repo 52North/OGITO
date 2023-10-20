@@ -36,9 +36,9 @@ OGITO_streetnames(city, admin_id, outfile)
 ### how to get admin_id
 - go to https://www.openstreetmap.org/ 
 - enter your city name in the search field e.g. `Enschede`
-![1](/img/admin_id_step1.png)
+![1](https://github.com/52North/OGITO/blob/case_study/enschede/tools/street_names/img/admin_id_step1.png)
 - pick the correct area
-![2](/img/admin_id_step2.png)
+![2](https://github.com/52North/OGITO/blob/case_study/enschede/tools/street_names/img/admin_id_step2.png)
 - note the highlighted number in the picture
-![3](/img/admin_id_step3.png)
+![3](https://github.com/52North/OGITO/blob/case_study/enschede/tools/street_names/img/admin_id_step3.png)
 - use it in the function
