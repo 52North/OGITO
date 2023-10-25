@@ -2,6 +2,7 @@ import requests
 import json
 import geojson
 import geopandas as gpd
+import subprocess
 
 
 
@@ -70,8 +71,12 @@ def get_geometries(osm_ids, admin_id, outfile):
     admin_clip=feature.__geo_interface__
 
     ##clip streets by admin bound
+    ##clip streets by admin bound
     street_data=gpd.read_file(json.dumps(geojson_str))
+    street_data.to_file(f"./tmp_{outfile}.geojson")
+
     clip_data=gpd.read_file(json.dumps(admin_clip))
+    clip_data.to_file(f"./tmp_clip_{outfile}.geojson")
 
     clip=gpd.clip(street_data, clip_data)
 
@@ -81,6 +86,13 @@ def get_geometries(osm_ids, admin_id, outfile):
     diss=clip.dissolve(by='name')
 
     diss.to_file(f"./{outfile}.geojson")
+
+    #linestrings to multiline
+    ogr_cmd = ['ogr2ogr', '-f', 'GeoJSON', f'./{outfile}_multiline.geojson', f'./tmp_{outfile}_line.geojson', '-nlt', 'PROMOTE_TO_MULTI']
+
+    subprocess.run(ogr_cmd, check=True)
+
+
     print("everything done!")
 
 
@@ -93,7 +105,7 @@ def OGITO_streetnames(city, admin_id, outfile):
 # enter cityname and select the right one
 # copy number and use below
 #
-#OGITO_streetnames("Enschede", 415473, "enschede_multiline")
+#OGITO_streetnames("Enschede", 415473, "enschede")
 #
 
 
