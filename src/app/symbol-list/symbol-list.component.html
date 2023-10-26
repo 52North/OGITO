@@ -18,7 +18,7 @@
      <div id = "+{{symbol.key}}"  (click)="updateActivesymbol(symbol)"
       [ngClass]="symbolActiveKey == symbol.key? 'active': 'normal'" >
       <canvas id ={{symbol.key}} class="canvasSymbol" #cmp></canvas>
-      <span> {{symbol.value.label}} </span>
+      <span class="symbolLabel"> {{symbol.value.label}} </span>
      </div>
   </div>
 
