@@ -3090,7 +3090,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       if(pos && pos.length == 2){
         locationSource.addFeature(new Feature({geometry: new Point(pos), name: "position_marker"})) //add position marker
         view.setCenter(pos); //center view
-        view.setZoom(view.getMaxZoom());
+        view.setZoom(view.getMaxZoom()-2);
         console.log(locationSource.getFeatures().length)
       }else{
         console.log("unable to to get current position")
