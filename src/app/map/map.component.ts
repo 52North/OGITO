@@ -38,7 +38,6 @@ import TileLayer from 'ol/layer/Tile';
 import ImageWMS from 'ol/source/ImageWMS';
 import TileWMS from  'ol/source/TileWMS';
 import { Group as LayerGroup } from 'ol/layer';
-import { platformModifierKeyOnly } from 'ol/events/condition';
 import WFS from 'ol/format/WFS';
 import GML from 'ol/format/GML';
 import WMSCapabilities from 'ol/format/WMSCapabilities.js';
@@ -59,7 +58,7 @@ import {
   Translate,
 } from 'ol/interaction';
 import { LineString, Point, Polygon } from 'ol/geom';
-import { Fill, Stroke, Style, Circle } from 'ol/style';
+import { Fill, Stroke, Style } from 'ol/style';
 import CircleStyle from 'ol/style/Circle';
 import { GeoJSON, KML } from 'ol/format';
 import ZoomSlider from 'ol/control/ZoomSlider';
