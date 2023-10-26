@@ -25,7 +25,7 @@ import { Subject, Subscription } from 'rxjs';
 import { AppConfiguration } from '../app-configuration';
 import 'ol/ol.css';
 import { Map, View } from 'ol';
-import {Feature} from 'ol/Feature'
+import Feature from 'ol/Feature';
 import { getArea, getDistance, getLength } from 'ol/sphere';
 import { transform } from 'ol/proj';
 import proj4 from 'proj4';
@@ -59,7 +59,7 @@ import {
   Translate,
 } from 'ol/interaction';
 import { LineString, Point, Polygon } from 'ol/geom';
-import { Fill, Stroke, Style } from 'ol/style';
+import { Fill, Stroke, Style, Circle } from 'ol/style';
 import CircleStyle from 'ol/style/Circle';
 import { GeoJSON, KML } from 'ol/format';
 import ZoomSlider from 'ol/control/ZoomSlider';
@@ -170,6 +170,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
   private currentClass: any;
   private currentSelectedValue: any;
   private streetsVectorSource: VectorSource;
+  private geolocationVectorSource: VectorSource;
   private addedFeature: Feature;
   private afterSymbolSelectedHandler: (layer: any, feature: any) => void = this.popAttrForm;
   measureTooltipElement: any; // The measure tooltip element.  * @type {HTMLElement}
@@ -1888,7 +1889,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     this.pinchZoom.on('change', () => {});
     this.pinchZoom.on('change', () => {});
 
-    this.streetsVectorSource = new VectorSource();
+    this.streetsVectorSource = new VectorSource(); //add layer for street search
     const streetsLayer = new VectorLayer({
       source: this.streetsVectorSource,
       zIndex: 1000,
@@ -1902,6 +1903,22 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     });
 
     this.map.addLayer(streetsLayer);
+
+    this.geolocationVectorSource = new VectorSource(); //add layer for geolocation
+    const geolocationLayer = new VectorLayer({
+      source: this.geolocationVectorSource,
+      zIndex: 1001,
+      name: "geolocationlayer",
+      style: new Style({
+        image: new CircleStyle({
+          radius: 12,
+          fill: new Fill({ color: 'yellow' }),
+          stroke: new Stroke({ color: 'gray', width: 2}),
+        })
+      })
+    });
+
+    this.map.addLayer(geolocationLayer)
   }
 
   createHelpTooltip() {
@@ -3061,17 +3078,21 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private centerGeolocation(){
     const view = this.map.getView()
+    const locationSource = this.geolocationVectorSource;
     const geolocation = new Geolocation({
       projection: view.getProjection()
     });
     geolocation.setTracking(true);
+    locationSource.clear() //delete previos position marker
     geolocation.once('change:position', function(evt) {
       const pos = geolocation.getPosition();
       console.log("current device location: " + pos)
       geolocation.setTracking(false)
       if(pos && pos.length == 2){
-        view.setCenter(pos);
+        locationSource.addFeature(new Feature({geometry: new Point(pos), name: "position_marker"})) //add position marker
+        view.setCenter(pos); //center view
         view.setZoom(view.getMaxZoom());
+        console.log(locationSource.getFeatures().length)
       }else{
         console.log("unable to to get current position")
         console.log(pos);
