@@ -142,7 +142,8 @@ export class EditReportingComponent implements OnInit {
     var invalidDescrpiton = !this.description || this.description.trim().length === 0;
     var invalidImageDescription = (this.imageFile && (!this.imageDescription ||this.imageDescription.trim().length === 0))
 
-    return (invalidDescrpiton ||invalidImageDescription || this.uploadPending)
+    //return (invalidDescrpiton ||invalidImageDescription || this.uploadPending)
+    return this.uploadPending; //no mandatory fields only disable button during image upload
   }
 
   public onFileSelected(event){
