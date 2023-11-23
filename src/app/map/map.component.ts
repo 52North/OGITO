@@ -43,6 +43,7 @@ import { Group as LayerGroup } from 'ol/layer';
 import WFS from 'ol/format/WFS';
 import GML from 'ol/format/GML';
 import WMSCapabilities from 'ol/format/WMSCapabilities.js';
+import Attribution from 'ol/control/Attribution.js';
 import {click} from 'ol/events/condition.js';
 import Overlay from 'ol/Overlay';
 import {

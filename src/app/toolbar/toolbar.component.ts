@@ -17,7 +17,9 @@ export class ToolbarComponent implements OnInit {
   startX = 0;
   startY = 0;
   layerSketchName: string;
-  subscriptionExistingProject: Subscription;
+  private subscriptionExistingProject: Subscription;
+  private subscriptionStreetSearchConfigured: Subscription;
+  isStreetSearchConfigured: boolean = false;
   existingProject = true;
   constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer,
               private openLayersService: OpenLayersService,
@@ -100,6 +102,9 @@ export class ToolbarComponent implements OnInit {
         alert('error retrieving existing project');
         console.log(error);
       });
+    this.subscriptionStreetSearchConfigured = this.openLayersService.streetSearchConfigured$.subscribe(
+      (isConfigured: boolean) => this.isStreetSearchConfigured = isConfigured
+    )
   }
   startAction(action: string){
     /**

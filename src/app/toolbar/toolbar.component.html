@@ -27,7 +27,7 @@
     <button mat-icon-button aria-labelledby="Show your location" matTooltip="Show your location" (click)="updateCurrentPosition()" >
       <mat-icon class="svgIconToolbar" svgIcon="geolocation"></mat-icon>
     </button>
-    <button mat-icon-button aria-labelledby="Open search by street name" matTooltip="Search by street name" (click)="openStreetSearch()" >
+    <button *ngIf="isStreetSearchConfigured" mat-icon-button aria-labelledby="Open search by street name" matTooltip="Search by street name" (click)="openStreetSearch()" >
       <mat-icon class="svgIconToolbar" svgIcon="magnifier"></mat-icon>
     </button>
    <!-- disable noise related queries for Herne and Zwolle Case Study

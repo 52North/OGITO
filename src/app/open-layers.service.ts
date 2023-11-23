@@ -47,6 +47,8 @@ export class OpenLayersService {
   symbolPanelClosed$ = this.symbolPanelClosed.asObservable();
   private zoomToLocation = new Subject<any>();
   zoomToLocation$ = this.zoomToLocation.asObservable();
+  private streetSearchConfigured = new Subject<boolean>();
+  streetSearchConfigured$ = this.streetSearchConfigured.asObservable();
 
   constructor() { }
 
@@ -178,6 +180,10 @@ export class OpenLayersService {
 
   raiseSymbolPanelClosed(isAborted: boolean){
     this.symbolPanelClosed.next(isAborted)
+  }
+
+  updateStreetSearchConfigured(isConfigured: boolean){
+    this.streetSearchConfigured.next(isConfigured)
   }
 
 }

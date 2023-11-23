@@ -383,24 +383,24 @@ export class MapQgsStyleService {
       symbolType: this.sketchStyleAttr,
       ruleBased: true,
       style: {
-        rood: {
+        red: {
           style: this.defineSketchStyle("#FF0000"),
-          label: 'rood',
-          value: 'rood',
+          label: 'red',
+          value: 'red',
           attr: this.sketchStyleAttr,
           symbol: 'default'
         },
-        blauw: {
+        blue: {
           style: this.defineSketchStyle("#0000FF"),
-          label: 'blauw',
-          value: 'blauw',
+          label: 'blue',
+          value: 'blue',
           attr: this.sketchStyleAttr,
           symbol: 'default'
         },
-        roze: {
+        pink: {
           style: this.defineSketchStyle("#FF00FF"),
-          label: 'roze',
-          value: 'roze',
+          label: 'pink',
+          value: 'pink',
           attr: this.sketchStyleAttr,
           symbol: 'default'
         }

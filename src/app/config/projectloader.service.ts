@@ -33,12 +33,13 @@ export class ProjectloaderService {
         name: "OGITO Starter",
         qgisProjectFilename: "ogito_starter.qgs", //qgs filename only
         thumbnail: "https://raw.githubusercontent.com/rosaguilar/myogito/master/company_logo.png?token=GHSAT0AAAAAAB7UFEDR7ODZRUTTXZQS6BOUZCJJ5YA",
-        minZoom: 0,
+        minZoom: 14,
         maxZoom: 21,
         initZoom: 15,
         nameSessionGroup: "Sketch Layers",
         hiddenLayers : [],
         backgroundLayers : [{title: "OpenStreetMap", format: "image/jpeg"}],
+        centerWGS84: {lat: 51.935, lon: 7.6521}
         /*extentWGS84: {
           minLon: 7.1,
           minLat: 32.88,

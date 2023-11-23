@@ -175,6 +175,7 @@ export class StreetSearchComponent implements OnInit, OnDestroy {
       }else{
         this.isConfigured = false;
       }
+      this.openLayersService.updateStreetSearchConfigured(this.isConfigured);
   }
 
   private openSelectOptions(open: boolean){
