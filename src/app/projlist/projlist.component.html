@@ -12,10 +12,10 @@
     </mat-card-title-group>
     <mat-divider class = "toolbarDivider"></mat-divider>
 
-      <ng-container  *ngFor= "let project of projects" >
+      <ng-container  *ngFor= "let project of getProjects()" >
            <mat-nav-list [id]="project.name">
                 <mat-list-item class = "group" (click)="setProject(project)">
-                  <img matListAvatar [src] = 'sanitizeImageUrl(project.img)'>
+                  <img *ngIf="project.thumbnail" matListAvatar [src] = 'sanitizeImageUrl(project.thumbnail)'>
                  {{project.name}}
                 </mat-list-item>
               </mat-nav-list>

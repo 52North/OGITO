@@ -1,3 +1,5 @@
+import { Subscription } from 'rxjs';
+import { OpenLayersService } from './open-layers.service';
 import { Injectable } from '@angular/core';
 import CircleStyle from 'ol/style/Circle';
 import {Fill, RegularShape, Stroke, Style, Icon, Text, Circle} from 'ol/style';
@@ -7,6 +9,7 @@ import {Parser} from 'xml2js';
 import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
 import { valueFromAST } from 'graphql';
 import { ThrowStmt } from '@angular/compiler';
+import { ProjectConfiguration } from './config/project-config';
 
 @Injectable({
   providedIn: 'root'
@@ -57,8 +60,18 @@ export class MapQgsStyleService {
     'stroke-linejoin': 'lineJoin'
   };
   private sketchStyleAttr = "style"
+  private readonly projectSelectedSubscription : Subscription;
+  private loadedProject : ProjectConfiguration;
 
-  constructor(  private sanitizer: DomSanitizer) { }
+
+  constructor(  private sanitizer: DomSanitizer, private readonly openlayersService : OpenLayersService) {
+    this.projectSelectedSubscription = openlayersService.qgsProjectUrl$.subscribe(
+        (projectConfig) => {
+            this.loadedProject = projectConfig
+        },
+        error => console.error('error on project selection', error)
+    );
+  }
 
   findJsonStyle(feature: any, layerName: any): any {
     /** Given a feature and the layerName it returns the corresponding style
@@ -247,7 +260,7 @@ export class MapQgsStyleService {
         const layerStyle = jsonStyle.StyledLayerDescriptor.NamedLayer[i];
         const layerName = layerStyle['se:Name'][0];
 
-        if(AppConfiguration.hiddenLayers.includes(layerName)){
+        if(this.loadedProject.hiddenLayers.includes(layerName)){
           console.log("do not parse style for hidden layer " + layerName)
           return;
         }

@@ -15,6 +15,7 @@ import { GeoJSON, WFS } from 'ol/format';
 import {GML} from 'ol/format'
 import { HttpClient } from '@angular/common/http';
 import { MatSelect } from '@angular/material/select';
+import { ProjectConfiguration } from '../config/project-config';
 
 @Component({
   selector: 'app-street-search',
@@ -23,9 +24,10 @@ import { MatSelect } from '@angular/material/select';
 })
 export class StreetSearchComponent implements OnInit, OnDestroy {
 
-  private static SRS = AppConfiguration.srsName;
-  private static FEATURETYPE = AppConfiguration.streetSearch.featureType;
-  private static FEATUREPROPERTY = AppConfiguration.streetSearch.property;
+  private readonly srs : string;
+  private  layername: string;
+  private  featureproperty: string;
+  private isConfigured: boolean = false;
 
   selectedFeature: Feature = null;
   userInput: string = '';
@@ -34,9 +36,11 @@ export class StreetSearchComponent implements OnInit, OnDestroy {
   private showStreetSourceSubscription: Subscription;
   private projectSelectedSubscription: Subscription;
   private qgisServerUrl : string;
-  @ViewChild ('streetSelect', {static: false}) streetSelect : MatSelect;  
+  @ViewChild ('streetSelect', {static: false}) streetSelect : MatSelect;
 
-  constructor(private openLayersService: OpenLayersService, private http: HttpClient, private changeDetectorRef: ChangeDetectorRef) { }
+  constructor(private openLayersService: OpenLayersService, private http: HttpClient, private changeDetectorRef: ChangeDetectorRef) {
+    this.srs = AppConfiguration.srs;
+  }
 
   ngOnInit(): void {
     this.showStreetSourceSubscription = this.openLayersService.showStreetSearch$.subscribe(
@@ -67,6 +71,10 @@ export class StreetSearchComponent implements OnInit, OnDestroy {
     return this.isVisible;
   }
 
+  public isStreetSearchConfigured() : boolean {
+    return this.isConfigured;
+  }
+
   public setStreetSearchVisible(isVisible: boolean){
     this.isVisible = isVisible;
     if(!isVisible){
@@ -82,7 +90,7 @@ export class StreetSearchComponent implements OnInit, OnDestroy {
   }
 
   public getOptionsLabel(feature: Feature){
-    const label = feature.getProperties()[StreetSearchComponent.FEATUREPROPERTY]
+    const label = feature.getProperties()[this.featureproperty]
     return label;
   }
 
@@ -122,16 +130,16 @@ export class StreetSearchComponent implements OnInit, OnDestroy {
   }
 
   private parseFeaturesFromGeoJson(geojson: string) : Feature[]{
-    const features = new GML().readFeatures(geojson, {dataProjection: StreetSearchComponent.SRS, featureProjection: StreetSearchComponent.SRS});
+    const features = new GML().readFeatures(geojson, {dataProjection: this.srs, featureProjection: this.srs});
     return features;
   }
 
   private createGetFeatureRequest() : any {
     const featureRequest = new WFS().writeGetFeature({
-      srsName: StreetSearchComponent.SRS,
+      srsName: this.srs,
       //featureNS: 'http://openstreemap.org',
       //featurePrefix: 'osm',
-      featureTypes: [StreetSearchComponent.FEATURETYPE],
+      featureTypes: [this.layername],
       outputFormat: 'test/xml',
       filter: this.createFilterExpression()
     });
@@ -141,7 +149,7 @@ export class StreetSearchComponent implements OnInit, OnDestroy {
 
   private createFilterExpression() : LikeFilter {
     const pattern = "*" + this.userInput.trim() + "*"; //add wildcards and trim
-    const filter = new LikeFilter(StreetSearchComponent.FEATUREPROPERTY, pattern, "*" /*wildcard*/ , '.' /*single char*/,  '!' /*escape char*/, false /*match case*/)
+    const filter = new LikeFilter(this.featureproperty, pattern, "*" /*wildcard*/ , '.' /*single char*/,  '!' /*escape char*/, false /*match case*/)
 
     return filter;
   }
@@ -154,14 +162,19 @@ export class StreetSearchComponent implements OnInit, OnDestroy {
   }
 
   private sortFeatures(features : Feature[]){
-    return features.sort((a, b) => a.getProperties()[StreetSearchComponent.FEATUREPROPERTY].localeCompare(b.getProperties()[StreetSearchComponent.FEATUREPROPERTY]))
+    return features.sort((a, b) => a.getProperties()[this.featureproperty].localeCompare(b.getProperties()[this.featureproperty]))
   }
 
-  private updateSelectedProject(qgisProject: any) {
-    // get the var from the selection List
-    if (qgisProject.file.length > 0) {
-      this.qgisServerUrl = qgisProject.qGsServerUrl + "SERVICE=WFS&REQUEST=GetFeature&OUTPUTFORMAT=GML3&SRSNAME="+ StreetSearchComponent.SRS +"&VERSION=" + AppConfiguration.wfsVersion + "&map=" + qgisProject.file + "&TYPENAME=" + StreetSearchComponent.FEATURETYPE;
-    }
+  private updateSelectedProject(projectConfig: ProjectConfiguration) {
+      if(projectConfig.streetSearch){
+        const projectFile = AppConfiguration.qgisServerProjectFolder + projectConfig.qgisProjectFilename;
+        this.layername = projectConfig.streetSearch.layerName;
+        this.featureproperty = projectConfig.streetSearch.property;
+        this.qgisServerUrl = AppConfiguration.qgisServerUrl + "SERVICE=WFS&REQUEST=GetFeature&OUTPUTFORMAT=GML3&SRSNAME="+ this.srs +"&VERSION=" + AppConfiguration.wfsVersion + "&map=" + projectFile + "&TYPENAME=" + this.layername;
+        this.isConfigured = true;
+      }else{
+        this.isConfigured = false;
+      }
   }
 
   private openSelectOptions(open: boolean){

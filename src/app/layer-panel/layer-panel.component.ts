@@ -7,6 +7,7 @@ import {MatIconRegistry} from '@angular/material/icon';
 import {DomSanitizer} from '@angular/platform-browser';
 import {QuestionBase} from '../question-base';
 import { AppConfiguration } from '../app-configuration';
+import { ProjectConfiguration } from '../config/project-config';
 
 @Component({
   selector: 'app-layer-panel',
@@ -18,6 +19,8 @@ export class LayerPanelComponent implements OnInit, OnDestroy{
   @Input() groupLayers: Observable<{}>;
   private groupLayersSubscription: Subscription;
   private showEditToolsSubscription: Subscription;
+  private projectSelectedSubscription: Subscription;
+  private loadedProject: ProjectConfiguration;
   public  sgroupLayers: any;
   @Output() layerVisClick = new EventEmitter<any>();   // emit an event when a layer is clicked in the list
   @Output() groupLayerVisClick = new EventEmitter<any>();   // emit an event when a layer is clicked in the list
@@ -47,18 +50,25 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
    }
 
   ngOnInit(): void {
-  this.layerActive = null;
-  this.showLayerPanel$ = observableOf(true);
+    this.layerActive = null;
+    this.showLayerPanel$ = observableOf(true);
 
-  this.showEditToolsSubscription = this.openLayersService.showEditLayerPanel$.subscribe(data =>{
-     this.showLayerPanel$ = observableOf(data);  },
-    error => console.log('error showing layer panel'));
+    this.showEditToolsSubscription = this.openLayersService.showEditLayerPanel$.subscribe(data =>{
+      this.showLayerPanel$ = observableOf(data);  },
+      error => console.log('error showing layer panel'));
 
-  this.groupLayersSubscription = this.groupLayers.subscribe(
-      data => {
-        this.sgroupLayers = data;
-      },
-      error => console.log ('Error in subscription to groupLayers', error)    );
+    this.groupLayersSubscription = this.groupLayers.subscribe(
+        data => {
+          this.sgroupLayers = data;
+        },
+        error => console.log ('Error in subscription to groupLayers', error)
+    );
+    this.projectSelectedSubscription = this.openLayersService.qgsProjectUrl$.subscribe(
+          (projectConfig) => {
+              this.loadedProject = projectConfig
+          },
+          error => console.error('error on project selection', error)
+    );
   }
 
   updateIdentifyActionInLayers(layerName: string){
@@ -235,7 +245,7 @@ ngOnDestroy(){
   }
 
   isLayerQueryable(layerName: string): boolean {
-    return !AppConfiguration.backgroundLayers.includes(layerName)
+    return !this.loadedProject.backgroundLayers.find((bl) => bl.title === layerName);
   }
 
   onLayerVisClick(  $event: any, layer: any, groupName: any){

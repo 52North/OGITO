@@ -1,8 +1,10 @@
+import { ProjectloaderService } from './../config/projectloader.service';
 import {Component, EventEmitter, OnInit, Output} from '@angular/core';
 import {AppConfiguration} from '../app-configuration';
 import {Observable, of as observableOf} from 'rxjs';
 import {OpenLayersService} from '../open-layers.service';
 import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
+import { ProjectConfiguration } from '../config/project-config';
 
 @Component({
   selector: 'app-projlist',
@@ -12,22 +14,13 @@ import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
 export class ProjlistComponent implements OnInit {
   @Output() selectProject = new EventEmitter<any>();
   showProjectList$: Observable<boolean>;
-  projectFolder = '/etc/qgisserver/';
-  projects = [
-    {
-      name: 'OGITO Enschede Case Study',
-      url: AppConfiguration.hostname + 'qgs_projects/noisebochumcity.qgs',
-      file: this.projectFolder + 'ogito_enschede.qgs',     // was checking4
-      img: AppConfiguration.hostname + 'qgs_projects/noise.png',
-      qGsServerUrl: 'http://localhost:8380/?',
-      srsID: 'EPSG:28992'   //EPSG CODE
-    }
-   ];
+  private projects: ProjectConfiguration[];
 
-  constructor( private  openLayersService: OpenLayersService, private sanitizer: DomSanitizer) {
-  }
+  constructor( private  openLayersService: OpenLayersService, private sanitizer: DomSanitizer, private projectsConfig : ProjectloaderService) {}
 
   ngOnInit(): void {
+    console.info("load project configuration")
+    this.projects = this.projectsConfig.retrieveProjects();
     this.showProjectList$ = observableOf(true);
   }
  sanitizeImageUrl(imageUrl: string): SafeUrl {
@@ -41,4 +34,7 @@ export class ProjlistComponent implements OnInit {
     this.updateShowProjectList(false);
   }
 
+  getProjects() {
+    return this.projects;
+  }
 }

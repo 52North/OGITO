@@ -57,3 +57,4 @@ src/**/*.rrd
 
 /Upload/images
 Upload/node_modules
+tools/street_names

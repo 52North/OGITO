@@ -1,33 +1,23 @@
 
 
 export class AppConfiguration{
+  static qgisServerUrl = "http://localhost:8380/?";
+  static qgisServerProjectFolder = "/etc/qgisserver/"
   static hostname = 'http://localhost:4200/';
   static wmsVersion  = '1.3.0' ;
   static wfsVersion = '1.1.0';
   static wmtsVersion = '1.0.0';
-  static qgsProject = 'checking2.qgs';  // shapefiles
-  static srsName = 'EPSG:28992';
-  // Path to access projects
-  static curProject =  AppConfiguration.hostname + 'qgs_projects/' + AppConfiguration.qgsProject;  // to fecth the xml project file
+  static srs = 'EPSG:3857';
   static svgFolder = '../../assets/svg/';
   static userImageFolder = '';
-  static mapZoom = 15;
-  static maxZoom = 21 ;
-  static minZoom = 14 ;
   static threshold = 1000; // Distance in meter to close a polygon being drawn with a line.
   static projDefs = {
     25832: '+proj=utm +zone=32 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs',
     28992: '+proj=sterea +lat_0=52.15616055555555 +lon_0=5.38763888888889 +k=0.999908 +x_0=155000 +y_0=463000 +ellps=bessel +units=m +towgs84=565.2369,50.0087,465.658,-0.406857330322398,0.350732676542563,-1.8703473836068,4.0812 +no_defs'
   };
-  static streetSearch = {
-    featureType : 'enschede_streets',
-    property: 'name'
-  };
   static imageUploadService = "http://localhost:5001/" + "images/"
   static imageUploadFolder = "/assets/img/userimg/enschede/uploads/"
 
-  static hiddenLayers : string[] =  ["enschede_streets"] //layers not in layer panel
-  static backgroundLayers : any[] = [{title: "Aerial photo", format: "image/jpeg"}, {title: "Topographic map", format: "image/jpeg"}] //create as tiled wms layer
   // raster icon used as symbol for WMS layers
   static rasterIcon =  'data:image/png;base64,' + 'iVBORw0KGgoAAAANSUhEUgAAACYAAAAmCAYAAACoPemuAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAXE' +
     'gAAFxIBZ5/SUgAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAIJSURBVFiF7dfNSxVhFMfxz71zkd40X1KzrZgmQRQF/Qkt2oSLWvive' +
@@ -106,7 +96,6 @@ export class AppConfiguration{
   static totalPopBochumArea =  64966.73;  // Result of the SQL query: select sum(population.value) as Sum   from population
   static noiseGroupName = 'Laermkarten';  // in lower case
   static institutionsGroupName = 'oeffentliche_einrichtungen';  // in lower case
-  static nameSessionGroup = 'sessionGroup';
 }
 
 

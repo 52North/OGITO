@@ -1,3 +1,4 @@
+import { ProjectConfiguration } from './../config/project-config';
 
 import { CustomDialogDescription, CustomDialogService } from './../custom-dialog.service';
 import {
@@ -27,7 +28,8 @@ import 'ol/ol.css';
 import { Map, View } from 'ol';
 import Feature from 'ol/Feature';
 import { getArea, getDistance, getLength } from 'ol/sphere';
-import { transform } from 'ol/proj';
+import { transform, transformExtent, fromLonLat } from 'ol/proj';
+import {getCenter} from 'ol/extent';
 import proj4 from 'proj4';
 import { register } from 'ol/proj/proj4';
 import Projection from 'ol/proj/Projection';
@@ -125,12 +127,9 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
   view: View;
   srsID: any; // ID of the SRS to be used in the map View
   wgs84ID = 'EPSG:4326';
-  projectTitle: string;
   mapCanvasExtent: any;
-  BBOX: any;
-  mapCenterXY: number[] = [376987, 5710901]; // the center of the map in the project EPSG coordinates
-  projectProjection: Projection;
-  mapZoom: number = AppConfiguration.mapZoom;
+  mapCenterXY: number[];
+  mapZoom: number;
   selectStyle: any;
   popExposedStyle: any;
   qgsProjectFile: string;
@@ -171,6 +170,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
   private streetsVectorSource: VectorSource;
   private geolocationVectorSource: VectorSource;
   private addedFeature: Feature;
+  private loadedProject: ProjectConfiguration;
   private afterSymbolSelectedHandler: (layer: any, feature: any) => void = this.popAttrForm;
   measureTooltipElement: any; // The measure tooltip element.  * @type {HTMLElement}
   measureTooltip: any;
@@ -618,7 +618,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       .find(
         (x) =>
           x.get('name').toLowerCase() ===
-          AppConfiguration.nameSessionGroup.toLowerCase()
+          this.loadedProject.nameSessionGroup.toLowerCase()
       );
     if (groupSession) {
       if (
@@ -634,7 +634,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         return; */ // --> old version
         const layer = this.findLayerWithGroup(
           layerName.toLowerCase(),
-          AppConfiguration.nameSessionGroup.toLowerCase()
+          this.loadedProject.nameSessionGroup.toLowerCase()
         );
         this.map.removeLayer(layer);
       }
@@ -739,7 +739,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       .find(
         (x) =>
           x.get('name').toLowerCase() ===
-          AppConfiguration.nameSessionGroup.toLowerCase()
+          this.loadedProject.nameSessionGroup.toLowerCase()
       );
     if (groupSession) {
       if (
@@ -753,7 +753,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         // remove from the map to recalculate
         const layer = this.findLayerWithGroup(
           layerName.toLowerCase(),
-          AppConfiguration.nameSessionGroup.toLowerCase()
+          this.loadedProject.nameSessionGroup.toLowerCase()
         );
         this.map.removeLayer(layer);
       }
@@ -1240,7 +1240,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       layerName: sketchLayerName,
       // layerGeom,
       layerTitle: sketchLayerName,
-      defaultSRS: AppConfiguration.srsName,
+      defaultSRS: AppConfiguration.srs,
       operations: ['insert', 'modify', 'delete'], // #Check  this #TODO
       geometryType: 'Multi', // Dependent of QGIS project as the styles.
       source: newSource,
@@ -1284,14 +1284,14 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     if (
       !(
         this.groupsLayers.findIndex(
-          (x) => x.groupName === AppConfiguration.nameSessionGroup
+          (x) => x.groupName === this.loadedProject.nameSessionGroup
         ) >= 0
       )
     ) {
       // add the group at the beginning
       this.groupsLayers.unshift({
-        groupName: AppConfiguration.nameSessionGroup,
-        groupTittle: AppConfiguration.nameSessionGroup,
+        groupName: this.loadedProject.nameSessionGroup,
+        groupTittle: this.loadedProject.nameSessionGroup,
         visible: true, // group visible by default.. less clicks
         layers,
       });
@@ -1300,7 +1300,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     // group does exists
     const group = this.groupsLayers.find(
-      (x) => x.groupName === AppConfiguration.nameSessionGroup
+      (x) => x.groupName === this.loadedProject.nameSessionGroup
     );
     group.layers.push(layerItem);
     this.groupsLayersSubject.next(this.groupsLayers);
@@ -1364,14 +1364,14 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
           .getArray()
           .findIndex(
             (x) =>
-              AppConfiguration.nameSessionGroup.toLowerCase() ===
+            this.loadedProject.nameSessionGroup.toLowerCase() ===
               x.get('name').toLowerCase()
           ) > 0
       )
     ) {
       // group does not exist, create it.
       const newGroup = new LayerGroup({
-        name: AppConfiguration.nameSessionGroup,
+        name: this.loadedProject.nameSessionGroup,
         layers: [],
         visible: true, // visible by default
         zIndex: 100, // at the end of the layers by default
@@ -1388,7 +1388,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       this.map.getLayers().forEach((grp) => {
         if (
           grp.get('name').toLowerCase() ===
-          AppConfiguration.nameSessionGroup.toLowerCase()
+          this.loadedProject.nameSessionGroup.toLowerCase()
         ) {
           group = grp;
         }
@@ -1497,15 +1497,15 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       this.openDialog(this.curEditingLayer.layerName, selectedFeatures[0]);
     });
   }
-  updateSelectedProject(qgsProject: any) {
+  updateSelectedProject(projectConfig: ProjectConfiguration) {
     // get the var from the selection List
-    if (qgsProject.file.length > 0) {
-      this.qgsProjectFile = qgsProject.file;
-      this.qGsServerUrl = qgsProject.qGsServerUrl;
-      this.srsID = qgsProject.srsID;
+      this.loadedProject = projectConfig;
+      this.qgsProjectFile = AppConfiguration.qgisServerProjectFolder + projectConfig.qgisProjectFilename;
+      this.qGsServerUrl = AppConfiguration.qgisServerUrl;
+      this.mapZoom = projectConfig.initZoom;
+      this.srsID = AppConfiguration.srs;
+
       this.updateMap(this.qgsProjectFile);
-      return;
-    }
   }
 
   requestProjectInfo(qgsfile: string) {
@@ -1541,7 +1541,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         k++
       ) {
         const layerName = WFSLayers.getElementsByTagName('WFSLayer')[k].getAttribute('name');
-          if(!AppConfiguration.hiddenLayers.includes(layerName)){
+          if(!this.loadedProject.hiddenLayers.includes(layerName)){
           wfsLayerList.push(
             layerName
           );
@@ -1555,7 +1555,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       // the epsg code comes in the second place in the list
 
       let projBBOX: Element = null;
-      const projectSRID = AppConfiguration.srsName;
+      const projectSRID = AppConfiguration.srs;
 
       for (
         let i = 0;
@@ -1585,8 +1585,10 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       ];
       this.srsID = projBBOX.getAttribute('CRS');
 
+    if(!["EPSG:3857", "EPSG:4326"].includes(this.srsID.toUpperCase())){
       proj4.defs(this.srsID, AppConfiguration.projDefs[this.srsID.split(":")[1]]);
       register(proj4);
+    }
     } else {
       const BBOX = rootLayer.getElementsByTagName(
         'EX_GeographicBoundingBox'
@@ -1849,7 +1851,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     this.dragRotate = new DragRotate();
     this.dragZoom = new DragZoom();
     this.dragAndDropInteraction = new DragAndDrop({
-      formatConstructors: [new GeoJSON({dataProjection: AppConfiguration.srsName, featureProjection: AppConfiguration.srsName})],
+      formatConstructors: [new GeoJSON({dataProjection: AppConfiguration.srs, featureProjection: AppConfiguration.srs})],
     });
     this.dragAndDropInteraction.on('addfeatures', (event) => {
         this.dragAndDropHandler(event);
@@ -1959,46 +1961,23 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   updateMapView() {
-    /** Uses the map extent and projection written in the Qgs project (this.mapCanvasExtent [xmin, xmax, ymin, ymax])
-     * to update the mapView after the map initialization.
-     *  To do that creates to point and calculate the center.
-     */
-    // get a center for the map
-    const leftMinCorner = new Point([
-      this.mapCanvasExtent[0],
-      this.mapCanvasExtent[2],
-    ]);
-    const rightMinCorner = new Point([
-      this.mapCanvasExtent[1],
-      this.mapCanvasExtent[2],
-    ]);
-    const leftMaxCorner = new Point([
-      this.mapCanvasExtent[0],
-      this.mapCanvasExtent[3],
-    ]);
-    const hDistance = getDistance(
-      transform(leftMinCorner.getCoordinates(), this.srsID, this.wgs84ID),
-      transform(rightMinCorner.getCoordinates(), this.srsID, this.wgs84ID)
-    );
-    const vDistance = getDistance(
-      transform(leftMaxCorner.getCoordinates(), this.srsID, this.wgs84ID),
-      transform(leftMinCorner.getCoordinates(), this.srsID, this.wgs84ID)
-    );
-    this.mapCenterXY = [
-      this.mapCanvasExtent[0] + hDistance / 2,
-      this.mapCanvasExtent[2] + vDistance / 2,
-    ];
+    //use extent written in the Qgs project if not provided in project config
+    const extentConstraint = (this.loadedProject.extentWGS84) ? transformExtent([this.loadedProject.extentWGS84.minLon, this.loadedProject.extentWGS84.minLat, this.loadedProject.extentWGS84.maxLon, this.loadedProject.extentWGS84.maxLat], this.wgs84ID, this.srsID) : this.mapCanvasExtent;
+    //use bbox center point if center not provided in project config
+    this.mapCenterXY = (this.loadedProject.centerWGS84) ? fromLonLat([this.loadedProject.centerWGS84.lon, this.loadedProject.centerWGS84.lat], this.srsID) : getCenter(extentConstraint);
     this.view = new View({
-      center: [this.mapCenterXY[0], this.mapCenterXY[1]], // [-66,10] ,
-      zoom: AppConfiguration.mapZoom, // this.mapZoom,
-      minZoom: AppConfiguration.minZoom,
-      maxZoom: AppConfiguration.maxZoom,
+      center: [this.mapCenterXY[0], this.mapCenterXY[1]],
+      zoom: this.loadedProject.initZoom,
+      minZoom: this.loadedProject.minZoom,
+      maxZoom: this.loadedProject.maxZoom,
       projection: this.srsID,
+      extent: extentConstraint,
+      smoothExtentConstraint: true,
+      constrainOnlyCenter: true
     });
     this.map.setView(this.view);
     this.map.addControl(new ZoomSlider());
     this.map.addControl(new ScaleLine());
-    //this.map.addControl(new FullScreen({source: 'app-content'}));
    }
 
   ngAfterViewInit() {
@@ -2026,7 +2005,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
      * Centers the map canvas view to the center and zoom specified in the Qgsprojec file extent and the appConfiguration
      */
     this.map.getView().setRotation(0);
-    this.map.getView().setZoom(AppConfiguration.mapZoom);
+    this.map.getView().setZoom(this.mapZoom);
     this.map.getView().setCenter([this.mapCenterXY[0], this.mapCenterXY[1]]);
   }
 
@@ -2121,11 +2100,11 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
             (x) => x.layerName.toLowerCase() === layer.Name.toLowerCase()
           ) === -1
           &&
-          !AppConfiguration.hiddenLayers.includes(layer.Name)
+          !this.loadedProject.hiddenLayers.includes(layer.Name)
         ) {
           if (!layer.hasOwnProperty('Layer')) {
             // it is a simple WMS layer without a group
-            const wmsLayer = this.createWMSLayer(layer.title,layer.Name, urlWMS)
+            const wmsLayer = (layer.Attribution && layer.Attribution.Title) ? this.createWMSLayer(layer.title,layer.Name, urlWMS, layer.Attribution.Title) : this.createWMSLayer(layer.title,layer.Name, urlWMS);
             this.addWebServLayer(layer.Title, wmsLayer);
             this.loadedWmsLayers.push({
               layerName: layer.Name,
@@ -2142,7 +2121,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
                   (x) => x.layerName.toLowerCase() === lyr.Name.toLowerCase()
                 ) === -1
               ) {
-                const wmsLayer = this.createWMSLayer(lyr.Title, lyr.Name, urlWMS)
+                const wmsLayer =  (lyr.Attribution && lyr.Attribution.Title) ? this.createWMSLayer(lyr.Title,lyr.Name, urlWMS, lyr.Attribution.Title) : this.createWMSLayer(lyr.Title,lyr.Name, urlWMS);
                 this.addWebServLayer(lyr.Title, wmsLayer);
                 this.loadedWmsLayers.push({
                   layerName: lyr.Name,
@@ -2161,14 +2140,15 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  createWMSLayer(title: string, name: string,  urlWMS: string){
-    const baselayerConfig = AppConfiguration.backgroundLayers.find( (layer) =>   title.toLowerCase() === layer.title.toLowerCase()) //check if is configured as baselayer
+  createWMSLayer(title: string, name: string,  urlWMS: string, attributionText: string = undefined){
+    const baselayerConfig = this.loadedProject.backgroundLayers.find( (layer) =>   title.toLowerCase() === layer.title.toLowerCase()) //check if is configured as baselayer
     if(baselayerConfig){ //use tile wms for baselayers
       const wmsSource = new TileWMS({
         url: urlWMS,
         params: { LAYERS: name, FORMAT: baselayerConfig.format },
         serverType: 'qgis',
         crossOrigin: null,
+        attributions: [attributionText]
       });
       const wmsLayer = new TileLayer({
         source: wmsSource,
@@ -2182,6 +2162,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         params: { LAYERS: name },
         serverType: 'qgis',
         crossOrigin: null,
+        attributions: [attributionText]
       });
       const wmsLayer = new ImageLayer({
         source: wmsSource,
@@ -2900,10 +2881,10 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       if(defaultSRSNode[0].childNodes.length > 0){
         defaultSRS = defaultSRSNode[0].childNodes[0].nodeValue;
       }else{
-        defaultSRS = AppConfiguration.srsName;
+        defaultSRS = AppConfiguration.srs;
       }
       // validation or warning
-      if (defaultSRS !== AppConfiguration.srsName) {
+      if (defaultSRS !== AppConfiguration.srs) {
         alert(
           `The layer ${layerName}has a different default SRS than the SRS of the project`
         );
@@ -2947,7 +2928,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         upperCorner.split(' ')[1] === '0'
       ) {
       }
-      if (layerName.length > 0 && !AppConfiguration.hiddenLayers.includes(layerName)) {
+      if (layerName.length > 0 && !this.loadedProject.hiddenLayers.includes(layerName)) {
         // store layer properties to use later
         const geom = this.findGeometryType(layerName);
         const qGsProject = '&map=' + this.qgsProjectFile;
@@ -3864,7 +3845,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     const wmsUrl = wmsSource.getFeatureInfoUrl(
       evt.coordinate, // how to check this with EPSG # 4326 and 3857
       viewResolution,
-      AppConfiguration.srsName,
+      AppConfiguration.srs,
       {
         INFO_FORMAT: 'application/json',
         FI_POINT_TOLERANCE: 10,

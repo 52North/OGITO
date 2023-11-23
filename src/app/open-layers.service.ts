@@ -1,6 +1,7 @@
 import { Feature } from 'ol/Feature';
 import { Injectable } from '@angular/core';
 import {Subject} from 'rxjs';
+import { ProjectConfiguration } from './config/project-config';
 
 @Injectable({
   providedIn: 'root'
@@ -30,7 +31,7 @@ export class OpenLayersService {
   editAction$ = this.editActionSource.asObservable();
   private zoomHomeSource = new Subject<boolean>();
   zoomHome$ = this.zoomHomeSource.asObservable();
-  private qgsProjectUrlSource = new Subject<any>();
+  private qgsProjectUrlSource = new Subject<ProjectConfiguration>();
   qgsProjectUrl$ = this.qgsProjectUrlSource.asObservable();
   private findPopExposedSource = new Subject<any>();  // Population exposed to certain level of noise
   findPopExposed$ = this.findPopExposedSource.asObservable();
