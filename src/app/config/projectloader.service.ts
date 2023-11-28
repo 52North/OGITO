@@ -1,5 +1,8 @@
 import { Injectable } from '@angular/core';
-import {ProjectConfiguration } from './project-config';
+import {ProjectConfiguration, ProjectConfigurationCodec } from './project-config';
+import { AppconfigService } from './appconfig.service';
+import { HttpClient } from '@angular/common/http';
+import * as t from 'io-ts'
 
 @Injectable({
   providedIn: 'root'
@@ -7,47 +10,35 @@ import {ProjectConfiguration } from './project-config';
 export class ProjectloaderService {
 
 
+  private configPromise: Promise<any>;
 
-  constructor() { }
-
-
-  public retrieveProjects() : ProjectConfiguration [] {
-
-    return [
-      {
-        name: "test project",
-        qgisProjectFilename: "ogito_enschede.qgs", //qgs filename only
-        thumbnail: "https://avatars.githubusercontent.com/u/3714494?s=200&v=4",
-        minZoom: 14,
-        maxZoom: 21,
-        initZoom: 15,
-        nameSessionGroup: "Session Layers",
-        hiddenLayers : ["enschede_streets"],
-        backgroundLayers : [{title: "Aerial photo", format: "image/jpeg"}, {title: "Topographic map", format: "image/jpeg"}],
-        streetSearch: {
-          layerName : 'enschede_streets',
-          property: 'name'
-        }
-      },
-      {
-        name: "OGITO Starter",
-        qgisProjectFilename: "ogito_starter.qgs", //qgs filename only
-        thumbnail: "https://raw.githubusercontent.com/rosaguilar/myogito/master/company_logo.png?token=GHSAT0AAAAAAB7UFEDR7ODZRUTTXZQS6BOUZCJJ5YA",
-        minZoom: 14,
-        maxZoom: 21,
-        initZoom: 15,
-        nameSessionGroup: "Sketch Layers",
-        hiddenLayers : [],
-        backgroundLayers : [{title: "OpenStreetMap", format: "image/jpeg"}],
-        centerWGS84: {lat: 51.935, lon: 7.6521}
-        /*extentWGS84: {
-          minLon: 7.1,
-          minLat: 32.88,
-          maxLon: 40.18,
-          maxLat: 84.73
-        }*/
-      }
-    ];
+  constructor(private http: HttpClient, private config: AppconfigService) {
+    this.configPromise = this.http.get<ProjectConfiguration[]>(this.config.getAppConfig().projectConfigurationFile, {responseType: 'json' as any}).toPromise();
   }
 
+  public async retrieveProjects() : Promise<ProjectConfiguration[]> {
+    try{
+      //typescript does not check types at runtime
+      //use codecs (ts-io) to check type validty of configured projects
+      //omit project if configuration is not valid
+      const uncheckedConfig: ProjectConfiguration[] = await this.configPromise;
+
+      const validProjects: ProjectConfiguration[] = []
+      for(let project of uncheckedConfig){
+        const validityCheck = ProjectConfigurationCodec.decode(project);
+        if(validityCheck._tag === "Right"){
+          validProjects.push(project); //valid project config
+        }else{
+          console.warn("unable to parse project configuration")
+          console.warn(project)
+          console.error(validityCheck.left);
+          continue;
+        }
+      }
+      return validProjects;
+    }catch(e){
+      window.prompt("unable to load project configuration")
+      throw new Error("unable to load project configuration: " + e.toString())
+    }
+  }
 }

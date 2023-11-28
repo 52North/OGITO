@@ -1,5 +1,4 @@
 import { ProjectConfiguration } from './../config/project-config';
-
 import { CustomDialogDescription, CustomDialogService } from './../custom-dialog.service';
 import {
   AfterViewInit,
@@ -23,7 +22,7 @@ import {
   MAT_DIALOG_DATA,
 } from '@angular/material/dialog';
 import { Subject, Subscription } from 'rxjs';
-import { AppConfiguration } from '../app-configuration';
+import { AppConstants } from '../app-constants';
 import 'ol/ol.css';
 import { Map, View } from 'ol';
 import Feature from 'ol/Feature';
@@ -85,6 +84,7 @@ import {request, gql} from 'graphql-request';
 import {QueryDBService} from '../query-db.service';
 import {DialogOrgExposedComponent} from '../dialog-org-exposed/dialog-org-exposed.component';
 import {saveAs} from 'file-saver';
+import { AppconfigService } from '../config/appconfig.service';
 
 // To use rating dialogs
 export interface DialogData {
@@ -212,7 +212,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     private snackBar: MatSnackBar,
     public dialog: MatDialog,
     private sanitizer: DomSanitizer,
-    private customDialogInitializer : CustomDialogService
+    private customDialogInitializer : CustomDialogService,
+    private config: AppconfigService
   ) {
     this.subsToShapeEdit = this.openLayersService.shapeEditType$.subscribe(
       (data) => {
@@ -424,7 +425,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       layerName === 'massnahmen'
         ? 'Massnahmen Laute Orte'
         : 'Massnahmen Leise Orte';
-    const fieldsNames = AppConfiguration.ratingMeasureLayers[layerName];
+    const fieldsNames = AppConstants.ratingMeasureLayers[layerName];
     let fieldsToRank = []; // select those that have a true value
     fieldsNames.forEach((field) => {
       if (feature.get(field) === true) {
@@ -433,12 +434,12 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     });
     // add sonstiges
     if (
-      feature.get(AppConfiguration.fieldOther[layerName]) &&
-      feature.get(AppConfiguration.fieldOther[layerName]).length > 0
+      feature.get(AppConstants.fieldOther[layerName]) &&
+      feature.get(AppConstants.fieldOther[layerName]).length > 0
     ) {
-      fieldsToRank.push(AppConfiguration.fieldOther[layerName]);
+      fieldsToRank.push(AppConstants.fieldOther[layerName]);
     }
-    const measureDesc = feature.get(AppConfiguration.fieldDesc[layerName]);
+    const measureDesc = feature.get(AppConstants.fieldDesc[layerName]);
     const dialogRef = this.dialog.open(DialogRatingMeasureDialog, {
       width: '24vw',
       data: {
@@ -501,7 +502,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     this.map.getLayers().forEach((layer) => {
       if (
         layer.get('name').toLowerCase() ===
-        AppConfiguration.institutionsGroupName.toLowerCase()
+        AppConstants.institutionsGroupName.toLowerCase()
       ) {
         orgGroup = layer;
         return;
@@ -523,7 +524,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     // find the layers for noise
     this.map.getLayers().forEach((layer) => {
-      if (layer.get('name') === AppConfiguration.noiseGroupName) {
+      if (layer.get('name') === AppConstants.noiseGroupName) {
         noiseGroup = layer;
         return;
       }
@@ -658,7 +659,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     let noiseGroup: any;
     // find the layers
     this.map.getLayers().forEach((layer) => {
-      if (layer.get('name') === AppConfiguration.noiseGroupName) {
+      if (layer.get('name') === AppConstants.noiseGroupName) {
         noiseGroup = layer;
         return;
       }
@@ -1059,7 +1060,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         100
     );
     const popShare = Math.round(
-      (popExposed / AppConfiguration.totalPopBochumArea) * 100
+      (popExposed / AppConstants.totalPopBochumArea) * 100
     );
     // load the layer - creates a group if needed
     this.loadJson(data.nodes, layerName);
@@ -1241,7 +1242,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       layerName: sketchLayerName,
       // layerGeom,
       layerTitle: sketchLayerName,
-      defaultSRS: AppConfiguration.srs,
+      defaultSRS: this.config.getAppConfig().srs,
       operations: ['insert', 'modify', 'delete'], // #Check  this #TODO
       geometryType: 'Multi', // Dependent of QGIS project as the styles.
       source: newSource,
@@ -1412,7 +1413,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
   saveRating(layerName: string, feature: any) {
     // update the database
     const attrRanking =
-      AppConfiguration.ratingPrex[layerName] + this.rating.toString();
+      AppConstants.ratingPrex[layerName] + this.rating.toString();
     const newRating = feature.get(attrRanking) + 1; // the number of times that people ranked with 3, 4, 5 starts;
     // assign attributes
     feature.set(attrRanking, newRating);
@@ -1458,7 +1459,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
     // checking that layer can be ranked.. this is in AppConfiguration
-    if (!AppConfiguration.ratingPrex[this.curEditingLayer.layerName]) {
+    if (!AppConstants.ratingPrex[this.curEditingLayer.layerName]) {
       this.snackBar.open('Current layer is not available for rating', 'ok', {
         horizontalPosition: 'center',
         verticalPosition: 'top',
@@ -1501,10 +1502,10 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
   updateSelectedProject(projectConfig: ProjectConfiguration) {
     // get the var from the selection List
       this.loadedProject = projectConfig;
-      this.qgsProjectFile = AppConfiguration.qgisServerProjectFolder + projectConfig.qgisProjectFilename;
-      this.qGsServerUrl = AppConfiguration.qgisServerUrl;
+      this.qgsProjectFile = this.config.getAppConfig().qgisServerProjectFolder + projectConfig.qgisProjectFilename;
+      this.qGsServerUrl = this.config.getAppConfig().qgisServerUrl;
       this.mapZoom = projectConfig.initZoom;
-      this.srsID = AppConfiguration.srs;
+      this.srsID = this.config.getAppConfig().srs;
 
       this.updateMap(this.qgsProjectFile);
   }
@@ -1556,7 +1557,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       // the epsg code comes in the second place in the list
 
       let projBBOX: Element = null;
-      const projectSRID = AppConfiguration.srs;
+      const projectSRID = this.config.getAppConfig().srs;
 
       for (
         let i = 0;
@@ -1587,7 +1588,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       this.srsID = projBBOX.getAttribute('CRS');
 
     if(!["EPSG:3857", "EPSG:4326"].includes(this.srsID.toUpperCase())){
-      proj4.defs(this.srsID, AppConfiguration.projDefs[this.srsID.split(":")[1]]);
+      proj4.defs(this.srsID, AppConstants.projDefs[this.srsID.split(":")[1]]);
       register(proj4);
     }
     } else {
@@ -1652,7 +1653,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
             layerIsWfs = true;
             // check if more elements can be added
             if (
-              AppConfiguration.noAddingFeatsLayers.findIndex(
+              AppConstants.noAddingFeatsLayers.findIndex(
                 (element) => element === layerName
               ) > -1
             ) {
@@ -1677,7 +1678,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
               });
             }
             // check if layer is available for rating
-            if (AppConfiguration.ratingMeasureLayers[layerName]) {
+            if (AppConstants.ratingMeasureLayers[layerName]) {
               layerForRanking = true;
             }
           }
@@ -1736,7 +1737,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       // layer does not have symbols, raster
       return [
         {
-          iconSrc: this.sanitizeImageUrl(AppConfiguration.rasterIcon),
+          iconSrc: this.sanitizeImageUrl(AppConstants.rasterIcon),
           title: layerName,
         },
       ];
@@ -1752,7 +1753,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         } else {
           // workaround issue with OSM in GECCO
           symbolList.push({
-            iconSrc: this.sanitizeImageUrl(AppConfiguration.rasterIcon),
+            iconSrc: this.sanitizeImageUrl(AppConstants.rasterIcon),
             title: layerName,
           });
         }
@@ -1852,7 +1853,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     this.dragRotate = new DragRotate();
     this.dragZoom = new DragZoom();
     this.dragAndDropInteraction = new DragAndDrop({
-      formatConstructors: [new GeoJSON({dataProjection: AppConfiguration.srs, featureProjection: AppConfiguration.srs})],
+      formatConstructors: [new GeoJSON({dataProjection: this.config.getAppConfig().srs, featureProjection: this.config.getAppConfig().srs})],
     });
     this.dragAndDropInteraction.on('addfeatures', (event) => {
         this.dragAndDropHandler(event);
@@ -2015,7 +2016,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     capRequest: string,
     qGsProject: string
   ) {
-    const wmsVersion = 'SERVICE=WMS&VERSION=' + AppConfiguration.wmsVersion;
+    const wmsVersion = 'SERVICE=WMS&VERSION=' + this.config.getAppConfig().wmsVersion;
     const urlWMS = qGsServerUrl + wmsVersion + capRequest + qGsProject;
     let parser: any;
     parser = new WMSCapabilities();
@@ -2039,7 +2040,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     const qGsProject = '&map=' + this.qgsProjectFile;
     const qGsServerUrl = this.qGsServerUrl;
     const capRequest = '&REQUEST=GetCapabilities';
-    const wfsVersion = 'SERVICE=WFS&VERSION=' + AppConfiguration.wfsVersion;
+    const wfsVersion = 'SERVICE=WFS&VERSION=' + this.config.getAppConfig().wfsVersion;
     const urlWFS = qGsServerUrl + wfsVersion + capRequest + qGsProject;
     fetch(urlWFS)
       .then((response) => response.text())
@@ -2421,7 +2422,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     // the layer is not available for addingnewFeatures
     if (
-      AppConfiguration.noAddingFeatsLayers.findIndex(
+      AppConstants.noAddingFeatsLayers.findIndex(
         (x) => x.toLowerCase() === this.curEditingLayer.layerName.toLowerCase()
       ) >= 0
     ) {
@@ -2559,7 +2560,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
               transform(first, sourceProj, 'EPSG:4326'),
               transform(last, sourceProj, 'EPSG:4326')
             );
-            if (distance < AppConfiguration.threshold) {
+            if (distance < AppConstants.threshold) {
               output = Math.round(distance * 100) / 100 + ' ' + 'm'; // round to 2 decimal places
               tooltipCoord = geom.getFirstCoordinate();
               self.measureTooltipElement.innerHTML = output;
@@ -2588,7 +2589,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         ) {
           // valid for multipolygon and multipolygonz
           const geom = e.feature.getProperties().geometry;
-          const threshold = AppConfiguration.threshold;
+          const threshold = AppConstants.threshold;
           const last = geom.getLastCoordinate();
           const first = geom.getFirstCoordinate();
           const sourceProj = this.map.getView().getProjection();
@@ -2882,10 +2883,10 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       if(defaultSRSNode[0].childNodes.length > 0){
         defaultSRS = defaultSRSNode[0].childNodes[0].nodeValue;
       }else{
-        defaultSRS = AppConfiguration.srs;
+        defaultSRS = this.config.getAppConfig().srs;
       }
       // validation or warning
-      if (defaultSRS !== AppConfiguration.srs) {
+      if (defaultSRS !== this.config.getAppConfig().srs) {
         alert(
           `The layer ${layerName}has a different default SRS than the SRS of the project`
         );
@@ -2936,7 +2937,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         const qGsServerUrl = this.qGsServerUrl;
         const outputFormat = '&outputFormat=GML3';
         const loadedLayers = [];
-        const wfsVersion = 'SERVICE=WFS&VERSION=' + AppConfiguration.wfsVersion;
+        const wfsVersion = 'SERVICE=WFS&VERSION=' + this.config.getAppConfig().wfsVersion;
         const urlWFS =
           qGsServerUrl +
           wfsVersion +
@@ -3399,7 +3400,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     // configure nodes.
     const strService =
       'SERVICE=WFS&VERSION=' +
-      AppConfiguration.wfsVersion +
+      this.config.getAppConfig().wfsVersion +
       '&REQUEST=DescribeFeatureType';
     const strUrl =
       this.qGsServerUrl + strService + '&map=' + this.qgsProjectFile;
@@ -3708,7 +3709,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
      */
     console.log('featureValues', featureValues);
     const measureList =
-      AppConfiguration.ratingMeasureLayers[
+      AppConstants.ratingMeasureLayers[
         layerOnIdentifyingName.toLowerCase()
       ];
     let totalCount = 0;
@@ -3782,7 +3783,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       // Prepare html text with all the information
       let text = '';
       if (
-        AppConfiguration.ratingMeasureLayers.hasOwnProperty(
+        AppConstants.ratingMeasureLayers.hasOwnProperty(
           layerOnIdentifyingName
         )
       ) {
@@ -3810,7 +3811,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         if (featureValues.img && featureValues.img.toString().length > 0 && !featureValues.img["xsi:nil"]/* check database null */) {
           // the property img exists
           // visualize img if any  --> document somewhere that we will look for a field called 'img'
-          const folder = AppConfiguration.userImageFolder;
+          const folder = AppConstants.userImageFolder;
           const alt = (featureValues.alt_img) ? featureValues.alt_img : "image unloadable " + featureValues.img;
           text = text.concat(
             '<tr><img class=imgInfo src="' +
@@ -3846,7 +3847,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     const wmsUrl = wmsSource.getFeatureInfoUrl(
       evt.coordinate, // how to check this with EPSG # 4326 and 3857
       viewResolution,
-      AppConfiguration.srs,
+      this.config.getAppConfig().srs,
       {
         INFO_FORMAT: 'application/json',
         FI_POINT_TOLERANCE: 10,
@@ -3933,7 +3934,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     // checking that layer can be ranked.. this is in AppConfiguration, seems not necessary
     if (
-      Object.keys(AppConfiguration.ratingMeasureLayers).findIndex(
+      Object.keys(AppConstants.ratingMeasureLayers).findIndex(
         (x) => x.toLowerCase() === this.curEditingLayer.layerName.toLowerCase()
       ) === -1
     ) {
@@ -4008,7 +4009,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       if (properties.img) {
         // the property img exists
         // visualize img if any  --> document somewhere that we will look for a field called 'img'
-        const folder = AppConfiguration.userImageFolder;
+        const folder = AppConstants.userImageFolder;
         text = text.concat(
           '<tr><img class=imgInfo src=" ' +
             folder + properties.img +

@@ -6,7 +6,7 @@ import {OpenLayersService} from '../open-layers.service';
 import {MatIconRegistry} from '@angular/material/icon';
 import {DomSanitizer} from '@angular/platform-browser';
 import {QuestionBase} from '../question-base';
-import { AppConfiguration } from '../app-configuration';
+import { AppConstants } from '../app-constants';
 import { ProjectConfiguration } from '../config/project-config';
 
 @Component({

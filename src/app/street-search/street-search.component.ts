@@ -1,6 +1,6 @@
 import { AppComponent } from './../app.component';
 import { catchError } from 'rxjs/operators';
-import { AppConfiguration } from './../app-configuration';
+import { AppConstants } from '../app-constants';
 import { OpenLayersService } from './../open-layers.service';
 import { Subscription } from 'rxjs';
 import { Component, OnInit, OnDestroy, ViewChild, ChangeDetectorRef, Input } from '@angular/core';
@@ -16,6 +16,7 @@ import {GML} from 'ol/format'
 import { HttpClient } from '@angular/common/http';
 import { MatSelect } from '@angular/material/select';
 import { ProjectConfiguration } from '../config/project-config';
+import { AppconfigService } from '../config/appconfig.service';
 
 @Component({
   selector: 'app-street-search',
@@ -38,8 +39,8 @@ export class StreetSearchComponent implements OnInit, OnDestroy {
   private qgisServerUrl : string;
   @ViewChild ('streetSelect', {static: false}) streetSelect : MatSelect;
 
-  constructor(private openLayersService: OpenLayersService, private http: HttpClient, private changeDetectorRef: ChangeDetectorRef) {
-    this.srs = AppConfiguration.srs;
+  constructor(private openLayersService: OpenLayersService, private http: HttpClient, private changeDetectorRef: ChangeDetectorRef, private config : AppconfigService) {
+    this.srs = this.config.getAppConfig().srs;
   }
 
   ngOnInit(): void {
@@ -167,10 +168,10 @@ export class StreetSearchComponent implements OnInit, OnDestroy {
 
   private updateSelectedProject(projectConfig: ProjectConfiguration) {
       if(projectConfig.streetSearch){
-        const projectFile = AppConfiguration.qgisServerProjectFolder + projectConfig.qgisProjectFilename;
+        const projectFile = this.config.getAppConfig().qgisServerProjectFolder + projectConfig.qgisProjectFilename;
         this.layername = projectConfig.streetSearch.layerName;
         this.featureproperty = projectConfig.streetSearch.property;
-        this.qgisServerUrl = AppConfiguration.qgisServerUrl + "SERVICE=WFS&REQUEST=GetFeature&OUTPUTFORMAT=GML3&SRSNAME="+ this.srs +"&VERSION=" + AppConfiguration.wfsVersion + "&map=" + projectFile + "&TYPENAME=" + this.layername;
+        this.qgisServerUrl = this.config.getAppConfig().qgisServerUrl + "SERVICE=WFS&REQUEST=GetFeature&OUTPUTFORMAT=GML3&SRSNAME="+ this.srs +"&VERSION=" + this.config.getAppConfig().wfsVersion + "&map=" + projectFile + "&TYPENAME=" + this.layername;
         this.isConfigured = true;
       }else{
         this.isConfigured = false;

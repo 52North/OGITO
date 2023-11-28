@@ -1,3 +1,5 @@
+import * as t from 'io-ts';
+
 export interface ProjectConfiguration{
   name: string,
   qgisProjectFilename: string, //qgs filename only
@@ -29,3 +31,46 @@ export interface BackgroundLayer{
   title: string,
   format: "image/jpeg" | "image/png"
 }
+
+
+
+//codecs based on the interfaces
+//used for checking project configuration
+// must be updated when ProjectConfiguration definition is updated!
+export const ExtentWGS84Codec = t.type({
+  minLat: t.number,
+  minLon: t.number,
+  maxLat: t.number,
+  maxLon: t.number
+});
+
+export const CenterWGS84Codec = t.type({
+  lat: t.number,
+  lon: t.number
+});
+
+export const BackgroundLayerCodec = t.type({
+  title: t.string,
+  format: t.string
+});
+
+export const StreetSearchCodec = t.type({
+  layerName: t.string,
+  property: t.string
+});
+
+export const ProjectConfigurationCodec = t.type({
+  name: t.string,
+  qgisProjectFilename: t.string,
+  thumbnail: t.union([t.string, t.undefined]),
+  minZoom: t.number,
+  maxZoom: t.number,
+  initZoom: t.number,
+  extentWGS84: t.union([ExtentWGS84Codec, t.undefined]),
+  centerWGS84: CenterWGS84Codec,
+  nameSessionGroup: t.string,
+  hiddenLayers : t.array(t.string),
+  backgroundLayers : t.array(BackgroundLayerCodec),
+  streetSearch: t.union([StreetSearchCodec, t.undefined])
+});
+

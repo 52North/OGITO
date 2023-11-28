@@ -1,11 +1,12 @@
 import { map, catchError } from "rxjs/operators";
-import { AppConfiguration } from '../app-configuration';
+import { AppConstants } from '../app-constants';
 import { VectorLayer } from 'ol/layer/Vector';
 import { Feature } from 'ol/Feature';
 import { Observable, Subscription } from 'rxjs';
 import { CustomDialogService, EditedFeature } from '../custom-dialog.service';
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { HttpClient, HttpEvent, HttpEventType } from '@angular/common/http';
+import { AppconfigService } from "../config/appconfig.service";
 
 @Component({
   selector: 'app-edit-reporting',
@@ -35,7 +36,7 @@ export class EditReportingComponent implements OnInit {
   private uploadPending = false;
   private uploadProgress = 0;
 
-  constructor(private customDialogInitializer: CustomDialogService, private http: HttpClient) {
+  constructor(private customDialogInitializer: CustomDialogService, private http: HttpClient, private config: AppconfigService) {
 
     this.subToInitDialog = this.customDialogInitializer.editMeldingen$.subscribe(
       (data) => {
@@ -90,11 +91,11 @@ export class EditReportingComponent implements OnInit {
     if(this.imageFile){ //upload image before submit
       console.log("start upload of file " + this.imageFile.name)
       this.uploadPending = true;
-      this.uploadImage(this.imageFile, AppConfiguration.imageUploadService).subscribe(
+      this.uploadImage(this.imageFile, this.config.getAppConfig().imageUploadService).subscribe(
         resp => {
           if (resp.type === HttpEventType.Response) { //complete
               console.log("successfully uploaded image " + this.imageFile.name);
-              this.serverImageFileName = AppConfiguration.imageUploadFolder + resp.body["filename"];
+              this.serverImageFileName = this.config.getAppConfig().imageUploadFolder + resp.body["filename"];
 
               this.publishData()
           }

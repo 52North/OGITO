@@ -3,7 +3,7 @@ import {Observable, Subscription, of as observableOf} from 'rxjs';
 import {OpenLayersService} from '../open-layers.service';
 import { MatIconRegistry } from "@angular/material/icon";
 import {DomSanitizer} from "@angular/platform-browser";
-import {AppConfiguration} from '../app-configuration';
+import {AppConstants} from '../app-constants';
 
 
 @Component({
@@ -134,14 +134,14 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
 
   updateLayerTypeRanking(layerName: string) {
     this.layerTypeRateMeasures$ = false;
-    if (Object.keys(AppConfiguration.ratingMeasureLayers).findIndex(x => x.toLowerCase() === layerName.toLowerCase())  > -1) {
+    if (Object.keys(AppConstants.ratingMeasureLayers).findIndex(x => x.toLowerCase() === layerName.toLowerCase())  > -1) {
       this.layerTypeRateMeasures$ = true;
     }
   }
 
   updateLayerTypeRating(layerName: string) {
     this.layerTypeRate$ = false;
-    if (Object.keys(AppConfiguration.ratingPrex).findIndex(x => x.toLowerCase() === layerName.toLowerCase()) > -1) {
+    if (Object.keys(AppConstants.ratingPrex).findIndex(x => x.toLowerCase() === layerName.toLowerCase()) > -1) {
       this.layerTypeRate$ = true;
     }
   }

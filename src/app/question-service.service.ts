@@ -1,6 +1,6 @@
 import { DateTimeQuestion } from './datetime-question';
 import { Injectable } from '@angular/core';
-import {AppConfiguration} from './app-configuration';
+import {AppConstants} from './app-constants';
 import { DropdownQuestion } from './dropdown-question';
 import { QuestionBase } from './question-base';
 import { TextboxQuestion } from './textbox-question';
@@ -25,7 +25,7 @@ export class QuestionService {
      * forms the question from a list of fields;
      */
     // action plan layer treated in a different way
-    if (layerName.toLowerCase() === AppConfiguration.actionPlanLayerName){
+    if (layerName.toLowerCase() === AppConstants.actionPlanLayerName){
       return (this.setLayerQuestionsActionPlanNoise(layerName.toLowerCase(), qgisFieldList));
     }
 
@@ -34,7 +34,7 @@ export class QuestionService {
   let question = null;
   let orderInLayer = false;
   // check if there is an specific order
-  if (typeof(AppConfiguration.fieldsOrder[layerName.toLowerCase()]) !== 'undefined'){
+  if (typeof(AppConstants.fieldsOrder[layerName.toLowerCase()]) !== 'undefined'){
      orderInLayer = true;
    }
 
@@ -116,7 +116,7 @@ export class QuestionService {
     let question = null;
     let orderInLayer = false;
     // check if there is an specific order
-    if (typeof(AppConfiguration.fieldsOrder[layerName]) !== 'undefined'){
+    if (typeof(AppConstants.fieldsOrder[layerName]) !== 'undefined'){
       orderInLayer = true;
     }
     qgisFieldList.forEach(attr => {
@@ -152,26 +152,26 @@ export class QuestionService {
   findOrder(layerName: string, attrName: any){
     layerName = layerName.toLowerCase(); // ensure lower case
     let order = 0;
-    if (typeof (AppConfiguration.fieldsOrder[layerName]) !== 'undefined'){
-     if (typeof(AppConfiguration.fieldsOrder[layerName][attrName]) !== 'undefined'){
-         return(AppConfiguration.fieldsOrder[layerName][attrName]);
+    if (typeof (AppConstants.fieldsOrder[layerName]) !== 'undefined'){
+     if (typeof(AppConstants.fieldsOrder[layerName][attrName]) !== 'undefined'){
+         return(AppConstants.fieldsOrder[layerName][attrName]);
        }
     }
     return null;
   }
 
   findMinRange(attrName: any){
-  let min = AppConfiguration.range.min;
-  if (typeof (AppConfiguration.ranges[attrName]) !== 'undefined') {
-      min = AppConfiguration.ranges[attrName].min;
+  let min = AppConstants.range.min;
+  if (typeof (AppConstants.ranges[attrName]) !== 'undefined') {
+      min = AppConstants.ranges[attrName].min;
   }
   return min;
   }
 
   findMaxRange(attrName: any){
-    let max = AppConfiguration.range.max;
-    if (typeof (AppConfiguration.ranges[attrName])!== 'undefined') {
-      max = AppConfiguration.ranges[attrName].max;
+    let max = AppConstants.range.max;
+    if (typeof (AppConstants.ranges[attrName])!== 'undefined') {
+      max = AppConstants.ranges[attrName].max;
     }
     return max;
   }

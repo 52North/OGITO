@@ -1,13 +1,5 @@
 
-
-export class AppConfiguration{
-  static qgisServerUrl = "http://localhost:8380/?";
-  static qgisServerProjectFolder = "/etc/qgisserver/"
-  static hostname = 'http://localhost:4200/';
-  static wmsVersion  = '1.3.0' ;
-  static wfsVersion = '1.1.0';
-  static wmtsVersion = '1.0.0';
-  static srs = 'EPSG:3857';
+export class AppConstants{
   static svgFolder = '../../assets/svg/';
   static userImageFolder = '';
   static threshold = 1000; // Distance in meter to close a polygon being drawn with a line.
@@ -15,8 +7,6 @@ export class AppConfiguration{
     25832: '+proj=utm +zone=32 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs',
     28992: '+proj=sterea +lat_0=52.15616055555555 +lon_0=5.38763888888889 +k=0.999908 +x_0=155000 +y_0=463000 +ellps=bessel +units=m +towgs84=565.2369,50.0087,465.658,-0.406857330322398,0.350732676542563,-1.8703473836068,4.0812 +no_defs'
   };
-  static imageUploadService = "http://localhost:5001/" + "images/"
-  static imageUploadFolder = "/assets/img/userimg/enschede/uploads/"
 
   // raster icon used as symbol for WMS layers
   static rasterIcon =  'data:image/png;base64,' + 'iVBORw0KGgoAAAANSUhEUgAAACYAAAAmCAYAAACoPemuAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAXE' +

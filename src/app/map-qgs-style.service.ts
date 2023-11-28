@@ -4,12 +4,13 @@ import { Injectable } from '@angular/core';
 import CircleStyle from 'ol/style/Circle';
 import {Fill, RegularShape, Stroke, Style, Icon, Text, Circle} from 'ol/style';
 import {DEVICE_PIXEL_RATIO} from 'ol/has.js';
-import {AppConfiguration} from './app-configuration';
+import {AppConstants} from './app-constants';
 import {Parser} from 'xml2js';
 import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
 import { valueFromAST } from 'graphql';
 import { ThrowStmt } from '@angular/compiler';
 import { ProjectConfiguration } from './config/project-config';
+import { AppconfigService } from './config/appconfig.service';
 
 @Injectable({
   providedIn: 'root'
@@ -47,7 +48,7 @@ export class MapQgsStyleService {
   /** Retrieves the styles for WFS layers in the Qgs project associated
    *
    */
-  svgFolder = AppConfiguration.svgFolder;
+  svgFolder = AppConstants.svgFolder;
   nodes = {};   // dictionary to store the layer styles
   layerStyles = {};
   sessionLayerLegend = {};
@@ -64,7 +65,7 @@ export class MapQgsStyleService {
   private loadedProject : ProjectConfiguration;
 
 
-  constructor(  private sanitizer: DomSanitizer, private readonly openlayersService : OpenLayersService) {
+  constructor(  private sanitizer: DomSanitizer, private readonly openlayersService : OpenLayersService, private config : AppconfigService) {
     this.projectSelectedSubscription = openlayersService.qgsProjectUrl$.subscribe(
         (projectConfig) => {
             this.loadedProject = projectConfig
@@ -368,7 +369,7 @@ export class MapQgsStyleService {
   createAllLayerStyles(qGsServerUrl: any, qgsProjectFile: any, layerList: any){
     const qGsProject = '&map=' + qgsProjectFile;
     const capRequest = '&REQUEST=GetStyles';
-    const wmsVersion = 'SERVICE=WMS&VERSION=' + AppConfiguration.wmsVersion;
+    const wmsVersion = 'SERVICE=WMS&VERSION=' + this.config.getAppConfig().wmsVersion;
     const urlStyle = qGsServerUrl + wmsVersion + capRequest + qGsProject + '&LAYERS=' + layerList;
     const xmlStyles = fetch(urlStyle)
       .then(response => response.text())

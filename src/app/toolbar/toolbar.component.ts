@@ -3,7 +3,7 @@ import {Subscription} from 'rxjs';
 import {OpenLayersService} from '../open-layers.service';
 import {MatIconRegistry} from '@angular/material/icon';
 import {DomSanitizer} from '@angular/platform-browser';
-import {AppConfiguration} from '../app-configuration';
+import {AppConstants} from '../app-constants';
 import {MatDialog, MatDialogRef} from '@angular/material/dialog';
 
 @Component({

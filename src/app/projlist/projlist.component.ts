@@ -1,6 +1,6 @@
 import { ProjectloaderService } from './../config/projectloader.service';
 import {Component, EventEmitter, OnInit, Output} from '@angular/core';
-import {AppConfiguration} from '../app-configuration';
+import {AppConstants} from '../app-constants';
 import {Observable, of as observableOf} from 'rxjs';
 import {OpenLayersService} from '../open-layers.service';
 import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
@@ -20,8 +20,10 @@ export class ProjlistComponent implements OnInit {
 
   ngOnInit(): void {
     console.info("load project configuration")
-    this.projects = this.projectsConfig.retrieveProjects();
     this.showProjectList$ = observableOf(true);
+    this.projectsConfig.retrieveProjects().then(
+      (config) => this.projects = config
+    );
   }
  sanitizeImageUrl(imageUrl: string): SafeUrl {
     return this.sanitizer.bypassSecurityTrustUrl(imageUrl);
