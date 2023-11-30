@@ -85,6 +85,10 @@ import {QueryDBService} from '../query-db.service';
 import {DialogOrgExposedComponent} from '../dialog-org-exposed/dialog-org-exposed.component';
 import {saveAs} from 'file-saver';
 import { AppconfigService } from '../config/appconfig.service';
+import { InitializeSketchlayersService } from '../initialize-sketchlayers.service';
+import MultiPoint from 'ol/geom/MultiPoint.js';
+import MultiPolygon from 'ol/geom/MultiPolygon.js';
+import MultiLineString from 'ol/geom/MultiLineString.js';
 
 // To use rating dialogs
 export interface DialogData {
@@ -213,7 +217,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     public dialog: MatDialog,
     private sanitizer: DomSanitizer,
     private customDialogInitializer : CustomDialogService,
-    private config: AppconfigService
+    private config: AppconfigService,
+    private sketchLayerInitializer: InitializeSketchlayersService
   ) {
     this.subsToShapeEdit = this.openLayersService.shapeEditType$.subscribe(
       (data) => {
@@ -1182,7 +1187,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     this.addSessionLayer(vectorLayer, fieldstoShow, false);
   }
 
-  addNewSketchLayer(sketchLayerName: string, showDefaultFields = true, editable = true) {
+  addNewSketchLayer(sketchLayerName: string, showDefaultFields = true, editable = true, source?: VectorSource) {
     /**
      * Adds a sketch layer to the panel"
      * multi-geometry --> all
@@ -1198,9 +1203,9 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     this.mapQgsStyleService.setSketchStyle(sketchLayerName);
     const self = this;
-    const newSource = new VectorSource({ wrapx: false });
+    const sketchSource = (source) ? source :  this.sketchLayerInitializer.createSourceForSketchLayer(this.loadedProject, sketchLayerName);
     const newVector = new VectorLayer({
-      source: newSource,
+      source: sketchSource,
       name: sketchLayerName,
       zIndex: 101, // check this #TODO
       visible: true,
@@ -1245,7 +1250,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       defaultSRS: this.config.getAppConfig().srs,
       operations: ['insert', 'modify', 'delete'], // #Check  this #TODO
       geometryType: 'Multi', // Dependent of QGIS project as the styles.
-      source: newSource,
+      source: sketchSource,
     });
     // set the questions for the form
     this.questionService.setSketchQuestions(sketchLayerName, fieldsToEdit);
@@ -1508,6 +1513,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       this.srsID = this.config.getAppConfig().srs;
 
       this.updateMap(this.qgsProjectFile);
+
   }
 
   requestProjectInfo(qgsfile: string) {
@@ -1527,6 +1533,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       })
       .catch((error) => console.error(error));
   }
+
+  private
 
   async parseQgsProject(gqsProjectinfo: any) {
     /**
@@ -2050,7 +2058,13 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       })
       .then((text) =>
         this.prepareLoadWMSLayers(qGsServerUrl, capRequest, qGsProject)
-      )
+      ).then(()=> {
+        this.sketchLayerInitializer.retrieveExistingSketchLayers(this.loadedProject).then((sketchSources) => {
+          sketchSources.forEach((sketchSource: VectorSource, layername: string) => {
+            this.addNewSketchLayer(layername, true, true, sketchSource);
+          })
+        })
+      })
       .catch((error) => console.error(error));
   }
 
@@ -2329,7 +2343,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     // assign attributes
     this.addingAttrFeature(data.layerName, data.feature, data.payload);
     // save in the buffer
-    this.saveFeatinBuffer(data.layerName, data.feature, 'insert');
+    this.saveFeatinBuffer(data.layerName, data.feature, 'insert'); //after dialog finished?
   }
 
   addingAttrFeature(layerName: string, feature: any, attr: any) {
@@ -2792,7 +2806,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
           self.curEditingLayer.geometryType === 'Point' ||
           self.curEditingLayer.geometryType === 'Line' ||
           self.curEditingLayer.geometryType === 'MultiPoint' ||
-          self.curEditingLayer.geometryType === 'Polygon'
+          self.curEditingLayer.geometryType === 'Polygon' ||
+          self.curEditingLayer.geometryType === 'Multi'
         ) {
           selectedFeatures.forEach((f) => {
             const lastFeat = f.clone();
@@ -3146,7 +3161,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     this.removeInteractions();
   }
 
-  saveAllEdits() {
+  async saveAllEdits() {
     /**
      * saves all edits in all WFS layers
      */
@@ -3159,21 +3174,22 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       });
       return;
     }
-    this.loadedWfsLayers.forEach((layer) => {
+
+    for(let layer of this.loadedWfsLayers){
       console.log('saving changes in ', layer.layerName);
-      this.saveEdits(layer);
-    });
+      await this.saveEdits(layer);
+    }
     if (this.loadedSketchLayers.length > 0) {
-      if (confirm('Do you want to save all cahnges?')) {
-        this.loadedSketchLayers.forEach((layer) => {
-          console.log('saving changes in sketch layers', layer.layerName);
-          this.saveEdits(layer);
-        });
+      if (confirm('Do you want to save all changes?')) {
+        for(let sketchLayer of this.loadedSketchLayers){
+          console.log('saving changes in sketch layers', sketchLayer.layerName);
+          await this.saveEdits(sketchLayer);
+        }
       }
     }
   }
 
-  saveEdits(editLayer: any) {
+  async saveEdits(editLayer: EditLayer) {
     /**
      * @param editLayer:
      */
@@ -3214,7 +3230,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       editLayer.geometryType === 'MultiPolygonZ' ||
       editLayer.geometryType === 'MultiPoint'
     ) {
-      const result = this.writeTransactWfs(editLayer);
+      const result = this.executeWFSTransactions(editLayer);
       if (result) {
         result.then(() => {
           this.snackBar.open('Aenderungen gespeichert ', 'ok', {
@@ -3231,7 +3247,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  saveSketchLayer(editLayer: any) {
+  async saveSketchLayer(editLayer: EditLayer) {
     /** saves the changes in a sketch layer
      * @param editLayer: name of the layer to be saved.
      */
@@ -3247,7 +3263,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       );
       return;
     }
-    if (!confirm('Do you want to download changes in this session layer?')) {
+    if (!confirm('Do you want to safe changes in session layer '+ editLayer.layerName +'?')) {
       //  do not want to save changes
       return;
     }
@@ -3261,11 +3277,10 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         });
         return;
       }
-      let data = new GeoJSON().writeFeatures(tsource.getFeatures());
-      const featJSON = JSON.parse(data);
-      data = JSON.stringify(featJSON, null, 4);
-      const blob = new Blob([data], { type: 'text/json;charset=UTF-8' });
-      saveAs(blob, editLayer.layerName + '.geojson');
+      //add layer name as property
+      tsource.forEachFeature((feature) => feature.set("layername", editLayer.layerName, true));
+      await this.executeWFSTransactionsForSketchLayer(editLayer);
+
     } catch (e) {
       console.log('Error saving sketchLayer' + e);
     }
@@ -3359,7 +3374,35 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     this.removeFeatEditBuffer(lastOperation.feats);
   }
 
-  writeTransactWfs(editLayer: any) {
+  private createWriteTransactionWfs (featureType: string, inserts : Feature[] = null, updates: Feature[] = null, deletes: Feature[] = null) : string{
+    const formatWFS = new WFS();
+    const wfsOptions = {
+      featureNS: this.config.getAppConfig().hostname,
+      featureType: featureType,
+      crossOrigin: null,
+      featurePrefix: featureType,
+      srsName: this.config.getAppConfig().srs,
+      version: this.config.getAppConfig().wfsVersion
+    };
+    const transactNode = formatWFS.writeTransaction(
+        inserts,
+        updates,
+        deletes,
+        wfsOptions
+    );
+    const xs = new XMLSerializer();
+    const transactStr = xs.serializeToString(transactNode);
+    return transactStr;
+  }
+
+  private async executeHTTPPost(url: string, body: string) : Promise<Response>{
+    return fetch(url, {   //execute transaction and return promise
+      method: 'POST',
+      body: body,
+    })
+  }
+
+  private async executeWFSTransactions(editLayer: EditLayer) {
     /** saves changes on a wfs layer
      * @param editLayer: layer to save changes stored in the editBuffer
      */
@@ -3370,28 +3413,42 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     layerTrs[editLayer.layerName].update = [];
     layerTrs[editLayer.layerName].source = editLayer.source;
 
+    const deletedFeatureInsertTransactions = []; //features that were inserted (temporarily) and immediatly deleted before saving to wfs
+
     this.editBuffer.forEach((t) => {
       // create the node for CRU
       if (t.layerName === editLayer.layerName) {
         // save edits in current edit layer
         switch (t.transaction) {
           case 'insert':
-            layerTrs[editLayer.layerName].insert.push(t.feats); // t.feats is only one feat
+            if(this.isDeletedeature(t.feats)){ //no insert transaction if features was deleted immediately
+              layerTrs[editLayer.layerName].insert.push(t.feats); // t.feats is only one feat
+            }else{
+              deletedFeatureInsertTransactions.push(t)
+            }
             break;
           case 'delete':
-            layerTrs[editLayer.layerName].delete.push(t.feats); // t.feats is one feat #TODO next ver delete several
+            if(this.isDeletedeature(t.feats)){ //no delete transaction if features is not stored in wfs
+              layerTrs[editLayer.layerName].delete.push(t.feats); // t.feats is one feat #TODO next ver delete several
+            }
             break;
           case 'translate':
-            layerTrs[editLayer.layerName].update.push(t.feats); // t.feats is one feat #TODO next ver delete several
+            if(this.isNewlyInsertedFeature(t.feats)){
+              layerTrs[editLayer.layerName].update.push(t.feats); // t.feats is one feat #TODO next ver delete several
+            }
             break;
           case 'rating':
-            layerTrs[editLayer.layerName].update.push(t.feats); // t.feats is one feat
+            if(this.isNewlyInsertedFeature(t.feats)){
+             layerTrs[editLayer.layerName].update.push(t.feats); // t.feats is one feat
+            }
             break;
-          case 'update':
+          case 'update': //no modify transaction if features is not stored in wfs
             /* t.feats.forEach(f => {
               layerTrs[editLayer.layerName].update.push(f); // t.feats is an array with one or several feats
             }); */
-            layerTrs[editLayer.layerName].update.push(t.feats[0]); // t.feats is an array with one or several feats
+            if(this.isNewlyInsertedFeature(t.feats[0])){
+              layerTrs[editLayer.layerName].update.push(t.feats[0]); // t.feats is an array with one or several feats
+            }
             break;
         }
       }
@@ -3404,138 +3461,209 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       '&REQUEST=DescribeFeatureType';
     const strUrl =
       this.qGsServerUrl + strService + '&map=' + this.qgsProjectFile;
-    const formatWFS = new WFS();
-    const formatGML = new GML({
-      featureNS: 'http://localhost:4200',
-      featureType: editLayer.layerName,
-      crossOrigin: null,
-    });
-    let node: any;
-    const xs = new XMLSerializer();
-    let str: any;
-    let res: any;
+
+    var failedOnInsert = false;
     // Edits should be done in chain... 1)insert, 2)updates, 3) deletes
-    if (layerTrs[editLayer.layerName].insert.length > 0) {
-      node = formatWFS.writeTransaction(
-        layerTrs[editLayer.layerName].insert,
-        null,
-        null,
-        formatGML
-      );
-      str = xs.serializeToString(node);
-      return fetch(strUrl, {
-        method: 'POST',
-        mode: 'no-cors',
-        body: str,
-      })
-        .then((textInsert) => {
-          layerTrs[editLayer.layerName].insert = [];
-          if (layerTrs[editLayer.layerName].update.length > 0) {
-            node = formatWFS.writeTransaction(
-              null,
-              layerTrs[editLayer.layerName].update,
-              null,
-              formatGML
-            );
-            str = xs.serializeToString(node);
-            return fetch(strUrl, {
-              method: 'POST',
-              body: str,
-            }).then((respUpdate) => {
-              layerTrs[editLayer.layerName].update = [];
-              if (layerTrs[editLayer.layerName].delete.length > 0) {
-                node = formatWFS.writeTransaction(
-                  null,
-                  null,
-                  layerTrs[editLayer.layerName].delete,
-                  formatGML
-                );
-                str = xs.serializeToString(node);
-                return fetch(strUrl, {
-                  method: 'POST',
-                  body: str,
-                })
-                  .then((respDelete) => {
-                    return respDelete.text();
-                  })
-                  .then((textDelete) => {
-                    layerTrs[editLayer.layerName].delete = [];
-                  })
-                  .catch((error) => console.error(error));
-              }
-            });
-          }
-        })
-        .then(() => {
-          // cleaning the editbuffer after inserting - updating and deleting
-          this.editBuffer = this.editBuffer.filter(
-            (obj) => obj.layerName !== editLayer.layerName
-          );
-        });
+    if (layerTrs[editLayer.layerName].insert.length > 0){
+      const transaction = this.createWriteTransactionWfs(editLayer.layerName, layerTrs[editLayer.layerName].insert);
+      const resp = await this.executeHTTPPost(strUrl, transaction);
+      if(resp.ok || (resp.type.toLowerCase() === "opaque" && resp.status === 0)){
+        layerTrs[editLayer.layerName].insert = []
+        console.log("succesfully executed wfs insert transaction, featureType", editLayer.layerName)
+        //clean edit buffer
+        this.editBuffer = this.editBuffer.filter(
+          (t) => t.layerName !== editLayer.layerName && t.transaction !== 'insert'
+        );
+      }else{
+        failedOnInsert = true;
+        console.warn("wfs insert transaction failed, featureType: " + editLayer.layerName)
+        console.error(resp.text)
+        alert("inserting features failed for layer " + editLayer.layerName)
+      }
     }
-    if (layerTrs[editLayer.layerName].update.length > 0) {
-      node = formatWFS.writeTransaction(
-        null,
-        layerTrs[editLayer.layerName].update,
-        null,
-        formatGML
-      );
-      str = xs.serializeToString(node);
-      return fetch(strUrl, {
-        method: 'POST',
-        body: str,
-      })
-        .then((respUpdate) => {
-          layerTrs[editLayer.layerName].update = [];
-          if (layerTrs[editLayer.layerName].delete.length > 0) {
-            node = formatWFS.writeTransaction(
-              null,
-              null,
-              layerTrs[editLayer.layerName].delete,
-              formatGML
-            );
-            str = xs.serializeToString(node);
-            return fetch(strUrl, {
-              method: 'POST',
-              body: str,
-            })
-              .then((respDelete) => {
-                return respDelete.text();
-              })
-              .then((textDelete) => {
-                layerTrs[editLayer.layerName].delete = [];
-              });
-          }
-        })
-        .then(() => {
-          // cleaning the editbuffer when only updates and deletes where done
-          this.editBuffer = this.editBuffer.filter(
-            (obj) => obj.layerName !== editLayer.layerName
-          );
-        });
+    if(layerTrs[editLayer.layerName].update.length > 0){
+      const transaction = this.createWriteTransactionWfs(editLayer.layerName, null, layerTrs[editLayer.layerName].update);
+      const resp = await this.executeHTTPPost(strUrl, transaction);
+      if(resp.ok || (resp.type.toLowerCase() === "opaque" && resp.status === 0)){
+        layerTrs[editLayer.layerName].update = []
+        console.log("succesfully executed wfs update transaction, featureType", editLayer.layerName)
+      }else{
+        console.warn("wfs update transaction failed, featureType: " + editLayer.layerName)
+        console.error(resp.text)
+        alert("updating features failed for layer " + editLayer.layerName)
+      }
     }
-    if (layerTrs[editLayer.layerName].delete.length > 0) {
-      node = formatWFS.writeTransaction(
-        null,
-        null,
-        layerTrs[editLayer.layerName].delete,
-        formatGML
-      );
-      str = xs.serializeToString(node);
-      return fetch(strUrl, {
-        method: 'POST',
-        body: str,
-      })
-        .then((respDelete) => {
-          return respDelete.text();
-        })
-        .then((respDelete) => {
-          layerTrs[editLayer.layerName].delete = [];
-          this.editBuffer = this.editBuffer.filter(
-            (obj) => obj.layerName !== editLayer.layerName
-          );
-        });
+    if(layerTrs[editLayer.layerName].delete.length > 0){
+      const transaction = this.createWriteTransactionWfs(editLayer.layerName, null, null, layerTrs[editLayer.layerName].delete);
+      const resp = await this.executeHTTPPost(strUrl, transaction);
+      if(resp.ok || (resp.type.toLowerCase() === "opaque" && resp.status === 0)){
+        layerTrs[editLayer.layerName].delete = []
+        console.log("succesfully executed wfs delete transaction, featureType", editLayer.layerName)
+      }else{
+        console.warn("wfs delete transaction failed, featureType: " + editLayer.layerName)
+        console.error(resp.text)
+        alert("deleting features failed for layer " + editLayer.layerName)
+      }
     }
+
+    //clean edit buffer (keep failed inserts)
+    this.editBuffer = this.editBuffer.filter(
+      (t) => t.layerName !== editLayer.layerName || t.transaction === 'insert'
+    );
+    for(let transaction in deletedFeatureInsertTransactions){ //remove redundant insert transactions from edit buffer
+      this.editBuffer = this.editBuffer.filter(
+        (t) => t !== transaction
+      );
+    }
+
+    if(!failedOnInsert){ //otherwise features that are not stored in WFS would be lost
+      this.refreshEditLayer(editLayer); //relaod features from service, ensures stable id for added features
+    }
+  }
+
+  private async executeWFSTransactionsForSketchLayer(sketchLayer: EditLayer){
+
+    const transactionIndex = {}
+    transactionIndex[this.loadedProject.sketchLayerPolygons] = {
+      insert: [],
+      update: [],
+      delete: []
+    }
+    transactionIndex[this.loadedProject.sketchLayerLinestrings] = {
+      insert: [],
+      update: [],
+      delete: []
+    }
+    transactionIndex[this.loadedProject.sketchLayerPoints] = {
+      insert: [],
+      update: [],
+      delete: []
+    }
+
+    const bufferedInserts = this.editBuffer.filter( (t) => t.layerName === sketchLayer.layerName && t.transaction === 'insert')
+    const bufferedUpdates = this.editBuffer.filter( (t) => t.layerName === sketchLayer.layerName && t.transaction === 'update')
+    const bufferedDeletes = this.editBuffer.filter( (t) => t.layerName === sketchLayer.layerName &&  t.transaction === 'delete')
+
+    const deletedFeatureInsertTransactions = []; //features that were inserted (temporarily) and immediatly deleted before saving to wfs
+    for(let insert of bufferedInserts){
+      if(!this.isDeletedeature(insert.feats)){
+       if(insert.feats.getGeometry() instanceof Point ||insert.feats.getGeometry() instanceof MultiPoint){
+        transactionIndex[this.loadedProject.sketchLayerPoints].insert.push(insert.feats)
+       }else if(insert.feats.getGeometry() instanceof Polygon || insert.feats.getGeometry() instanceof MultiPolygon){
+        transactionIndex[this.loadedProject.sketchLayerPolygons].insert.push(insert.feats)
+       }else if(insert.feats.getGeometry() instanceof LineString || insert.feats.getGeometry() instanceof MultiLineString){
+        transactionIndex[this.loadedProject.sketchLayerLinestrings].insert.push(insert.feats)
+       }
+      }else{
+        deletedFeatureInsertTransactions.push(insert)
+      }
+    }
+    for(let update of bufferedUpdates){
+      if(!this.isNewlyInsertedFeature(update.feats[0])){ //no modify transaction if features is not stored in wfs
+        if(update.feats[0].getGeometry() instanceof Point || update.feats[0].getGeometry() instanceof MultiPoint){
+        transactionIndex[this.loadedProject.sketchLayerPoints].update.push(update.feats[0])
+        }else if(update.feats[0].getGeometry() instanceof Polygon ||update.feats[0].getGeometry() instanceof MultiPolygon){
+        transactionIndex[this.loadedProject.sketchLayerPolygons].update.push(update.feats[0])
+        }else if(update.feats[0].getGeometry() instanceof LineString || update.feats[0].getGeometry() instanceof MultiLineString){
+        transactionIndex[this.loadedProject.sketchLayerLinestrings].update.push(update.feats[0])
+      }
+    }
+   }
+   for(let del of bufferedDeletes){
+    if(!this.isNewlyInsertedFeature(del.feats)){ //no delete transaction if features is not stored in wfs
+      if(del.feats.getGeometry() instanceof Point || del.feats.getGeometry() instanceof MultiPoint){
+      transactionIndex[this.loadedProject.sketchLayerPoints].delete.push(del.feats)
+      }else if(del.feats.getGeometry() instanceof Polygon || del.feats.getGeometry() instanceof MultiPolygon){
+      transactionIndex[this.loadedProject.sketchLayerPolygons].delete.push(del.feats)
+      }else if(del.feats.getGeometry() instanceof LineString || del.feats.getGeometry() instanceof MultiLineString){
+      transactionIndex[this.loadedProject.sketchLayerLinestrings].delete.push(del.feats)
+      }
+    }
+  }
+
+    var failedOnInsert : boolean = false;
+    const strService = 'SERVICE=WFS&VERSION=' + this.config.getAppConfig().wfsVersion + '&REQUEST=DescribeFeatureType';
+    const strUrl = this.qGsServerUrl + strService + '&map=' + this.qgsProjectFile;
+    const featureTypes  = [this.loadedProject.sketchLayerPolygons, this.loadedProject.sketchLayerPoints, this.loadedProject.sketchLayerLinestrings]
+    for(let featureType of featureTypes){ //different featuretype (layer) per geometry type
+       // Edits should be done in chain... 1)insert, 2)updates, 3) deletes
+      if (transactionIndex[featureType].insert.length > 0){
+        const transaction = this.createWriteTransactionWfs(featureType, transactionIndex[featureType].insert);
+        const resp = await this.executeHTTPPost(strUrl, transaction);
+        if(resp.ok || (resp.type.toLowerCase() === "opaque" && resp.status === 0)){
+          transactionIndex[featureType].insert = []
+          console.log("succesfully executed wfs insert transaction, featureType", featureType)
+          //clean edit buffer
+          this.editBuffer = this.editBuffer.filter(
+            (t) => t.layerName !== sketchLayer.layerName || t.transaction !== 'insert' //remove successful inserts
+          );
+        }else{
+          failedOnInsert = true;
+          console.warn("wfs insert transaction failed, featureType: " + featureType)
+          console.error(resp.text)
+          alert("inserting features failed for layer " + sketchLayer.layerName)
+        }
+      }
+      if(transactionIndex[featureType].update.length > 0){
+        const transaction = this.createWriteTransactionWfs(featureType, null, transactionIndex[featureType].update);
+        const resp = await this.executeHTTPPost(strUrl, transaction);
+        if(resp.ok || (resp.type.toLowerCase() === "opaque" && resp.status === 0)){
+          transactionIndex[featureType].update = []
+          console.log("succesfully executed wfs update transaction, featureType", featureType)
+        }else{
+          console.warn("wfs update transaction failed, featureType: " + featureType)
+          console.error(resp.text)
+          alert("updating features failed for layer " + sketchLayer.layerName)
+        }
+      }
+      if(transactionIndex[featureType].delete.length > 0){
+        const transaction = this.createWriteTransactionWfs(featureType, null, null, transactionIndex[featureType].delete);
+        const resp = await this.executeHTTPPost(strUrl, transaction);
+        if(resp.ok || (resp.type.toLowerCase() === "opaque" && resp.status === 0)){
+          transactionIndex[featureType].delete = []
+          console.log("succesfully executed wfs delete transaction, featureType", featureType)
+        }else{
+          console.warn("wfs delete transaction failed, featureType: " + featureType)
+          console.error(resp.text)
+          alert("deleting features failed for layer " + sketchLayer.layerName)
+        }
+      }
+    }
+
+    //clean edit buffer (keep failed inserts)
+    this.editBuffer = this.editBuffer.filter(
+      (t) => t.layerName !== sketchLayer.layerName || t.transaction === 'insert'
+    );
+    for(let transaction in deletedFeatureInsertTransactions){ //remove redundant insert transactions from edit buffer
+      this.editBuffer = this.editBuffer.filter(
+        (t) => t !== transaction
+      );
+    }
+
+    if(!failedOnInsert){ //otherwise features that are not stored in WFS would be lost
+      this.refreshEditLayer(sketchLayer); //relaod features from service, ensures stable id for added features
+    }
+  }
+
+  /**
+   * clears all features and reloads
+   * all manually added features that cannot be reloaded (from server etc.) will be lost!
+   * @param editLayer
+   */
+  private refreshEditLayer(editLayer: EditLayer){
+    const source = editLayer.source;
+    source.refresh();
+    console.info("refresh edit layer " + editLayer.layerName)
+  }
+
+  private isNewlyInsertedFeature(feature: Feature){
+    const hit = this.editBuffer.find((t) => t.transaction === 'insert' && t.feats.getId() === feature.getId())
+    return (hit !== undefined)
+  }
+
+  private isDeletedeature(feature: Feature){
+    const hit = this.editBuffer.find((t) => t.transaction === 'delete' && t.feats.getId() === feature.getId())
+    return (hit !== undefined)
   }
 
   findSketchLayer(layerName: string) {
@@ -4410,4 +4538,13 @@ export class DialogRatingMeasureDialog {
   onNoClick(): void {
     this.dialogRef.close();
   }
+}
+
+export interface EditLayer{
+  defaultSRS: string,
+  geometryType: "Multi" | "Line" | "Polygon" | "Point" | "MultiPolygon" | "MultiPolygonZ" | "MultiPoint",
+  layerName: string,
+  layerTitle: string,
+  operations: string[],
+  source: VectorSource
 }

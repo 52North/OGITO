@@ -24,6 +24,9 @@ export interface ProjectConfiguration{
     layerName : string,
     property: string
   };
+  sketchLayerPolygons: string,
+  sketchLayerLinestrings: string,
+  sketchLayerPoints: string
 }
 
 
@@ -71,6 +74,9 @@ export const ProjectConfigurationCodec = t.type({
   nameSessionGroup: t.string,
   hiddenLayers : t.array(t.string),
   backgroundLayers : t.array(BackgroundLayerCodec),
-  streetSearch: t.union([StreetSearchCodec, t.undefined])
+  streetSearch: t.union([StreetSearchCodec, t.undefined]),
+  sketchLayerPolygons: t.string,
+  sketchLayerLinestrings: t.string,
+  sketchLayerPoints: t.string
 });
 

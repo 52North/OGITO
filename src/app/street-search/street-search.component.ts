@@ -109,9 +109,9 @@ export class StreetSearchComponent implements OnInit, OnDestroy {
   private postGetFeatureRequest(body: string){
     //post request
     this.http.post<string>(this.qgisServerUrl, body, {responseType: 'text' as any}).subscribe(
-      (jsonData) => {
-        //geojson to ol features
-        const features = this.parseFeaturesFromGeoJson(jsonData)
+      (xmlData) => {
+        //xml to ol features
+        const features = this.parseFeaturesFromGML(xmlData)
         this.currentFeatures = this.sortFeatures(features);
         const selectedFeature = (features && features.length === 1) ? features[0] : null;
         //auto select first hit if only one hit
@@ -130,7 +130,7 @@ export class StreetSearchComponent implements OnInit, OnDestroy {
     )
   }
 
-  private parseFeaturesFromGeoJson(geojson: string) : Feature[]{
+  private parseFeaturesFromGML(geojson: string) : Feature[]{
     const features = new GML().readFeatures(geojson, {dataProjection: this.srs, featureProjection: this.srs});
     return features;
   }
@@ -141,7 +141,7 @@ export class StreetSearchComponent implements OnInit, OnDestroy {
       //featureNS: 'http://openstreemap.org',
       //featurePrefix: 'osm',
       featureTypes: [this.layername],
-      outputFormat: 'test/xml',
+      outputFormat: 'text/xml',
       filter: this.createFilterExpression()
     });
 
