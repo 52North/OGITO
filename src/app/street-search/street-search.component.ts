@@ -130,8 +130,8 @@ export class StreetSearchComponent implements OnInit, OnDestroy {
     )
   }
 
-  private parseFeaturesFromGML(geojson: string) : Feature[]{
-    const features = new GML().readFeatures(geojson, {dataProjection: this.srs, featureProjection: this.srs});
+  private parseFeaturesFromGML(gml: string) : Feature[]{
+    const features = new GML().readFeatures(gml, {dataProjection: this.srs, featureProjection: this.srs});
     return features;
   }
 

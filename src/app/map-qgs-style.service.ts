@@ -407,6 +407,7 @@ export class MapQgsStyleService {
         }
       }
     };
+    return this.layerStyles[layerName]
   }
 
   defineSketchStyle(color: string = "#FFA500"): any{
@@ -446,7 +447,7 @@ export class MapQgsStyleService {
   }
 
   getLegendSessionLayer( layerName: string) {
-    let legend = [{iconSrc: '', title: 'Institutions Exposed'}];
+    let legend = [{iconSrc: '', title: layerName}];
     if ( layerName.toLowerCase().indexOf('pop') >= 0 && this.sessionLayerLegend['pop']) {
      legend = this.sessionLayerLegend['pop'];
     }

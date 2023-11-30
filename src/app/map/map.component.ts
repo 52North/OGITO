@@ -1210,7 +1210,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       zIndex: 101, // check this #TODO
       visible: true,
       // getting default style
-      style(feature) {
+      style: (feature) => {
         // this equiv to style: function(feature)
         let layerStyle = self.mapQgsStyleService.findJsonStyle(
           feature,
@@ -2673,14 +2673,10 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       this.afterSymbolSelectedHandler = this.popAttrForm //use default dynamic form
     }
 
-    if(this.draw.type_ === 'Point'){ //only show symbol list for points
-      if(customHeader){//handleSymbolSelected called after user selected symbol from list
-        this.showSymbolPanel(true, customHeader)
-      }else{
-        this.showSymbolPanel(true)
-      }
+    if(customHeader){//handleSymbolSelected called after user selected symbol from list
+      this.showSymbolPanel(true, customHeader)
     }else{
-      this.afterSymbolSelectedHandler(layer, feature); //show edit dialog
+      this.showSymbolPanel(true)
     }
   }
 
@@ -3517,12 +3513,11 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     if(!failedOnInsert){ //otherwise features that are not stored in WFS would be lost
-      this.refreshEditLayer(editLayer); //relaod features from service, ensures stable id for added features
+      this.refreshEditLayer(editLayer); //relaod features from service, ensures
     }
   }
 
   private async executeWFSTransactionsForSketchLayer(sketchLayer: EditLayer){
-
     const transactionIndex = {}
     transactionIndex[this.loadedProject.sketchLayerPolygons] = {
       insert: [],

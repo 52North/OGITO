@@ -11,6 +11,9 @@ import { HttpClient } from '@angular/common/http';
 import EqualTo from 'ol/format/filter/EqualTo.js';
 import { success } from 'io-ts';
 
+import GML from 'ol/format/GML.js';
+import GeoJSON from 'ol/format/GeoJSON.js';
+
 @Injectable({
   providedIn: 'root'
 })
@@ -19,6 +22,7 @@ export class InitializeSketchlayersService{
 
   private readonly layernameProperty : string = "layername"
   private readonly wfsFormat : WFS;
+  private readonly retrieveFeaturesSrs: string = "EPSG:4326" //retrieve features in Geojson in WGS84 and transform to app srs, since OL GML/WFS format cannot read polygons properly (bug?)
 
   constructor(private config: AppconfigService, private http: HttpClient) {
     this.wfsFormat =  new WFS({
@@ -53,7 +57,7 @@ export class InitializeSketchlayersService{
     const featureRequest = this.wfsFormat.writeGetFeature({
       srsName: this.config.getAppConfig().srs,
       featureTypes: featuresTypes,
-      outputFormat: 'text/xml',
+      outputFormat: 'application/json',
       propertyNames: [this.layernameProperty]
     });
     const features = await this.postGetFeatureRequest(serverUrl, featureRequest)
@@ -75,9 +79,9 @@ export class InitializeSketchlayersService{
         format: this.wfsFormat,
         loader: () => {
           const featureRequest = this.wfsFormat.writeGetFeature({
-            srsName: this.config.getAppConfig().srs,
+            srsName: this.retrieveFeaturesSrs,
             featureTypes: featureTypes,
-            outputFormat: 'text/xml',
+            outputFormat: 'application/json',
             filter: new EqualTo(this.layernameProperty , layername, false)
           });
           this.postGetFeatureRequest(serverUrl, featureRequest).then((features) => {
@@ -98,7 +102,7 @@ export class InitializeSketchlayersService{
     const body = new XMLSerializer().serializeToString(featureRequest) //xml node object to xml string
     const response = await this.http.post(serverUrl, body, {responseType: 'text' as any}).toPromise();
     if(response){
-      const features : Feature[] = this.wfsFormat.readFeatures(response, {dataProjection: this.config.getAppConfig().srs});
+      const features : Feature[] = new GeoJSON().readFeatures(response, {dataProjection: this.retrieveFeaturesSrs , featureProjection: this.config.getAppConfig().srs}); //retrieve and parse as geojson wgs84 and transform to app srs; workaround for OL GML format not able to parse polygons properly
       return features;
     }else{
       console.warn("error while retrieving features for sketch layer initialization")
