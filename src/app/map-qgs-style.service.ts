@@ -410,17 +410,18 @@ export class MapQgsStyleService {
     return this.layerStyles[layerName]
   }
 
-  defineSketchStyle(color: string = "#FFA500"): any{
+  defineSketchStyle(colorHex: string = "#FFA500"): any{
     const newIcon = new Icon({
       opacity: 1,
       crossOrigin: 'anonymous',
       src: 'data:image/svg+xml;base64,' + this.svgMarkerColor,
       scale: 1.2,   // it was 0.9
-      color: color
+      color: colorHex
     });
     newIcon.load();
-    const fill = new Fill({color: color});
-    const stroke = new Stroke({color: color, width: 5 });
+    const fillColorHex = colorHex + '40'; //opacity 0.25
+    const fill = new Fill({color: fillColorHex});
+    const stroke = new Stroke({color: colorHex, width: 5 });
     const style =
       new Style({
         stroke,
