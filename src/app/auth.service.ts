@@ -1,49 +1,69 @@
-import { Injectable } from '@angular/core';
+import { Injectable, OnInit } from '@angular/core';
 import createAuth0Client from '@auth0/auth0-spa-js';
 import Auth0Client from '@auth0/auth0-spa-js/dist/typings/Auth0Client';
 import { from, of, Observable, BehaviorSubject, combineLatest, throwError } from 'rxjs';
 import { tap, catchError, concatMap, shareReplay } from 'rxjs/operators';
 import { Router } from '@angular/router';
+import { AppconfigService } from './config/appconfig.service';
+import { ApplicationConfiguration } from './config/app-config';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
   // Create an observable of Auth0 instance of client
-  auth0Client$ = (from(
-    createAuth0Client({
-      domain: "dev-ew2bbxvh5ycbrurw.us.auth0.com",
-      client_id: "Ed1hqzqDLEJ05s5oGTv7VzUQHjPVS8mA",
-      redirect_uri: `${window.location.origin}`
-    })
-  ) as Observable<Auth0Client>).pipe(
-    shareReplay(1), // Every subscription receives the same shared value
-    catchError(err => throwError(err))
-  );
+  private auth0Client$;
   // Define observables for SDK methods that return promises by default
   // For each Auth0 SDK method, first ensure the client instance is ready
   // concatMap: Using the client instance, call SDK method; SDK returns a promise
   // from: Convert that resulting promise into an observable
-  isAuthenticated$ = this.auth0Client$.pipe(
-    concatMap((client: Auth0Client) => from(client.isAuthenticated())),
-    tap(res => this.loggedIn = res)
-  );
-  handleRedirectCallback$ = this.auth0Client$.pipe(
-    concatMap((client: Auth0Client) => from(client.handleRedirectCallback()))
-  );
-  // Create subject and public observable of user profile data
-  private userProfileSubject$ = new BehaviorSubject<any>(null);
-  userProfile$ = this.userProfileSubject$.asObservable();
-  // Create a local property for login status
-  loggedIn: boolean = null;
+  private isAuthenticated$;
+  private handleRedirectCallback$;
+  private userProfileSubject$;
+  public userProfile$;
 
-  constructor(private router: Router) {
-    // On initial load, check authentication state with authorization server
-    // Set up local auth streams if user is already authenticated
-    this.localAuthSetup();
-    // Handle redirect from Auth0 login
-    this.handleAuthCallback();
+  // Create subject and public observable of user profile data
+  // Create a local property for login status
+  private loggedIn: boolean = null;
+
+  constructor(private router: Router, private config: AppconfigService) {
+    this.config.getAppConfigPromise().then((config: ApplicationConfiguration) =>{
+      this.auth0Client$ = (from(
+        createAuth0Client({
+          domain: config.auth.domain,
+          client_id: config.auth.clientId,
+          redirect_uri: `${window.location.origin}`
+        })
+      ) as Observable<Auth0Client>).pipe(
+        shareReplay(1), // Every subscription receives the same shared value
+        catchError(err => throwError(err))
+      );
+
+      this.isAuthenticated$ = this.auth0Client$.pipe(
+        concatMap((client: Auth0Client) => from(client.isAuthenticated())),
+        tap((res: boolean) => this.loggedIn = res)
+      );
+
+      this.handleRedirectCallback$ = this.auth0Client$.pipe(
+        concatMap((client: Auth0Client) => from(client.handleRedirectCallback()))
+      );
+
+      this.auth0Client$.pipe(
+        concatMap((client: Auth0Client) => from(client.handleRedirectCallback()))
+      );
+
+
+      this.userProfileSubject$ = new BehaviorSubject<any>(null);
+      this.userProfile$ = this.userProfileSubject$.asObservable();
+
+      // On initial load, check authentication state with authorization server
+      // Set up local auth streams if user is already authenticated
+      this.localAuthSetup();
+      // Handle redirect from Auth0 login
+      this.handleAuthCallback();
+    })
   }
+
 
   // When calling, options can be passed if desired
   // https://auth0.github.io/auth0-spa-js/classes/auth0client.html#getuser
@@ -72,16 +92,18 @@ export class AuthService {
   }
 
   login(redirectPath: string = '/') {
-    // A desired redirect path can be passed to login method
-    // (e.g., from a route guard)
-    // Ensure Auth0 client instance exists
-    this.auth0Client$.subscribe((client: Auth0Client) => {
-      // Call method to log in
-      client.loginWithRedirect({
-        redirect_uri: `${window.location.origin}`,
-        appState: { target: redirectPath }
+    if(this.auth0Client$){
+      // A desired redirect path can be passed to login method
+      // (e.g., from a route guard)
+      // Ensure Auth0 client instance exists
+      this.auth0Client$.subscribe((client: Auth0Client) => {
+        // Call method to log in
+        client.loginWithRedirect({
+          redirect_uri: `${window.location.origin}`,
+          appState: { target: redirectPath }
+        });
       });
-    });
+    }
   }
 
   private handleAuthCallback() {
@@ -91,7 +113,7 @@ export class AuthService {
       let targetRoute: string; // Path to redirect to after login processsed
       const authComplete$ = this.handleRedirectCallback$.pipe(
         // Have client, now call method to handle auth callback redirect
-        tap(cbRes => {
+        tap((cbRes : any) => {
           // Get and set target redirect route from callback results
           targetRoute = cbRes.appState && cbRes.appState.target ? cbRes.appState.target : '/';
         }),
@@ -113,14 +135,16 @@ export class AuthService {
   }
 
   logout() {
-    // Ensure Auth0 client instance exists
-    this.auth0Client$.subscribe((client: Auth0Client) => {
-      // Call method to log out
-      client.logout({
-        client_id: "Ed1hqzqDLEJ05s5oGTv7VzUQHjPVS8mA",
-        returnTo: `${window.location.origin}`
+    if(this.auth0Client$){
+      // Ensure Auth0 client instance exists
+      this.auth0Client$.subscribe((client: Auth0Client) => {
+        // Call method to log out
+        client.logout({
+          client_id: this.config.getAppConfig().auth.clientId,
+          returnTo: `${window.location.origin}`
+        });
       });
-    });
+   }
   }
 
 }

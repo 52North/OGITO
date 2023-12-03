@@ -2,7 +2,6 @@ import { Injectable } from '@angular/core';
 import {ProjectConfiguration, ProjectConfigurationCodec } from './project-config';
 import { AppconfigService } from './appconfig.service';
 import { HttpClient } from '@angular/common/http';
-import * as t from 'io-ts'
 
 @Injectable({
   providedIn: 'root'
@@ -37,7 +36,7 @@ export class ProjectloaderService {
       }
       return validProjects;
     }catch(e){
-      window.prompt("unable to load project configuration")
+      window.alert("unable to load project configuration")
       throw new Error("unable to load project configuration: " + e.toString())
     }
   }

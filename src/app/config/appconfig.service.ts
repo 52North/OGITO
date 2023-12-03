@@ -1,6 +1,6 @@
 
 import { Injectable } from '@angular/core';
-import { settings } from 'src/environments/environment';
+import { settings, settingsPromise} from 'src/environments/environment';
 import { ApplicationConfiguration } from './app-config';
 
 @Injectable({
@@ -8,13 +8,13 @@ import { ApplicationConfiguration } from './app-config';
 })
 export class AppconfigService {
 
-  private appConfig: ApplicationConfiguration
-
-  constructor() {
-    this.appConfig = settings
-  }
+  constructor() {}
 
   public getAppConfig() : ApplicationConfiguration {
-    return this.appConfig;
+    return settings;
+  }
+
+  public getAppConfigPromise() : Promise<ApplicationConfiguration>{
+    return settingsPromise;
   }
 }

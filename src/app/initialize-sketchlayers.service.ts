@@ -13,6 +13,7 @@ import { success } from 'io-ts';
 
 import GML from 'ol/format/GML.js';
 import GeoJSON from 'ol/format/GeoJSON.js';
+import { ApplicationConfiguration } from './config/app-config';
 
 @Injectable({
   providedIn: 'root'
@@ -21,13 +22,13 @@ export class InitializeSketchlayersService{
 
 
   private readonly layernameProperty : string = "layername"
-  private readonly wfsFormat : WFS;
+  private wfsFormat : WFS;
   private readonly retrieveFeaturesSrs: string = "EPSG:4326" //retrieve features in Geojson in WGS84 and transform to app srs, since OL GML/WFS format cannot read polygons properly (bug?)
 
   constructor(private config: AppconfigService, private http: HttpClient) {
     this.wfsFormat =  new WFS({
-      version: this.config.getAppConfig().wfsVersion,
-      featureNS: this.config.getAppConfig().hostname
+      version: config.getAppConfig().wfsVersion,
+      featureNS: config.getAppConfig().hostname
     })
   }
 

@@ -7,5 +7,9 @@ export interface ApplicationConfiguration{
   projectConfigurationFile: string,
   wmsVersion:  string,
   wfsVersion: string,
-  srs: string
+  srs: string,
+  auth: {
+    domain: string,
+    clientId: string,
+  }
 }
