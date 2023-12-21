@@ -1,7 +1,7 @@
 {
   "name": "image_upload",
   "version": "1.0.0",
-  "description": "backend for OGITO Zwolle image upload",
+  "description": "backend for OGITO image upload",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
