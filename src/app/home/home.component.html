@@ -27,8 +27,8 @@
       <span class = "userNickName" *ngIf="auth.userProfile$ | async as profile">
       <code>{{ profile["nickname"] }}</code>
       </span> <pre>  </pre>
-      <button mat-button (click)="auth.login()" *ngIf="!auth.loggedIn"> Log in</button>
-      <button mat-button (click)="auth.logout()" *ngIf="auth.loggedIn"> Log out</button>
+      <button mat-button (click)="auth.login()" *ngIf="!auth.isLoggedIn()"> Log in</button>
+      <button mat-button (click)="auth.logout()" *ngIf="auth.isLoggedIn()"> Log out</button>
       <button mat-icon-button (click)="exitToApp()">
           <mat-icon> exit_to_app</mat-icon>
       </button>
@@ -47,12 +47,12 @@
   <!-- uncomment to enable authentication  25/11/2020 -->
   <div id="app-content" class="app-content">
     <div id="app-content-container" class="app-content-container">
-      <app-map *ngIf="auth.loggedIn"></app-map>
-      <app-toolbar *ngIf="auth.loggedIn"></app-toolbar>
-      <app-street-search *ngIf="auth.loggedIn"></app-street-search>
-      <app-editing-toolbar *ngIf="auth.loggedIn"></app-editing-toolbar>
-      <app-symbol-list *ngIf="auth.loggedIn"></app-symbol-list>
-      <app-projlist *ngIf="auth.loggedIn"></app-projlist>
+      <app-map *ngIf="auth.isLoggedIn()"></app-map>
+      <app-toolbar *ngIf="auth.isLoggedIn()"></app-toolbar>
+      <app-street-search *ngIf="auth.isLoggedIn()"></app-street-search>
+      <app-editing-toolbar *ngIf="auth.isLoggedIn()"></app-editing-toolbar>
+      <app-symbol-list *ngIf="auth.isLoggedIn()"></app-symbol-list>
+      <app-projlist *ngIf="auth.isLoggedIn()"></app-projlist>
     </div>
   </div>
   <!-- colocar algo para cuando no este autenticado -->

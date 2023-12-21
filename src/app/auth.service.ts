@@ -64,6 +64,9 @@ export class AuthService {
     })
   }
 
+  public isLoggedIn() : boolean {
+    return this.loggedIn;
+  }
 
   // When calling, options can be passed if desired
   // https://auth0.github.io/auth0-spa-js/classes/auth0client.html#getuser
