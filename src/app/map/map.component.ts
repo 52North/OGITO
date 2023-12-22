@@ -3417,14 +3417,14 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         // save edits in current edit layer
         switch (t.transaction) {
           case 'insert':
-            if(this.isDeletedeature(t.feats)){ //no insert transaction if features was deleted immediately
+            if(!this.isDeletedeature(t.feats)){ //no insert transaction if features was deleted immediately
               layerTrs[editLayer.layerName].insert.push(t.feats); // t.feats is only one feat
             }else{
               deletedFeatureInsertTransactions.push(t)
             }
             break;
           case 'delete':
-            if(this.isDeletedeature(t.feats)){ //no delete transaction if features is not stored in wfs
+            if(!this.isDeletedeature(t.feats)){ //no delete transaction if features is not stored in wfs
               layerTrs[editLayer.layerName].delete.push(t.feats); // t.feats is one feat #TODO next ver delete several
             }
             break;
@@ -3442,7 +3442,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
             /* t.feats.forEach(f => {
               layerTrs[editLayer.layerName].update.push(f); // t.feats is an array with one or several feats
             }); */
-            if(this.isNewlyInsertedFeature(t.feats[0])){
+            if(!this.isNewlyInsertedFeature(t.feats[0])){
               layerTrs[editLayer.layerName].update.push(t.feats[0]); // t.feats is an array with one or several feats
             }
             break;
