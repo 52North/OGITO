@@ -56,7 +56,17 @@ def get_geometries(osm_ids, admin_id, outfile):
     print("create FC")
     features=[]
     for item in ls:
-        geometry=geojson.LineString(item['geometry']['coordinates'])
+        print(item)
+        geom_type = item["geometry"]["type"].lower()
+        coords = item['geometry']['coordinates']
+        if geom_type == "multilinestring":
+            coords = coords #already MultiLineString, do nothing
+        elif geom_type == "linestring":
+            coords = [coords] #promote to MultiLineString
+        else:
+            continue #skip other geometry types
+
+        geometry=geojson.MultiLineString(coords)
         feature=geojson.Feature(geometry=geometry, properties={"name": item['name']})
         features.append(feature)
 
@@ -105,8 +115,8 @@ def OGITO_streetnames(city, admin_id, outfile):
 # enter cityname and select the right one
 # copy number and use below
 #
-#OGITO_streetnames("Enschede", 415473, "enschede")
-#
+OGITO_streetnames("Kippenheim", 453011, "kippenheim")
+
 
 
 
