@@ -1,6 +1,6 @@
 {
   "/graphql": {
-    "target": "https://ogito.itc.utwente.nl/graphql",
+    "target": "https://example.org/graphql",
     "secure": true,
     "pathRewrite": {
       "^/graphql": ""
