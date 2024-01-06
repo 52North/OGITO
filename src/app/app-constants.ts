@@ -1,6 +1,5 @@
 
 export class AppConstants{
-  static svgFolder = '../../assets/svg/';
   static userImageFolder = '';
   static threshold = 1000; // Distance in meter to close a polygon being drawn with a line.
   static projDefs = {

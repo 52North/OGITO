@@ -48,7 +48,6 @@ export class MapQgsStyleService {
   /** Retrieves the styles for WFS layers in the Qgs project associated
    *
    */
-  svgFolder = AppConstants.svgFolder;
   nodes = {};   // dictionary to store the layer styles
   layerStyles = {};
   sessionLayerLegend = {};

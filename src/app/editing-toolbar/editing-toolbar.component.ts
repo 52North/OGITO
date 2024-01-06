@@ -106,7 +106,6 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
   );
   this.subsToGeomTypeEditing = this.openLayersService.layerEditing$.subscribe(
     (data: any) => {
-      // console.log('data aqui de donde viene esto XXX LOL', data);
       this.updateLayerTypeRanking(data.layerName);
       this.updateLayerTypeRating(data.layerName);
       this.updateLayerTypeEdit(data.layerGeom);
@@ -199,31 +198,6 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
     }
     this.highlightAction(action);
    }
-
-  // identifyFeatures(){
-    /**
-     * Identify Feautures, the user select element(s) and the information is retrieved
-     */
-  /*  alert("add Code to identify Features");
-   }
-  copiarFeatures(){
-    /**
-     * Copiar Features, the user select element(s) and paste in the location when the click is released
-     */
-    //alert("add Code to copiar Features");
-  /*}
-  rotateFeatures(){
-    /**
-     * Rotate
-     */
-   // alert("add Code to rotate Features");
-  /*}
-  measureDistance(){
-    /**
-     * Measure Distance
-     */
-   /* alert("add Code to measure Distance");
-  } */
 
   showSymbolPanel(visible: boolean, canceled: boolean = true, optHeader? : string): void{
     /**
