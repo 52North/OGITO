@@ -1,30 +1,22 @@
-# MyOgito
+# OGITO - Open Geospatial Interactive Tool
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 9.1.1.
+OGITO is a collaborative mapping an planning application. To support collaborative spatial planning tasks, OGITO is optimised for use on digital map tables. As it is a web application, OGITO can be opened on all devices in the web browser. Touch gestures or pointing devices (e.g. computer mouse) can be used to operate OGITO.
 
-## Development server
+## Introduction
+
+## Deployment
+### Requirements
+- Web Server (e.g Apache2 or NGINX) for serving the OGITO app
+- QGIS Server
+- POSTGIS (other Database supported by QGIS can be used as well)
+- (NodeJS, only required for image upload)
+
+### Development
 
 Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
 
-## Code scaffolding
-
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
-
-## Build
-
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory. Use the `--prod` flag for a production build.
-
-## Running unit tests
-
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
-
-## Running end-to-end tests
-
-Run `ng e2e` to execute the end-to-end tests via [Protractor](http://www.protractortest.org/).
-
-## Further help
-
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI README](https://github.com/angular/angular-cli/blob/master/README.md).
-=======
-# ogito-v0
-Migration ogito to ng 9, ol 6 and qgis 3.10
+## Configuration
+### App Configuration
+### Project Configuration (Setup Projects)
+#### Image Upload
+#### Street Search
