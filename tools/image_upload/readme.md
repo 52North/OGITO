@@ -5,7 +5,7 @@ The image upload service uses the [NodeJS](https://nodejs.org/en) JavaScript run
 - [NodeJS](https://nodejs.org/en) must be installed to deploy the service
 ## Deployment
 The image upload service is deployed on the server alongside with OGTIO app.
-- install dependencies: execute `pip install`
+- install dependencies: execute `npm install`
 - start service:
   - (execute `node server.js`)
   - for production deployment the image upload service should be registered as a daemon process to make sure that the service is re-started after a server reboot. This can be achieved with [PM2](https://pm2.keymetrics.io/) (NodeJS) daemon process manager.
