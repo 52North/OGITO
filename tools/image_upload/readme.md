@@ -11,7 +11,7 @@ The image upload service is deployed on the server alongside with OGTIO app.
   - for production deployment the image upload service should be registered as a daemon process to make sure that the service is re-started after a server reboot. This can be achieved with [PM2](https://pm2.keymetrics.io/) (NodeJS) daemon process manager.
 ### Deployment Hints
 For production deployment in most scenarios it is useful to configure a proxy to make the image upload service to make it available at the same location as the OGITO app.
-An example proxy configuration for Apache2 web serve looks like this:
+An example proxy configuration for Apache2 web server looks like this:
 ```
 <Location /upload>
   ProxyPass http://localhost:5000
