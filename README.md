@@ -19,4 +19,6 @@ Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app w
 ### App Configuration
 ### Project Configuration (Setup Projects)
 #### Image Upload
+The dialogue for mapping user observations offers the option of uploading photos. To do this, there must be a service on the server that manages the upload of the images.  
+[image_upload](https://github.com/52North/OGITO/tree/ogito_global/tools/image_upload) tool is a simple image upload service for this task using NodeJS. See the [ReadMe](https://github.com/52North/OGITO/blob/ogito_global/tools/image_upload/readme.md) for information regarding deployment and usage.
 #### Street Search
