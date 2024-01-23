@@ -1,5 +1,5 @@
 # Ogito Image Upload Service
-The image upload service is a simple upload service implementation. This tool handels the upload of user image that can be added when mapping user observations in the OGITO app.
+The image upload service is a simple upload service implementation. This tool handles the upload of user image that can be added when mapping user observations in the OGITO app.
 The image upload service uses the [NodeJS](https://nodejs.org/en) JavaScript runtime environment.
 ## Requirements
 - [NodeJS](https://nodejs.org/en) must be installed to deploy the service
