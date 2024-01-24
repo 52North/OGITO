@@ -55,6 +55,7 @@ Each project must registered in the project configuration (JSON) file. The locat
 | initZoom | initial zoom level | e.g. 15 |
 | nameSessionGroup | group name for sketch layers in layer panel | e.g. "Sketch Layers" |
 | hiddenLayers | published WMS layers that should no be visible (in the layer panel) | typically technical layers for sketch geometries and street search, e.g. `["sketch_polygons", "sketch_points", "sketch_linestrings", "streets_layer"]`|
+|"backgroundLayers"| list of background (WMS) layers, background layers are loaded splitted into multiple tiles instead of a single images (might create issues wiht lables on the layer)| e.g. `[{"title": "Topographic Map", "format": "image/jpeg"}, {"title": "Other Basemap", "format": "image/png"}]` |
 | centerWGS84 | inital view center in geographic coordinates (WGS84) (optional, eiher this or `extentWGS84` must be set| e.g `{"lat": 51.935, "lon": 7.6521}`, if not set center point of the configured extent is used|
 | extentWGS84 | constraints the visible extent (geographic coordinates (WGS84) of the map (optional, either this or `centerWGS84` must be set | e.g. `{"minLon": 7.1, "minLat": 32.88, "maxLon": 40.18, "maxLat": 84.73}` | 
 | sketchLayerPolygons | name of the technical sketch layer for polygons | e.g "sketch_polygons" |
