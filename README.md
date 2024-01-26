@@ -4,27 +4,29 @@ OGITO is a collaborative mapping an planning application. To support collaborati
 
 ## Introduction
 
-
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory. Use the `--prod` flag for a production build.
 ## Deployment
 ### Requirements
 - Web Server (e.g Apache2 or NGINX) for serving the OGITO app and hosting QGIS Server
 - QGIS Server
 - POSTGIS (other Database supported by QGIS can be used as well)
-- (NodeJS, only required for image upload and developemnt)
+- NodeJS, only required for image upload and developemnt
+- (Python, only required to execute the [script to extract street data](#street-search))
 
 ### Authentication
-- Auth0 single page application login
+The OGITO app requires authentication. For authentication OGITO currently uses [AUTH0](https://auth0.com/) (registration required - free tier only).
+At Auth0, a _singe page web application' must be created an configured according to the URL of the OGITO deployment (can be _http://localhost:4200/_ for development setup).
+Domain and client id must be provided in the [application configuration](#app-configuration).
 
-### Development
+### Development Setup
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 9.1.1. In order to build and run the project locally [Angular CLI must be installed](https://angular.io/guide/setup-local#install-the-angular-cli)
 #### Build
 Run `ng build` to build the project. The build artifacts will be stored in the dist/ directory. Use the `--prod` flag for a production build.
 #### Development server
 Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
+In order to access projects in OGTIO [authentication](#authentication) must be configured for the development setup as well
 
-## Configuration
-OGITO has a global app configuration file for settings that affect the deployment or all projects and project configuration file with settings for each project. Each project needs a entry in the project settings file.
+### Configuration
+OGITO has a global app configuration file for settings that affect the deployment or all projects and project configuration file with [settings for each project](#publish-project). Each project needs a entry in the project settings file.
 ### App Configuration
 `src/assets/configuration/appsettings.json`  
   
@@ -42,7 +44,14 @@ OGITO has a global app configuration file for settings that affect the deploymen
 | auth.domain | authentication: domain of the [auth0](https://auth0.com/) application| e.g. "dev-abcabc123.us.auth0.com" | 
 |auth.clientId| authentication: client id of the [auth0](https://auth0.com/) application| e.g. "abeadsadssaDJo12das"|
 
-### Project Configuration (Setup Projects)
+### Image Upload
+The mapping of user observations supports the upload of user images. For this purpose the Image Upload Service must be deployed and configured. See [documentation for the image upload service](https://github.com/52North/OGITO/tree/ogito_global/tools/image_upload) and [application configuration](#app-configuration) parameters `imageUploadService` and `imageUploadFolder`.
+
+## Publish Project
+The content (layers) of an OGITO project are defined in a QGIS project that is pusblished by QGIS server. Use the starter QGIS project and the (POSTGIS) database backup to initialize a new project.
+To make the new project available in the OGITO app a the .qgs QGIS project file must be published with QGIS server first. The new project must also be registered in the [project configuration](#project-coniguration).
+
+### Project Configuration
 Each project must registered in the project configuration (JSON) file. The location of the project configuration depends on the property `projectConfigurationFile` of the [application configuration](#app-configuration).  
   
 |  property | description  |  hint |
@@ -100,9 +109,19 @@ Each project must registered in the project configuration (JSON) file. The locat
 
 </details>
 
-### Image Upload
-The mapping of user observations supports the upload of user images. For this purpose the Image Upload Service must be deployed and configured. See [documentation for the image upload service](https://github.com/52North/OGITO/tree/ogito_global/tools/image_upload) and [application configuration](#app-configuration) parameters `imageUploadService` and `imageUploadFolder`.
 ### Street Search
-To activate the street search in the OGITO app a layer with street data must be provided in the QGIS-project. This layer **must be published as WFS** in QGIS Server. 
+To activate the street search in the OGITO app a layer with street data must be provided in the QGIS-project. This layer **must be published as WFS** in QGIS Server (read-only). 
 The [Python script for extracting road data](https://github.com/52North/OGITO/tree/ogito_global/tools/street_names) from the OpenStreetMap database can be used to generate the road data. See the [documentation](https://github.com/52North/OGITO/tree/ogito_global/tools/street_names) of the street.  
-Additionaly street search must be configured in the [project configuration](#project-Configuration-(setup-projects)). The `layerName` value is the name of the layer containing the street data in the QGIS project. The `property` value is the name of the field of the layer that contains the street names.
+Additionaly street search must be configured in the [project configuration](#project-configuration). The `layerName` value is the name of the layer containing the street data in the QGIS project. The `property` value is the name of the field of the layer that contains the street names.
+
+### QGIS Project Requirements
+- the three separate layers for sketch geometries (points, polygons, linestrings) must be part of QGIS project (part of the QGIS start project)
+  - each of these layer must be associated to database tables (contained in the starter database backup)
+  - these layer must be published as WFS (read, delete and update must be activated)
+  - these are technical layers and should be added to the `hiddenLayers` in the [project configuration](#project-configuration)
+- reporting
+  - db table
+  - wfs  
+  - styles and categories
+- only projection of map
+- technical layer for [street search](street-search) should be added to the `hiddenLayers` in the [project configuration](#project-configuration)
