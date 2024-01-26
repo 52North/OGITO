@@ -14,7 +14,7 @@ OGITO is a collaborative mapping an planning application. To support collaborati
 
 ### Authentication
 The OGITO app requires authentication. For authentication OGITO currently uses [AUTH0](https://auth0.com/) (registration required - free tier only).
-At Auth0, a _singe page web application' must be created an configured according to the URL of the OGITO deployment (can be _http://localhost:4200/_ for development setup).
+At Auth0, a _singe page web application_ must be created an configured according to the URL of the OGITO deployment (can be _http://localhost:4200/_ for development setup).
 Domain and client id must be provided in the [application configuration](#app-configuration).
 
 ### Development Setup
