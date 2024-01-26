@@ -2,6 +2,22 @@
 
 OGITO is a collaborative mapping an planning application. To support collaborative spatial planning tasks, OGITO is optimised for use on digital map tables. As it is a web application, OGITO can be opened on all devices in the web browser. Touch gestures or pointing devices (e.g. computer mouse) can be used to operate OGITO.
 
+## Table of Content
+- [Introduction](#introduction)
+- [Deployment](#deployment)
+   * [Requirements](#requirements)
+   * [Authentication](#authentication)
+   * [Development Setup](#development-setup)
+      + [Build](#build)
+      + [Development server](#development-server)
+   * [Configuration](#configuration)
+      + [App Configuration](#app-configuration)
+   * [Image Upload](#image-upload)
+- [Publish Project](#publish-project)
+   * [Project Configuration](#project-configuration)
+   * [Street Search](#street-search)
+   * [QGIS Project Requirements](#qgis-project-requirements)
+
 ## Introduction
 
 ## Deployment
@@ -27,7 +43,7 @@ In order to access projects in OGTIO [authentication](#authentication) must be c
 
 ### Configuration
 OGITO has a global app configuration file for settings that affect the deployment or all projects and project configuration file with [settings for each project](#publish-project). Each project needs a entry in the project settings file.
-### App Configuration
+#### App Configuration
 `src/assets/configuration/appsettings.json`  
   
 |  property | description  |  hint |
