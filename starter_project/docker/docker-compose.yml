@@ -1,0 +1,37 @@
+version: "3.3"
+
+services:
+  qgis_server:
+    image: camptocamp/qgis-server:3.26
+    volumes:
+      - './ogito_starter_docker.qgs:/etc/qgisserver/ogito_starter_docker.qgs'
+    ports:
+      - 8380:80
+    depends_on:
+      - db
+    networks:
+      - db
+    environment:
+      - QGIS_PROJECT_FILE=/etc/qgisserver/ogito_starter_docker.qgs
+      - QGIS_AUTH_DB_DIR_PATH=/etc/qgisserver/
+      - QGIS_SERVER_LOG_LEVEL=0
+      - QGIS_SERVER_LANDING_PAGE_PROJECTS_DIRECTORIES=/etc/qgisserver
+  db:
+    image: postgis/postgis:16-3.4-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=ogito_data
+    ports:
+      - 5432:5432
+    networks:
+      - db
+    volumes:
+      - postgresdata_starter:/var/lib/postgresql/data
+      - './init_db.sh:/docker-entrypoint-initdb.d/init_db.sh'
+      - '../ogito_starter_db.sql:/tmp/ogito_starter_db.sql'
+volumes:
+  postgresdata_starter:
+
+networks:
+  db:

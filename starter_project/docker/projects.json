@@ -1,0 +1,17 @@
+[
+  {
+    "name": "OGITO Starter copy",
+    "qgisProjectFilename": "ogito_starter_docker.qgs",
+    "thumbnail": "https://raw.githubusercontent.com/rosaguilar/myogito/master/company_logo.png?token=GHSAT0AAAAAAB7UFEDR7ODZRUTTXZQS6BOUZCJJ5YA",
+    "minZoom": 8,
+    "maxZoom": 20,
+    "initZoom": 12,
+    "nameSessionGroup": "Sketch Layers",
+    "hiddenLayers" : ["sketch_polygons", "sketch_points", "sketch_linestrings"],
+    "backgroundLayers" : [{"title": "Topographic Map (OSM)", "format": "image/jpeg"}],
+    "centerWGS84": {"lat": 51.935, "lon": 7.6521},
+    "sketchLayerPolygons": "sketch_polygons",
+    "sketchLayerLinestrings": "sketch_linestrings",
+    "sketchLayerPoints": "sketch_points"
+  }
+]
