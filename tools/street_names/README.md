@@ -34,6 +34,7 @@ edit in the [last block](https://github.com/52North/OGITO/blob/case_study/ensche
 ```python
 OGITO_streetnames(city, admin_id, outfile)
 ```
+
 ### how to get admin_id
 - go to https://www.openstreetmap.org/ 
 - enter your city name in the search field e.g. `Enschede` <br>
