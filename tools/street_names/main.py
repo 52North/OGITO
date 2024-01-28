@@ -118,7 +118,7 @@ def OGITO_streetnames(city, admin_id, outfile):
 # enter cityname and select the right one
 # copy number and use below
 #
-OGITO_streetnames("Bochum", 62644, "bochum_streets")
+OGITO_streetnames("Münster", 62591, "muenster_streets")
 
 
 

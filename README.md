@@ -1,6 +1,6 @@
 # OGITO - Open Geospatial Interactive Tool
 
-OGITO is a collaborative mapping an planning application. To support collaborative spatial planning tasks, OGITO is optimised for use on digital map tables. As it is a web application, OGITO can be opened on all devices in the web browser. Touch gestures or pointing devices (e.g. computer mouse) can be used to operate OGITO.
+OGITO is a collaborative mapping and planning application. To support collaborative spatial planning tasks, OGITO is optimised for use on digital map tables. As it is a web application, OGITO can be opened on all devices in the web browser. Touch gestures or pointing devices (e.g. computer mouse) can be used to operate OGITO.
 
 ## Table of Content
 - [OGITO - Open Geospatial Interactive Tool](#ogito---open-geospatial-interactive-tool)
@@ -24,11 +24,14 @@ OGITO is a collaborative mapping an planning application. To support collaborati
 
 ## Introduction
 
+OGITO is a web application built with [Angular](https://angular.io) and [Openlayers](https://openlayers.org). 
+The backend mainly consists of an instance of [QGIS Server](https://docs.qgis.org/3.28/en/docs/server_manual/index.html). QGIS Server publishes layers of a [QGIS Desktop](https://qgis.org/en/site/) project as OGC web services (Web Map Service (WMS) and Web Feature Service (WFS)). The OGITO frontend retrieves data from QGIS server. Layers that are added to QGIS project automatically appear in the OGITO application. The PostGIS database is used to store data for QGIS Server. This includes data that is mapped and saved in the OGITO application, as well as data for layers that are visualised in the OGITO application. Through QGIS server external web services (e.g. WMS and WFS) can be added to the OGITO application as well.
+
 ## Deployment
 ### Requirements
 - Web Server (e.g Apache2 or NGINX) for serving the OGITO app and hosting QGIS Server
 - QGIS Server
-- POSTGIS (other Database supported by QGIS can be used as well)
+- PostGIS (other Database supported by QGIS can be used as well)
 - NodeJS, only required for image upload and developemnt
 - (Python, only required to execute the [script to extract street data](#street-search))
 
@@ -141,10 +144,18 @@ The directory `starter_project` contains a minmal QGIS project which meets the t
   - these layer must be published as WFS (read, delete and update must be activated)
   - these are technical layers and should be added to the `hiddenLayers` in the [project configuration](#project-configuration)
 - reporting
-  - db table
-  - wfs  
-  - styles and categories
-- only projection of map
+  - reporting layer must be connected `user_observation` table (part of starter project database dump)
+    - schema and user dialog is currently not changable
+    - multiple reporting layers can be added to the project 
+  - layer name can be changed but must not contain whitespace characters (group and layer)
+    - all reporting layers must be published as WFS (read, update, delete) 
+  - categories can be changed in QGIS (symbologie -> rule-based styling) 
+    - example rule: `"category" = 'my category'`
+    - icon must be simple svg marker
+    - svg must be embeded 
+    - parsing styles for reporting layers needs improvments, it is advised to use the preconfigured square markers and only adjust colors
+- wms capabilities must be restricted to the map projection set in [application configuration](#app-configuration) (e.g. EPSG:3857)
+  - QGIS: project -> properties -> qgis server -> wms capabilities -> crs restrictions 
 - technical layer for [street search](street-search) should be added to the `hiddenLayers` in the [project configuration](#project-configuration)
 
 ### Street Search
