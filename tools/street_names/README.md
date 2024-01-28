@@ -43,3 +43,25 @@ OGITO_streetnames(city, admin_id, outfile)
 - note the highlighted number in the picture <br>
 ![3](https://github.com/52North/OGITO/blob/case_study/enschede/tools/street_names/img/admin_id_step3.png)
 - use it in the function
+
+### Docker
+If you don't want to install GDAL dependencies - which can be tricky on windows - you can run the script inside a docker container.  
+Build the image:
+```commandline
+docker build -t street-names .
+```
+Run the container:  
+  
+Windows (Powershell):  
+```commandline
+docker run -v ${PWD}:/usr/src/app/ street_names
+```
+Windows (CMD)  
+```commandline
+docker run -v %cd%:/usr/src/app/ street_names
+```
+Linux/Max:  
+```commandline
+docker run -v $(pwd):/usr/src/app/ street_names
+```
+

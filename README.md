@@ -3,20 +3,24 @@
 OGITO is a collaborative mapping an planning application. To support collaborative spatial planning tasks, OGITO is optimised for use on digital map tables. As it is a web application, OGITO can be opened on all devices in the web browser. Touch gestures or pointing devices (e.g. computer mouse) can be used to operate OGITO.
 
 ## Table of Content
-- [Introduction](#introduction)
-- [Deployment](#deployment)
-   * [Requirements](#requirements)
-   * [Authentication](#authentication)
-   * [Development Setup](#development-setup)
-      + [Build](#build)
-      + [Development server](#development-server)
-   * [Configuration](#configuration)
-      + [App Configuration](#app-configuration)
-   * [Image Upload](#image-upload)
-- [Publish Project](#publish-project)
-   * [Project Configuration](#project-configuration)
-   * [Street Search](#street-search)
-   * [QGIS Project Requirements](#qgis-project-requirements)
+- [OGITO - Open Geospatial Interactive Tool](#ogito---open-geospatial-interactive-tool)
+  - [Table of Content](#table-of-content)
+  - [Introduction](#introduction)
+  - [Deployment](#deployment)
+    - [Requirements](#requirements)
+    - [Authentication](#authentication)
+    - [Development Setup](#development-setup)
+      - [Build](#build)
+      - [Development server](#development-server)
+      - [Docker](#docker)
+    - [Configuration](#configuration)
+      - [App Configuration](#app-configuration)
+    - [Image Upload](#image-upload)
+  - [Publish Project](#publish-project)
+    - [Project Configuration](#project-configuration)
+    - [Starter Project](#starter-project)
+    - [QGIS Project Requirements](#qgis-project-requirements)
+    - [Street Search](#street-search)
 
 ## Introduction
 
@@ -40,6 +44,8 @@ Run `ng build` to build the project. The build artifacts will be stored in the d
 #### Development server
 Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
 In order to access projects in OGTIO [authentication](#authentication) must be configured for the development setup as well
+#### Docker
+The directory `starter_project/docker` contains a docker compose file to setup background services (POSTGIS and QGIS Server) for development.
 
 ### Configuration
 OGITO has a global app configuration file for settings that affect the deployment or all projects and project configuration file with [settings for each project](#publish-project). Each project needs a entry in the project settings file.
@@ -125,10 +131,9 @@ Each project must registered in the project configuration (JSON) file. The locat
 
 </details>
 
-### Street Search
-To activate the street search in the OGITO app a layer with street data must be provided in the QGIS-project. This layer **must be published as WFS** in QGIS Server (read-only). 
-The [Python script for extracting road data](https://github.com/52North/OGITO/tree/ogito_global/tools/street_names) from the OpenStreetMap database can be used to generate the road data. See the [documentation](https://github.com/52North/OGITO/tree/ogito_global/tools/street_names) of the street.  
-Additionaly street search must be configured in the [project configuration](#project-configuration). The `layerName` value is the name of the layer containing the street data in the QGIS project. The `property` value is the name of the field of the layer that contains the street names.
+
+### Starter Project
+The directory `starter_project` contains a minmal QGIS project which meets the technical requirements of OGITO. The (Postgis) database dump can be used to setup all required database tables.
 
 ### QGIS Project Requirements
 - the three separate layers for sketch geometries (points, polygons, linestrings) must be part of QGIS project (part of the QGIS start project)
@@ -141,3 +146,8 @@ Additionaly street search must be configured in the [project configuration](#pro
   - styles and categories
 - only projection of map
 - technical layer for [street search](street-search) should be added to the `hiddenLayers` in the [project configuration](#project-configuration)
+
+### Street Search
+To activate the street search in the OGITO app a layer with street data must be provided in the QGIS-project. This layer **must be published as WFS** in QGIS Server (read-only). 
+The [Python script for extracting road data](https://github.com/52North/OGITO/tree/ogito_global/tools/street_names) from the OpenStreetMap database can be used to generate the road data. See the [documentation](https://github.com/52North/OGITO/tree/ogito_global/tools/street_names) of the street.  
+Additionaly street search must be configured in the [project configuration](#project-configuration). The `layerName` value is the name of the layer containing the street data in the QGIS project. The `property` value is the name of the field of the layer that contains the street names.
