@@ -2,3 +2,4 @@ requests
 geojson
 geopandas
 gdal
+shapely

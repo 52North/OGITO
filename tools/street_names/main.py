@@ -2,7 +2,8 @@ import requests
 import json
 import geojson
 import geopandas as gpd
-import subprocess
+from shapely.geometry.linestring import LineString
+from shapely.geometry.multilinestring import MultiLineString
 
 
 
@@ -56,19 +57,21 @@ def get_geometries(osm_ids, admin_id, outfile):
     print("create FC")
     features=[]
     for item in ls:
-        print(item)
         geom_type = item["geometry"]["type"].lower()
         coords = item['geometry']['coordinates']
         if geom_type == "multilinestring":
-            coords = coords #already MultiLineString, do nothing
+          coords = coords #already MultiLineString, do nothing
         elif geom_type == "linestring":
-            coords = [coords] #promote to MultiLineString
+          coords = [coords] #promote to MultiLineString
         else:
-            continue #skip other geometry types
+          print("skip item")
+          continue #skip other geometry types
+
 
         geometry=geojson.MultiLineString(coords)
         feature=geojson.Feature(geometry=geometry, properties={"name": item['name']})
         features.append(feature)
+
 
     feature_collection=geojson.FeatureCollection(features)
     geojson_str=feature_collection.__geo_interface__
@@ -76,32 +79,32 @@ def get_geometries(osm_ids, admin_id, outfile):
     ##get admisitrative boundaries
     print("get borders to clip")
     req=requests.get(f"https://nominatim.openstreetmap.org/details.php?osmtype=R&osmid={admin_id}&polygon_geojson=1&format=json")
-    geometry=geojson.Polygon(json.loads(req.text)['geometry']['coordinates'])
+    admin_geom = json.loads(req.text)['geometry']
+    admin_geomtype = admin_geom["type"].lower()
+    if admin_geomtype == "polygon":
+      geometry=geojson.Polygon(admin_geom['coordinates'])
+    elif admin_geomtype == "multipolygon":
+      geometry=geojson.MultiPolygon(admin_geom['coordinates'])
+    else:
+      raise Exception("invalid geometry type for admin boundary: " + admin_geomtype + ", expected polygon or multipolygon")
+
     feature=geojson.Feature(geometry=geometry, properties={"name": json.loads(req.text)['localname']})
     admin_clip=feature.__geo_interface__
 
     ##clip streets by admin bound
-    ##clip streets by admin bound
     street_data=gpd.read_file(json.dumps(geojson_str))
-    street_data.to_file(f"./tmp_{outfile}.geojson")
-
     clip_data=gpd.read_file(json.dumps(admin_clip))
-    clip_data.to_file(f"./tmp_clip_{outfile}.geojson")
-
     clip=gpd.clip(street_data, clip_data)
-
 
     ##dissolve by streetnames
     print("dissolve street names")
     diss=clip.dissolve(by='name')
 
-    diss.to_file(f"./{outfile}.geojson")
+    #promote linestrings to multilinestrings
+    diss["geometry"] = [MultiLineString([feature]) if isinstance(feature, LineString) else feature for feature in diss["geometry"]]
 
-    #linestrings to multiline
-    ogr_cmd = ['ogr2ogr', '-f', 'GeoJSON', f'./{outfile}_multiline.geojson', f'./tmp_{outfile}_line.geojson', '-nlt', 'PROMOTE_TO_MULTI']
-
-    subprocess.run(ogr_cmd, check=True)
-
+    #save result as geojson
+    diss.to_file(f"/usr/src/app/{outfile}.geojson")
 
     print("everything done!")
 
@@ -115,7 +118,7 @@ def OGITO_streetnames(city, admin_id, outfile):
 # enter cityname and select the right one
 # copy number and use below
 #
-OGITO_streetnames("Kippenheim", 453011, "kippenheim")
+OGITO_streetnames("Bochum", 62644, "bochum_streets")
 
 
 
