@@ -4,7 +4,7 @@ services:
   qgis_server:
     image: camptocamp/qgis-server:3.26
     volumes:
-      - './ogito_starter_docker.qgs:/etc/qgisserver/ogito_starter_docker.qgs'
+      - './ogito_starter_docker.qgs:/etc/qgisserver/ogito_starter.qgs'
     ports:
       - 8380:80
     depends_on:
@@ -12,7 +12,7 @@ services:
     networks:
       - db
     environment:
-      - QGIS_PROJECT_FILE=/etc/qgisserver/ogito_starter_docker.qgs
+      - QGIS_PROJECT_FILE=/etc/qgisserver/ogito_starter.qgs
       - QGIS_AUTH_DB_DIR_PATH=/etc/qgisserver/
       - QGIS_SERVER_LOG_LEVEL=0
       - QGIS_SERVER_LANDING_PAGE_PROJECTS_DIRECTORIES=/etc/qgisserver

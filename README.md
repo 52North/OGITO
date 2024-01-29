@@ -30,10 +30,10 @@ The backend mainly consists of an instance of [QGIS Server](https://docs.qgis.or
 ## Deployment
 ### Requirements
 - Web Server (e.g Apache2 or NGINX) for serving the OGITO app and hosting QGIS Server
-- QGIS Server
+- QGIS Server (3.x)
 - PostGIS (other Database supported by QGIS can be used as well)
-- NodeJS, only required for image upload and developemnt
-- (Python, only required to execute the [script to extract street data](#street-search))
+- NodeJS (16.x), only required for image upload and developemnt
+- (Python (3.x), only required to execute the [script to extract street data](#street-search))
 
 ### Authentication
 The OGITO app requires authentication. For authentication OGITO currently uses [AUTH0](https://auth0.com/) (registration required - free tier only).
