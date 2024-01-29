@@ -77,7 +77,7 @@ OGITO has a global app configuration file for settings that affect the deploymen
 |auth.clientId| authentication: client id of the [auth0](https://auth0.com/) application| e.g. "abeadsadssaDJo12das"|
 
 ### Image Upload
-The mapping of user observations supports the upload of user images. For this purpose the Image Upload Service must be deployed and configured. See [documentation for the image upload service](https://github.com/52North/OGITO/tree/ogito_global/tools/image_upload) and [application configuration](#app-configuration) parameters `imageUploadService` and `imageUploadFolder`.
+The mapping of user observations supports the upload of user images. For this purpose the Image Upload Service must be deployed and configured. See [documentation for the image upload service](https://github.com/52North/OGITO/tree/main/tools/image_upload) and [application configuration](#app-configuration) parameters `imageUploadService` and `imageUploadFolder`.
 
 ## Publish Project
 The content (layers) of an OGITO project are defined in a QGIS project that is pusblished by QGIS server. Use the starter QGIS project and the (POSTGIS) database backup to initialize a new project.
@@ -167,7 +167,7 @@ The directory `starter_project` contains a minmal QGIS project which meets the t
 
 ### Street Search
 To activate the street search in the OGITO app a layer with street data must be provided in the QGIS-project. This layer **must be published as WFS** in QGIS Server (read-only). 
-The [Python script for extracting road data](https://github.com/52North/OGITO/tree/ogito_global/tools/street_names) from the OpenStreetMap database can be used to generate the road data. See the [documentation](https://github.com/52North/OGITO/tree/ogito_global/tools/street_names) of the street.  
+The [Python script for extracting road data](https://github.com/52North/OGITO/tree/main/tools/street_names) from the OpenStreetMap database can be used to generate the road data. See the [documentation](https://github.com/52North/OGITO/tree/main/tools/street_names) of the street.  
 Additionaly street search must be configured in the [project configuration](#project-configuration). The `layerName` value is the name of the layer containing the street data in the QGIS project. The `property` value is the name of the field of the layer that contains the street names.
 
 ## Acknowledgements
