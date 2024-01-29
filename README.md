@@ -1,6 +1,8 @@
 # OGITO - Open Geospatial Interactive Tool
 
-OGITO is a collaborative mapping and planning application. To support collaborative spatial planning tasks, OGITO is optimised for use on digital map tables. As it is a web application, OGITO can be opened on all devices in the web browser. Touch gestures or pointing devices (e.g. computer mouse) can be used to operate OGITO.
+OGITO is a collaborative mapping and planning application. To support collaborative spatial planning tasks, OGITO is optimised for use on digital map tables. As it is a web application, OGITO can be opened on all devices in the web browser. Touch gestures or pointing devices (e.g. computer mouse) can be used to operate OGITO.  
+OGITO was originally developed by the [Faculty of Geo-Information Science and Earth Observation (ITC)](https://www.itc.nl/facilities/labs-and-resources/thedisc/) at the [University of Twente](https://www.utwente.nl/en/).
+
 
 ## Table of Content
 - [OGITO - Open Geospatial Interactive Tool](#ogito---open-geospatial-interactive-tool)
@@ -21,11 +23,16 @@ OGITO is a collaborative mapping and planning application. To support collaborat
     - [Starter Project](#starter-project)
     - [QGIS Project Requirements](#qgis-project-requirements)
     - [Street Search](#street-search)
+  - [Acknowledgement](#acknowledgements)
 
 ## Introduction
 
 OGITO is a web application built with [Angular](https://angular.io) and [Openlayers](https://openlayers.org). 
-The backend mainly consists of an instance of [QGIS Server](https://docs.qgis.org/3.28/en/docs/server_manual/index.html). QGIS Server publishes layers of a [QGIS Desktop](https://qgis.org/en/site/) project as OGC web services (Web Map Service (WMS) and Web Feature Service (WFS)). The OGITO frontend retrieves data from QGIS server. Layers that are added to QGIS project automatically appear in the OGITO application. The PostGIS database is used to store data for QGIS Server. This includes data that is mapped and saved in the OGITO application, as well as data for layers that are visualised in the OGITO application. Through QGIS server external web services (e.g. WMS and WFS) can be added to the OGITO application as well.
+The backend mainly consists of an instance of [QGIS Server](https://docs.qgis.org/3.28/en/docs/server_manual/index.html). QGIS Server publishes layers of a [QGIS Desktop](https://qgis.org/en/site/) project as OGC web services (Web Map Service (WMS) and Web Feature Service (WFS)). The OGITO frontend retrieves data from QGIS server. Layers that are added to QGIS project automatically appear in the OGITO application. The PostGIS database is used to store data for QGIS Server. This includes data that is mapped and saved in the OGITO application, as well as data for layers that are visualised in the OGITO application. Through QGIS server external web services (e.g. WMS and WFS) can be added to the OGITO application as well.  
+<p align="center">
+  <img src="https://github.com/52North/OGITO/blob/main/img/ogito_architecture.png?raw=true" alt="OGITO software achitecture"></br>
+  Overview of OGITO's software architecture 
+</p>
 
 ## Deployment
 ### Requirements
@@ -162,3 +169,8 @@ The directory `starter_project` contains a minmal QGIS project which meets the t
 To activate the street search in the OGITO app a layer with street data must be provided in the QGIS-project. This layer **must be published as WFS** in QGIS Server (read-only). 
 The [Python script for extracting road data](https://github.com/52North/OGITO/tree/ogito_global/tools/street_names) from the OpenStreetMap database can be used to generate the road data. See the [documentation](https://github.com/52North/OGITO/tree/ogito_global/tools/street_names) of the street.  
 Additionaly street search must be configured in the [project configuration](#project-configuration). The `layerName` value is the name of the layer containing the street data in the QGIS project. The `property` value is the name of the field of the layer that contains the street names.
+
+## Acknowledgements
+Our thanks goes to Rosa Aguilar Bolivar. She implemented the original OGITO application as part of her PhD thesis at the Faculty of Geo-Information Science and Earth Observation (ITC) of the University of Twente (NL).  
+[Original publication on the concepts and work behind OGITO](https://doi.org/10.1016/j.compenvurbsys.2020.101591)
+
