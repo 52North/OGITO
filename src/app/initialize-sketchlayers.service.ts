@@ -9,7 +9,6 @@ import { Subscription } from 'rxjs';
 import WFS from 'ol/format/WFS.js';
 import { HttpClient } from '@angular/common/http';
 import EqualTo from 'ol/format/filter/EqualTo.js';
-import { success } from 'io-ts';
 
 import GML from 'ol/format/GML.js';
 import GeoJSON from 'ol/format/GeoJSON.js';
@@ -19,8 +18,6 @@ import { ApplicationConfiguration } from './config/app-config';
   providedIn: 'root'
 })
 export class InitializeSketchlayersService{
-
-
   private readonly layernameProperty : string = "layername"
   private wfsFormat : WFS;
   private readonly retrieveFeaturesSrs: string = "EPSG:4326" //retrieve features in Geojson in WGS84 and transform to app srs, since OL GML/WFS format cannot read polygons properly (bug?)
@@ -78,7 +75,7 @@ export class InitializeSketchlayersService{
       const source = new VectorSource({
         wrapx: false,
         format: this.wfsFormat,
-        loader: () => {
+        loader: (extent, resolution, projection, success, failure) => {
           const featureRequest = this.wfsFormat.writeGetFeature({
             srsName: this.retrieveFeaturesSrs,
             featureTypes: featureTypes,

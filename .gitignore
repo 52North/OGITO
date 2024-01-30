@@ -59,4 +59,4 @@ tools/image_upload/images
 tools/image_upload/node_modules
 tools/street_names
 
-src/assets/configuration/appsettings.json
+src/assets/configuration/

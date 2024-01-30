@@ -18,7 +18,6 @@ import { DynamicFormQuestionComponent } from './dynamic-form-question/dynamic-fo
 import { DialogPopulationExposedComponent } from './dialog-population-exposed/dialog-population-exposed.component';
 import { DialogOrgExposedComponent } from './dialog-org-exposed/dialog-org-exposed.component';
 import { DialogResultExposedComponent } from './dialog-result-exposed/dialog-result-exposed.component';
-import {MatKeyboardModule} from '@ngx-material-keyboard/core';
 import { StreetSearchComponent } from './street-search/street-search.component';
 import { EditReportingComponent } from './edit-reporting/edit-reporting.component';
 

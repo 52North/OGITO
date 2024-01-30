@@ -83,7 +83,6 @@ import {DialogResultExposedComponent} from '../dialog-result-exposed/dialog-resu
 import {request, gql} from 'graphql-request';
 import {QueryDBService} from '../query-db.service';
 import {DialogOrgExposedComponent} from '../dialog-org-exposed/dialog-org-exposed.component';
-import {saveAs} from 'file-saver';
 import { AppconfigService } from '../config/appconfig.service';
 import { InitializeSketchlayersService } from '../initialize-sketchlayers.service';
 import MultiPoint from 'ol/geom/MultiPoint.js';
