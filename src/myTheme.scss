@@ -1,12 +1,13 @@
 /* You can add global styles to this file, and also import other style files */
+@use '~@angular/material' as mat;
 @import '~@angular/material/theming';
-@include mat-core();
+@include mat.core();
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
-$myOgito-app-primary: mat-palette($mat-pink,800,100,900);
+$myOgito-app-primary: mat.define-palette(mat.$pink-palette,800,100,900);
 // GECCO colors
 // $myOgito-app-primary: mat-palette($mat-indigo,500);
 
-$myOgito-app-accent: mat-palette($mat-amber,50);
-$myOgito-app-theme:mat-light-theme($myOgito-app-primary,$myOgito-app-accent);
-@include angular-material-theme($myOgito-app-theme);
+$myOgito-app-accent: mat.define-palette(mat.$amber-palette,50);
+$myOgito-app-theme:mat.define-light-theme($myOgito-app-primary,$myOgito-app-accent);
+@include mat.all-component-themes($myOgito-app-theme);
