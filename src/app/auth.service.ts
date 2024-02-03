@@ -1,6 +1,6 @@
-import { Injectable, OnInit } from '@angular/core';
-import createAuth0Client from '@auth0/auth0-spa-js';
-import Auth0Client from '@auth0/auth0-spa-js/dist/typings/Auth0Client';
+import { Injectable } from '@angular/core';
+import {createAuth0Client} from '@auth0/auth0-spa-js';
+import {Auth0Client} from '@auth0/auth0-spa-js/dist/typings/Auth0Client';
 import { from, of, Observable, BehaviorSubject, combineLatest, throwError } from 'rxjs';
 import { tap, catchError, concatMap, shareReplay } from 'rxjs/operators';
 import { Router } from '@angular/router';
@@ -31,8 +31,10 @@ export class AuthService {
       this.auth0Client$ = (from(
         createAuth0Client({
           domain: config.auth.domain,
-          client_id: config.auth.clientId,
-          redirect_uri: `${window.location.origin}`
+          clientId: config.auth.clientId,
+          authorizationParams: {
+            redirect_uri: `${window.location.origin}`
+          }
         })
       ) as Observable<Auth0Client>).pipe(
         shareReplay(1), // Every subscription receives the same shared value
@@ -68,11 +70,10 @@ export class AuthService {
     return this.loggedIn;
   }
 
-  // When calling, options can be passed if desired
-  // https://auth0.github.io/auth0-spa-js/classes/auth0client.html#getuser
-  getUser$(options?): Observable<any> {
+
+  getUser$(): Observable<any> {
     return this.auth0Client$.pipe(
-      concatMap((client: Auth0Client) => from(client.getUser(options))),
+      concatMap((client: Auth0Client) => from(client.getUser())),
       tap(user => this.userProfileSubject$.next(user))
     );
   }
@@ -102,7 +103,9 @@ export class AuthService {
       this.auth0Client$.subscribe((client: Auth0Client) => {
         // Call method to log in
         client.loginWithRedirect({
-          redirect_uri: `${window.location.origin}`,
+          authorizationParams:{
+            redirect_uri: `${window.location.origin}`
+          },
           appState: { target: redirectPath }
         });
       });
@@ -143,8 +146,10 @@ export class AuthService {
       this.auth0Client$.subscribe((client: Auth0Client) => {
         // Call method to log out
         client.logout({
-          client_id: this.config.getAppConfig().auth.clientId,
-          returnTo: `${window.location.origin}`
+          clientId: this.config.getAppConfig().auth.clientId,
+          logoutParams: {
+            returnTo: `${window.location.origin}`
+          }
         });
       });
    }
