@@ -28,7 +28,8 @@
             ],
             "styles": [
               "src/styles.scss",
-              "src/myTheme.scss"
+              "src/myTheme.scss",
+              "node_modules/ol/ol.css"
             ],
             "scripts": [],
             "vendorChunk": true,
@@ -96,7 +97,8 @@
             "karmaConfig": "karma.conf.js",
             "assets": [
               "src/favicon.ico",
-              "src/assets"
+              "src/assets",
+              "node_modules/ol/ol.css"
             ],
             "styles": [
               "./node_modules/@angular/material/prebuilt-themes/purple-green.css",
