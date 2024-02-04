@@ -1,14 +1,10 @@
 import { Subscription } from 'rxjs';
 import { OpenLayersService } from './open-layers.service';
 import { Injectable } from '@angular/core';
-import CircleStyle from 'ol/style/Circle';
-import {Fill, RegularShape, Stroke, Style, Icon, Text, Circle} from 'ol/style';
+import {Fill, Stroke, Style, Icon} from 'ol/style';
 import {DEVICE_PIXEL_RATIO} from 'ol/has.js';
-import {AppConstants} from './app-constants';
 import {Parser} from 'xml2js';
 import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
-import { valueFromAST } from 'graphql';
-import { ThrowStmt } from '@angular/compiler';
 import { ProjectConfiguration } from './config/project-config';
 import { AppconfigService } from './config/appconfig.service';
 
