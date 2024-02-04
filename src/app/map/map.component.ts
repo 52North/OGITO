@@ -77,7 +77,7 @@ import {QuestionService} from '../question-service.service';
 import {QuestionBase} from '../question-base';
 import {DynamicFormComponent} from '../dynamic-form/dynamic-form.component';
 import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
-import {FormControl, FormGroup, Validators} from '@angular/forms';
+import {UntypedFormControl, UntypedFormGroup, Validators} from '@angular/forms';
 import {DialogPopulationExposedComponent} from '../dialog-population-exposed/dialog-population-exposed.component';
 import {DialogResultExposedComponent} from '../dialog-result-exposed/dialog-result-exposed.component';
 import {request, gql} from 'graphql-request';
@@ -4506,20 +4506,20 @@ export class DialogRatingMeasureDialog {
   measureDesc: string;
   selectedRating = 0;
   fieldNames: any; // esto debe ir a data.fieldNames..
-  formGroup: FormGroup;
+  formGroup: UntypedFormGroup;
   constructor(
     public dialogRef: MatDialogRef<DialogRatingMeasureDialog>,
     @Inject(MAT_DIALOG_DATA) public data: DialogData
   ) {
     const group: any = {};
     data.fieldNames.forEach((question) => {
-      group[question] = new FormControl(
+      group[question] = new UntypedFormControl(
         question.value || '',
         Validators.required
       );
     });
-    group.sonstiges = new FormControl(false || ''); // ranking question
-    this.formGroup = new FormGroup(group);
+    group.sonstiges = new UntypedFormControl(false || ''); // ranking question
+    this.formGroup = new UntypedFormGroup(group);
     this.measureDesc = data.desc;
   }
   showQuestionValue(elementID: any, value: any) {

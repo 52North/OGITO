@@ -1,7 +1,7 @@
 import {AfterViewInit, Component, EventEmitter, Input, OnInit, Output, NgModule, ElementRef, ViewChild} from '@angular/core';
 import {Observable, of, of as observableOf, Subject, Subscription} from 'rxjs';
 import {QuestionService} from '../question-service.service';
-import {FormGroup, Validators, FormsModule} from '@angular/forms';
+import {UntypedFormGroup, Validators, FormsModule} from '@angular/forms';
 import { QuestionBase } from '../question-base';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import Keyboard from 'simple-keyboard';
@@ -20,7 +20,7 @@ export class DynamicFormComponent implements OnInit, AfterViewInit {
   @ViewChild('keyboard') elRef: ElementRef;
   @ViewChild('input') input;
   sQuestions: QuestionBase<string>[];
-  form: FormGroup;
+  form: UntypedFormGroup;
   payLoad = '';
   value = '';
   keyboard: Keyboard;

@@ -7,7 +7,7 @@ import { TextboxQuestion } from './textbox-question';
 import { CheckBoxQuestion } from './check-box-question';
 import { SliderQuestion } from './slider-question';
 import {of, Subject} from 'rxjs';
-import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
 
 @Injectable({
   providedIn: 'root'
@@ -205,14 +205,14 @@ export class QuestionService {
     const group: any = {};
    questions.forEach(question => {
     if (question.controlType === 'checkbox') {
-        group[question.key] = question.required ? new FormControl(question.value || '', Validators.required)
-          : new FormControl( false); // workaround...
+        group[question.key] = question.required ? new UntypedFormControl(question.value || '', Validators.required)
+          : new UntypedFormControl( false); // workaround...
         return;
       }
-    group[question.key] = question.required ? new FormControl(question.value || '', Validators.required)
-        : new FormControl(question.value || '');
+    group[question.key] = question.required ? new UntypedFormControl(question.value || '', Validators.required)
+        : new UntypedFormControl(question.value || '');
     });
-    return new FormGroup(group);
+    return new UntypedFormGroup(group);
   }
 
 
