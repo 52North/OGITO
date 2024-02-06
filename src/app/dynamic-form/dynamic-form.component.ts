@@ -3,7 +3,7 @@ import {Observable, of, of as observableOf, Subject, Subscription} from 'rxjs';
 import {QuestionService} from '../question-service.service';
 import {UntypedFormGroup, Validators, FormsModule} from '@angular/forms';
 import { QuestionBase } from '../question-base';
-import {MatSnackBar} from '@angular/material/snack-bar';
+import {MatLegacySnackBar as MatSnackBar} from '@angular/material/legacy-snack-bar';
 import Keyboard from 'simple-keyboard';
 @Component({
   selector: 'app-dynamic-form',

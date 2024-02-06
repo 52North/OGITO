@@ -12,15 +12,15 @@ import {
   ViewChild,
 } from '@angular/core';
 import {
-  MatSnackBar,
-  MatSnackBarHorizontalPosition,
-  MatSnackBarVerticalPosition,
-} from '@angular/material/snack-bar';
+  MatLegacySnackBar as MatSnackBar,
+  MatLegacySnackBarHorizontalPosition as MatSnackBarHorizontalPosition,
+  MatLegacySnackBarVerticalPosition as MatSnackBarVerticalPosition,
+} from '@angular/material/legacy-snack-bar';
 import {
-  MatDialog,
-  MatDialogRef,
-  MAT_DIALOG_DATA,
-} from '@angular/material/dialog';
+  MatLegacyDialog as MatDialog,
+  MatLegacyDialogRef as MatDialogRef,
+  MAT_LEGACY_DIALOG_DATA as MAT_DIALOG_DATA,
+} from '@angular/material/legacy-dialog';
 import { Subject, Subscription } from 'rxjs';
 import { AppConstants } from '../app-constants';
 import { Map, View } from 'ol';

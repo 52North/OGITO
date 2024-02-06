@@ -8,8 +8,8 @@ import {DomSanitizer} from '@angular/platform-browser';
 import {QuestionBase} from '../question-base';
 import { AppConstants } from '../app-constants';
 import { ProjectConfiguration } from '../config/project-config';
-import { MatOptionSelectionChange } from '@angular/material/core';
-import { MatSelectionListChange } from '@angular/material/list';
+import { MatLegacyOptionSelectionChange as MatOptionSelectionChange } from '@angular/material/legacy-core';
+import { MatLegacySelectionListChange as MatSelectionListChange } from '@angular/material/legacy-list';
 
 @Component({
   selector: 'app-layer-panel',

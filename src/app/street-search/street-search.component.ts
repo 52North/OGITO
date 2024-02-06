@@ -14,7 +14,7 @@ import Feature from 'ol/Feature';
 import { GeoJSON, WFS } from 'ol/format';
 import {GML} from 'ol/format'
 import { HttpClient } from '@angular/common/http';
-import { MatSelect } from '@angular/material/select';
+import { MatLegacySelect as MatSelect } from '@angular/material/legacy-select';
 import { ProjectConfiguration } from '../config/project-config';
 import { AppconfigService } from '../config/appconfig.service';
 
