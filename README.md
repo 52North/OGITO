@@ -10,7 +10,7 @@ OGITO was originally developed by the [Faculty of Geo-Information Science and Ea
   - [Introduction](#introduction)
   - [Deployment](#deployment)
     - [Requirements](#requirements)
-    - [Authentication](#authentication)
+    - [Login](#login)
     - [Development Setup](#development-setup)
       - [Build](#build)
       - [Development server](#development-server)
@@ -42,11 +42,10 @@ The backend mainly consists of an instance of [QGIS Server](https://docs.qgis.or
 - NodeJS (14.20.x, 16.13.x or 18.10.x), only required for image upload and developemnt
 - (Python (3.x), only required to execute the [script to extract street data](#street-search))
 
-### Authentication
-The OGITO app requires authentication. For authentication OGITO currently uses [AUTH0](https://auth0.com/) (registration required - free tier only).
+### Login
+By default OGITO allows anonymous login. This setting should not be used for production deployment. User is logged in as anonymous after clicking the Login button on the top right. 
+Proper authentication can be activated in the [application settings](#app-configuration) For authentication OGITO currently uses [AUTH0](https://auth0.com/) (registration required - free tier only).
 At Auth0, a _singe page web application_ must be created an configured according to the URL of the OGITO deployment (can be _http://localhost:4200/_ for development setup).
-Domain and client id must be provided in the [application configuration](#app-configuration).
-
 ### Development Setup
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 9.1.1. In order to build and run the project locally [Angular CLI must be installed](https://angular.io/guide/setup-local#install-the-angular-cli)
 #### Build
@@ -54,7 +53,6 @@ This project was generated with [Angular CLI](https://github.com/angular/angular
 Run `ng build` to build the project. The build artifacts will be stored in the dist/ directory. Use the `--prod` flag for a production build.
 #### Development server
 Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
-In order to access projects in OGTIO [authentication](#authentication) must be configured for the development setup as well
 #### Docker
 The directory `starter_project/docker` contains a docker compose file to setup background services (POSTGIS and QGIS Server) for development.
 
@@ -74,8 +72,9 @@ OGITO has a global app configuration file for settings that affect the deploymen
 | wmsVersion | version of the OGC Web Map Serivce interface that is used to retrieve map data from QGIS Server  |  e.g. "1.3.0" |
 | wfsVersion | version of the OGC Web Feature Serivce interface that is used to retrieve and upload vector data from/to QGIS Server  |  e.g. "1.1.0" |
 | srs |   EPSG code for the map projection (supported projections are EPSG:3857 (Web Mercator), EPSG:4326 (WGS84), EPSG:25832 (UTM 32), EPSG:28992 (Amersfoort))| e.g. "EPSG:3857", QGIS service must be able to serve data in this projection | 
-| auth.domain | authentication: domain of the [auth0](https://auth0.com/) application| e.g. "dev-abcabc123.us.auth0.com" | 
-|auth.clientId| authentication: client id of the [auth0](https://auth0.com/) application| e.g. "abeadsadssaDJo12das"|
+| requireAuth | if `false` anonymous login is allowed, should be `true` for production deployment | default: `false` |
+| auth.domain | authentication: domain of the [auth0](https://auth0.com/) application| e.g. "dev-abcabc123.us.auth0.com", only required if `requireAuth: true` | 
+|auth.clientId| authentication: client id of the [auth0](https://auth0.com/) application| e.g. "abeadsadssaDJo12das", only required if `requireAuth: true`|
 
 ### Image Upload
 The mapping of user observations supports the upload of user images. For this purpose the Image Upload Service must be deployed and configured. See [documentation for the image upload service](https://github.com/52North/OGITO/tree/main/tools/image_upload) and [application configuration](#app-configuration) parameters `imageUploadService` and `imageUploadFolder`.
