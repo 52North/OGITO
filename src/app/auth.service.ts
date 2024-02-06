@@ -21,6 +21,7 @@ export class AuthService {
   private handleRedirectCallback$;
   private userProfileSubject$;
   public userProfile$;
+  public allowAnonLogin: boolean = false;
 
   // Create subject and public observable of user profile data
   // Create a local property for login status
@@ -28,54 +29,60 @@ export class AuthService {
 
   constructor(private router: Router, private config: AppconfigService) {
     this.config.getAppConfigPromise().then((config: ApplicationConfiguration) =>{
-      this.auth0Client$ = (from(
-        createAuth0Client({
-          domain: config.auth.domain,
-          clientId: config.auth.clientId,
-          authorizationParams: {
-            redirect_uri: `${window.location.origin}`
-          }
-        })
-      ) as Observable<Auth0Client>).pipe(
-        shareReplay(1), // Every subscription receives the same shared value
-        catchError(err => throwError(err))
-      );
+      this.allowAnonLogin = !config.requireAuth;
+      if(!this.allowAnonLogin){
+        this.auth0Client$ = (from(
+          createAuth0Client({
+            domain: config.auth.domain,
+            clientId: config.auth.clientId,
+            authorizationParams: {
+              redirect_uri: `${window.location.origin}`
+            }
+          })
+        ) as Observable<Auth0Client>).pipe(
+          shareReplay(1), // Every subscription receives the same shared value
+          catchError(err => throwError(err))
+        );
 
-      this.isAuthenticated$ = this.auth0Client$.pipe(
-        concatMap((client: Auth0Client) => from(client.isAuthenticated())),
-        tap((res: boolean) => this.loggedIn = res)
-      );
+        this.isAuthenticated$ = this.auth0Client$.pipe(
+          concatMap((client: Auth0Client) => from(client.isAuthenticated())),
+          tap((res: boolean) => this.loggedIn = res)
+        );
 
-      this.handleRedirectCallback$ = this.auth0Client$.pipe(
-        concatMap((client: Auth0Client) => from(client.handleRedirectCallback()))
-      );
+        this.handleRedirectCallback$ = this.auth0Client$.pipe(
+          concatMap((client: Auth0Client) => from(client.handleRedirectCallback()))
+        );
 
-      this.auth0Client$.pipe(
-        concatMap((client: Auth0Client) => from(client.handleRedirectCallback()))
-      );
+        this.auth0Client$.pipe(
+          concatMap((client: Auth0Client) => from(client.handleRedirectCallback()))
+        );
 
 
-      this.userProfileSubject$ = new BehaviorSubject<any>(null);
-      this.userProfile$ = this.userProfileSubject$.asObservable();
+        this.userProfileSubject$ = new BehaviorSubject<any>(null);
+        this.userProfile$ = this.userProfileSubject$.asObservable();
 
-      // On initial load, check authentication state with authorization server
-      // Set up local auth streams if user is already authenticated
-      this.localAuthSetup();
-      // Handle redirect from Auth0 login
-      this.handleAuthCallback();
+        // On initial load, check authentication state with authorization server
+        // Set up local auth streams if user is already authenticated
+        this.localAuthSetup();
+        // Handle redirect from Auth0 login
+        this.handleAuthCallback();
+      } //end if anon login
     })
+
   }
 
   public isLoggedIn() : boolean {
-    return this.loggedIn;
+      return this.loggedIn;
   }
 
 
-  getUser$(): Observable<any> {
-    return this.auth0Client$.pipe(
-      concatMap((client: Auth0Client) => from(client.getUser())),
-      tap(user => this.userProfileSubject$.next(user))
-    );
+  private getUser$(): Observable<any> {
+    if(!this.allowAnonLogin){
+      return this.auth0Client$.pipe(
+        concatMap((client: Auth0Client) => from(client.getUser())),
+        tap(user => this.userProfileSubject$.next(user))
+      );
+    }
   }
 
   private localAuthSetup() {
@@ -96,19 +103,26 @@ export class AuthService {
   }
 
   login(redirectPath: string = '/') {
-    if(this.auth0Client$){
-      // A desired redirect path can be passed to login method
-      // (e.g., from a route guard)
-      // Ensure Auth0 client instance exists
-      this.auth0Client$.subscribe((client: Auth0Client) => {
-        // Call method to log in
-        client.loginWithRedirect({
-          authorizationParams:{
-            redirect_uri: `${window.location.origin}`
-          },
-          appState: { target: redirectPath }
+    if(!this.allowAnonLogin){
+      if(this.auth0Client$){
+        // A desired redirect path can be passed to login method
+        // (e.g., from a route guard)
+        // Ensure Auth0 client instance exists
+        this.auth0Client$.subscribe((client: Auth0Client) => {
+          // Call method to log in
+          client.loginWithRedirect({
+            authorizationParams:{
+              redirect_uri: `${window.location.origin}`
+            },
+            appState: { target: redirectPath }
+          });
         });
-      });
+      }
+    }else{
+      this.loggedIn = true;
+      this.userProfile$ = of({
+        nickname: "anonymous user"
+      })
     }
   }
 
@@ -141,17 +155,22 @@ export class AuthService {
   }
 
   logout() {
-    if(this.auth0Client$){
-      // Ensure Auth0 client instance exists
-      this.auth0Client$.subscribe((client: Auth0Client) => {
-        // Call method to log out
-        client.logout({
-          clientId: this.config.getAppConfig().auth.clientId,
-          logoutParams: {
-            returnTo: `${window.location.origin}`
-          }
+    if(!this.allowAnonLogin){
+      if(this.auth0Client$){
+        // Ensure Auth0 client instance exists
+        this.auth0Client$.subscribe((client: Auth0Client) => {
+          // Call method to log out
+          client.logout({
+            clientId: this.config.getAppConfig().auth.clientId,
+            logoutParams: {
+              returnTo: `${window.location.origin}`
+            }
+          });
         });
-      });
+      }
+   }else{
+    this.loggedIn = false;
+    window.location.href = `${window.location.origin}`;
    }
   }
 

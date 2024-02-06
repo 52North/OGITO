@@ -16,6 +16,9 @@ export const settingsPromise = new Promise<ApplicationConfiguration>((resolve, r
   xhr.onload = () => {
     if (xhr.status === 200) {
       settings = JSON.parse(xhr.responseText);
+      if(settings.requireAuth === undefined || settings.requireAuth === null){
+        settings.requireAuth = true;
+      }
       resolve(settings);
     } else {
       reject('Cannot load configuration...');

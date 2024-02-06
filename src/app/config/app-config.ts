@@ -8,7 +8,8 @@ export interface ApplicationConfiguration{
   wmsVersion:  string,
   wfsVersion: string,
   srs: string,
-  auth: {
+  requireAuth?: boolean,
+  auth?: {
     domain: string,
     clientId: string,
   }
