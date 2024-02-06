@@ -23,7 +23,7 @@ OGITO was originally developed by the [Faculty of Geo-Information Science and Ea
     - [Starter Project](#starter-project)
     - [QGIS Project Requirements](#qgis-project-requirements)
     - [Street Search](#street-search)
-  - [Acknowledgement](#acknowledgements)
+  - [Acknowledgements](#acknowledgements)
 
 ## Introduction
 
@@ -39,7 +39,7 @@ The backend mainly consists of an instance of [QGIS Server](https://docs.qgis.or
 - Web Server (e.g Apache2 or NGINX) for serving the OGITO app and hosting QGIS Server
 - QGIS Server (3.x)
 - PostGIS (other Database supported by QGIS can be used as well)
-- NodeJS (16.x), only required for image upload and developemnt
+- NodeJS (14.20.x, 16.13.x or 18.10.x), only required for image upload and developemnt
 - (Python (3.x), only required to execute the [script to extract street data](#street-search))
 
 ### Authentication
