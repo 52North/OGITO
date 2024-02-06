@@ -19,7 +19,7 @@
           <mat-panel-title>
             <mat-selection-list [id]="group.groupName">
               <mat-list-option class = "group" checkboxPosition="before" (click)="onGroupLayerVisClick($event,group)"
-                               [(selected)]="group.visible" >
+                 [(selected)]="group.visible"               >
                 {{group.groupName | titlecase}}
               </mat-list-option>
             </mat-selection-list>
@@ -31,10 +31,10 @@
             <mat-expansion-panel>
               <mat-expansion-panel-header>
                 <mat-panel-title>
-                  <mat-selection-list (selectionChange)="onSelectedChanged($event)">
+                  <mat-selection-list>
                     <mat-list-option class="example-box mat-primary" [value]="layer.layerName"
                                      (click)="onLayerVisClick($event,layer,group.groupName)" checkboxPosition="before"
-                                     [ngClass]="layerActive == layer.layerName? 'active': 'normal'"  [(selected)]="layer.visible">
+                                     [ngClass]="layerActive == layer.layerName? 'active': 'normal'" [(selected)]="layer.visible" >
                       <div class="selectLayer" >
                         <div style="display:flex;align-items:center">
                           {{layer.layerName | titlecase}} <!-- {{layer['layerTitle']}} -->

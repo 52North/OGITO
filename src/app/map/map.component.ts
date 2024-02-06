@@ -23,7 +23,6 @@ import {
 } from '@angular/material/dialog';
 import { Subject, Subscription } from 'rxjs';
 import { AppConstants } from '../app-constants';
-import 'ol/ol.css';
 import { Map, View } from 'ol';
 import Feature from 'ol/Feature';
 import { getArea, getDistance, getLength } from 'ol/sphere';
@@ -3027,7 +3026,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     const layerName = selectedLayer.layer.layerName;
     const groupName = selectedLayer.groupName;
     this.map.getLayers().forEach((layer) => {
-      if (groupName === layer.get('name')) {
+      if (layer.getLayers /*check is group layer*/ && groupName === layer.get('name')) {
         layer.getLayers().forEach((lyrinGroup) => {
           if (layerName === lyrinGroup.get('name')) {
             lyrinGroup.setVisible(!lyrinGroup.getVisible());

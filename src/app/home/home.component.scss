@@ -73,9 +73,7 @@ footer a {
 
 @media screen and (min-width: 900px) {
   .mat-toolbar {
-    background-color: #78002e; // primary dark color only for test removed later to keep the primary color
-    // test for GECCO
-    //background-color: #3F51B5;
+    background-color: #ad1457;
   }
   .mat-icon {
     font-size: 24px;
@@ -86,19 +84,18 @@ footer a {
 }
   @media screen and (min-width: 1400px){
     .mat-toolbar {
-      background-color: #ad1457; // primary normal color only for test removed later to keep the primary color
-    //  background-color: #3F51B5;
+      background-color: #ad1457;
     }
     .mat-icon {
         font-size: 36px;
+        overflow: visible;
      }
 
   }
 
   @media screen and (min-width: 1900px){
     .mat-toolbar  {
-     // background-color: darkred;  // only for test removed later to keep the primary color
-   //   background-color: #3F51B5;
+      background-color: #ad1457;
       .mat-icon {
         font-size: 48px;
       }
@@ -108,7 +105,7 @@ footer a {
 // iiyama 24'' // resolution is 1920 x 1080 //viewable area 521.28 x 293.22mm //Pixel pitch	0.272mm
 @media screen and (min-width: 5200px){
   .mat-toolbar  {
-    background-color: #e35183;  // primary light only for test removed later to keep the primary color
+    background-color: #ad1457;
     .mat-icon {
       font-size: 72px;
     }
@@ -118,7 +115,7 @@ footer a {
 // iiyama 27'' // resolution is 1920 x 1080// viewable area 597.6 x 336.2mm //Pixel pitch	0.311mm
 @media screen and (min-width: 5800px){
   .mat-toolbar  {
-    background-color: darkred;  // only for test removed later to keep the primary color
+    background-color: #ad1457;
     .mat-icon {
       font-size: 72px;
     }

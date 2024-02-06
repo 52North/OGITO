@@ -8,6 +8,8 @@ import {DomSanitizer} from '@angular/platform-browser';
 import {QuestionBase} from '../question-base';
 import { AppConstants } from '../app-constants';
 import { ProjectConfiguration } from '../config/project-config';
+import { MatOptionSelectionChange } from '@angular/material/core';
+import { MatSelectionListChange } from '@angular/material/list';
 
 @Component({
   selector: 'app-layer-panel',
@@ -153,19 +155,18 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
       }
 
 
-  onRemoveLayerClick($event: any, layer: any, groupName: any)
+  onRemoveLayerClick($event: any, layer: any, groupName: string)
   {
     $event.preventDefault();
     $event.stopImmediatePropagation();
     this.removeLayerClick.emit({layer, groupName});
   }
 
-  onIdentifyLayerClick($event: any, layer: any, groupName: any) {
-    // TODO identify features
-    /** enables identifies features in a layer
-     * @param $event for the future, doing nothing with it so far.
-     * @param item: item (layer) that was clicked on to change opacity
-     */
+  /** enables identifies features in a layer
+   * @param $event for the future, doing nothing with it so far.
+   * @param item: item (layer) that was clicked on to change opacity
+   */
+  onIdentifyLayerClick($event: any, layer: any, groupName: string) {
     $event.preventDefault();
     $event.stopImmediatePropagation();
     // there is not layerActive
@@ -226,10 +227,11 @@ ngOnDestroy(){
 }
 
 
-  onSelectedChanged($event: any){
-    if ($event.option.value.isChecked) {
-        $event.option.selected = true;
-        $event.stopImmediatePropagation();
+  onSelectedChanged($event: MatSelectionListChange){
+    if ($event.options[0].selected) {
+        //$event.source.selectedOptions.
+        console.log($event.options[0].value)
+        console.log($event.options[0]._setSelected(true));
       }
   }
 
@@ -248,18 +250,17 @@ ngOnDestroy(){
     return !this.loadedProject.backgroundLayers.find((bl) => bl.title === layerName);
   }
 
-  onLayerVisClick(  $event: any, layer: any, groupName: any){
-    /** This function emit an event to allow the map component to know that a layer was clicked
+  /** This function emit an event to allow the map component to know that a layer was clicked
      * @param $event: to stop event propagation
      * @param layer: the layer that the user clicked on to show/hide
-     */
+  */
+  onLayerVisClick(  $event: any, layer: any, groupName: string){
+
     $event.preventDefault();
     $event.stopImmediatePropagation();
     // update visible of the layer in the variable
     const tlayer = this.findLayerinGroups(layer.layerName);
-    tlayer.visible = !layer.visible;
     this.layerVisClick.emit({layer, groupName});
-
 
     const layerGroup = this.findGroupByName(groupName); //make group visible automatically
     if(tlayer.visible && !layerGroup.visible){
@@ -268,24 +269,20 @@ ngOnDestroy(){
     }
 }
 
-onGroupLayerVisClick(  $event: any, layer: any){
-    /** This function emit an event to allow the map component to know that a layer was clicked
-     * @param $event: to stop event propagation
-     * @param layer: the layer that the user clicked on to show/hide --> in this case layer is a group
-     */
+  /** This function emit an event to allow the map component to know that a layer was clicked
+   * @param $event: to stop event propagation
+   * @param groupLayer: the layer that the user clicked on to show/hide --> in this case layer is a group
+   */
+onGroupLayerVisClick(  $event: any, groupLayer: any){
     $event.preventDefault();
     $event.stopImmediatePropagation();
-    // update visible of the group in the global variable groupLayers
-    const tgroup = this.findLayerGroup(layer);
-    tgroup.visible = !layer.visible;
      // emit the event to update the group visibility in the map
-    this.groupLayerVisClick.emit(layer);  // emit the change
+    this.groupLayerVisClick.emit(groupLayer);  // emit the change
   }
 
 
   private findLayerGroup(layer: any) : any{
-    const layerGroup = this.sgroupLayers.find(x => x.groupName === layer.groupName);
-    return layerGroup;
+    return this.findGroupByName(layer.groupName);
   }
 
   private findGroupByName(groupName: string) : any {
