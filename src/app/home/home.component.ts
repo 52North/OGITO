@@ -21,7 +21,14 @@ export class HomeComponent implements OnInit {
     // Here you can edit the project to be display
     console.log('add code to edit settings, e.g., project to edit..');
   }
-  exitToApp(){
-    confirm("Exiting app");
+  handleLogin(){
+    if(!this.auth.isLoggedIn()){
+      this.auth.login()
+    }else{
+      const confirmed = confirm("Logging out, have all edits been saved?");
+      if(confirmed){
+        this.auth.logout();
+      }
+    }
   }
 }

@@ -9,10 +9,6 @@
         <mat-icon>menu</mat-icon>
       </button>
       <mat-menu  #myMenu="matMenu">
-      <!-- <button mat-menu-item  (click)="openProject()">
-          <mat-icon>folder_open</mat-icon>
-          <span>Open project</span>
-        </button> -->
         <button mat-menu-item disabled (click) = "editSettings()">
           <mat-icon>settings</mat-icon>
           <span>settings</span>
@@ -27,22 +23,14 @@
       <span class = "userNickName" *ngIf="auth.userProfile$ | async as profile">
       <code>{{ profile["nickname"] }}</code>
       </span> <pre>  </pre>
-      <button mat-button (click)="auth.login()" *ngIf="!auth.isLoggedIn()"> Log in</button>
-      <button mat-button (click)="auth.logout()" *ngIf="auth.isLoggedIn()"> Log out</button>
-      <button mat-icon-button (click)="exitToApp()">
+      <button mat-button (click)="handleLogin()" *ngIf="!auth.isLoggedIn()"> Log in</button>
+      <button mat-button (click)="handleLogin()" *ngIf="auth.isLoggedIn()"> Log out</button>
+      <button mat-icon-button (click)="handleLogin()">
           <mat-icon>exit_to_app</mat-icon>
       </button>
       </mat-toolbar>
     </div>
-  <!--// here put the divs/cards and the design-->
 
-
-
-    <!--
-    <div class="terminal" >
-      <span> Keeping alive to copy the style</span>
-    </div>
-  -->
   </div>
   <!-- uncomment to enable authentication  25/11/2020 -->
   <div id="app-content" class="app-content">
@@ -55,14 +43,5 @@
       <app-projlist *ngIf="auth.isLoggedIn()"></app-projlist>
     </div>
   </div>
-  <!-- colocar algo para cuando no este autenticado -->
-  <!-- bypassing Auth0 -->
 
-  <!-- for testing purpose
-<app-map></app-map>
-<app-toolbar></app-toolbar>
-<app-editing-toolbar></app-editing-toolbar>
-<app-symbol-list></app-symbol-list>
-<app-projlist></app-projlist>
--->
 
