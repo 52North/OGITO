@@ -399,6 +399,20 @@ export class MapQgsStyleService {
           value: 'pink',
           attr: this.sketchStyleAttr,
           symbol: 'default'
+        },
+        green: {
+          style: this.defineSketchStyle("#00FF00"),
+          label: 'green',
+          value: 'green',
+          attr: this.sketchStyleAttr,
+          symbol: 'default'
+        },
+        yellow: {
+          style: this.defineSketchStyle("#FFFF00"),
+          label: 'yellow',
+          value: 'yellow',
+          attr: this.sketchStyleAttr,
+          symbol: 'default'
         }
       }
     };
