@@ -65,17 +65,11 @@ export class AppConstants{
   static rankingMethod = 'allFiveStars';    // Change to 'oneFiveStars'  =>
   // static rankingLayers = ['massnahmen_laute', 'massnahmen_leise'];
   // indicate which layers contain measures
-  static ratingMeasureLayers = {
-    massnahmen: ['geschwindigkeitsreduzierung', 'fluesterasphalt', 'schallschutzfenster', 'park_ride', 'fahrspurreduzierung', 'sonstiges'],
-   // massnahmen_leise: ['schutz', 'visuelle _verbesserung', 'zuganglichkeit_verbessern', 'sicherheit']
-  };
-  static fieldDesc = {
-    massnahmen: 'beschreibung'
-  };
+
+  static ratingMeasureRankAttributesPostFix = "_rank";
   static fieldOther = {
     massnahmen: 'sonstiges'
   };
-  static actionPlanLayerName = 'massnahmen';
   // configure layers to add more features or not.
   static noAddingFeatsLayers = [ 'massnahmen_leise']; //'massnahmen_laute',
   /* layers below will have a default style for LDEN noise map taken from train_LDEN*/

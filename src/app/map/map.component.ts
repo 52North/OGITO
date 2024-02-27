@@ -1,3 +1,4 @@
+import { map } from 'rxjs/operators';
 import { ProjectConfiguration } from './../config/project-config';
 import { CustomDialogDescription, CustomDialogService } from './../custom-dialog.service';
 import {
@@ -424,31 +425,15 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
      * @params layerName
      * @params @feature the feature selected for ranking (represents a location with predefined measures)
      */
-    const ratingName =
-      layerName === 'massnahmen'
-        ? 'Massnahmen Laute Orte'
-        : 'Massnahmen Leise Orte';
-    const fieldsNames = AppConstants.ratingMeasureLayers[layerName];
-    let fieldsToRank = []; // select those that have a true value
-    fieldsNames.forEach((field) => {
-      if (feature.get(field) === true) {
-        fieldsToRank.push(field);
-      }
-    });
-    // add sonstiges
-    if (
-      feature.get(AppConstants.fieldOther[layerName]) &&
-      feature.get(AppConstants.fieldOther[layerName]).length > 0
-    ) {
-      fieldsToRank.push(AppConstants.fieldOther[layerName]);
-    }
-    const measureDesc = feature.get(AppConstants.fieldDesc[layerName]);
+    const ratingName = "Measure Ranking"
+    const layer = this.findLayerinGroups(layerName)
+    let fieldsToRank = layer.fields.filter(l => l.type === "bool" && Boolean(feature.get(l.name)) === true).map(f => f.name);
     const dialogRef = this.dialog.open(DialogRatingMeasureDialog, {
       width: '24vw',
       data: {
         layerNameDialog: ratingName,
         fieldNames: fieldsToRank,
-        desc: measureDesc,
+        desc: "",
         ranking: this.ranking,
       },
     });
@@ -457,6 +442,11 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       // unselect the feature in the map
       this.select.getFeatures().clear();
       if (result) {
+        for(const attr in result){
+          if(result[attr] === ""){ //handle if value not set
+            result[attr] = null
+          }
+        }
         this.saveRatingMeasures(layerName, feature, result);
       }
     });
@@ -1424,7 +1414,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     this.saveFeatinBuffer(this.curEditingLayer.layerName, feature, 'rating');
   }
 
-  saveRatingMeasures(layerName: string, feature: any, rating: any) {
+  saveRatingMeasures(layerName: string, feature: Feature, rating: any) {
     /**
      * saves in the DB the rating given to a measure.
      * a 0 value is below the minimum so its not considered as a valid vote.
@@ -1433,13 +1423,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
      * @rating the rating values as entered in the form
      */
     for (const key in rating) {
-      if (key !== 'sonstiges') {
-        feature.set(key + '_rank', rating[key]);
-      }
-    }
-    if (rating.sonstiges) {
-      // this accumulate the voting.
-      feature.set('sonstiges', this.replaceNull(rating.sonstiges));
+        feature.set(key + AppConstants.ratingMeasureRankAttributesPostFix, rating[key]);
     }
 
     this.saveFeatinBuffer(layerName, feature, 'rating');
@@ -1684,7 +1668,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
               });
             }
             // check if layer is available for rating
-            if (AppConstants.ratingMeasureLayers[layerName]) {
+            if (this.isRateMeasureLayer(layerName)) {
               layerForRanking = true;
             }
           }
@@ -2317,9 +2301,6 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       this.formQuestions = this.questionService.getQuestions(layer.layerName);
       this.updateFormQuestions(this.formQuestions, layer.layerName, feature);
       this.updateShowForm(true);
-
-
-
     } catch (e) {
       alert('Error initializing form' + e);
     }
@@ -2965,6 +2946,15 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
             },
             crossOrigin: null, // gis.stackexchange.com/questions/71715/enabling-cors-in-openlayers
           });
+          vectorSource.on("addfeature", e => { //handle xml/database null values
+            const feat = e.feature;
+            for(const prop in feat.getProperties()){
+              if(feat.get(prop)["xsi:nil"] && feat.get(prop)["xsi:nil"] === "true" /* check database null */){
+                feat.set(prop, null);
+                console.log(feat.get(prop));
+              }
+            }
+          })
           const wfsVectorLayer = new VectorLayer({
             source: vectorSource,
             name: layerName,
@@ -3432,7 +3422,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
             }
             break;
           case 'rating':
-            if(this.isNewlyInsertedFeature(t.feats)){
+            if(!this.isNewlyInsertedFeature(t.feats)){
              layerTrs[editLayer.layerName].update.push(t.feats); // t.feats is one feat
             }
             break;
@@ -3821,7 +3811,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     return '';
   }
 
-  createReporMeasureLayer(
+  createReportMeasureLayer(
     layerOnIdentifyingName: any,
     featureValues: any
   ): any {
@@ -3829,45 +3819,60 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
      * creates a report of the voting or measuring tacklinf noise
      */
     console.log('featureValues', featureValues);
-    const measureList =
-      AppConstants.ratingMeasureLayers[
-        layerOnIdentifyingName.toLowerCase()
-      ];
+    const layer = this.findLayerinGroups(layerOnIdentifyingName)
+    const measureList = layer.fields.filter(l => l.type === "bool" && Boolean(featureValues[l.name]) === true).map(f => f.name);
+    const otherFields = layer.fields.filter(l => !measureList.includes(l.name) && !l.name.endsWith(AppConstants.ratingMeasureRankAttributesPostFix) && featureValues[l.name]).map(f => f.name);
     let totalCount = 0;
-    let textMeasure = '';
-    let text = '<div id="popupDiv">' + '<table border=0 width=100%>';
-    text = text.concat(
-      '<tr><th>' +
-        'Measures' +
-        '</th>' +
-        '<th colspan="2">' +
-        'Rating' +
-        '</th></tr>'
-    );
-    measureList.forEach((measure) => {
-      totalCount = featureValues[measure + '_rank'];
-      textMeasure = measure.slice(0, measure.indexOf('_rank'));
+    let text = '';
+
+    if(otherFields.length > 0){
+      text = text.concat('<div id="attrDiv">' + '<table border=0 width=100%>');
       text = text.concat(
-        '<tr><td>' +
-          measure +
-          '</td>' +
-          '<td>' +
-          '<input type="range" min="1" max="5" value="' +
-          this.replaceNull(totalCount) +
-          '" disabled=true>' +
-          '</td>'
+          '<tr><th>' +
+            'Attribute' +
+            '</th>' +
+            '<th colspan="2">' +
+            'Value' +
+            '</th></tr>'
+        );
+
+      otherFields.forEach((attribute) => {
+        const attributeVal = featureValues[attribute];
+        text = text.concat(
+          '<tr><td>' +
+            attribute +
+            '</td>' +
+            '<td>' +
+            attributeVal +
+            '</td></tr>'
+        );
+      });
+      text = text.concat('</table>' + '</div>');
+    }
+
+    if(measureList.length > 0){
+      text = text.concat('<div id="measureDiv">' + '<table border=0 width=100%>');
+      text = text.concat(
+        '<tr><th>' +
+          'Measure' +
+          '</th>' +
+          '<th colspan="2">' +
+          'Rating' +
+          '</th></tr>'
       );
-    });
-    text = text.concat(
-      '<tr><td>' +
-        'Sonstiges' +
-        '</td><td  colspan="3">' +
-        this.replaceNullString(featureValues.sonstiges)
-          .toString()
-          .slice(0, 50) +
-        '</td></tr>'
-    );
-    text = text.concat('</table>' + '</div>');
+      measureList.forEach((measure) => {
+        totalCount = featureValues[measure + AppConstants.ratingMeasureRankAttributesPostFix];
+        text = text +
+          '<tr><td>' +
+            measure +
+            '</td>' +
+            '<td>';
+        text = (totalCount) ? text + '<input type="range" min="1" max="5" value="' + this.replaceNull(totalCount) + '" disabled=true>' + ' (' + this.replaceNull(totalCount) + ')' : text + 'unranked' ;
+        text = text + '</td>'+
+          '</tr>'
+      });
+      text = text.concat('</table>' + '</div>');
+    }
     return text;
   }
 
@@ -3885,7 +3890,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         var valuesToShow = {};
         if(fieldsToShow){
           for (const field of fieldsToShow) {
-            valuesToShow[field.name] = feature.get(field.name);
+            let attrVal = feature.get(field.name);
+            valuesToShow[field.name] = attrVal;
           }
         }else{//if not specifies show all attributes
           const properties = feature.getProperties();
@@ -3903,22 +3909,18 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     if (featureValues) {
       // Prepare html text with all the information
       let text = '';
-      if (
-        AppConstants.ratingMeasureLayers.hasOwnProperty(
-          layerOnIdentifyingName
-        )
-      ) {
+      if (this.isRateMeasureLayer(layerOnIdentifyingName)) {
         // create the table for rating measures
         text =
           text +
-          this.createReporMeasureLayer(layerOnIdentifyingName, featureValues);
+          this.createReportMeasureLayer(layerOnIdentifyingName, featureValues);
         this.content.nativeElement.innerHTML = text;
       }
       // report normal layer
       else {
         for (const key in featureValues) {
           if (key !== 'img') {
-            if (featureValues[key] && !featureValues[key]["xsi:nil"] /* check database null */) {
+            if (featureValues[key]) {
               text = text.concat(
                 '<tr><td>' +
                   key +
@@ -4054,11 +4056,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
     // checking that layer can be ranked.. this is in AppConfiguration, seems not necessary
-    if (
-      Object.keys(AppConstants.ratingMeasureLayers).findIndex(
-        (x) => x.toLowerCase() === this.curEditingLayer.layerName.toLowerCase()
-      ) === -1
-    ) {
+    if (!this.isRateMeasureLayer(this.curEditingLayer.layerName)) {
       // The layer is not available for rating
       this.snackBar.open(
         'Current layer is not available for rating in Action Plan',
@@ -4104,7 +4102,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         return;
       }
       this.openDialogRankingMeasures(
-        this.curEditingLayer.layerName.toLowerCase(),
+        this.curEditingLayer.layerName,
         selectedFeatures[0]
       );
     });
@@ -4422,6 +4420,10 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     this.overlay.panIntoView();
   }
 
+  private isRateMeasureLayer(layerName: string): boolean{
+    return (this.loadedProject.rateMeasureLayers && this.loadedProject.rateMeasureLayers.includes(layerName));
+  }
+
   ngOnDestroy() {
     // prevent memory leak when component destroyed
     // unsubscribe all the subscriptions
@@ -4517,7 +4519,6 @@ export class DialogRatingMeasureDialog {
         Validators.required
       );
     });
-    group.sonstiges = new UntypedFormControl(false || ''); // ranking question
     this.formGroup = new UntypedFormGroup(group);
     this.measureDesc = data.desc;
   }

@@ -19,7 +19,7 @@ cdkDrag cdkDragBoundary=".app-content" >
         <div class="inputField" [ngSwitch]="question.controlType">
          <mat-form-field *ngSwitchCase="'textbox'" >
            <mat-label>
-             {{question.label | titlecase }}:
+             {{question.label }}:
            </mat-label>
            <div class = "container">
            <div>
@@ -39,7 +39,7 @@ cdkDrag cdkDragBoundary=".app-content" >
 
          <mat-form-field *ngSwitchCase="'datetime'" >
           <mat-label>
-            {{question.label | titlecase }}:
+            {{question.label}}:
           </mat-label>
           <div class = "container">
           <div>
@@ -57,14 +57,14 @@ cdkDrag cdkDragBoundary=".app-content" >
          <div  *ngSwitchCase="'checkbox'" >
            <mat-checkbox  [formControlName]="question.key"  [checked] = "question.checked" labelPosition='after' color = 'primary'
                           (change)="checkingChecks(question.key, $event.checked)">
-              <label> {{question.label | titlecase }}  </label>
+              <label> {{question.label }}  </label>
            </mat-checkbox>
          </div>
 
 
           <div class="container" *ngSwitchCase="'slider'">
             <div class="sliderLabel">
-              <label >{{question.label | titlecase}} ({{question.min}} - {{question.max}}): </label>
+              <label >{{question.label}} ({{question.min}} - {{question.max}}): </label>
             </div>
             <div>
 

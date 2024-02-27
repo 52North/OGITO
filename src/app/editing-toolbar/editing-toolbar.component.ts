@@ -4,6 +4,7 @@ import {OpenLayersService} from '../open-layers.service';
 import { MatIconRegistry } from "@angular/material/icon";
 import {DomSanitizer} from "@angular/platform-browser";
 import {AppConstants} from '../app-constants';
+import { ProjectConfiguration } from '../config/project-config';
 
 
 @Component({
@@ -56,6 +57,8 @@ export class EditingToolbarComponent implements OnInit, OnDestroy {
     this.x = this.startX + event.deltaX;
     this.y = this.startY + event.deltaY;
   }
+  private subsToLoadedProject: Subscription;
+  private loadedProject: ProjectConfiguration;
 
 constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private openLayersService: OpenLayersService,
             /*private _focusMonitor: FocusMonitor,
@@ -119,6 +122,17 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
       console.log('Error in subscription openLayersService.geomTypeEditing$');
     }
   );
+
+  this.subsToLoadedProject = this.openLayersService.qgsProjectUrl$.subscribe(
+    (data) => {
+      if (data) {
+        this.loadedProject = data;
+      }
+    },
+    (error) => {
+      console.log('error while updating loaded project', error);
+    }
+  );
   }
 
 
@@ -129,11 +143,12 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
     /* this can be replaced using takeuntil */
    this.subsToShowEditToolbar.unsubscribe();
    this.subsToGeomTypeEditing.unsubscribe();
+   this.subsToLoadedProject.unsubscribe();
   }
 
   updateLayerTypeRanking(layerName: string) {
     this.layerTypeRateMeasures$ = false;
-    if (Object.keys(AppConstants.ratingMeasureLayers).findIndex(x => x.toLowerCase() === layerName.toLowerCase())  > -1) {
+    if (this.loadedProject.rateMeasureLayers && this.loadedProject.rateMeasureLayers.includes(layerName)) {
       this.layerTypeRateMeasures$ = true;
     }
   }

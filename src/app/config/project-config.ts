@@ -27,6 +27,7 @@ export interface ProjectConfiguration{
   sketchLayerPolygons: string,
   sketchLayerLinestrings: string,
   sketchLayerPoints: string
+  rateMeasureLayers: string[]
 }
 
 
@@ -77,6 +78,7 @@ export const ProjectConfigurationCodec = t.type({
   streetSearch: t.union([StreetSearchCodec, t.undefined]),
   sketchLayerPolygons: t.string,
   sketchLayerLinestrings: t.string,
-  sketchLayerPoints: t.string
+  sketchLayerPoints: t.string,
+  rateMeasureLayers: t.union([t.array(t.string), t.undefined])
 });
 

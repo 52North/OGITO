@@ -8,6 +8,8 @@ import { CheckBoxQuestion } from './check-box-question';
 import { SliderQuestion } from './slider-question';
 import {of, Subject} from 'rxjs';
 import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
+import { ProjectConfiguration } from './config/project-config';
+import { OpenLayersService } from './open-layers.service';
 
 @Injectable({
   providedIn: 'root'
@@ -16,6 +18,21 @@ export class QuestionService {
  questions = {};
   private showEditFormSource = new Subject<boolean>();
   showEditForm$ = this.showEditFormSource.asObservable();
+  private loadedProject: ProjectConfiguration;
+
+
+  constructor (private openLayersService: OpenLayersService){
+    this.openLayersService.qgsProjectUrl$.subscribe(
+      (data) => {
+        if (data) {
+          this.loadedProject = data;
+        }
+      },
+      (error) => {
+        console.log('error while updating loaded project', error);
+      }
+    );
+  }
 
   updateShowEditForm(showForm: boolean){
     this.showEditFormSource.next(showForm);
@@ -25,8 +42,8 @@ export class QuestionService {
      * forms the question from a list of fields;
      */
     // action plan layer treated in a different way
-    if (layerName.toLowerCase() === AppConstants.actionPlanLayerName){
-      return (this.setLayerQuestionsActionPlanNoise(layerName.toLowerCase(), qgisFieldList));
+    if (this.loadedProject.rateMeasureLayers && this.loadedProject.rateMeasureLayers.includes(layerName)){
+      return (this.setLayerQuestionsRateMeasures(layerName.toLowerCase(), qgisFieldList));
     }
 
   let order = 0;
@@ -106,7 +123,7 @@ export class QuestionService {
   return layerQuestions;
  }
 
-  setLayerQuestionsActionPlanNoise(layerName: string, qgisFieldList: any) {
+  setLayerQuestionsRateMeasures(layerName: string, qgisFieldList: any) {
     /**
      * forms the question from a list of fields;
      */

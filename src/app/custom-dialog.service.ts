@@ -1,23 +1,43 @@
-import { Injectable } from '@angular/core';
-import {Subject} from 'rxjs';
+import { Injectable, OnDestroy } from '@angular/core';
+import {Subject, Subscription} from 'rxjs';
 import { VectorLayer } from 'ol/layer/Vector';
 import { Feature } from 'ol/Feature';
+import { OpenLayersService } from './open-layers.service';
+import { ProjectConfiguration } from './config/project-config';
 
 @Injectable({
   providedIn: 'root'
 })
 export class CustomDialogService {
+
+  private loadedProject: ProjectConfiguration;
+
   private editMeldingenSource = new Subject<EditedFeature>();
   editMeldingen$ = this.editMeldingenSource.asObservable();
   private customDialogClosedSource = new Subject<DialogClosedEvent>();
   dialogClosed$ = this.customDialogClosedSource.asObservable();
+
+
+  constructor (private openLayersService: OpenLayersService){
+    this.openLayersService.qgsProjectUrl$.subscribe(
+      (data) => {
+        if (data) {
+          this.loadedProject = data;
+        }
+      },
+      (error) => {
+        console.log('error while updating loaded project', error);
+      }
+    );
+  }
+
 
   private customDialogs: CustomDialogDescription[] = [
     {
       layerName: "Reporting",
       header: "Category",
       handler: (layer: VectorLayer, feature: Feature) => {
-        console.log("request custom edit dialag for Reporting")
+        console.log("request custom edit dialog for Reporting")
         this.startEditNewMeldigen({layer, feature})
      }
     }
@@ -31,12 +51,11 @@ export class CustomDialogService {
    * @returns
    */
   public getCustomHandlerForLayer(layerName: string): CustomDialogDescription {
-      for(let customDialog of this.customDialogs){
-        if(customDialog.layerName === layerName){
-          return customDialog;
-        }
+      if(!this.loadedProject.rateMeasureLayers || !this.loadedProject.rateMeasureLayers.includes(layerName)){ //if not layer for measure ranking, use custom dialog
+        return this.customDialogs[0];
+      }else{
+        return null;
       }
-      return null;
   }
 
   public raiseCustomDialogClosed(layerName: string, isAborted: boolean){
