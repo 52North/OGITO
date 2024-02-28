@@ -427,7 +427,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
      */
     const ratingName = "Measure Ranking"
     const layer = this.findLayerinGroups(layerName)
-    let fieldsToRank = layer.fields.filter(l => l.type === "bool" && Boolean(feature.get(l.name)) === true).map(f => f.name);
+    let fieldsToRank = layer.fields.filter(l => l.type === "bool" && String(feature.get(l.name)).toLowerCase() === 'true').map(f => f.name);
     const dialogRef = this.dialog.open(DialogRatingMeasureDialog, {
       width: '24vw',
       data: {
@@ -3820,7 +3820,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
      */
     console.log('featureValues', featureValues);
     const layer = this.findLayerinGroups(layerOnIdentifyingName)
-    const measureList = layer.fields.filter(l => l.type === "bool" && Boolean(featureValues[l.name]) === true).map(f => f.name);
+    const measureList = layer.fields.filter(l => l.type === "bool" && String(featureValues[l.name]).toLowerCase() === 'true').map(f => f.name);
     const otherFields = layer.fields.filter(l => !measureList.includes(l.name) && !l.name.endsWith(AppConstants.ratingMeasureRankAttributesPostFix) && featureValues[l.name]).map(f => f.name);
     let totalCount = 0;
     let text = '';
