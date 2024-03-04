@@ -3821,7 +3821,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     console.log('featureValues', featureValues);
     const layer = this.findLayerinGroups(layerOnIdentifyingName)
     const measureList = layer.fields.filter(l => l.type === "bool" && String(featureValues[l.name]).toLowerCase() === 'true').map(f => f.name);
-    const otherFields = layer.fields.filter(l => !measureList.includes(l.name) && !l.name.endsWith(AppConstants.ratingMeasureRankAttributesPostFix) && featureValues[l.name]).map(f => f.name);
+    const otherFields = layer.fields.filter(l => l.type !== "bool" && !l.name.endsWith(AppConstants.ratingMeasureRankAttributesPostFix) && featureValues[l.name]).map(f => f.name);
     let totalCount = 0;
     let text = '';
 
