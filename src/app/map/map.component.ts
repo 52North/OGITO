@@ -2660,7 +2660,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private getCustomHandlerForLayer(layerName: string){
-    return this.customDialogInitializer.getCustomHandlerForLayer(layerName)
+    const isSketchLayer = this.loadedSketchLayers.some(sl => sl.layerName === layerName);
+    return this.customDialogInitializer.getCustomHandlerForLayer(layerName, isSketchLayer);
   }
 
   private handleSymbolSelected(listEntry){

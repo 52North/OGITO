@@ -50,8 +50,8 @@ export class CustomDialogService {
    * @param layerName
    * @returns
    */
-  public getCustomHandlerForLayer(layerName: string): CustomDialogDescription {
-      if(!this.loadedProject.rateMeasureLayers || !this.loadedProject.rateMeasureLayers.includes(layerName)){ //if not layer for measure ranking, use custom dialog
+  public getCustomHandlerForLayer(layerName: string, isSketchLayer: boolean = false): CustomDialogDescription {
+      if(!isSketchLayer && (!this.loadedProject.rateMeasureLayers || !this.loadedProject.rateMeasureLayers.includes(layerName))){ //if not layer for measure ranking, use custom dialog
         return this.customDialogs[0];
       }else{
         return null;
