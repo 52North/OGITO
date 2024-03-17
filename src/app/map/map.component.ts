@@ -88,6 +88,7 @@ import { InitializeSketchlayersService } from '../initialize-sketchlayers.servic
 import MultiPoint from 'ol/geom/MultiPoint.js';
 import MultiPolygon from 'ol/geom/MultiPolygon.js';
 import MultiLineString from 'ol/geom/MultiLineString.js';
+import { LabelLutService } from '../config/label-lut.service';
 
 // To use rating dialogs
 export interface DialogData {
@@ -96,6 +97,7 @@ export interface DialogData {
   rating: number;
   fieldNames: any;
   desc: string;
+  layerName: string;
 }
 
 @Component({
@@ -217,7 +219,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     private sanitizer: DomSanitizer,
     private customDialogInitializer : CustomDialogService,
     private config: AppconfigService,
-    private sketchLayerInitializer: InitializeSketchlayersService
+    private sketchLayerInitializer: InitializeSketchlayersService,
+    private lableLookUpTable: LabelLutService
   ) {
     this.subsToShapeEdit = this.openLayersService.shapeEditType$.subscribe(
       (data) => {
@@ -435,6 +438,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         fieldNames: fieldsToRank,
         desc: "",
         ranking: this.ranking,
+        layerName: layerName
       },
     });
     dialogRef.afterClosed().subscribe((result) => {
@@ -3839,9 +3843,10 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 
       otherFields.forEach((attribute) => {
         const attributeVal = featureValues[attribute];
+        const label = this.lableLookUpTable.getLabelForPropertyName(layerOnIdentifyingName, attribute);
         text = text.concat(
           '<tr><td>' +
-            attribute +
+            label +
             '</td>' +
             '<td>' +
             attributeVal +
@@ -3863,9 +3868,10 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       );
       measureList.forEach((measure) => {
         totalCount = featureValues[measure + AppConstants.ratingMeasureRankAttributesPostFix];
+        const label = this.lableLookUpTable.getLabelForPropertyName(layerOnIdentifyingName, measure);
         text = text +
           '<tr><td>' +
-            measure +
+            label +
             '</td>' +
             '<td>';
         text = (totalCount) ? text + '<input type="range" min="1" max="5" value="' + this.replaceNull(totalCount) + '" disabled=true>' + ' (' + this.replaceNull(totalCount) + ')' : text + 'unranked' ;
@@ -3924,7 +3930,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
             if (featureValues[key]) {
               text = text.concat(
                 '<tr><td>' +
-                  key +
+                  this.lableLookUpTable.getLabelForPropertyName(layerOnIdentifyingName, key) +
                   '</td><td>' +
                   featureValues[key] +
                   '</td></tr>'
@@ -3985,7 +3991,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         .then((json) => {
           // this.content.nativeElement.innerHTML = html;
           this.content.nativeElement.innerHTML =
-            this.formatHtmlInfoResponse(json);
+            this.formatHtmlInfoResponse(json, layerOnIdentifying.get("name"));
         })
         .catch((error) => {
           console.log('Error retrieving info', error);
@@ -4109,7 +4115,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  formatHtmlInfoResponse(json: string): string {
+  formatHtmlInfoResponse(json: string, layerName: string): string {
     /*
     Transform the text response from a WMS request into a more 'friendly' format
      */
@@ -4122,7 +4128,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       for (const key in properties) {
         if (key !== 'img') {
           text = text.concat(
-            '<tr><td>' + key + '</td><td>' + properties[key] + '</td></tr>'
+            '<tr><td>' + this.lableLookUpTable.getLabelForPropertyName(layerName, key) + '</td><td>' + properties[key] + '</td></tr>'
           );
         }
       }
@@ -4511,7 +4517,7 @@ export class DialogRatingMeasureDialog {
   formGroup: UntypedFormGroup;
   constructor(
     public dialogRef: MatDialogRef<DialogRatingMeasureDialog>,
-    @Inject(MAT_DIALOG_DATA) public data: DialogData
+    @Inject(MAT_DIALOG_DATA) public data: DialogData, private labelLUT: LabelLutService
   ) {
     const group: any = {};
     data.fieldNames.forEach((question) => {
@@ -4532,6 +4538,10 @@ export class DialogRatingMeasureDialog {
   }
   onNoClick(): void {
     this.dialogRef.close();
+  }
+
+  getLabel(propertyName: string){
+    return this.labelLUT.getLabelForPropertyName(this.data.layerName, propertyName)
   }
 }
 

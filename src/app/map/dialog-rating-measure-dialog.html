@@ -5,7 +5,7 @@
     <div [formGroup]="formGroup">
     <div *ngFor="let field of data.fieldNames" >
 
-      <label >{{field}} (1-5): </label>
+      <label >{{getLabel(field)}} (1-5): </label>
       <mat-slider  color = 'primary' [formControlName]="field" [max]= 5
                    [min]=1 [thumbLabel]=true  [value]="field.min"
                    (change) = "showQuestionValue(field, $event.value)">{{field.value}}</mat-slider>

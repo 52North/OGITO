@@ -7,6 +7,7 @@ import { CustomDialogService, EditedFeature } from '../custom-dialog.service';
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { HttpClient, HttpEvent, HttpEventType } from '@angular/common/http';
 import { AppconfigService } from "../config/appconfig.service";
+import { LabelLutService } from "../config/label-lut.service";
 
 @Component({
   selector: 'app-edit-reporting',
@@ -36,7 +37,7 @@ export class EditReportingComponent implements OnInit {
   private uploadPending = false;
   private uploadProgress = 0;
 
-  constructor(private customDialogInitializer: CustomDialogService, private http: HttpClient, private config: AppconfigService) {
+  constructor(private customDialogInitializer: CustomDialogService, private http: HttpClient, private config: AppconfigService, private labelLUT: LabelLutService) {
 
     this.subToInitDialog = this.customDialogInitializer.editMeldingen$.subscribe(
       (data) => {
@@ -155,6 +156,14 @@ export class EditReportingComponent implements OnInit {
       console.log(this.imageFile.name)
     }else{
       this.imageFile = null;
+    }
+  }
+
+  getLabel(propertyName: string, defaultLabel: string){
+    if(this.labelLUT.hasLabel(this.layer.layerName, propertyName)){
+      return this.labelLUT.getLabelForPropertyName(this.layer.layerName, propertyName);
+    }else{
+      return defaultLabel
     }
   }
 

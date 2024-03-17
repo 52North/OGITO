@@ -17,13 +17,13 @@
             type="text"
             [(ngModel)]="this.description"
           />
-          <mat-placeholder class="textPlaceholder">Text</mat-placeholder>
+          <mat-placeholder class="textPlaceholder">{{this.getLabel('text', 'Date')}}</mat-placeholder>
         </mat-form-field>
       </div>
       <div class="date-input">
           <mat-form-field  >
             <input matInput type="date"
-                  placeholder="Date" [(ngModel)]="this.date"  />
+                  [placeholder]="this.getLabel('date', 'Date')" [(ngModel)]="this.date"  />
           </mat-form-field>
         </div>
         <div class="radio-input">
@@ -39,7 +39,7 @@
           </mat-radio-group>
       </div>
       <div class="select-input" *ngIf="this.isGoodExample === 'false'">
-        <mat-label>Priority:
+        <mat-label>{{this.getLabel("priority", "Priority")}}:
           <mat-select [(ngModel)]="this.priority"  (multiple) = 'false'>
             <mat-option *ngFor="let priority of priorities" [value]="priority">
               {{priority}}
@@ -49,7 +49,7 @@
       </div>
       <div class="file-input">
         <div class="file-input-label">
-          <mat-label>Photo:</mat-label>
+          <mat-label>{{this.getLabel("img", "Photo")}}:</mat-label>
         </div>
         <input type="file"
         accept="image/*"
@@ -63,7 +63,7 @@
             type="text"
             [(ngModel)]="this.imageDescription"
           />
-          <mat-placeholder class="textPlaceholder">Photo Description</mat-placeholder>
+          <mat-placeholder class="textPlaceholder">{{this.getLabel("alt_img", "Photo Description")}}</mat-placeholder>
         </mat-form-field>
       </div>
       <div class="text-input" *ngIf="this.imageFile !== null">
@@ -73,7 +73,7 @@
             type="text"
             [(ngModel)]="this.address"
           />
-          <mat-placeholder class="textPlaceholder">Address</mat-placeholder>
+          <mat-placeholder class="textPlaceholder">{{this.getLabel("address", "Address")}}</mat-placeholder>
         </mat-form-field>
       </div>
       <div class="submit-button">

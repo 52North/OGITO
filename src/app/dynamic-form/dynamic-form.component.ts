@@ -5,6 +5,7 @@ import {UntypedFormGroup, Validators, FormsModule} from '@angular/forms';
 import { QuestionBase } from '../question-base';
 import {MatLegacySnackBar as MatSnackBar} from '@angular/material/legacy-snack-bar';
 import Keyboard from 'simple-keyboard';
+import { LabelLutService } from '../config/label-lut.service';
 @Component({
   selector: 'app-dynamic-form',
   templateUrl: './dynamic-form.component.html',
@@ -34,7 +35,7 @@ export class DynamicFormComponent implements OnInit, AfterViewInit {
   private showFormSubscription: Subscription;
 
   constructor(private questionService: QuestionService,
-              private snackBar: MatSnackBar) { }
+              private snackBar: MatSnackBar, private labelLUT: LabelLutService) { }
 
   ngOnInit(): void {
     this.showForm$ = observableOf(false);
@@ -173,6 +174,10 @@ export class DynamicFormComponent implements OnInit, AfterViewInit {
       }
 
 
+  }
+
+  getLabel(propertyName: string){
+    return this.labelLUT.getLabelForPropertyName(this.featureLayer.layerName, propertyName);
   }
 
 // get isValid() { return this.form.controls[this.questions[key].valid;}
