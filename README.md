@@ -102,7 +102,8 @@ Each project must registered in the project configuration (JSON) file. The locat
 | sketchLayerPolygons | name of the technical sketch layer for polygons | e.g. "sketch_polygons" |
 | sketchLayerLinestrings | name of the technical sketch layer for linestrings | e.g. "sketch_linestrings" |
 | sketchLayerPoints | name of the technical sketch layer for points | e.g. "sketch_points" |
-| labels | look up table to override property names in dialogs (e.g. feature info) per layer, unlike layer properties in the QGIS project file the overrides can contain special or whitespace characters | e.g. `labels: {"MyLayer":{ "propertyOne": "Property 1!"}}` |
+| labels | look up table to override property names in dialogs (e.g. feature info) per layer, unlike layer properties in the QGIS project file the overrides can contain special or whitespace characters | e.g. `{"MyLayer":{ "propertyOne": "Property 1!"}}` |
+| rateMeasureLayers | list of layers with ranked properties (measures); ranked properties can receive a (single) rating (1-5) for each feature; for _rateMeasureLayers_ there is a additional _Rate Measures_ button in the editing toolbar; also see [requirements](#qgis-project-requirements) for setting up rating layers  | e.g. `["rankingLayerA", "RankingLayerB"]` |
 | streetSearch | configures the technical street search layer and feature property containing the street name (optional, street search deactivated if not set) | e.g. `{"layerName": "streets_layer", "property": "streetname"}` | 
 
 <details>
@@ -151,10 +152,13 @@ The directory `starter_project` contains a minmal QGIS project which meets the t
   - each of these layer must be associated to database tables (contained in the starter database backup)
   - these layer must be published as WFS (read, delete and update must be activated)
   - these are technical layers and should be added to the `hiddenLayers` in the [project configuration](#project-configuration)
-- reporting
-  - reporting layer must be connected `user_observation` table (part of starter project database dump)
+- reporting layers & rating layers
+  - reporting layer must be connected to `user_observation` table (part of starter project database dump)
     - schema and user dialog is currently not changable
     - multiple reporting layers can be added to the project 
+  - for each ranked property in a rating layer there must be a boolean property to indicate a ranked property and corresponding integer property for the actual rating according to this scheme: `rankedPropertyA` (boolean), `rankedPropertyA_rank` (integer)
+    - rating layers might have additional unranked properties 
+    - example is part of the starter project (database dumb)
   - layer name can be changed but must not contain special characters or whitespace characters (group and layer)
     - all reporting layers must be published as WFS (read, update, delete) 
   - layer properties must not contain special characters or whitespace characters
