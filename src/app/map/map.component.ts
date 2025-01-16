@@ -3222,7 +3222,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       const result = this.executeWFSTransactions(editLayer);
       if (result) {
         result.then(() => {
-          this.snackBar.open('Aenderungen gespeichert ', 'ok', {
+          this.snackBar.open('saved changes', 'ok', {
             horizontalPosition: 'center',
             verticalPosition: 'top',
             duration: 10000,
