@@ -49,7 +49,7 @@ At Auth0, a _singe page web application_ must be created an configured according
 ### Development Setup
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 9.1.1. In order to build and run the project locally [Angular CLI must be installed](https://angular.io/guide/setup-local#install-the-angular-cli)
 #### Build
-(install dependencies `npm install --force`)
+(install dependencies `npm install`)
 Run `ng build` to build the project. The build artifacts will be stored in the dist/ directory. Use the `--prod` flag for a production build.
 #### Development server
 Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
@@ -99,9 +99,10 @@ Each project must registered in the project configuration (JSON) file. The locat
 |backgroundLayers| list of background (WMS) layers, background layers are loaded splitted into multiple tiles instead of a single images (might create issues wiht lables on the layer)| e.g. `[{"title": "Topographic Map", "format": "image/jpeg"}, {"title": "Other Basemap", "format": "image/png"}]` |
 | centerWGS84 | inital view center in geographic coordinates (WGS84) (optional, eiher this or `extentWGS84` must be set| e.g `{"lat": 51.935, "lon": 7.6521}`, if not set center point of the configured extent is used|
 | extentWGS84 | constraints the visible extent (geographic coordinates (WGS84) of the map (optional, either this or `centerWGS84` must be set | e.g. `{"minLon": 7.1, "minLat": 32.88, "maxLon": 40.18, "maxLat": 84.73}` | 
-| sketchLayerPolygons | name of the technical sketch layer for polygons | e.g "sketch_polygons" |
-| sketchLayerLinestrings | name of the technical sketch layer for linestrings | e.g "sketch_linestrings" |
-| sketchLayerPoints | name of the technical sketch layer for points | e.g "sketch_points" |
+| sketchLayerPolygons | name of the technical sketch layer for polygons | e.g. "sketch_polygons" |
+| sketchLayerLinestrings | name of the technical sketch layer for linestrings | e.g. "sketch_linestrings" |
+| sketchLayerPoints | name of the technical sketch layer for points | e.g. "sketch_points" |
+| labels | look up table to override property names in dialogs (e.g. feature info) per layer, unlike layer properties in the QGIS project file the overrides can contain special or whitespace characters | e.g. `labels: {"MyLayer":{ "propertyOne": "Property 1!"}}` |
 | streetSearch | configures the technical street search layer and feature property containing the street name (optional, street search deactivated if not set) | e.g. `{"layerName": "streets_layer", "property": "streetname"}` | 
 
 <details>
@@ -154,8 +155,10 @@ The directory `starter_project` contains a minmal QGIS project which meets the t
   - reporting layer must be connected `user_observation` table (part of starter project database dump)
     - schema and user dialog is currently not changable
     - multiple reporting layers can be added to the project 
-  - layer name can be changed but must not contain whitespace characters (group and layer)
+  - layer name can be changed but must not contain special characters or whitespace characters (group and layer)
     - all reporting layers must be published as WFS (read, update, delete) 
+  - layer properties must not contain special characters or whitespace characters
+    - configure labels in the [project configuration](#project-configuration) instead 
   - categories can be changed in QGIS (symbologie -> rule-based styling) 
     - example rule: `"category" = 'my category'`
     - icon must be simple svg marker
