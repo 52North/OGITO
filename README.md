@@ -50,7 +50,7 @@ At Auth0, a _singe page web application_ must be created an configured according
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 9.1.1. In order to build and run the project locally [Angular CLI must be installed](https://angular.io/guide/setup-local#install-the-angular-cli)
 #### Build
 (install dependencies `npm install`)
-Run `ng build` to build the project. The build artifacts will be stored in the dist/ directory. Use the `--prod` flag for a production build.
+Run `ng build` to build the project. The build artifacts will be stored in the dist/ directory.
 #### Development server
 Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
 #### Docker
