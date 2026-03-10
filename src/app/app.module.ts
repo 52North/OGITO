@@ -20,6 +20,7 @@ import { DialogOrgExposedComponent } from './dialog-org-exposed/dialog-org-expos
 import { DialogResultExposedComponent } from './dialog-result-exposed/dialog-result-exposed.component';
 import { StreetSearchComponent } from './street-search/street-search.component';
 import { EditReportingComponent } from './edit-reporting/edit-reporting.component';
+import { CustomSketchLayerFormComponent } from './custom-sketch-layer-form/custom-sketch-layer-form.component';
 
 @NgModule({
   declarations: [
@@ -40,7 +41,8 @@ import { EditReportingComponent } from './edit-reporting/edit-reporting.componen
     DialogResultExposedComponent,
     DialogLayerNameDialog,
     StreetSearchComponent,
-    EditReportingComponent
+    EditReportingComponent,
+    CustomSketchLayerFormComponent
   ],
     imports: [
         BrowserModule,

@@ -89,6 +89,7 @@ import MultiPoint from 'ol/geom/MultiPoint.js';
 import MultiPolygon from 'ol/geom/MultiPolygon.js';
 import MultiLineString from 'ol/geom/MultiLineString.js';
 import { LabelLutService } from '../config/label-lut.service';
+import { CustomSketchLayerService } from '../config/custom-sketch-layer-service';
 
 // To use rating dialogs
 export interface DialogData {
@@ -220,6 +221,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     private customDialogInitializer : CustomDialogService,
     private config: AppconfigService,
     private sketchLayerInitializer: InitializeSketchlayersService,
+    private customSketchLayerService: CustomSketchLayerService,
     private lableLookUpTable: LabelLutService
   ) {
     this.subsToShapeEdit = this.openLayersService.shapeEditType$.subscribe(
@@ -235,6 +237,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     );
     this.subsTocurrentSymbol = this.openLayersService.currentSymbol$.subscribe(
+      //raised after category selection in the symbol list
       (selectedEntry) => {
         this.handleSymbolSelected(selectedEntry)
       },
@@ -1248,6 +1251,50 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     this.questionService.setSketchQuestions(sketchLayerName, fieldsToEdit);
   }
 
+
+  addCustomSketchLayer(customSketchLayerName: string, source: VectorSource){
+    this.mapQgsStyleService.setSketchStyle(customSketchLayerName);
+    const self = this;
+    const newVector = new VectorLayer({
+      source: source,
+      name: customSketchLayerName,
+      zIndex: 102, // check this #TODO
+      visible: true,
+      // getting default style
+      style: (feature) => {
+        // this equiv to style: function(feature)
+        let layerStyle = self.mapQgsStyleService.findJsonStyle(
+          feature,
+          customSketchLayerName
+        );
+        if (!layerStyle) {
+          layerStyle = self.mapQgsStyleService.findDefaultStyleProvisional(
+            feature.getGeometry().getType(),
+            customSketchLayerName
+          );
+        }
+        return layerStyle;
+      },
+    });
+    // add the layer to the map
+
+
+
+    const fields = this.customSketchLayerService.getQGISFieldsForCustomSketchLayers();
+
+    this.addSessionLayer(newVector, fields, true);
+    // add tp the group of sketch layers
+    this.loadedSketchLayers.push({
+      layerName: customSketchLayerName,
+      // layerGeom,
+      layerTitle: customSketchLayerName,
+      defaultSRS: this.config.getAppConfig().srs,
+      operations: ['insert', 'modify', 'delete'], // #Check  this #TODO
+      geometryType: 'Point', // Dependent of QGIS project as the styles.
+      source: source,
+    });
+  }
+
   addLayerGroupLayerPanel(layerName: any, fieldsToShow: any, sketch = false) {
     // add configuration to the layer to be added in a group
     let newFeats = false;
@@ -1350,11 +1397,16 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     return;
   }
 
-  addSessionLayer(layer: any, fieldstoShow: any, sketch = false) {
+  addSessionLayer(layer: any, fieldstoShow: any, sketch = false, groupName: string = undefined) {
     /**
      *   Add a layer in a 'session group', layers are sketch or queries result
      *   @param: layer with the vector source associated
      */
+
+    if(!groupName){
+      groupName = this.loadedProject.nameSessionGroup;
+    }
+
     // check if group exist
     if (
       !(
@@ -1363,14 +1415,14 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
           .getArray()
           .findIndex(
             (x) =>
-            this.loadedProject.nameSessionGroup.toLowerCase() ===
+            groupName.toLowerCase() ===
               x.get('name').toLowerCase()
           ) > 0
       )
     ) {
       // group does not exist, create it.
       const newGroup = new LayerGroup({
-        name: this.loadedProject.nameSessionGroup,
+        name: groupName,
         layers: [],
         visible: true, // visible by default
         zIndex: 100, // at the end of the layers by default
@@ -1538,9 +1590,9 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       ) {
         const layerName = WFSLayers.getElementsByTagName('WFSLayer')[k].getAttribute('name');
           if(!this.loadedProject.hiddenLayers.includes(layerName)){
-          wfsLayerList.push(
-            layerName
-          );
+            wfsLayerList.push(
+              layerName
+            );
         }
       }
     }
@@ -2045,6 +2097,12 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       .then((text) =>
         this.prepareLoadWMSLayers(qGsServerUrl, capRequest, qGsProject)
       ).then(()=> {
+        //load configured custom sketch layers first
+        const customSketchSources = this.sketchLayerInitializer.retrieveConfiguredCustomSketchLayers(this.loadedProject);
+        customSketchSources.forEach((sketchSource: VectorSource, layername: string) => {
+          this.addCustomSketchLayer(layername, sketchSource);
+        }); 
+        //then load sketch layers the already exist in the database for the project
         this.sketchLayerInitializer.retrieveExistingSketchLayers(this.loadedProject).then((sketchSources) => {
           sketchSources.forEach((sketchSource: VectorSource, layername: string) => {
             this.addNewSketchLayer(layername, true, true, sketchSource);
@@ -2323,8 +2381,13 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     if(this.select){
       this.select.getFeatures().clear();
     }
-    // assign attributes
-    this.addingAttrFeature(data.layerName, data.feature, data.payload);
+
+    const isCustomSketchLayer = this.customSketchLayerService.isCustomSketchLayer(data.layerName);
+    if(!isCustomSketchLayer){
+      // assign attributes from payload to the feature
+      this.addingAttrFeature(data.layerName, data.feature, data.payload);
+    }
+
     // save in the buffer
     this.saveFeatinBuffer(data.layerName, data.feature, 'insert'); //after dialog finished?
   }
@@ -2643,8 +2706,10 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
   private afterdrawFeature(layer, feature){
     this.addedFeature = feature;
     this.curEditingLayer = layer;
+    
+    const layername = layer.layerName;
+    const customHandler = this.getCustomHandlerForLayer(layername);
 
-    const customHandler = this.getCustomHandlerForLayer(layer.layerName);
     var customHeader: string;
     if(customHandler){
       this.afterSymbolSelectedHandler = (layer: VectorLayer, feature: Feature) => {
@@ -2653,6 +2718,13 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       }
       customHeader = customHandler.header;
     }else{
+      const isCustomSketchLayer = this.customSketchLayerService.isCustomSketchLayer(layername);
+      if(isCustomSketchLayer){
+        //custom sketch layer must have custom handler -> custom sketch layer form
+        console.error('Custom handler not found for custom sketch layer', layername);
+        return;
+      }
+
       this.afterSymbolSelectedHandler = this.popAttrForm //use default dynamic form
     }
 
@@ -2674,9 +2746,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       this.currentStyle = listEntry.symbol.value;
       this.currentClass = listEntry.symbol.key
       if(this.currentSelectedValue){ //add selected value to feture properties
-        let properties = {};
-        properties[this.currentSelectedValue.property] = this.currentSelectedValue.value;
-        this.addedFeature.setProperties(properties);
+        this.addedFeature.set(this.currentSelectedValue.property, this.currentSelectedValue.value);
       }
 
       if(this.afterSymbolSelectedHandler){ //handle edit e.g. show edit dialog
@@ -3211,14 +3281,10 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       );
       return;
     }
-    if (
-      editLayer.geometryType === 'Point' ||
-      editLayer.geometryType === 'Line' ||
-      editLayer.geometryType === 'Polygon' ||
-      editLayer.geometryType === 'MultiPolygon' ||
-      editLayer.geometryType === 'MultiPolygonZ' ||
-      editLayer.geometryType === 'MultiPoint'
-    ) {
+
+    const isSketchLayer = this.loadedSketchLayers.some(sl => sl.layerName === editLayer.layerName) || this.customSketchLayerService.isCustomSketchLayer(editLayer.layerName);
+
+    if (!isSketchLayer) {
       const result = this.executeWFSTransactions(editLayer);
       if (result) {
         result.then(() => {
@@ -3232,7 +3298,6 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     } else {
       this.saveSketchLayer(editLayer);
-      // it is a 'multi' geometry --> sketch layer
     }
   }
 
@@ -3527,15 +3592,23 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       update: [],
       delete: []
     }
+    transactionIndex[this.loadedProject.customSketchLayersPoints] = {
+      insert: [],
+      update: [],
+      delete: []
+    }
 
     const bufferedInserts = this.editBuffer.filter( (t) => t.layerName === sketchLayer.layerName && t.transaction === 'insert')
     const bufferedUpdates = this.editBuffer.filter( (t) => t.layerName === sketchLayer.layerName && t.transaction === 'update')
     const bufferedDeletes = this.editBuffer.filter( (t) => t.layerName === sketchLayer.layerName &&  t.transaction === 'delete')
 
     const deletedFeatureInsertTransactions = []; //features that were inserted (temporarily) and immediatly deleted before saving to wfs
+    const isCustomSketchLayer = this.customSketchLayerService.isCustomSketchLayer(sketchLayer.layerName);
     for(let insert of bufferedInserts){
       if(!this.isDeletedeature(insert.feats)){
-       if(insert.feats.getGeometry() instanceof Point ||insert.feats.getGeometry() instanceof MultiPoint){
+       if (isCustomSketchLayer){
+        transactionIndex[this.loadedProject.customSketchLayersPoints].insert.push(insert.feats);
+       }else if(insert.feats.getGeometry() instanceof Point ||insert.feats.getGeometry() instanceof MultiPoint){
         transactionIndex[this.loadedProject.sketchLayerPoints].insert.push(insert.feats)
        }else if(insert.feats.getGeometry() instanceof Polygon || insert.feats.getGeometry() instanceof MultiPolygon){
         transactionIndex[this.loadedProject.sketchLayerPolygons].insert.push(insert.feats)
@@ -3548,7 +3621,9 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     for(let update of bufferedUpdates){
       if(!this.isNewlyInsertedFeature(update.feats[0])){ //no modify transaction if features is not stored in wfs
-        if(update.feats[0].getGeometry() instanceof Point || update.feats[0].getGeometry() instanceof MultiPoint){
+        if (isCustomSketchLayer){
+        transactionIndex[this.loadedProject.customSketchLayersPoints].update.push(update.feats[0]);
+        }else if(update.feats[0].getGeometry() instanceof Point || update.feats[0].getGeometry() instanceof MultiPoint){
         transactionIndex[this.loadedProject.sketchLayerPoints].update.push(update.feats[0])
         }else if(update.feats[0].getGeometry() instanceof Polygon ||update.feats[0].getGeometry() instanceof MultiPolygon){
         transactionIndex[this.loadedProject.sketchLayerPolygons].update.push(update.feats[0])
@@ -3559,7 +3634,9 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
    }
    for(let del of bufferedDeletes){
     if(!this.isNewlyInsertedFeature(del.feats)){ //no delete transaction if features is not stored in wfs
-      if(del.feats.getGeometry() instanceof Point || del.feats.getGeometry() instanceof MultiPoint){
+      if (isCustomSketchLayer){
+        transactionIndex[this.loadedProject.customSketchLayersPoints].delete.push(del.feats);
+      }else if(del.feats.getGeometry() instanceof Point || del.feats.getGeometry() instanceof MultiPoint){
       transactionIndex[this.loadedProject.sketchLayerPoints].delete.push(del.feats)
       }else if(del.feats.getGeometry() instanceof Polygon || del.feats.getGeometry() instanceof MultiPolygon){
       transactionIndex[this.loadedProject.sketchLayerPolygons].delete.push(del.feats)
@@ -3572,8 +3649,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     var failedOnInsert : boolean = false;
     const strService = 'SERVICE=WFS&VERSION=' + this.config.getAppConfig().wfsVersion + '&REQUEST=DescribeFeatureType';
     const strUrl = this.qGsServerUrl + strService + '&map=' + this.qgsProjectFile;
-    const featureTypes  = [this.loadedProject.sketchLayerPolygons, this.loadedProject.sketchLayerPoints, this.loadedProject.sketchLayerLinestrings]
-    for(let featureType of featureTypes){ //different featuretype (layer) per geometry type
+    const featureTypes  = [this.loadedProject.sketchLayerPolygons, this.loadedProject.sketchLayerPoints, this.loadedProject.sketchLayerLinestrings, this.loadedProject.customSketchLayersPoints]
+    for(let featureType of featureTypes){ //different featuretype (layer) per geometry type or custom sketch layer (only points)
        // Edits should be done in chain... 1)insert, 2)updates, 3) deletes
       if (transactionIndex[featureType].insert.length > 0){
         const transaction = this.createWriteTransactionWfs(featureType, transactionIndex[featureType].insert);
@@ -3831,7 +3908,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     let text = '';
 
     if(otherFields.length > 0){
-      text = text.concat('<div id="attrDiv">' + '<table border=0 width=100%>');
+      text = text.concat('<div id="attrDiv">' + '<table class=featureInfoTable>');
       text = text.concat(
           '<tr><th>' +
             'Attribute' +
@@ -3857,7 +3934,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     if(measureList.length > 0){
-      text = text.concat('<div id="measureDiv">' + '<table border=0 width=100%>');
+      text = text.concat('<div id="measureDiv">' + '<table class=featureInfoTable>');
       text = text.concat(
         '<tr><th>' +
           'Measure' +
@@ -3889,6 +3966,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       '<p>Searching at:</p><code>' + hdms + '</code>';
     this.overlay.setPosition(evt.coordinate);
     const layerOnIdentifyingName = this.curInfoLayer.get('name'); // this.curInfoLayer is an OL layer object
+    const isCustomSketchLayer = this.customSketchLayerService.isCustomSketchLayer(layerOnIdentifyingName);
     const tlayer = this.findLayerinGroups(layerOnIdentifyingName);
     const fieldsToShow = tlayer.fields;
     const featureValues = this.map.forEachFeatureAtPixel(
@@ -3926,8 +4004,28 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       // report normal layer
       else {
         for (const key in featureValues) {
-          if (key !== 'img') {
-            if (featureValues[key]) {
+          if (isCustomSketchLayer && key === 'payload' && featureValues[key]) {
+            try {
+              const payload = JSON.parse(featureValues[key]);
+              // Instead of a nested table, add each entry of the JSON object directly to the main table
+              for (const payloadKey in payload) {
+                if (payload[payloadKey]) {
+                  text = text.concat(
+                    '<tr><td>' +
+                      this.lableLookUpTable.getLabelForPropertyName(layerOnIdentifyingName, payloadKey) +
+                      '</td><td>' +
+                      payload[payloadKey] +
+                      '</td></tr>'
+                  );
+                }
+              }
+            } catch (e) {
+              console.error("Error parsing payload for custom sketch layer", e);
+              // Fallback to just showing the string if it's not valid JSON
+              text = text.concat('<tr><td>' + this.lableLookUpTable.getLabelForPropertyName(layerOnIdentifyingName, key) + '</td><td>' + featureValues[key] + '</td></tr>');
+            }
+          } else if (key !== 'img') {
+            if (featureValues[key] && (typeof featureValues[key] !== 'object' || featureValues[key] === null)) {
               text = text.concat(
                 '<tr><td>' +
                   this.lableLookUpTable.getLabelForPropertyName(layerOnIdentifyingName, key) +
@@ -3950,7 +4048,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         }
         this.content.nativeElement.innerHTML =
           '<div id="popupDiv">' +
-          '<table border=0 width=100%>' +
+          '<table class=featureInfoTable>' +
           '<tr><th>Attribute</th><th>Value</th></tr>' +
           text +
           '</table>' +
@@ -4144,7 +4242,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         this.popupImage.nativeElement.src = folder + properties.img
       }
       text =
-        '<table border=0 width=92%>' +
+        '<table class=featureInfoTable>' +
         '<tr><th>Attribute</th><th>Value</th></tr>' +
         text +
         '</table>' +

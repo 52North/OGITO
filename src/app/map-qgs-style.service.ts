@@ -7,6 +7,7 @@ import {Parser} from 'xml2js';
 import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
 import { ProjectConfiguration } from './config/project-config';
 import { AppconfigService } from './config/appconfig.service';
+import { CustomSketchLayerService } from './config/custom-sketch-layer-service';
 
 @Injectable({
   providedIn: 'root'
@@ -60,7 +61,7 @@ export class MapQgsStyleService {
   private loadedProject : ProjectConfiguration;
 
 
-  constructor(  private sanitizer: DomSanitizer, private readonly openlayersService : OpenLayersService, private config : AppconfigService) {
+  constructor(  private sanitizer: DomSanitizer, private readonly openlayersService : OpenLayersService, private customSketchLayerService: CustomSketchLayerService, private config : AppconfigService) {
     this.projectSelectedSubscription = openlayersService.qgsProjectUrl$.subscribe(
         (projectConfig) => {
             this.loadedProject = projectConfig
@@ -375,47 +376,68 @@ export class MapQgsStyleService {
   }
 
   setSketchStyle(layerName: string){
-    this.layerStyles[layerName] = {
-      symbolType: this.sketchStyleAttr,
-      ruleBased: true,
-      style: {
-        red: {
-          style: this.defineSketchStyle("#FF0000"),
-          label: 'red',
-          value: 'red',
-          attr: this.sketchStyleAttr,
-          symbol: 'default'
-        },
-        blue: {
-          style: this.defineSketchStyle("#0000FF"),
-          label: 'blue',
-          value: 'blue',
-          attr: this.sketchStyleAttr,
-          symbol: 'default'
-        },
-        pink: {
-          style: this.defineSketchStyle("#FF00FF"),
-          label: 'pink',
-          value: 'pink',
-          attr: this.sketchStyleAttr,
-          symbol: 'default'
-        },
-        green: {
-          style: this.defineSketchStyle("#00FF00"),
-          label: 'green',
-          value: 'green',
-          attr: this.sketchStyleAttr,
-          symbol: 'default'
-        },
-        yellow: {
-          style: this.defineSketchStyle("#FFFF00"),
-          label: 'yellow',
-          value: 'yellow',
-          attr: this.sketchStyleAttr,
-          symbol: 'default'
+    const isCustomSketchLayer = this.customSketchLayerService.isCustomSketchLayer(layerName);
+
+    if(isCustomSketchLayer){
+      this.layerStyles[layerName] = {
+        symbolType: "category",
+        ruleBased: true,
+        style: {
+          transport: {
+            style: this.defineCustomSketchStyle("https://openlayers.org/en/v7.5.2/examples/data/icon.png"),
+            label: 'Transport',
+            value: 'transport',
+            attr: "category",
+            symbol: 'default'
+          }
         }
-      }
-    };
+      };
+    }else{
+      this.layerStyles[layerName] = {
+        symbolType: this.sketchStyleAttr,
+        ruleBased: true,
+        style: {
+          red: {
+            style: this.defineSketchStyle("#FF0000"),
+            label: 'red',
+            value: 'red',
+            attr: this.sketchStyleAttr,
+            symbol: 'default'
+          },
+          blue: {
+            style: this.defineSketchStyle("#0000FF"),
+            label: 'blue',
+            value: 'blue',
+            attr: this.sketchStyleAttr,
+            symbol: 'default'
+          },
+          pink: {
+            style: this.defineSketchStyle("#FF00FF"),
+            label: 'pink',
+            value: 'pink',
+            attr: this.sketchStyleAttr,
+            symbol: 'default'
+          },
+          green: {
+            style: this.defineSketchStyle("#00FF00"),
+            label: 'green',
+            value: 'green',
+            attr: this.sketchStyleAttr,
+            symbol: 'default'
+          },
+          yellow: {
+            style: this.defineSketchStyle("#FFFF00"),
+            label: 'yellow',
+            value: 'yellow',
+            attr: this.sketchStyleAttr,
+            symbol: 'default'
+          }
+        }
+      };
+    }
+
+
+
     return this.layerStyles[layerName]
   }
 
@@ -435,6 +457,21 @@ export class MapQgsStyleService {
       new Style({
         stroke,
         fill,
+        image: newIcon,
+      });
+    return(style);
+  }
+
+
+  defineCustomSketchStyle(iconURL: string){
+    const newIcon = new Icon({
+      opacity: 1,
+      crossOrigin: 'anonymous',
+      src: iconURL,
+    });
+    newIcon.load();
+    const style =
+      new Style({
         image: newIcon,
       });
     return(style);

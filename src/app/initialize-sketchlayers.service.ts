@@ -1,18 +1,14 @@
-import VectorLayer from 'ol/layer/Vector.js';
 import VectorSource from 'ol/source/Vector.js';
 import { Feature } from 'ol/Feature';
-import { Injectable, OnDestroy, OnInit } from '@angular/core';
-import { OpenLayersService } from './open-layers.service';
+import { Injectable } from '@angular/core';
 import { AppconfigService } from './config/appconfig.service';
 import { ProjectConfiguration } from './config/project-config';
-import { Subscription } from 'rxjs';
 import WFS from 'ol/format/WFS.js';
 import { HttpClient } from '@angular/common/http';
 import EqualTo from 'ol/format/filter/EqualTo.js';
 
-import GML from 'ol/format/GML.js';
 import GeoJSON from 'ol/format/GeoJSON.js';
-import { ApplicationConfiguration } from './config/app-config';
+import { CustomSketchLayerService } from './config/custom-sketch-layer-service';
 
 @Injectable({
   providedIn: 'root'
@@ -22,7 +18,7 @@ export class InitializeSketchlayersService{
   private wfsFormat : WFS;
   private readonly retrieveFeaturesSrs: string = "EPSG:4326" //retrieve features in Geojson in WGS84 and transform to app srs, since OL GML/WFS format cannot read polygons properly (bug?)
 
-  constructor(private config: AppconfigService, private http: HttpClient) {
+  constructor(private config: AppconfigService, private customSketchLayerService: CustomSketchLayerService, private http: HttpClient) {
     this.wfsFormat =  new WFS({
       version: config.getAppConfig().wfsVersion,
       featureNS: config.getAppConfig().hostname
@@ -42,9 +38,19 @@ export class InitializeSketchlayersService{
     return sources;
   }
 
-  public createSourceForSketchLayer(project: ProjectConfiguration, sketchLayerName : string){
+  public retrieveConfiguredCustomSketchLayers(project: ProjectConfiguration): Map<string, VectorSource> {
     const serverUrl = this.getServerUrl(project);
-    const featureTypes = [project.sketchLayerPoints, project.sketchLayerLinestrings, project.sketchLayerPolygons]
+    const featureTypes = [project.customSketchLayersPoints]
+    const layernames = this.customSketchLayerService.getAllCustomDefinitionLayernames();
+    const sources = this.createVectorSources(serverUrl, layernames, featureTypes);
+    return sources;
+  }
+
+  public createSourceForSketchLayer(project: ProjectConfiguration, sketchLayerName : string, featureTypes: string[] =  null) : VectorSource{
+    if(!featureTypes){
+      featureTypes = [project.sketchLayerPoints, project.sketchLayerLinestrings, project.sketchLayerPolygons]
+    }    
+    const serverUrl = this.getServerUrl(project);
     const layernames = [sketchLayerName]
     const source = this.createVectorSources(serverUrl, layernames, featureTypes).get(sketchLayerName);
 

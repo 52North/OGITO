@@ -55,6 +55,17 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; overflow: h
 }
 
 
+
+.featureInfoTable {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #ccc;
+  th, td {
+    padding: 10px;
+    border: 1px solid #ccc;
+  }
+}
+
 @media (orientation: landscape){
   .imgInfo{
     max-height: 50vh;

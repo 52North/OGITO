@@ -131,7 +131,6 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
           canvas.nativeElement.height = height;
           const render = toContext(canvas.nativeElement.getContext('2d'));
           const stylelayer = this.symbols$[key];
-          const stylelayerClone = [];   // clone the style hopefully deep copy
           const olStyle = stylelayer.style;
           let cloneStyle: any;
           cloneStyle = olStyle.clone();
@@ -204,7 +203,7 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
           }
           let props = {};
           props[this.styles.symbolType] = key;
-          feature.setProperties(props)
+          feature.setProperties((props))
 
           render.drawFeature(feature, cloneStyle);
         }

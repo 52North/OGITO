@@ -29,6 +29,8 @@ export interface ProjectConfiguration{
   sketchLayerPoints: string
   rateMeasureLayers: string[]
   labels?: Object
+  customSketchLayerDefinitionsFiles?: string[];
+  customSketchLayersPoints: string;
 }
 
 
@@ -81,6 +83,8 @@ export const ProjectConfigurationCodec = t.type({
   sketchLayerLinestrings: t.string,
   sketchLayerPoints: t.string,
   rateMeasureLayers: t.union([t.array(t.string), t.undefined]),
-  label: t.union([t.UnknownRecord, t.undefined])
+  label: t.union([t.UnknownRecord, t.undefined]),
+  customSketchLayerDefinitionsFiles: t.array(t.string),
+  customSketchLayersPoints: t.string
 });
 
