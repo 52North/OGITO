@@ -81,16 +81,6 @@ mat-label {
   padding-bottom: 0.9em; /* Aligned with .radio-input padding */
   padding-left: 4px;
   padding-right: 4px;
-
-  /* Colors the background of the box when checked */
-  ::ng-deep .mat-checkbox-checked .mat-checkbox-background {
-    background-color: black !important;
-  }
-
-  /* Ensures the border of the unchecked box is clearly visible */
-  ::ng-deep .mat-checkbox-frame {
-    border-color: rgba(0, 0, 0, 0.54) !important;
-  }
 }
 
 .radio-label {

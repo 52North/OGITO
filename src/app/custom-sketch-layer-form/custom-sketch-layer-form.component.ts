@@ -68,6 +68,23 @@ export class CustomSketchLayerFormComponent{
         fieldValidators.push(Validators.required);
       }
 
+      if (field.type === 'text' || field.type === 'textarea') {
+        if (field.minLength !== undefined) {
+          fieldValidators.push(Validators.minLength(field.minLength));
+        }
+        if (field.maxLength !== undefined) {
+          fieldValidators.push(Validators.maxLength(field.maxLength));
+        }
+      }
+
+      if(field.type === 'number'){
+        if (field.min !== undefined) {
+          fieldValidators.push(Validators.min(field.min));
+        }
+        if (field.max !== undefined) {
+          fieldValidators.push(Validators.max(field.max));
+        }
+      }
 
       let initialValue = field.default !== undefined ? field.default : null;
       if (initialValue === 'now' && (field.type === 'date' || field.type === 'datetime')) {
@@ -132,15 +149,28 @@ export class CustomSketchLayerFormComponent{
   }
 
   public getMinMaxLabel(field: FieldConfig): string {
-    let label = "";    let initialValue = field.default !== undefined ? field.default : null;
-    
-    if (initialValue === 'now' && (field.type === 'date' || field.type === 'datetime')) {
-      initialValue = this.getNowFormatted(field.type);
-    }
+    let label = "";
+
     if(field.type === 'number'){
       const min = field.min !== undefined ? `min: ${field.min}` : '';
       const max = field.max !== undefined ? `max: ${field.max}` : '';
-      label = [min, max].filter(part => part).join(' ');
+      label = [min, max].filter(part => part).join(', ');
+    }
+
+    if(label !== ""){
+      label = `(${label})`;
+    }
+
+    return label;
+  }
+
+
+  public getMinMaxLengthLabel(field: FieldConfig): string {
+    let label = "";    
+    if(field.type === 'text' || field.type === 'textarea'){
+      const minLength = field.minLength !== undefined ? `min: ${field.minLength}` : '';
+      const maxLength = field.maxLength !== undefined ? `max: ${field.maxLength}` : '';
+      label = [minLength, maxLength].filter(part => part).join(', ');
     }
 
     if(label !== ""){
