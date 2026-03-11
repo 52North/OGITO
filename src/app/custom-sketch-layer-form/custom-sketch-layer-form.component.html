@@ -74,7 +74,8 @@
             <div class="select-input" *ngSwitchCase="'select'">
               <mat-form-field appearance="outline" class="full-width">
                 <mat-label>{{ field.label }}</mat-label>
-                <mat-select [formControlName]="field.id">
+                <mat-select [formControlName]="field.id"  >
+                  <mat-option *ngIf="!field.required" [value]="null"><em>----</em></mat-option> <!-- allows to clear selection if field not required -->
                   <mat-option *ngFor="let opt of field.options" [value]="opt">{{ opt }}</mat-option>
                 </mat-select>
                 <mat-error *ngIf="form.get(field.id)?.hasError('required')">This field is required</mat-error>
