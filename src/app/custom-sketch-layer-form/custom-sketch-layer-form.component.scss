@@ -16,12 +16,15 @@
   left: 40% !important;
   max-width: 28%;
   width: 22%;
-  top: 40% !important;
+  top: 15% !important;
   opacity: 0.9;
   background-color: white;
   display: flex;
   flex-direction: column;
-  cursor: move; /* Indicates the element is draggable */
+}
+
+mat-label {
+  white-space: nowrap;
 }
 
 /* --- 2. Input Field Alignments --- */
@@ -78,6 +81,16 @@
   padding-bottom: 0.9em; /* Aligned with .radio-input padding */
   padding-left: 4px;
   padding-right: 4px;
+
+  /* Colors the background of the box when checked */
+  ::ng-deep .mat-checkbox-checked .mat-checkbox-background {
+    background-color: black !important;
+  }
+
+  /* Ensures the border of the unchecked box is clearly visible */
+  ::ng-deep .mat-checkbox-frame {
+    border-color: rgba(0, 0, 0, 0.54) !important;
+  }
 }
 
 .radio-label {
@@ -106,4 +119,10 @@
 .submit-button {
   text-align: right;
   margin-top: 16px;
+}
+
+.textarea-input {
+  textarea{
+    resize: none;;
+  }
 }

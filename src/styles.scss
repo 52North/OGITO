@@ -63,6 +63,7 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; overflow: h
   th, td {
     padding: 10px;
     border: 1px solid #ccc;
+    white-space: pre-wrap;
   }
 }
 

@@ -1,5 +1,5 @@
 <div class="parent">
-  <div class="example-list" *ngIf="getVisibility()" cdkDrag cdkDragBoundary=".app-content">
+  <div class="example-list" *ngIf="getVisibility()" cdkDrag cdkDragBoundary=".app-content" cdkRes>
     <mat-card>
       <mat-card-title-group>
         <mat-card-title>{{ layerName }}</mat-card-title>
@@ -22,17 +22,17 @@
               </mat-form-field>
             </div>
 
-            <div class="text-input" *ngSwitchCase="'textarea'">
+            <div class="text-input textarea-input" *ngSwitchCase="'textarea'">
               <mat-form-field appearance="outline" class="full-width">
                 <mat-label>{{ field.label }}</mat-label>
-                <textarea matInput [formControlName]="field.id" [placeholder]="field.placeholder || ''" rows="3"></textarea>
+                <textarea matInput [formControlName]="field.id" [placeholder]="field.placeholder || ''" rows="6"></textarea>
                 <mat-error *ngIf="form.get(field.id)?.hasError('required')">This field is required</mat-error>
               </mat-form-field>
             </div>
 
             <div class="text-input" *ngSwitchCase="'number'">
               <mat-form-field appearance="outline" class="full-width">
-                <mat-label>{{ field.label }}</mat-label>
+                <mat-label>{{ field.label }} {{ getMinMaxLabel(field) }}</mat-label>
                 <input matInput type="number" [formControlName]="field.id" [min]="field.min" [max]="field.max">
                 <mat-error *ngIf="form.get(field.id)?.hasError('required')">This field is required</mat-error>
               </mat-form-field>
@@ -50,7 +50,7 @@
 
             <div class="custom-field-margin" *ngSwitchCase="'checkbox'">
               <mat-checkbox [formControlName]="field.id" [required]="field.required || false">{{ field.label }}</mat-checkbox>
-              <span class="custom-error" *ngIf="form.get(field.id)?.hasError('required') && form.get(field.id)?.touched">
+              <span class="custom-error" *ngIf="form.get(field.id)?.hasError('required')">
                 This checkbox is required
               </span>
             </div>
@@ -62,7 +62,7 @@
               <mat-radio-group [formControlName]="field.id" [required]="field.required || false">
                 <mat-radio-button *ngFor="let opt of field.options" [value]="opt" class="radio-btn">{{ opt }}</mat-radio-button>
               </mat-radio-group>
-              <span class="custom-error" *ngIf="form.get(field.id)?.hasError('required') && form.get(field.id)?.touched">
+              <span class="custom-error" *ngIf="form.get(field.id)?.hasError('required')">
                 Please select an option
               </span>
             </div>
@@ -71,6 +71,14 @@
               <mat-form-field appearance="outline" class="full-width">
                 <mat-label>{{ field.label }}</mat-label>
                 <input matInput type="datetime-local" [formControlName]="field.id">
+                <mat-error *ngIf="form.get(field.id)?.hasError('required')">This field is required</mat-error>
+              </mat-form-field>
+            </div>
+
+           <div class="date-input" *ngSwitchCase="'date'">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>{{ field.label }}</mat-label>
+                <input matInput type="date" [formControlName]="field.id">
                 <mat-error *ngIf="form.get(field.id)?.hasError('required')">This field is required</mat-error>
               </mat-form-field>
             </div>

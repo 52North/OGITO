@@ -8,29 +8,23 @@ import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
 import { ProjectConfiguration } from './config/project-config';
 import { AppconfigService } from './config/appconfig.service';
 import { CustomSketchLayerService } from './config/custom-sketch-layer-service';
+import { Feature } from 'ol/Feature';
+import { CustomLayerDefinition } from './config/custom-sketch-layer-config';
+import { cons } from 'fp-ts/lib/ReadonlyNonEmptyArray';
+
+
+export interface StyleDefinition {
+  style: Style;
+  label: string;
+  value: string;
+  attr: string;
+  symbol: string;
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class MapQgsStyleService {
-
-      // Sketch layer for example  return a default style #TODO
-      private svgMarker= 'PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjxzdmcKICAgaGVpZ2h0PSIyNHB4IgogICB2aWV3Qm' +
-      '94PSIwIDAgMjQgMjQiCiAgIHdpZHRoPSIyNHB4IgogICBmaWxsPSIjMDAwMDAwIgogICB2ZXJzaW9uPSIxLjEiCiAgIGlkPSJzdmc2IgogICBzb2RpcG9kaTpkb2NuYW1' +
-      'lPSJ3aGVyZV90b192b3RlX2JsYWNrXzI0ZHAuc3ZnIgogICBpbmtzY2FwZTp2ZXJzaW9uPSIxLjEgKGM2OGUyMmMzODcsIDIwMjEtMDUtMjMpIgogICB4bWxuczppbmt' +
-      'zY2FwZT0iaHR0cDovL3d3dy5pbmtzY2FwZS5vcmcvbmFtZXNwYWNlcy9pbmtzY2FwZSIKICAgeG1sbnM6c29kaXBvZGk9Imh0dHA6Ly9zb2RpcG9kaS5zb3VyY2Vmb3Jn' +
-      'ZS5uZXQvRFREL3NvZGlwb2RpLTAuZHRkIgogICB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciCiAgIHhtbG5zOnN2Zz0iaHR0cDovL3d3dy53My5vcmcvM' +
-      'jAwMC9zdmciPgogIDxkZWZzCiAgICAgaWQ9ImRlZnMxMCIgLz4KICA8c29kaXBvZGk6bmFtZWR2aWV3CiAgICAgaWQ9Im5hbWVkdmlldzgiCiAgICAgcGFnZWNvbG9yP' +
-      'SIjZmZmZmZmIgogICAgIGJvcmRlcmNvbG9yPSIjNjY2NjY2IgogICAgIGJvcmRlcm9wYWNpdHk9IjEuMCIKICAgICBpbmtzY2FwZTpwYWdlc2hhZG93PSIyIgogICAg' +
-      'IGlua3NjYXBlOnBhZ2VvcGFjaXR5PSIwLjAiCiAgICAgaW5rc2NhcGU6cGFnZWNoZWNrZXJib2FyZD0iMCIKICAgICBzaG93Z3JpZD0iZmFsc2UiCiAgICAgaW5rc2Nhc' +
-      'GU6em9vbT0iMzEuMzc1IgogICAgIGlua3NjYXBlOmN4PSIxMS45ODQwNjQiCiAgICAgaW5rc2NhcGU6Y3k9IjEyIgogICAgIGlua3NjYXBlOndpbmRvdy13aWR0aD0iM' +
-      'TkyMCIKICAgICBpbmtzY2FwZTp3aW5kb3ctaGVpZ2h0PSIxMDAxIgogICAgIGlua3NjYXBlOndpbmRvdy14PSItOSIKICAgICBpbmtzY2FwZTp3aW5kb3cteT0iMTE5M' +
-      'SIKICAgICBpbmtzY2FwZTp3aW5kb3ctbWF4aW1pemVkPSIxIgogICAgIGlua3NjYXBlOmN1cnJlbnQtbGF5ZXI9InN2ZzYiIC8+CiAgPHBhdGgKICAgICBkPSJNMCAwa' +
-      'DI0djI0SDBWMHoiCiAgICAgZmlsbD0ibm9uZSIKICAgICBpZD0icGF0aDIiIC8+CiAgPHBhdGgKICAgICBkPSJNIDEyLDEgQyA3LjU5LDEgNCw0LjU5IDQsOSBjIDAs' +
-      'NS41NyA2Ljk2LDEzLjM0IDcuMjYsMTMuNjcgTCAxMiwyMy40OSAxMi43NCwyMi42NyBDIDEzLjA0LDIyLjM0IDIwLDE0LjU3IDIwLDkgMjAsNC41OSAxNi40MSwxIDEy' +
-      'LDEgWiBtIDAsMTkuNDcgQyA5LjgyLDE3Ljg2IDYsMTIuNTQgNiw5IDYsNS42OSA4LjY5LDMgMTIsMyBjIDMuMzEsMCA2LDIuNjkgNiw2IDAsMy44MyAtNC4yNSw5LjM2I' +
-      'C02LDExLjQ3IHoiCiAgICAgaWQ9InBhdGg0IgogICAgIHNvZGlwb2RpOm5vZGV0eXBlcz0ic3NjY2Nzc2Nzc3NjIiAvPgo8L3N2Zz4K';
-
     private svgMarkerColor = 'PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjxzdmcKICAgaGVpZ2h0PSIyNHB4IgogIC' +
       'B2aWV3Qm94PSIwIDAgMjQgMjQiCiAgIHdpZHRoPSIyNHB4IgogICBmaWxsPSIjMDAwMDAwIgogICB2ZXJzaW9uPSIxLjEiCiAgIGlkPSJzdmc2IgogICBzb2RpcG9ka' +
       'Tpkb2NuYW1lPSJ3aGVyZV90b192b3RlX2JsYWNrXzI0ZHAuc3ZnIgogICBpbmtzY2FwZTp2ZXJzaW9uPSIxLjEgKGM2OGUyMmMzODcsIDIwMjEtMDUtMjMpIgogICB4' +
@@ -56,7 +50,10 @@ export class MapQgsStyleService {
     'stroke-width': 'width',
     'stroke-linejoin': 'lineJoin'
   };
-  private sketchStyleAttr = "style"
+  public readonly sketchStyleAttr = "style"
+  public readonly customSketchStyleAttr = "category";
+  public readonly iconHeightPxl = 38; //px
+
   private readonly projectSelectedSubscription : Subscription;
   private loadedProject : ProjectConfiguration;
 
@@ -70,7 +67,7 @@ export class MapQgsStyleService {
     );
   }
 
-  findJsonStyle(feature: any, layerName: any): any {
+  findJsonStyle(feature: Feature, layerName: string): any {
     /** Given a feature and the layerName it returns the corresponding style
      * it is used to get the styles for WFS layers in the Qgs project associated
      * @param { feature } the feature for which to find a rendering style
@@ -101,26 +98,7 @@ export class MapQgsStyleService {
     }
   }
 
-  findStyle(feature: any, layerName: any) {
-    /** Given a feature and the layerName it returns the corresponding style
-     * it is used to get the styles for WFS layers in the Qgs project associated
-     * @param { feature } the feature for which to find a rendering style  -- no needed apparently
-     * @param { layerName } the name of a WFS layer to be rendered
-     */
-   const styleLyr = this.nodes[layerName];
-    if (Object.keys(styleLyr).length > 0){
-      const attr = styleLyr[Object.keys(styleLyr)[0]].attr; // Which is the attribute used in the simbology
-      const featValue = feature.get(attr);
-      for (const key of Object.getOwnPropertyNames(styleLyr))
-      {
-        if (styleLyr[key].value == featValue){
-         return (styleLyr[key].style);    // and array of style is ok too
-        }
-      }
-    }
-  }
-
-  createLinePattern(fillColor: any, angle: number, spacing: number, line_width: number) {
+  private createLinePattern(fillColor: any, angle: number, spacing: number, line_width: number) {
     const pixelRatio = DEVICE_PIXEL_RATIO;
     this.canvas.width = 8 * pixelRatio;
     this.canvas.height = 8 * pixelRatio;
@@ -334,7 +312,7 @@ export class MapQgsStyleService {
         const theStyle = this.mapQsJsonPointSymbol(format, onlineResource, mark, size);
         let symbolLabel: string =  (value !== 'default') ? value : layerName;
 
-        let styledef = {
+        let styledef : StyleDefinition = {
             style: theStyle,      // style is a list
             label: symbolLabel,
             value: value,
@@ -375,22 +353,16 @@ export class MapQgsStyleService {
       .catch(error => console.error(error));
   }
 
-  setSketchStyle(layerName: string){
+  setSketchStyle(layerName: string): Promise<any>{
     const isCustomSketchLayer = this.customSketchLayerService.isCustomSketchLayer(layerName);
 
     if(isCustomSketchLayer){
+      const layerDefinition = this.customSketchLayerService.getConfigByLayerName(layerName)!;
+      const styles = this.createStylesForCustomSketchLayer(layerDefinition);
       this.layerStyles[layerName] = {
-        symbolType: "category",
+        symbolType: this.customSketchStyleAttr,
         ruleBased: true,
-        style: {
-          transport: {
-            style: this.defineCustomSketchStyle("https://openlayers.org/en/v7.5.2/examples/data/icon.png"),
-            label: 'Transport',
-            value: 'transport',
-            attr: "category",
-            symbol: 'default'
-          }
-        }
+        style: styles
       };
     }else{
       this.layerStyles[layerName] = {
@@ -435,47 +407,91 @@ export class MapQgsStyleService {
         }
       };
     }
-
-
-
     return this.layerStyles[layerName]
   }
+  
 
-  defineSketchStyle(colorHex: string = "#FFA500"): any{
-    const newIcon = new Icon({
+  private createStylesForCustomSketchLayer(layerDefinition: CustomLayerDefinition) {
+    const styles = {};
+    for(let i = 0; i < layerDefinition.categories.length; i++){
+      const category = layerDefinition.categories[i];
+      const style: StyleDefinition = {
+        style: this.defineCustomSketchStyle(category.icon),
+        label: category.label,
+        value: category.id,
+        attr: this.customSketchStyleAttr,
+        symbol: 'default'
+      }
+      styles[category.id] = style;
+    }
+    return styles;
+  }
+
+
+  private defineSketchStyle(colorHex: string = "#FFA500"): Style{
+    const newIcon: Icon = new Icon({
       opacity: 1,
       crossOrigin: 'anonymous',
       src: 'data:image/svg+xml;base64,' + this.svgMarkerColor,
       scale: 1.2,   // it was 0.9
       color: colorHex
     });
-    newIcon.load();
+
     const fillColorHex = colorHex + '40'; //opacity 0.25
     const fill = new Fill({color: fillColorHex});
     const stroke = new Stroke({color: colorHex, width: 5 });
-    const style =
+    const style : Style =
       new Style({
         stroke,
         fill,
         image: newIcon,
       });
-    return(style);
+
+    this.addIconScaler(newIcon);
+    newIcon.load();
+
+
+    return style;
   }
 
 
-  defineCustomSketchStyle(iconURL: string){
-    const newIcon = new Icon({
+  private defineCustomSketchStyle(iconURL: string): Style {
+    const newIcon: Icon = new Icon({
       opacity: 1,
       crossOrigin: 'anonymous',
       src: iconURL,
     });
-    newIcon.load();
-    const style =
+
+    const style: Style =
       new Style({
         image: newIcon,
-      });
-    return(style);
+    });
+
+
+    this.addIconScaler(newIcon);
+    newIcon.load();
+
+    return style;
   }
+
+  private addIconScaler(icon: Icon) {
+    const imgElement = icon.getImage();
+    if(imgElement){
+      const handleLoad = () => {
+      const originalWidth = imgElement.naturalWidth;
+
+      if (originalWidth > 0) {
+        console.log(`Original width of the icon: ${originalWidth}px`);
+        // Set the scale to force desired height while maintaining aspect ratio
+        icon.setScale(this.iconHeightPxl / originalWidth);
+      }
+    };
+
+    imgElement.onload = () => handleLoad();
+    }
+  }
+
+
 
   getLayerStyle(layerName: string){
     /** return the style for a layer

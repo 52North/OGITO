@@ -68,9 +68,15 @@ export class CustomSketchLayerFormComponent{
         fieldValidators.push(Validators.required);
       }
 
+
+      let initialValue = field.default !== undefined ? field.default : null;
+      if (initialValue === 'now' && (field.type === 'date' || field.type === 'datetime')) {
+        initialValue = this.getNowFormatted(field.type);
+      }
+
       formControls[field.id] = new FormControl(
         {
-          value: field.default !== undefined ? field.default : null,
+          value: initialValue,
           disabled: field.readonly || false
         },
         fieldValidators
@@ -79,6 +85,7 @@ export class CustomSketchLayerFormComponent{
 
     this.form = this.fb.group(formControls);
     this.isVisible = true;
+
   }
 
   public abbortDialog(): void {
@@ -124,6 +131,25 @@ export class CustomSketchLayerFormComponent{
     this.resetValues();
   }
 
+  public getMinMaxLabel(field: FieldConfig): string {
+    let label = "";    let initialValue = field.default !== undefined ? field.default : null;
+    
+    if (initialValue === 'now' && (field.type === 'date' || field.type === 'datetime')) {
+      initialValue = this.getNowFormatted(field.type);
+    }
+    if(field.type === 'number'){
+      const min = field.min !== undefined ? `min: ${field.min}` : '';
+      const max = field.max !== undefined ? `max: ${field.max}` : '';
+      label = [min, max].filter(part => part).join(' ');
+    }
+
+    if(label !== ""){
+      label = `(${label})`;
+    }
+
+    return label;
+  }
+
   private resetValues(): void {
     this.isVisible = false;
     this.feature = null;
@@ -134,4 +160,21 @@ export class CustomSketchLayerFormComponent{
       this.form.reset();
     }
   }
+
+  // Helper method to format the current date/time for default values as string for date and datetime fields
+  private getNowFormatted(type: 'date' | 'datetime'): string {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    
+    if (type === 'date') {
+      return `${year}-${month}-${day}`;
+    } else {
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      return `${year}-${month}-${day}T${hours}:${minutes}`;
+    }
+  }
+
 }

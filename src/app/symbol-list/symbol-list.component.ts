@@ -173,7 +173,7 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
               let imageClone: any;
               // cloneStyle = style.clone();
               imageClone = olStyle.clone().getImage();
-              imageClone.setScale(imageClone.getScale() * 5);  // #TODO check this
+              imageClone.setScale(imageClone.getScale() * 3.5);  // #TODO check this
               cloneStyle = new Style({
                 image: imageClone,
                 fill: olStyle.getFill()

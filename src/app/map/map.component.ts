@@ -90,6 +90,7 @@ import MultiPolygon from 'ol/geom/MultiPolygon.js';
 import MultiLineString from 'ol/geom/MultiLineString.js';
 import { LabelLutService } from '../config/label-lut.service';
 import { CustomSketchLayerService } from '../config/custom-sketch-layer-service';
+import { CustomLayerDefinition } from '../config/custom-sketch-layer-config';
 
 // To use rating dialogs
 export interface DialogData {
@@ -1252,7 +1253,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
 
-  addCustomSketchLayer(customSketchLayerName: string, source: VectorSource){
+  addCustomSketchLayer(customSketchLayerName: string, source: VectorSource, groupName: string){
     this.mapQgsStyleService.setSketchStyle(customSketchLayerName);
     const self = this;
     const newVector = new VectorLayer({
@@ -1276,13 +1277,10 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         return layerStyle;
       },
     });
-    // add the layer to the map
-
-
 
     const fields = this.customSketchLayerService.getQGISFieldsForCustomSketchLayers();
 
-    this.addSessionLayer(newVector, fields, true);
+    this.addSessionLayer(newVector, fields, true, groupName);
     // add tp the group of sketch layers
     this.loadedSketchLayers.push({
       layerName: customSketchLayerName,
@@ -1295,7 +1293,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  addLayerGroupLayerPanel(layerName: any, fieldsToShow: any, sketch = false) {
+  addLayerGroupLayerPanel(layerName: string, groupName: string, fieldsToShow: any, sketch = false) {
     // add configuration to the layer to be added in a group
     let newFeats = false;
     let geometryType = null;
@@ -1336,8 +1334,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     ) {
       // add the group at the beginning
       this.groupsLayers.unshift({
-        groupName: this.loadedProject.nameSessionGroup,
-        groupTittle: this.loadedProject.nameSessionGroup,
+        groupName: groupName,
+        groupTittle: groupName,
         visible: true, // group visible by default.. less clicks
         layers,
       });
@@ -1430,7 +1428,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       this.map.addLayer(newGroup);
       layer.setZIndex(newGroup.getZIndex() + 1);
       newGroup.getLayers().push(layer);
-      this.addLayerGroupLayerPanel(layer.get('name'), fieldstoShow, sketch);
+      this.addLayerGroupLayerPanel(layer.get('name'), groupName, fieldstoShow, sketch);
       return;
     }
     // group does exist
@@ -1448,7 +1446,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       const layerIndex = group.getLayers().length;
       layer.setZIndex(group.getZIndex() + layerIndex);
       group.getLayers().push(layer);
-      this.addLayerGroupLayerPanel(layer.get('name'), fieldstoShow, sketch);
+      this.addLayerGroupLayerPanel(layer.get('name'), groupName,fieldstoShow, sketch);
     } catch (e) {
       this.snackBar.open('Error adding results', 'ok', {
         horizontalPosition: 'center',
@@ -1571,8 +1569,6 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       })
       .catch((error) => console.error(error));
   }
-
-  private
 
   async parseQgsProject(gqsProjectinfo: any) {
     /**
@@ -2100,7 +2096,9 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         //load configured custom sketch layers first
         const customSketchSources = this.sketchLayerInitializer.retrieveConfiguredCustomSketchLayers(this.loadedProject);
         customSketchSources.forEach((sketchSource: VectorSource, layername: string) => {
-          this.addCustomSketchLayer(layername, sketchSource);
+          const groupName = this.customSketchLayerService.getConfigByLayerName(layername)?.groupname || this.loadedProject.nameSessionGroup;
+          console.log('adding custom sketch layer', layername, 'groupName', groupName);
+          this.addCustomSketchLayer(layername, sketchSource, groupName);
         }); 
         //then load sketch layers the already exist in the database for the project
         this.sketchLayerInitializer.retrieveExistingSketchLayers(this.loadedProject).then((sketchSources) => {
@@ -3934,7 +3932,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     if(measureList.length > 0){
-      text = text.concat('<div id="measureDiv">' + '<table class=featureInfoTable>');
+      text = text.concat('<div id="measureDiv" style="padding-top: 10px;">' + '<table class=featureInfoTable>');
       text = text.concat(
         '<tr><th>' +
           'Measure' +
@@ -4005,6 +4003,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       else {
         for (const key in featureValues) {
           if (isCustomSketchLayer && key === 'payload' && featureValues[key]) {
+            const layerDefinition = this.customSketchLayerService.getConfigByLayerName(layerOnIdentifyingName);
             try {
               const payload = JSON.parse(featureValues[key]);
               // Instead of a nested table, add each entry of the JSON object directly to the main table
@@ -4012,7 +4011,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
                 if (payload[payloadKey]) {
                   text = text.concat(
                     '<tr><td>' +
-                      this.lableLookUpTable.getLabelForPropertyName(layerOnIdentifyingName, payloadKey) +
+                      this.getPayloadLabelCustomSketchLayer(layerOnIdentifyingName, payloadKey, layerDefinition) +
                       '</td><td>' +
                       payload[payloadKey] +
                       '</td></tr>'
@@ -4058,6 +4057,22 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       this.content.nativeElement.innerHTML = '<p>Not elements found :</p>';
     }
     this.adjustMapView()
+  }
+
+  private getPayloadLabelCustomSketchLayer(layerName: string, payloadKey: string, layerDefinition: CustomLayerDefinition ): string{
+    let label = this.lableLookUpTable.getLabelForPropertyName(layerName, payloadKey);  //lut returns key if no entry in lut
+    // if label in lut -> use lut label
+    if(label && label !== payloadKey) {
+      return label;
+    }else {
+      //find label in custom form configuration
+      const fieldConfig = layerDefinition.fields.find(field => field.id === payloadKey);
+      if(fieldConfig){
+        return fieldConfig.label;
+      } else {
+        return payloadKey;
+      }
+    }
   }
 
   displayFeatureInfoWMS(evt) {
