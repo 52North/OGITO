@@ -14,7 +14,6 @@ import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {HttpClientModule } from '@angular/common/http';
 import { ProjlistComponent } from './projlist/projlist.component';
 import { DynamicFormComponent } from './dynamic-form/dynamic-form.component';
-import { DynamicFormQuestionComponent } from './dynamic-form-question/dynamic-form-question.component';
 import { DialogPopulationExposedComponent } from './dialog-population-exposed/dialog-population-exposed.component';
 import { DialogOrgExposedComponent } from './dialog-org-exposed/dialog-org-exposed.component';
 import { DialogResultExposedComponent } from './dialog-result-exposed/dialog-result-exposed.component';
@@ -33,7 +32,6 @@ import { CustomSketchLayerFormComponent } from './custom-sketch-layer-form/custo
     ToolbarComponent,
     ProjlistComponent,
     DynamicFormComponent,
-    DynamicFormQuestionComponent,
     DialogRatingDialog,
     DialogRatingMeasureDialog,
     DialogPopulationExposedComponent,
