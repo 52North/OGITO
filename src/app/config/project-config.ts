@@ -20,6 +20,7 @@ export interface ProjectConfiguration{
   nameSessionGroup: string,
   hiddenLayers : string[],
   backgroundLayers : BackgroundLayer[]
+  defaultVisibleLayers?: string[]
   streetSearch?: {
     layerName : string,
     property: string
@@ -30,7 +31,7 @@ export interface ProjectConfiguration{
   rateMeasureLayers: string[]
   labels?: Object
   customSketchLayerDefinitionsFiles?: string[];
-  customSketchLayersPoints: string;
+  customSketchLayerPoints: string;
 }
 
 
@@ -78,13 +79,14 @@ export const ProjectConfigurationCodec = t.type({
   nameSessionGroup: t.string,
   hiddenLayers : t.array(t.string),
   backgroundLayers : t.array(BackgroundLayerCodec),
+  defaultVisibleLayers: t.union([t.array(t.string), t.undefined]),
   streetSearch: t.union([StreetSearchCodec, t.undefined]),
   sketchLayerPolygons: t.string,
   sketchLayerLinestrings: t.string,
   sketchLayerPoints: t.string,
   rateMeasureLayers: t.union([t.array(t.string), t.undefined]),
   label: t.union([t.UnknownRecord, t.undefined]),
-  customSketchLayerDefinitionsFiles: t.array(t.string),
-  customSketchLayersPoints: t.string
+  customSketchLayerDefinitionsFiles: t.union([t.array(t.string), t.undefined]),
+  customSketchLayerPoints: t.string
 });
 

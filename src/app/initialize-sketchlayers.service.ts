@@ -40,7 +40,7 @@ export class InitializeSketchlayersService{
 
   public retrieveConfiguredCustomSketchLayers(project: ProjectConfiguration): Map<string, VectorSource> {
     const serverUrl = this.getServerUrl(project);
-    const featureTypes = [project.customSketchLayersPoints]
+    const featureTypes = [project.customSketchLayerPoints]
     const layernames = this.customSketchLayerService.getAllCustomDefinitionLayernames();
     const sources = this.createVectorSources(serverUrl, layernames, featureTypes);
     return sources;
