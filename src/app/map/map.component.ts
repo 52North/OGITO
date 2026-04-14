@@ -4012,10 +4012,18 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         for (const key in featureValues) {
           if (isCustomSketchLayer && key === 'payload' && featureValues[key]) {
             const layerDefinition = this.customSketchLayerService.getConfigByLayerName(layerOnIdentifyingName);
+
+            if(!layerDefinition){
+              console.error("No layer definition found for custom sketch layer " + layerOnIdentifyingName);
+              return;
+            }
+
             try {
               const payload = JSON.parse(featureValues[key]);
               // Instead of a nested table, add each entry of the JSON object directly to the main table
               for (const payloadKey in payload) {
+                if(!this.showPropertyCustomSketchLayer(payloadKey, layerDefinition)){continue;}
+
                 if (payload[payloadKey]) {
                   text = text.concat(
                     '<tr><td>' +
@@ -4080,6 +4088,15 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       } else {
         return payloadKey;
       }
+    }
+  }
+
+  private showPropertyCustomSketchLayer(payloadKey: string, layerDefinition: CustomLayerDefinition): boolean{
+    const fieldConfig = layerDefinition.fields.find(field => field.id === payloadKey);
+    if(fieldConfig){
+      return (fieldConfig.showInFeatureInfo !== undefined) ? fieldConfig.showInFeatureInfo : true; //if showInFeatureInfo is not specified show the field by default  
+    } else {
+      return true; //if no config for the field, show it by default
     }
   }
 

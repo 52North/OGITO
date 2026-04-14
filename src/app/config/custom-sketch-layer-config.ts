@@ -14,7 +14,7 @@ export interface FieldConfig {
     minLength?: number; // for text and textarea
     readonly?: boolean;
     required?: boolean;
-
+    showInFeatureInfo?: boolean; // whether to show this field in the feature info popup
 }
 
 export interface CategoriesConfig{
