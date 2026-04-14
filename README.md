@@ -99,12 +99,17 @@ Each project must registered in the project configuration (JSON) file. The locat
 |backgroundLayers| list of background (WMS) layers, background layers are loaded splitted into multiple tiles instead of a single images (might create issues wiht lables on the layer)| e.g. `[{"title": "Topographic Map", "format": "image/jpeg"}, {"title": "Other Basemap", "format": "image/png"}]` |
 | centerWGS84 | inital view center in geographic coordinates (WGS84) (optional, eiher this or `extentWGS84` must be set| e.g `{"lat": 51.935, "lon": 7.6521}`, if not set center point of the configured extent is used|
 | extentWGS84 | constraints the visible extent (geographic coordinates (WGS84) of the map (optional, either this or `centerWGS84` must be set | e.g. `{"minLon": 7.1, "minLat": 32.88, "maxLon": 40.18, "maxLat": 84.73}` | 
-| sketchLayerPolygons | name of the technical sketch layer for polygons | e.g. "sketch_polygons" |
-| sketchLayerLinestrings | name of the technical sketch layer for linestrings | e.g. "sketch_linestrings" |
-| sketchLayerPoints | name of the technical sketch layer for points | e.g. "sketch_points" |
+| sketchLayerPolygons | name of the technical polygon layer to store polygon features for all simple sketch layers | e.g. "sketch_polygons" |
+| sketchLayerLinestrings | name of the technical linestring layer to store linestring features for all simple sketch layers | e.g. "sketch_linestrings" |
+| sketchLayerPoints | name of the technical point layer to store point features for all simple sketch layers | e.g. "sketch_points" |
+| customSketchLayerPoints | name of the technical point layer to store point features for all custom sketch layers | e.g. "sketch_custom_points" | 
 | labels | look up table to override property names in dialogs (e.g. feature info) per layer, unlike layer properties in the QGIS project file the overrides can contain special or whitespace characters | e.g. `{"MyLayer":{ "propertyOne": "Property 1!"}}` |
 | rateMeasureLayers | list of layers with ranked properties (measures); ranked properties can receive a (single) rating (1-5) for each feature; for _rateMeasureLayers_ there is a additional _Rate Measures_ button in the editing toolbar; also see [requirements](#qgis-project-requirements) for setting up rating layers  | e.g. `["rankingLayerA", "RankingLayerB"]` |
 | streetSearch | configures the technical street search layer and feature property containing the street name (optional, street search deactivated if not set) | e.g. `{"layerName": "streets_layer", "property": "streetname"}` | 
+|defaultVisibleLayers | list of layers that are visible by default when app is started | e.g `["Topographic Map (OSM)", "My Custom Layer"]` |
+| customSketchLayerDefinitionsFiles | list of files (paths) that contain custom sketch layer definitions, see [Custom Sketch Layers](#custom-sketch-layers) | ["./assets/configuration/customlayer_1.json", "./assets/configuration/customlayer_2.json" ] |
+
+
 
 <details>
   <summary>example project configuration file</summary>
@@ -176,6 +181,10 @@ The directory `starter_project` contains a minmal QGIS project which meets the t
 To activate the street search in the OGITO app a layer with street data must be provided in the QGIS-project. This layer **must be published as WFS** in QGIS Server (read-only). 
 The [Python script for extracting road data](https://github.com/52North/OGITO/tree/main/tools/street_names) from the OpenStreetMap database can be used to generate the road data. See the [documentation](https://github.com/52North/OGITO/tree/main/tools/street_names) of the street.  
 Additionaly street search must be configured in the [project configuration](#project-configuration). The `layerName` value is the name of the layer containing the street data in the QGIS project. The `property` value is the name of the field of the layer that contains the street names.
+
+### Custom and Dynamic Layers
+
+#### Custom Sketch Layers
 
 ## Acknowledgements
 Our thanks goes to Rosa Aguilar Bolivar. She implemented the original OGITO application as part of her PhD thesis at the Faculty of Geo-Information Science and Earth Observation (ITC) of the University of Twente (NL).  

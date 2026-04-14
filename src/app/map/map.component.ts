@@ -4100,7 +4100,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  displayFeatureInfoWMS(evt) {
+  displayFeatureInfoWMS(evt: { coordinate: any; }) {
     /* shows a popup when the user pres click
      * @param evt, the event containing pixel and coordinates
      */
