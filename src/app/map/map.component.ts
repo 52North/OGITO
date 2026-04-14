@@ -1263,7 +1263,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       source: source,
       name: customSketchLayerName,
       zIndex: 102, // check this #TODO
-      visible: true,
+      visible: this.loadedProject.defaultVisibleLayers?.includes(customSketchLayerName) || false,
       // getting default style
       style: (feature) => {
         // this equiv to style: function(feature)
