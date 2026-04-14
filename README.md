@@ -90,7 +90,7 @@ Each project must registered in the project configuration (JSON) file. The locat
 |---|---|---|
 |  name | (visible) name of the project  | e.g "My OGITO Project"  |
 | qgisProjectFilename | .qgs file of the corresponding QGIS project (filename only, no path) | e.g. "myogitoqgisproject.qgs" |
-| thumbnail | url of thumbnail image shown in the project selection | e.g "www.example.com/thumbnail.png"|
+| thumbnail | url of thumbnail image shown in the project selection | e.g "www.example.com/thumbnail.png", optional|
 | minZoom |min. zoom level| e.g. 10|
 | maxZoom | max. zoom level | e.g. 20 |
 | initZoom | initial zoom level | e.g. 15 |
@@ -103,11 +103,12 @@ Each project must registered in the project configuration (JSON) file. The locat
 | sketchLayerLinestrings | name of the technical linestring layer to store linestring features for all simple sketch layers | e.g. "sketch_linestrings" |
 | sketchLayerPoints | name of the technical point layer to store point features for all simple sketch layers | e.g. "sketch_points" |
 | customSketchLayerPoints | name of the technical point layer to store point features for all custom sketch layers | e.g. "sketch_custom_points" | 
-| labels | look up table to override property names in dialogs (e.g. feature info) per layer, unlike layer properties in the QGIS project file the overrides can contain special or whitespace characters | e.g. `{"MyLayer":{ "propertyOne": "Property 1!"}}` |
+| customSketchLayerDefinitionsFiles | list of files (paths) that contain custom sketch layer definitions, see [Custom Sketch Layers](#custom-sketch-layers) | `["./assets/configuration/customlayer_1.json", "./assets/configuration/customlayer_2.json" ]`, optional |
+| labels | look up table to override property names in dialogs (e.g. feature info) per layer, unlike layer properties in the QGIS project file the overrides can contain special or whitespace characters | e.g. `{"MyLayer":{ "propertyOne": "Property 1!"}}`, optional |
 | rateMeasureLayers | list of layers with ranked properties (measures); ranked properties can receive a (single) rating (1-5) for each feature; for _rateMeasureLayers_ there is a additional _Rate Measures_ button in the editing toolbar; also see [requirements](#qgis-project-requirements) for setting up rating layers  | e.g. `["rankingLayerA", "RankingLayerB"]` |
-| streetSearch | configures the technical street search layer and feature property containing the street name (optional, street search deactivated if not set) | e.g. `{"layerName": "streets_layer", "property": "streetname"}` | 
-|defaultVisibleLayers | list of layers that are visible by default when app is started | e.g `["Topographic Map (OSM)", "My Custom Layer"]` |
-| customSketchLayerDefinitionsFiles | list of files (paths) that contain custom sketch layer definitions, see [Custom Sketch Layers](#custom-sketch-layers) | ["./assets/configuration/customlayer_1.json", "./assets/configuration/customlayer_2.json" ] |
+| streetSearch | configures the technical street search layer and feature property containing the street name (optional, street search deactivated if not set) | e.g. `{"layerName": "streets_layer", "property": "streetname"}`, optional | 
+|defaultVisibleLayers | list of layers that are visible by default when app is started | e.g `["Topographic Map (OSM)", "My Custom Layer"]` , optional |
+
 
 
 
