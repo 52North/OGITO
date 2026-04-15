@@ -17,40 +17,10 @@ export class AppConstants{
     'HDGZy2rgVhLdZcRC68EG+xGzgZsn03ot38j8La7gRhAV+ncR7YvFYyQHOI2csEvUnkpEiwc+GnDOGsxguWO+pqQ1jgX+9JR0GR99YLC5tumVNPJGUas' +
     'qaeCTal2b38gdhJQh3/bice9lIpU+LNho3vtzSuof+TGi9Q0fZ9L6EB4q/yldlpit+x3fslpvzPO+TtwAAAABJRU5ErkJggg==';
 
-  // Values for range in slider
-  static range = { min: 0, max: 10};
-  static ranges = {
-     'intensity_auto': {min: 0, max: 10},
-     'intensity_schiene': {min: 0, max: 10},
-     'intensity_kinder': {min: 0, max: 10},
-     'intensity_sonstiges': {min: 0, max: 10},
-     'intensity_arbeit': {min: 0, max: 10},
-     'intensity_bus': {min: 0, max: 10},
-  };
-  static fieldsOrder = {
-    'laute_orte': {
-       'name': 1,
-       'laermquelle_auto': 2,
-       'intensitaet_auto': 3,
-       'laermquelle_schiene': 4,
-       'intensitaet_schiene': 5,
-       'laermquelle_sonstiges': 6,
-       'intensitaet_sonstiges': 7,
-       'laerm_morgens': 8,
-       'laerm_tagsuber': 9,    // noise must be changed to laerm
-       'laerm_abends': 10,
-       'laerm_nachts': 11
-    },
-    'massnahmen': {
-      beschreibung: 1,
-      fahrspurreduzierung: 2,
-      fluesterasphalt: 3,
-      geschwindigkeitsreduzierung: 4,
-      park_ride: 5,
-      schallschutzfenster: 6,
-      sonstiges: 7
-    }
-    };
+  // Values for range in slider in dynamic form
+  static slider_range = { min: 0, max: 10};
+
+
   static ratingPrex = {
     'leise_Orte_obs': 'rank_'
   };
@@ -62,9 +32,8 @@ export class AppConstants{
    *  rankingMethod  choose between 'allFiveStars' or 'oneFiveStars'
    *  rankingLayers array of layers available for ranking
    */
-  static rankingMethod = 'allFiveStars';    // Change to 'oneFiveStars'  =>
-  // static rankingLayers = ['massnahmen_laute', 'massnahmen_leise'];
-  // indicate which layers contain measures
+
+  
 
   static ratingMeasureRankAttributesPostFix = "_rank";
   static fieldOther = {

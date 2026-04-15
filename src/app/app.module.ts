@@ -5,7 +5,7 @@ import { AppComponent } from './app.component';
 import {MapComponent, DialogRatingDialog, DialogRatingMeasureDialog} from './map/map.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HomeComponent } from './home/home.component';
-import {DemoMaterialModule} from './material-module';
+import {MaterialModule} from './material-module';
 import { EditingToolbarComponent } from './editing-toolbar/editing-toolbar.component';
 import { LayerPanelComponent } from './layer-panel/layer-panel.component';
 import { SymbolListComponent } from './symbol-list/symbol-list.component';
@@ -14,9 +14,6 @@ import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {HttpClientModule } from '@angular/common/http';
 import { ProjlistComponent } from './projlist/projlist.component';
 import { DynamicFormComponent } from './dynamic-form/dynamic-form.component';
-import { DialogPopulationExposedComponent } from './dialog-population-exposed/dialog-population-exposed.component';
-import { DialogOrgExposedComponent } from './dialog-org-exposed/dialog-org-exposed.component';
-import { DialogResultExposedComponent } from './dialog-result-exposed/dialog-result-exposed.component';
 import { StreetSearchComponent } from './street-search/street-search.component';
 import { EditReportingComponent } from './edit-reporting/edit-reporting.component';
 import { CustomSketchLayerFormComponent } from './custom-sketch-layer-form/custom-sketch-layer-form.component';
@@ -34,9 +31,6 @@ import { CustomSketchLayerFormComponent } from './custom-sketch-layer-form/custo
     DynamicFormComponent,
     DialogRatingDialog,
     DialogRatingMeasureDialog,
-    DialogPopulationExposedComponent,
-    DialogOrgExposedComponent,
-    DialogResultExposedComponent,
     DialogLayerNameDialog,
     StreetSearchComponent,
     EditReportingComponent,
@@ -46,7 +40,7 @@ import { CustomSketchLayerFormComponent } from './custom-sketch-layer-form/custo
         BrowserModule,
         AppRoutingModule,
         BrowserAnimationsModule,
-        DemoMaterialModule,
+        MaterialModule,
         FormsModule,
         HammerModule,
         HttpClientModule,

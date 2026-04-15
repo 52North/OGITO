@@ -1,6 +1,5 @@
-import { map } from 'rxjs/operators';
 import { ProjectConfiguration } from './../config/project-config';
-import { CustomDialogDescription, CustomDialogService } from './../custom-dialog.service';
+import { CustomDialogService } from './../custom-dialog.service';
 import {
   AfterViewInit,
   Component,
@@ -31,7 +30,6 @@ import { transform, transformExtent, fromLonLat } from 'ol/proj';
 import {getCenter} from 'ol/extent';
 import proj4 from 'proj4';
 import { register } from 'ol/proj/proj4';
-import Projection from 'ol/proj/Projection';
 import VectorSource from 'ol/source/Vector';
 import VectorLayer from 'ol/layer/Vector';
 import ImageLayer from 'ol/layer/Image';
@@ -43,7 +41,6 @@ import { Group as LayerGroup } from 'ol/layer';
 import WFS from 'ol/format/WFS';
 import GML from 'ol/format/GML';
 import WMSCapabilities from 'ol/format/WMSCapabilities.js';
-import Attribution from 'ol/control/Attribution.js';
 import {click} from 'ol/events/condition.js';
 import Overlay from 'ol/Overlay';
 import {
@@ -69,21 +66,16 @@ import ScaleLine from 'ol/control/ScaleLine';
 import {fromCircle} from 'ol/geom/Polygon';
 import {touchOnly} from 'ol/events/condition';
 import Geolocation from 'ol/Geolocation';
-import {OpenLayersService, SketchLayerDescriptor} from '../open-layers.service';
+import {OpenLayersService} from '../open-layers.service';
 import {MapQgsStyleService} from '../map-qgs-style.service';
 import {AuthService} from '../auth.service';
 import {unByKey} from 'ol/Observable';
 import {toStringHDMS} from 'ol/coordinate';
-import {QuestionService} from '../question-service.service';
-import {QuestionBase} from '../question-base';
+import {QuestionService} from '../dynamic-form-questions/question-service.service';
+import {QuestionBase} from '../dynamic-form-questions/question-base';
 import {DynamicFormComponent} from '../dynamic-form/dynamic-form.component';
 import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
 import {UntypedFormControl, UntypedFormGroup, Validators} from '@angular/forms';
-import {DialogPopulationExposedComponent} from '../dialog-population-exposed/dialog-population-exposed.component';
-import {DialogResultExposedComponent} from '../dialog-result-exposed/dialog-result-exposed.component';
-import {request, gql} from 'graphql-request';
-import {QueryDBService} from '../query-db.service';
-import {DialogOrgExposedComponent} from '../dialog-org-exposed/dialog-org-exposed.component';
 import { AppconfigService } from '../config/appconfig.service';
 import { InitializeSketchlayersService } from '../initialize-sketchlayers.service';
 import MultiPoint from 'ol/geom/MultiPoint.js';
@@ -179,7 +171,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
   private streetsVectorSource: VectorSource;
   private geolocationVectorSource: VectorSource;
   private addedFeature: Feature;
-  private loadedProject: ProjectConfiguration;
+  private loadedProject?: ProjectConfiguration;
   private afterSymbolSelectedHandler: (layer: any, feature: any) => void = this.popAttrForm;
   measureTooltipElement: any; // The measure tooltip element.  * @type {HTMLElement}
   measureTooltip: any;
@@ -215,7 +207,6 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     private mapQgsStyleService: MapQgsStyleService,
     private openLayersService: OpenLayersService,
     private questionService: QuestionService,
-    private queryDBService: QueryDBService,
     public auth: AuthService,
     private snackBar: MatSnackBar,
     public dialog: MatDialog,
@@ -274,25 +265,6 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       },
       (error) => alert('Error starting zooming Home' + error)
     );
-    this.subsToFindPopExposed =
-      this.openLayersService.findPopExposed$.subscribe(
-        (data) => {
-          if (data) {
-            this.findPopExposed();
-          }
-        },
-        (error) => alert('Error starting finding exposed people' + error)
-      );
-
-    this.subsToFindOrgExposed =
-      this.openLayersService.findInstitutionsExposed$.subscribe(
-        (data) => {
-          if (data) {
-            this.findOrgExposed();
-          }
-        },
-        (error) => alert('Error starting finding exposed people' + error)
-      );
 
     this.subsToSelectProject = this.openLayersService.qgsProjectUrl$.subscribe(
       (data) => {
@@ -461,727 +433,12 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  openDialogResult(count: number, summary: any): void {
-    // open a dialog to show org by district
-    this.dialog.open(DialogResultExposedComponent, {
-      width: '300px',
-      data: { totalCount: count, summary },
-    });
-  }
-
-  openDialog(layerName: string, feature: any): void {
-    const ratingName = 'Leise Orte';
-    const dialogRef = this.dialog.open(DialogRatingDialog, {
-      width: '300px',
-      data: { layerNameDialog: ratingName, rating: this.rating },
-    });
-    dialogRef.afterClosed().subscribe((result) => {
-      this.rating = result;
-      // unselect the feature in the map
-      this.select.getFeatures().clear();
-      if (result) {
-        // result is different to undefined
-        this.saveRating(layerName, feature);
-      }
-    });
-  }
-
-  findOrgExposed() {
-    /**
-     * First do some checks, then call a function in the queryD service that executes the query by calling the DB API function
-     * to find institutions exposed to certain range of noise
-     */
-    const lowlevel = 0;
-    const highlevel = 0;
-    const layerList = []; // layer constaining the institutions
-    const noiseMapList = [];
-    let selectedLayer: any;
-    let selectedNoiseLayer: any;
-    let noiseGroup: any;
-    let orgGroup: any;
-    // find the layers for institutions
-    console.log('al menos entra?');
-    this.map.getLayers().forEach((layer) => {
-      if (
-        layer.get('name').toLowerCase() ===
-        AppConstants.institutionsGroupName.toLowerCase()
-      ) {
-        orgGroup = layer;
-        return;
-      }
-    });
-    // validating group exists
-    if (!orgGroup) {
-      this.snackBar.open('Institutions maps not found', 'ok', {
-        horizontalPosition: 'center',
-        verticalPosition: 'top',
-        duration: 5000,
-      });
-      return;
-    }
-    if (orgGroup) {
-      orgGroup.getLayers().forEach((lyr) => {
-        layerList.push(lyr.get('name'));
-      });
-    }
-    // find the layers for noise
-    this.map.getLayers().forEach((layer) => {
-      if (layer.get('name') === AppConstants.noiseGroupName) {
-        noiseGroup = layer;
-        return;
-      }
-    });
-
-    if (noiseGroup) {
-      noiseGroup.getLayers().forEach((lyr) => {
-        noiseMapList.push(lyr.get('name'));
-      });
-    }
-    if (!noiseGroup) {
-      this.snackBar.open('Noise maps not found', 'ok', {
-        horizontalPosition: 'center',
-        verticalPosition: 'top',
-        duration: 5000,
-      });
-      return;
-    }
-    const dialogInstitutionsExposed = this.dialog.open(
-      DialogOrgExposedComponent,
-      {
-        width: '400px',
-        data: {
-          layerList,
-          noiseMapList,
-          lowlevel,
-          highlevel,
-          selectedLayer,
-          selectedNoiseLayer,
-        },
-      }
-    );
-
-    dialogInstitutionsExposed.afterClosed().subscribe((data) => {
-      if (data) {
-        this.queryOrgExposedNoise(data) // selectedLayer, lowlevel and highlevel
-          .then((r) => this.processOrgLden(r));
-      }
-    });
-  }
-
-  async queryOrgExposedNoise(data: any) {
-    /**
-     * First do some checks, then call a function in the queryD service that executes the query by calling the DB API function
-     * to find institutions exposed to certain range of noise
-     * @param data.selectedLayer: string --> name of layer
-     * @param data.selectedNoiseLayer: string --> name of the noise map layer
-     * @param data.lowLevel: number --> low level for the range
-     * @param data.highLevel: number --> high level for the range
-     */
-    let layerName: string;
-    // something was not selected
-    if (
-      !data.selectedLayer ||
-      !data.lowLevel ||
-      !data.highLevel ||
-      !data.selectedNoiseLayer
-    ) {
-      this.snackBar.open('Verify parameters', 'ok', {
-        horizontalPosition: 'center',
-        verticalPosition: 'top',
-        duration: 5000,
-      });
-      return;
-    }
-    const lowLevel = +data.lowLevel;
-    const highLevel = +data.highLevel;
-    layerName =
-      data.selectedLayer.toLowerCase() +
-      '_' +
-      data.selectedNoiseLayer.toLowerCase() +
-      '_' +
-      lowLevel +
-      '_' +
-      highLevel;
-    // the high and lower do not fit
-    if (lowLevel > highLevel) {
-      this.snackBar.open(
-        'Lower level should be less than the higher level',
-        'ok',
-        {
-          horizontalPosition: 'center',
-          verticalPosition: 'top',
-          duration: 3000,
-        }
-      );
-      return;
-    }
-    // first get the group
-    const groupSession = this.map
-      .getLayers()
-      .getArray()
-      .find(
-        (x) =>
-          x.get('name').toLowerCase() ===
-          this.loadedProject.nameSessionGroup.toLowerCase()
-      );
-    if (groupSession) {
-      if (
-        groupSession
-          .getLayers()
-          .getArray()
-          .findIndex(
-            (x) => x.get('name').toLowerCase() === layerName.toLowerCase()
-          ) >= 0
-      ) {
-        /* this.snackBar.open('This query was already computed, see the layer panel', 'ok',
-          { horizontalPosition: 'center', verticalPosition: 'top',  duration: 5000});
-        return; */ // --> old version
-        const layer = this.findLayerWithGroup(
-          layerName.toLowerCase(),
-          this.loadedProject.nameSessionGroup.toLowerCase()
-        );
-        this.map.removeLayer(layer);
-      }
-    }
-    // execute the query
-    this.snackBar.open('Berechnung wird ausgefuehrt - bitte warten', 'ok', {
-      horizontalPosition: 'center',
-      verticalPosition: 'top',
-      duration: 3000,
-    });
-    const result = await this.queryDBService.getOrgExposed(data);
-    return { result, layerName };
-  }
-
-  findPopExposed() {
-    const lowlevel = 0;
-    const highlevel = 0;
-    const layerList = []; // ['straat', 'IVU', 'train'];  // temporal later pass the list from the group laemkarten
-    let selectedLayer: any;
-    let noiseGroup: any;
-    // find the layers
-    this.map.getLayers().forEach((layer) => {
-      if (layer.get('name') === AppConstants.noiseGroupName) {
-        noiseGroup = layer;
-        return;
-      }
-    });
-    if (noiseGroup) {
-      noiseGroup.getLayers().forEach((lyr) => {
-        layerList.push(lyr.get('name'));
-      });
-    }
-    const dialogPopExposed = this.dialog.open(
-      DialogPopulationExposedComponent,
-      {
-        width: '400px',
-        data: { layerList, lowlevel, highlevel, selectedLayer },
-      }
-    );
-
-    dialogPopExposed.afterClosed().subscribe((data) => {
-      if (data) {
-        this.queryDBPopNoise(data); // selectedLayer, lowlevel and highlevel
-      }
-    });
-  }
-
   private updateStreetSource(feature: Feature){
     this.streetsVectorSource.clear();
     if(feature){
       this.streetsVectorSource.addFeature(feature);
       this.map.getView().fit(this.streetsVectorSource.getExtent());
     }
-  }
-
-  queryDBPopNoise(data: any) {
-    /**
-     * executes the query calling the DB API function to find people exposure under certain range of noise
-     * @param data.selectedLayer: string --> name of layer
-     * @param data.lowLevel: number --> low level for the range
-     * @param data.highLevel: number --> high level for the range
-     */
-    let query: any;
-    let queryName: string;
-    let layerName: string;
-    const lowLevel = +data.lowLevel;
-    const highLevel = +data.highLevel;
-    layerName =
-      'Pop' +
-      data.selectedLayer.toLowerCase() +
-      '_' +
-      lowLevel +
-      '_' +
-      highLevel;
-    // something was not selected
-    if (!data.selectedLayer || !data.lowLevel || !data.highLevel) {
-      return;
-      this.snackBar.open('Verify parameters', 'ok', {
-        horizontalPosition: 'center',
-        verticalPosition: 'top',
-        duration: 5000,
-      });
-      return;
-    }
-    // the high and lower do not fit
-    if (lowLevel > highLevel) {
-      this.snackBar.open(
-        'Lower level should be less than the higher level',
-        'ok',
-        {
-          horizontalPosition: 'center',
-          verticalPosition: 'top',
-          duration: 3000,
-        }
-      );
-      return;
-    }
-    // first get the group
-    const groupSession = this.map
-      .getLayers()
-      .getArray()
-      .find(
-        (x) =>
-          x.get('name').toLowerCase() ===
-          this.loadedProject.nameSessionGroup.toLowerCase()
-      );
-    if (groupSession) {
-      if (
-        groupSession
-          .getLayers()
-          .getArray()
-          .findIndex(
-            (x) => x.get('name').toLowerCase() === layerName.toLowerCase()
-          ) >= 0
-      ) {
-        // remove from the map to recalculate
-        const layer = this.findLayerWithGroup(
-          layerName.toLowerCase(),
-          this.loadedProject.nameSessionGroup.toLowerCase()
-        );
-        this.map.removeLayer(layer);
-      }
-    }
-
-    switch (data.selectedLayer.toLowerCase()) {
-      case 'strassenlaerm_lden': {
-        queryName = 'populationStrassenlaermLden';
-        query =
-          gql`
-      query {
-      populationStrassenlaermLden (dblow:` +
-          lowLevel +
-          ` dbhigh:` +
-          highLevel +
-          `) {
-       totalCount
-       nodes {
-        id
-        value
-        geom {
-          geojson
-          srid
-        }
-       }
-      }
-    }
-    `;
-        break;
-      }
-      case 'gesamtlaerm_lden': {
-        // Gesamtlarm_LDEN
-        queryName = 'populationGesamtlaermLden';
-        query =
-          gql`
-      query {
-      populationGesamtlaermLden (dblow: ` +
-          lowLevel +
-          `, dbhigh:` +
-          highLevel +
-          `) {
-       totalCount
-       nodes {
-        id
-        geom {
-          geojson
-          }
-          value
-       }
-      }
-    }
-    `;
-
-        break;
-      }
-      case 'industrielaerm_lden': {
-        // Industrielaerm_LDEN
-        queryName = 'populationIndustrielaermLden';
-        query =
-          gql`
-      query {
-      populationIndustrielaermLden (dblow:` +
-          lowLevel +
-          ` dbhigh:` +
-          highLevel +
-          `) {
-       totalCount
-       nodes {
-        id
-        value
-        geom {
-          geojson
-          srid
-        }
-       }
-      }
-    }
-    `;
-        break;
-      }
-      case 'industrielaerm_lnight': {
-        // Industrielaerm_LNight
-        queryName = 'populationIndustrielaermLnight';
-        query =
-          gql`
-      query {
-      populationIndustrielaermLnight (dblow:` +
-          lowLevel +
-          ` dbhigh:` +
-          highLevel +
-          `) {
-       totalCount
-       nodes {
-        id
-        value
-        geom {
-          geojson
-          srid
-        }
-       }
-      }
-    }
-    `;
-        break;
-      }
-      case 'strassenlaerm_lnight': {
-        // Straassenlaerm_LNight
-        queryName = 'populationStrassenlaermLnight';
-        query =
-          gql`
-      query {
-      populationStrassenlaermLnight (dblow:` +
-          lowLevel +
-          `, dbhigh:` +
-          highLevel +
-          `) {
-       totalCount
-       nodes {
-        id
-        value
-        geom {
-          geojson
-          srid
-        }
-       }
-      }
-    }
-    `;
-
-        break;
-      }
-      case 'zuglaerm_bogestra_lden': {
-        // Zuglaerm_Bogestra_LDEN
-        queryName = 'populationZuglaermBogestraLden';
-        query =
-          gql`
-      query {
-      populationZuglaermBogestraLden (dblow: ` +
-          lowLevel +
-          `, dbhigh:` +
-          highLevel +
-          `) {
-       totalCount
-       nodes {
-        id
-        value
-        geom {
-          geojson
-          srid
-        }
-       }
-      }
-    }
-    `;
-        break;
-      }
-      case 'zuglaerm_bogestra_lnight': {
-        // Zuglaerm_Bogestra_LNight
-        queryName = 'populationZuglaermBogestraLnight';
-        query =
-          gql`
-      query {
-      populationZuglaermBogestraLnight (dblow: ` +
-          lowLevel +
-          `, dbhigh:` +
-          highLevel +
-          `) {
-       totalCount
-       nodes {
-        id
-        value
-        geom {
-          geojson
-          srid
-        }
-       }
-      }
-    }
-    `;
-
-        break;
-      }
-      case 'zuglaerm_db_lden': {
-        // populationZuglaermDbLden
-        queryName = 'populationZuglaermDbLden';
-        query =
-          gql`
-      query {
-      populationZuglaermDbLden (dblow: ` +
-          lowLevel +
-          `, dbhigh:` +
-          highLevel +
-          `) {
-       totalCount
-       nodes {
-        id
-        value
-        geom {
-          geojson
-          srid
-        }
-       }
-      }
-    }
-    `;
-        break;
-      }
-    }
-
-    this.snackBar.open('Berechnung wird ausgefuehrt - bitte warten', 'ok', {
-      horizontalPosition: 'center',
-      verticalPosition: 'top',
-      duration: 3000,
-    });
-    console.log('query data pop', query);
-    // http://localhost:4200/graphql--> by proxy diverted to http://130.89.6.97:5000/graphql
-    request('http://localhost:5000/graphql', query)
-      // request('http://localhost:4200/graphql', query)   // debug time
-      .then((result) => {
-        // console.log('data', result[queryName]);
-        this.processPopLden(result[queryName], layerName);
-      });
-  }
-
-  processOrgLden(dataLayerName: any) {
-    /**
-     * @params dataLayerName contains in an array both the data dnd the result.
-     */
-    if (!dataLayerName) {
-      this.snackBar.open(
-        'There was an error while retrieving the data, contact the administrator',
-        'ok',
-        {
-          horizontalPosition: 'center',
-          verticalPosition: 'top',
-          duration: 10000,
-        }
-      );
-      return;
-    }
-    const data = dataLayerName.result;
-    const layerName = dataLayerName.layerName;
-
-    if (data.totalCount === 0) {
-      this.snackBar.open('Keine Institution gefunden.', 'ok', {
-        horizontalPosition: 'center',
-        verticalPosition: 'top',
-        duration: 10000,
-      });
-      return;
-    }
-
-    const orgExposed = data.totalCount;
-    // load the layer - creates a group if needed
-    this.loadJsonPoint(data.nodes, layerName);
-    // getting the schools by district
-    const summary = this.summarizeOrgByDistrict(data.nodes, 'bezirkeName'); // try with the new fieldname
-    this.openDialogResult(data.totalCount, summary);
-  }
-
-  summarizeOrgByDistrict(nodes: any, districName: string) {
-    /**
-     * summarizes by district the org affected by certain noise levels
-     * @param nodes a json array containing the result
-     */
-    let lookup = {}; // this gives unique values
-    let items = nodes;
-    let result = [];
-
-    for (let i = 0; i < items.length; i++) {
-      const name = items[i][districName];
-      if (!(name in lookup)) {
-        lookup[name] = 1;
-        result.push(name);
-      } else {
-        lookup[name] += 1;
-      }
-    }
-    console.log('items and result', items, lookup, result);
-    // make an array to show in the dialog
-    let arr = [];
-    for (const key in lookup) {
-      arr.push({ key, value: lookup[key] });
-    }
-    return arr;
-  }
-
-  processPopLden(data, layerName: string) {
-    // initialize the popExposedStyle
-    if (data.totalCount === 0) {
-      this.snackBar.open('Nichts gefunden.', 'ok', {
-        horizontalPosition: 'center',
-        verticalPosition: 'top',
-        duration: 10000,
-      });
-      return;
-    }
-    // start to process the data, get the sum
-    const popExposed = Math.round(
-      (data.nodes.reduce((sum, current) => sum + Number(current.value), 0) *
-        100) /
-        100
-    );
-    const popShare = Math.round(
-      (popExposed / AppConstants.totalPopBochumArea) * 100
-    );
-    // load the layer - creates a group if needed
-    this.loadJson(data.nodes, layerName);
-    // No need for a dialog, use  instead  a snackbar
-    this.snackBar.open(
-      'Ungefaehre Bevoelkerung betroffen: ' +
-        popExposed +
-        '. Dies entspricht einem Anteil von: ' +
-        popShare +
-        '%. Raeumliche Ergebnisse sind in der Kartenuebersicht zu sehen.',
-      'ok',
-      {
-        horizontalPosition: 'center',
-        verticalPosition: 'bottom',
-        duration: 60000,
-      }
-    ); // 60 seconds
-  }
-
-  loadJson(geoJsonArray: any, layerName: string) {
-    // build features
-    const features = [];
-    geoJsonArray.forEach((f) => {
-      const geojson = JSON.parse(f.geom.geojson);
-      const geoJsonNode = {
-        type: 'Feature',
-        geometry: {
-          type: geojson.type,
-          coordinates: geojson.coordinates,
-          value: f.value,
-        },
-        properties: {
-          value: f.value, // value is used in the style
-          id: f.id,
-        },
-      };
-      features.push(geoJsonNode);
-    });
-    const geojsonObject = {
-      type: 'FeatureCollection',
-      crs: {
-        type: 'name',
-        properties: {
-          name: this.srsID,
-        },
-      },
-      features,
-    };
-    // set the style function using a mqgis service
-    this.popExposedStyle = this.mapQgsStyleService.createStyleExposedPop();
-    const vectorSource = new VectorSource({
-      features: new GeoJSON().readFeatures(geojsonObject),
-    });
-    const vectorLayer = new VectorLayer({
-      source: vectorSource,
-      name: layerName,
-      style: this.popExposedStyle,
-      visible: true, // visible by default
-      opacity: 0.5,
-    });
-    // add the layer to the map
-    const fieldstoShow = [
-      { name: 'value', type: 'QString', typeName: 'varchar', comment: '' },
-    ];
-    this.addSessionLayer(vectorLayer, fieldstoShow, false);
-  }
-
-  loadJsonPoint(geoJsonArray: any, layerName: string) {
-    // build features
-    const features = [];
-    geoJsonArray.forEach((f) => {
-      const geojson = JSON.parse(f.geom.geojson);
-      const geoJsonNode = {
-        type: 'Feature',
-        geometry: {
-          type: geojson.type,
-          coordinates: geojson.coordinates,
-          bezirkeName: f.bezirkeName,
-        },
-        properties: {
-          bezirkeName: f.bezirkeName, // value in this case is not used in the style
-          id: f.id,
-        },
-      };
-      features.push(geoJsonNode);
-    });
-    const geojsonObject = {
-      type: 'FeatureCollection',
-      crs: {
-        type: 'name',
-        properties: {
-          name: this.srsID,
-        },
-      },
-      features,
-    };
-    // set the style function
-    const orgStyle = this.mapQgsStyleService.createStyleExposedOrg(layerName);
-    const vectorSource = new VectorSource({
-      features: new GeoJSON().readFeatures(geojsonObject),
-    });
-    const vectorLayer = new VectorLayer({
-      source: vectorSource,
-      name: layerName,
-      style: orgStyle,
-      visible: true,
-    });
-    // add the layer to the map
-    const fieldstoShow = [
-      { name: 'id', type: 'QString', typeName: 'varchar', comment: '' },
-      {
-        name: 'bezirkeName',
-        type: 'QString',
-        typeName: 'varchar',
-        comment: '',
-      },
-      //   {name: 'bezirkeId', type: 'QString', typeName: 'varchar', comment: ''},
-    ];
-    this.addSessionLayer(vectorLayer, fieldstoShow, false);
   }
 
   createSketchLayer(sketchLayerName: string, showDefaultFields = true, editable = true, source?: VectorSource) {
@@ -1307,9 +564,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       geometryType = 'multi';
       removable = false; // test
     }
-    const legend = this.mapQgsStyleService.getLegendSessionLayer(layerName);
-    console.log('legend in addLayerGroupLayerPanel', legend);
-    const layers = [];
+    const layerItems = [];
     const layerItem = {
       layerName,
       layerTittle: layerName,
@@ -1318,7 +573,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       layerForNewFeatures: newFeats,
       layerForRanking: false,
       layerLegendUrl: null, // que hacer aqui?
-      legendLayer: legend,
+      legendLayer: null,
       onEdit: false,
       onIdentify: false,
       onRanking: false,
@@ -1327,7 +582,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       removable,
       sketch,
     }; // sketch will be used to activate editing mode.. #TODO
-    layers.push(layerItem);
+    layerItems.push(layerItem);
     // group does not exist in the variable
 
     let sessionGroupLayerItem = this.groupsLayers.find(
@@ -1338,7 +593,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         groupName: groupName,
         groupTittle: groupName,
         visible: layer.getVisible(),
-        layers,
+        layers: layerItems,
       };
       // add the group at the beginning
       this.groupsLayers.unshift(sessionGroupLayerItem);
@@ -1485,63 +740,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     this.saveFeatinBuffer(layerName, feature, 'rating');
   }
 
-  startRating() {
-    /**
-     * Allows editing only the attributes of a layer
-     * designed to work well with polygons layers
-     * it uses a selecting interaction, get the element and show a form to update its attributes...
-     */
-    // checking that there is a layer being edited
-    if (!this.curEditingLayer) {
-      // this condition will be never held.. but...
-      this.snackBar.open('Error retrieving current layer on edit', 'ok', {
-        horizontalPosition: 'center',
-        verticalPosition: 'top',
-        duration: 5000,
-      });
-      return;
-    }
-    // checking that layer can be ranked.. this is in AppConfiguration
-    if (!AppConstants.ratingPrex[this.curEditingLayer.layerName]) {
-      this.snackBar.open('Current layer is not available for rating', 'ok', {
-        horizontalPosition: 'center',
-        verticalPosition: 'top',
-        duration: 5000,
-      });
-      return;
-    }
 
-    const lyr = this.findLayer(this.curEditingLayer.layerName);
-    if (lyr === null) {
-      this.snackBar.open('Error retrieving layer', 'ok', {
-        horizontalPosition: 'center',
-        verticalPosition: 'top',
-        duration: 5000,
-      });
-      return;
-    }
-    this.removeInteractions();
-    // add an interaction for selection
-    this.select = new Select({
-      layers: [lyr], // avoid selecting in other layers..
-      condition: click, // check if this work on touch
-      hitTolerance: 7, // check if we should adjust for # types of geometries..
-      style: this.selectStyle,
-    });
-    this.map.addInteraction(this.select);
-    this.select.on('select', (e) => {
-      const selectedFeatures = e.target.getFeatures().getArray();
-      if (selectedFeatures.length <= 0) {
-        this.snackBar.open('No features selected', 'ok', {
-          horizontalPosition: 'center',
-          verticalPosition: 'top',
-          duration: 3000,
-        });
-        return;
-      }
-      this.openDialog(this.curEditingLayer.layerName, selectedFeatures[0]);
-    });
-  }
   updateSelectedProject(projectConfig: ProjectConfiguration) {
     // get the var from the selection List
       this.loadedProject = projectConfig;
@@ -1663,7 +862,6 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         southBoundLatitude,
       ];
     }
-    const nGroups = rootLayer.getElementsByTagName('Layer').length;
     const layerList = xmlText.querySelectorAll('Layer > Layer');
     for (let i = 0; i < rootLayer.getElementsByTagName('Layer').length; i++) {
       const node = layerList[i];
@@ -1677,7 +875,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         for (let j = 0; j < layersinGroup.length; j++) {
           let layerIsWfs = false;
           let layerForRanking = false;
-          let layerForNewFeatures = true;
+
           const layer = layersinGroup.item(j);
           const geometryType = layer.getAttribute('geometryType');
           const layerName =
@@ -1695,14 +893,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
           const fields = [];
           if (wfsLayerList.find((element) => element === layerName)) {
             layerIsWfs = true;
-            // check if more elements can be added
-            if (
-              AppConstants.noAddingFeatsLayers.findIndex(
-                (element) => element === layerName
-              ) > -1
-            ) {
-              layerForNewFeatures = false; // the edit icon will not appear;
-            }
+
             // get the editable attributes
             const attrs = layer.getElementsByTagName('Attributes')[0];
             for (
@@ -1737,8 +928,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
             onIdentify: false,
             onRanking: false,
             visible: (layerName) ? this.loadedProject.defaultVisibleLayers?.includes(layerName) || false : false,
+            layerForNewFeatures: true,
             layerForRanking,
-            layerForNewFeatures,
             fields,
           });
         }
@@ -1765,7 +956,6 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     // update the observable for layerPanel
     this.groupsLayersSubject.next(this.groupsLayers);
     this.questionService.setQuestions(this.groupsLayers);
-    this.mapQgsStyleService.createLegendSessionLayers();
   }
 
   updateMap(qgsfile: string) {
@@ -2317,7 +1507,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     return editingstyle;
   }
 
-  imageCircle(radius) {
+  imageCircle(radius: number){
     return new CircleStyle({
       stroke: new Stroke({
         color: 'orange',
@@ -2487,19 +1677,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       alert('No layer selected to edit');
       return;
     }
-    // the layer is not available for addingnewFeatures
-    if (
-      AppConstants.noAddingFeatsLayers.findIndex(
-        (x) => x.toLowerCase() === this.curEditingLayer.layerName.toLowerCase()
-      ) >= 0
-    ) {
-      this.snackBar.open('No more elements can be added to this layer', 'ok', {
-        horizontalPosition: 'center',
-        verticalPosition: 'top',
-        duration: 3000,
-      });
-      return;
-    }
+
+
     const self = this;
     const tsource = this.curEditingLayer.source;
     let type: any;
@@ -3763,28 +2942,6 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
     return tlayer;
   }
 
-  findLayerWithGroup(layerName: string, groupName: string) {
-    /**
-     * finds a layer in the map and return its source and so on.
-     * @param layerName the name of the layer
-     * @parma groupName the name of the group parent of the layer
-     */
-    let tlayer: any = null;
-    this.map.getLayers().forEach((layer) => {
-      if (groupName.toLowerCase() === layer.get('name').toLowerCase()) {
-        layer.getLayers().forEach((lyrinGroup) => {
-          if (
-            layerName.toLowerCase() === lyrinGroup.get('name').toLowerCase()
-          ) {
-            tlayer = lyrinGroup;
-          }
-        });
-        return;
-      }
-    });
-    return tlayer;
-  }
-
   findLayer(layerName: string) {
     /**
      * finds a layer in the map and return its source and so on.
@@ -4520,6 +3677,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       console.log('Error removing interactions', e);
     }
   }
+
   findGeometryType(layerName) {
     /** Finds the geometry type of the layerName by looking in the dictionary filled when parsing the QGS project
      * @oaram layerName: the name of the layer to look for the geometry type

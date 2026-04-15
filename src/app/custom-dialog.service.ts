@@ -53,7 +53,7 @@ export class CustomDialogService {
    * @param layerName
    * @returns
    */
-  public getCustomHandlerForLayer(layerName: string, isSketchLayer: boolean = false): CustomDialogDescription {
+  public getCustomHandlerForLayer(layerName: string, isSketchLayer: boolean = false): CustomDialogDescription | null {
       //handle custom sketch layers
       if(isSketchLayer){
         const isCustomSketchLayer = this.customLayerService.isCustomSketchLayer(layerName); //check if custom layer definition is available

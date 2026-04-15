@@ -33,10 +33,6 @@ export class OpenLayersService {
   zoomHome$ = this.zoomHomeSource.asObservable();
   private qgsProjectUrlSource = new Subject<ProjectConfiguration>();
   qgsProjectUrl$ = this.qgsProjectUrlSource.asObservable();
-  private findPopExposedSource = new Subject<any>();  // Population exposed to certain level of noise
-  findPopExposed$ = this.findPopExposedSource.asObservable();
-  private findInstitutionsExposedSource = new Subject<any>();  // Population exposed to certain level of noise
-  findInstitutionsExposed$ = this.findInstitutionsExposedSource.asObservable();
   private addSketchLayerSource = new Subject<SketchLayerDescriptor>();
   addSketchLayer$ = this.addSketchLayerSource.asObservable();
   private showStreetSearchSource = new Subject<boolean>();
@@ -162,20 +158,6 @@ export class OpenLayersService {
      * @param selectedStreet: selected street feature
      */
     this.streetSelectedSource.next(selectedStreet);
-  }
-
-  updateFindPopExposed(data: any) {
-    /** Updates the observable popExposed to the next value
-     * @param data: the result of the query returned by the API
-     */
-    this.findPopExposedSource.next(data);
-  }
-
-  updateFindInstitutionsExposed(data: any) {
-    /** Updates the observable popExposed to the next value
-     * @param data: the result of the query returned by the API
-     */
-    this.findInstitutionsExposedSource.next(data);
   }
 
   raiseSymbolPanelClosed(isAborted: boolean){

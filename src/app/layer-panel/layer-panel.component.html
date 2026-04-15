@@ -28,7 +28,8 @@
 
         <mat-accordion>
           <ng-container  *ngFor= "let layer of group.layers" >
-            <mat-expansion-panel>
+            <!-- enable expansion panel only if layer has legend -->
+            <mat-expansion-panel [hideToggle] ="!layer.legendLayer || layer.legendLayer.length === 0" [disabled]="!layer.legendLayer || layer.legendLayer.length === 0">
               <mat-expansion-panel-header>
                 <mat-panel-title>
                   <mat-selection-list>
@@ -47,10 +48,6 @@
                             <mat-icon>edit</mat-icon>
                           </button>
                            <span class="spacer"></span>
-                          <!--<button *ngIf="layer.layerForRanking"  mat-icon-button (click)="onRankingLayerClick($event, layer, group.groupName)"
-                                  [ngClass]="layer.onRanking ? 'activeAction': 'normal'">
-                            <mat-icon  svgIcon="ratingActionPlan"></mat-icon>
-                          </button> -->
 
                          <!-- the identify button to the layer panel needed for WMS layers -->
                          <div *ngIf="isLayerQueryable(layer.layerName)">
@@ -73,16 +70,18 @@
                 </mat-panel-title>
 
               </mat-expansion-panel-header >
-              <mat-list *ngFor="let icon of layer.legendLayer">
-                <div>
-                  <div class="iconTitle">
-                    <img class = iconLegend [src] = icon.iconSrc alt="legend">
+              <ng-container *ngIf="layer.legendLayer && layer.legendLayer.length > 0">
+                <mat-list *ngFor="let icon of layer.legendLayer">
+                  <div>
+                    <div class="iconTitle">
+                      <img class = iconLegend [src] = icon.iconSrc alt="legend">
+                    </div>
+                    <div class="iconTitle">
+                      {{icon.title }}   <!-- #removed to show dB(A) | titlecase -->
+                    </div>
                   </div>
-                  <div class="iconTitle">
-                    {{icon.title }}   <!-- #removed to show dB(A) | titlecase -->
-                  </div>
-                </div>
-              </mat-list>
+                </mat-list>
+              </ng-container>
             </mat-expansion-panel>
           </ng-container>
         </mat-accordion>

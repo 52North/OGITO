@@ -1,8 +1,8 @@
 import {AfterViewInit, Component, EventEmitter, Input, OnInit, Output, NgModule, ElementRef, ViewChild} from '@angular/core';
 import {Observable, of, of as observableOf, Subject, Subscription} from 'rxjs';
-import {QuestionService} from '../question-service.service';
+import {QuestionService} from '../dynamic-form-questions/question-service.service';
 import {UntypedFormGroup, Validators, FormsModule} from '@angular/forms';
-import { QuestionBase } from '../question-base';
+import { QuestionBase } from '../dynamic-form-questions/question-base';
 import {MatLegacySnackBar as MatSnackBar} from '@angular/material/legacy-snack-bar';
 import Keyboard from 'simple-keyboard';
 import { LabelLutService } from '../config/label-lut.service';

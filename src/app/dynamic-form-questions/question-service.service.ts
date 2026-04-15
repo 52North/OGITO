@@ -1,15 +1,14 @@
 import { DateTimeQuestion } from './datetime-question';
 import { Injectable } from '@angular/core';
-import {AppConstants} from './app-constants';
-import { DropdownQuestion } from './dropdown-question';
+import {AppConstants} from '../app-constants';
 import { QuestionBase } from './question-base';
 import { TextboxQuestion } from './textbox-question';
 import { CheckBoxQuestion } from './check-box-question';
 import { SliderQuestion } from './slider-question';
 import {of, Subject} from 'rxjs';
 import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
-import { ProjectConfiguration } from './config/project-config';
-import { OpenLayersService } from './open-layers.service';
+import { ProjectConfiguration } from '../config/project-config';
+import { OpenLayersService } from '../open-layers.service';
 
 @Injectable({
   providedIn: 'root'
@@ -37,6 +36,7 @@ export class QuestionService {
   updateShowEditForm(showForm: boolean){
     this.showEditFormSource.next(showForm);
   }
+
  setLayerQuestions(layerName: string, qgisFieldList: any) {
     /**
      * forms the question from a list of fields;
@@ -48,12 +48,7 @@ export class QuestionService {
 
   let order = 0;
   let layerQuestions: QuestionBase<any>[]=[];
-  let question = null;
-  let orderInLayer = false;
-  // check if there is an specific order
-  if (typeof(AppConstants.fieldsOrder[layerName.toLowerCase()]) !== 'undefined'){
-     orderInLayer = true;
-   }
+  let question: QuestionBase<any> | null = null;
 
   qgisFieldList.forEach(attr => {
    if (!(attr.name === 'id' || attr.name === 'fid' || attr.name === 'picfilepath' || attr.name === 'linkqrfile')){
@@ -67,7 +62,7 @@ export class QuestionService {
           label,
           value: 'true',
           required,
-          order: orderInLayer ? this.findOrder(layerName, attr.name) : order,
+          order:  order,
           type: 'checkbox'
         });
         break;
@@ -78,7 +73,7 @@ export class QuestionService {
           label,
           value: '',
           required,
-          order: orderInLayer ? this.findOrder(layerName, attr.name) : order,
+          order: order,
         });
         break;
       }
@@ -88,20 +83,19 @@ export class QuestionService {
           label,
           value: 0,
           required,
-          order: orderInLayer ? this.findOrder(layerName, attr.name) : order,
-          min: this.findMinRange(attr.name),
-          max: this.findMaxRange(attr.name),
+          order: order,
+          min: AppConstants.slider_range.min,
+          max: AppConstants.slider_range.max,
         });
         break;
       }
       case 'double': {
-        // Noise intensity must be int in the table
         question = new TextboxQuestion ({
           key: attr.name,
           label,
           value: '',
           required,
-          order: orderInLayer ? this.findOrder(layerName, attr.name) : order,
+          order: order,
         });
         break;
       }
@@ -112,12 +106,16 @@ export class QuestionService {
           label,
           value: new Date(),
           required,
-          order: orderInLayer ? this.findOrder(layerName, attr.name) : order,
+          order: order,
         });
         break;
       }
     }
- layerQuestions.push(question);
+
+    if (question) {
+      layerQuestions.push(question);
+    }
+
    }
   });
   return layerQuestions;
@@ -130,12 +128,8 @@ export class QuestionService {
     // action plan layer treated in a different way
     let order = 0;
     let layerQuestions: QuestionBase<any>[]=[];
-    let question = null;
-    let orderInLayer = false;
-    // check if there is an specific order
-    if (typeof(AppConstants.fieldsOrder[layerName]) !== 'undefined'){
-      orderInLayer = true;
-    }
+    let question: QuestionBase<any> | null = null;
+
     qgisFieldList.forEach(attr => {
       if (!(attr.name === 'id' || attr.name === 'fid' || attr.name === 'picfilepath' || attr.name === 'linkqrfile')){
         order = order + 1;
@@ -146,8 +140,8 @@ export class QuestionService {
             question = new CheckBoxQuestion({
               key: attr.name,
               label,
-              required:false,
-              order: orderInLayer ? this.findOrder(layerName, attr.name) : order,
+              required: false,
+              order: order,
               type: 'checkbox'
             });
             layerQuestions.push(question);
@@ -158,7 +152,7 @@ export class QuestionService {
             label,
             value: '',  // if checked then it will get the true value
             required: false,
-            order: orderInLayer ? this.findOrder(layerName, attr.name) : order,
+            order: order,
           });
           layerQuestions.push(question);
         }
@@ -166,32 +160,8 @@ export class QuestionService {
     });
     return layerQuestions;
   }
-  findOrder(layerName: string, attrName: any){
-    layerName = layerName.toLowerCase(); // ensure lower case
-    let order = 0;
-    if (typeof (AppConstants.fieldsOrder[layerName]) !== 'undefined'){
-     if (typeof(AppConstants.fieldsOrder[layerName][attrName]) !== 'undefined'){
-         return(AppConstants.fieldsOrder[layerName][attrName]);
-       }
-    }
-    return null;
-  }
 
-  findMinRange(attrName: any){
-  let min = AppConstants.range.min;
-  if (typeof (AppConstants.ranges[attrName]) !== 'undefined') {
-      min = AppConstants.ranges[attrName].min;
-  }
-  return min;
-  }
-
-  findMaxRange(attrName: any){
-    let max = AppConstants.range.max;
-    if (typeof (AppConstants.ranges[attrName])!== 'undefined') {
-      max = AppConstants.ranges[attrName].max;
-    }
-    return max;
-  }
+ 
 
   setSketchQuestions(sketchName: string, fields: any) {
     // set the questions for a new Sketch layer
