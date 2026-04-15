@@ -3736,64 +3736,6 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 }
 
-@Component({
-  selector: 'dialog-rating-dialog',
-  templateUrl: './dialog-rating-dialog.html',
-  styleUrls: ['./map.component.scss'],
-})
-export class DialogRatingDialog {
-  selectedRating = 0;
-  stars = [
-    {
-      id: 1,
-      icon: 'sentiment_very_satisfied', // 'radio_button_unchecked', // 'star'
-      class: 'star-gray star-hover star',
-    },
-    {
-      id: 2,
-      icon: 'sentiment_very_satisfied', // 'radio_button_unchecked',   // 'favorite'
-      class: 'star-gray star-hover star',
-    },
-    {
-      id: 3,
-      icon: 'sentiment_very_satisfied', // 'radio_button_unchecked',
-      class: 'star-gray star-hover star',
-    },
-    {
-      id: 4,
-      icon: 'sentiment_very_satisfied', // 'radio_button_unchecked',
-      class: 'star-gray star-hover star',
-    },
-    {
-      id: 5,
-      icon: 'sentiment_very_satisfied', // 'radio_button_unchecked',
-      class: 'star-gray star-hover star',
-    },
-  ];
-
-  constructor(
-    public dialogRef: MatDialogRef<DialogRatingDialog>,
-    @Inject(MAT_DIALOG_DATA) public data: DialogData
-  ) {}
-
-  selectStar(value): void {
-    // prevent multiple selection
-    if (this.selectedRating === 0) {
-      this.stars.filter((star) => {
-        if (star.id <= value) {
-          star.class = 'star-gold star';
-        } else {
-          star.class = 'star-gray star';
-        }
-        return star;
-      });
-    }
-    this.data.rating = value;
-  }
-  onNoClick(): void {
-    this.dialogRef.close();
-  }
-}
 
 /**
  * Definition of dialogRatingMeasureDialog

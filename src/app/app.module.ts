@@ -2,7 +2,7 @@ import {BrowserModule, HammerModule} from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import {MapComponent, DialogRatingDialog, DialogRatingMeasureDialog} from './map/map.component';
+import {MapComponent, DialogRatingMeasureDialog} from './map/map.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HomeComponent } from './home/home.component';
 import {MaterialModule} from './material-module';
@@ -29,7 +29,6 @@ import { CustomSketchLayerFormComponent } from './custom-sketch-layer-form/custo
     ToolbarComponent,
     ProjlistComponent,
     DynamicFormComponent,
-    DialogRatingDialog,
     DialogRatingMeasureDialog,
     DialogLayerNameDialog,
     StreetSearchComponent,
