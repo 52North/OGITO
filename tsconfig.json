@@ -1,4 +1,5 @@
 {
+  "strict": false,
   "compileOnSave": false,
   "compilerOptions": {
     "baseUrl": "./",
@@ -15,7 +16,8 @@
       "es2018",
       "dom"
     ],
-    "useDefineForClassFields": false
+    "useDefineForClassFields": false,
+    "skipLibCheck": true
   },
   "angularCompilerOptions": {
     "fullTemplateTypeCheck": true,

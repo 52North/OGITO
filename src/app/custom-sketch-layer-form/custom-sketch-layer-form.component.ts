@@ -3,8 +3,10 @@ import { FormBuilder, FormGroup, FormControl, Validators } from '@angular/forms'
 import { FieldConfig } from '../config/custom-sketch-layer-config';
 import { CustomDialogService, EditedFeatureCustomSketchLayer } from '../custom-dialog.service';
 import { Subscription } from 'rxjs';
-import { VectorLayer } from 'ol/layer/Vector';
-import { Feature } from 'ol/Feature';
+import  VectorLayer  from 'ol/layer/Vector';
+import Feature  from 'ol/Feature';
+import VectorSource from 'ol/source/Vector';
+import { EditLayer } from '../map/map.component';
 
 @Component({
   selector: 'app-custom-sketch-layer-form',
@@ -23,7 +25,7 @@ export class CustomSketchLayerFormComponent{
   public category = '';
   
   private feature: Feature;
-  private layer: VectorLayer;
+  private layer: EditLayer;
 
   constructor(
     private fb: FormBuilder,
@@ -116,7 +118,7 @@ export class CustomSketchLayerFormComponent{
     }
 
     if (this.layer) {
-      this.customDialogInitializer.raiseCustomDialogClosed(this.layer.layerName, true);
+      this.customDialogInitializer.raiseCustomDialogClosed(this.layerName, true);
     }
     this.resetValues();
   }
@@ -143,7 +145,7 @@ export class CustomSketchLayerFormComponent{
     });
 
     if (this.layer) {
-      this.customDialogInitializer.raiseCustomDialogClosed(this.layer.layerName, false);
+      this.customDialogInitializer.raiseCustomDialogClosed(this.layerName, false);
     }
     this.resetValues();
   }

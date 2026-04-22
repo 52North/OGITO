@@ -8,7 +8,7 @@ import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
 import { ProjectConfiguration } from './config/project-config';
 import { AppconfigService } from './config/appconfig.service';
 import { CustomSketchLayerService } from './config/custom-sketch-layer-service';
-import { Feature } from 'ol/Feature';
+import  Feature, { FeatureLike }  from 'ol/Feature';
 import { CustomLayerDefinition } from './config/custom-sketch-layer-config';
 import { cons } from 'fp-ts/lib/ReadonlyNonEmptyArray';
 
@@ -67,7 +67,7 @@ export class MapQgsStyleService {
     );
   }
 
-  findJsonStyle(feature: Feature, layerName: string): any {
+  findJsonStyle(feature: FeatureLike, layerName: string): any {
     /** Given a feature and the layerName it returns the corresponding style
      * it is used to get the styles for WFS layers in the Qgs project associated
      * @param { feature } the feature for which to find a rendering style
@@ -419,8 +419,9 @@ export class MapQgsStyleService {
   }
 
   private addIconScaler(icon: Icon) {
-    const imgElement = icon.getImage();
-    if(imgElement){
+    const pixelRatio = window.devicePixelRatio || 1;
+    const imgElement = icon.getImage(pixelRatio);
+    if(imgElement && imgElement instanceof HTMLImageElement){
       const handleLoad = () => {
       const originalWidth = imgElement.naturalWidth;
 

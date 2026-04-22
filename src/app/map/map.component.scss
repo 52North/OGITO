@@ -46,25 +46,6 @@
   border-top-color: #ffcc33;
 }
 
-
-/*#info {
-  position: absolute;
-  height: 1px;
-  width: 1px;
-  z-index: 120;
-  border: 2px solid white;
-}
-[data-tooltip]:before {
-  position : absolute;
-  content : attr(data-tooltip);
-  opacity : 0;
-  border-left: 1px solid transparent;
-  border-right: 1px solid transparent;
-  border-top: 1px solid #646464;
-}
-[data-tooltip]:hover:before {
-  opacity : 1;
-}*/
 .hide {
   position: absolute;
   height: 0px;
@@ -72,15 +53,7 @@
   z-index: 100;
   opacity:0;
 }
-/*#progress {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  height: 2px;
-  background: rgba(0, 60, 136, 0.4);
-  width: 0;
-  transition: width 250ms;
-}*/
+
 .cdkDrag {
   display: inline-block;
 }
@@ -126,6 +99,24 @@
   content: "✖";
   font-size: x-large;
   color: black;
+}
+
+.ol-control {
+  background-color: #ad1457 !important;
+  padding: 2px !important;
+}
+
+.ol-control button {
+  background-color: #e35183 !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 2px !important;
+}
+
+.ol-control button:hover,
+.ol-control button:focus {
+  background-color: #ad1457 !important;
+  border-color: #e35183 !important;
 }
 
 ::ng-deep th {

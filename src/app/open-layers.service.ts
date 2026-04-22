@@ -1,4 +1,4 @@
-import { Feature } from 'ol/Feature';
+import  Feature  from 'ol/Feature';
 import { Injectable } from '@angular/core';
 import {Subject} from 'rxjs';
 import { ProjectConfiguration } from './config/project-config';

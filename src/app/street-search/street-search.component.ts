@@ -7,6 +7,7 @@ import { Component, OnInit, OnDestroy, ViewChild, ChangeDetectorRef, Input } fro
 import {
   and as AndFilter,
   equalTo as EqualToFilter,
+  like,
   like as LikeFilter,
 } from 'ol/format/filter';
 import VectorSource from 'ol/source/Vector'
@@ -17,6 +18,7 @@ import { HttpClient } from '@angular/common/http';
 import { MatLegacySelect as MatSelect } from '@angular/material/legacy-select';
 import { ProjectConfiguration } from '../config/project-config';
 import { AppconfigService } from '../config/appconfig.service';
+import IsLike from 'ol/format/filter/IsLike';
 
 @Component({
   selector: 'app-street-search',
@@ -138,19 +140,20 @@ export class StreetSearchComponent implements OnInit, OnDestroy {
   private createGetFeatureRequest() : any {
     const featureRequest = new WFS().writeGetFeature({
       srsName: this.srs,
-      //featureNS: 'http://openstreemap.org',
-      //featurePrefix: 'osm',
+      featureNS: AppConstants.wfs_feature_namespace,
+      featurePrefix: AppConstants.wfs_feature_prefix,
       featureTypes: [this.layername],
       outputFormat: 'text/xml',
       filter: this.createFilterExpression()
+
     });
 
     return featureRequest;
   }
 
-  private createFilterExpression() : LikeFilter {
+  private createFilterExpression() : IsLike {
     const pattern = "*" + this.userInput.trim() + "*"; //add wildcards and trim
-    const filter = new LikeFilter(this.featureproperty, pattern, "*" /*wildcard*/ , '.' /*single char*/,  '!' /*escape char*/, false /*match case*/)
+    const filter = like(this.featureproperty, pattern, "*" /*wildcard*/ , '.' /*single char*/,  '!' /*escape char*/, false /*match case*/)
 
     return filter;
   }

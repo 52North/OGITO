@@ -1,11 +1,13 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import {Subject, Subscription} from 'rxjs';
-import { VectorLayer } from 'ol/layer/Vector';
-import { Feature } from 'ol/Feature';
+import  VectorLayer from 'ol/layer/Vector';
+import Feature from 'ol/Feature';
 import { OpenLayersService } from './open-layers.service';
 import { ProjectConfiguration } from './config/project-config';
 import { CustomSketchLayerService } from './config/custom-sketch-layer-service';
 import { CustomLayerDefinition } from './config/custom-sketch-layer-config';
+import VectorSource from 'ol/source/Vector';
+import { EditLayer } from './map/map.component';
 
 @Injectable({
   providedIn: 'root'
@@ -40,7 +42,7 @@ export class CustomDialogService {
     {
       layerName: "Reporting",
       header: "Category",
-      handler: (layer: VectorLayer, feature: Feature) => {
+      handler: (layer: EditLayer, feature: Feature) => {
         console.log("request custom edit dialog for Reporting")
         this.startEditNewMeldigen({layer, feature})
      }
@@ -62,7 +64,7 @@ export class CustomDialogService {
             return {
               layerName: layerName,
               header: layerDefinition.header ?? "Category",
-              handler: (layer: VectorLayer, feature: Feature) => {
+              handler: (layer: EditLayer, feature: Feature) => {
                 console.log("request custom edit dialog for custom sketch layer " + layerName)
                 this.startEditCustomSketchLayer({layer, feature, layerDefinition})
               }
@@ -95,7 +97,7 @@ export class CustomDialogService {
 }
 
 export interface EditedFeature{
-  layer: VectorLayer
+  layer: EditLayer
   feature: Feature
 }
 
@@ -106,7 +108,7 @@ export interface EditedFeatureCustomSketchLayer extends EditedFeature{
 export interface CustomDialogDescription{
   layerName: string,
   header: string,
-  handler: (layer: VectorLayer, feature: Feature) => void
+  handler: (layer: EditLayer, feature: Feature) => void
 }
 
 export interface DialogClosedEvent{
