@@ -27,6 +27,7 @@
     "hammerjs": "^2.0.8",
     "io-ts": "^2.2.20",
     "ol": "^10.9.0",
+    "@nieuwlandgeo/sldreader": "^1.0.0",
     "proj4": "^2.6.1",
     "rxjs": "~6.5.4",
     "simple-keyboard": "^3.2.63",

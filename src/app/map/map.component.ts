@@ -90,6 +90,7 @@ import { CustomSketchLayerService } from "../config/custom-sketch-layer-service"
 import { CustomLayerDefinition } from "../config/custom-sketch-layer-config";
 import { Type } from "ol/geom/Geometry";
 import { createRegularPolygon, DrawEvent } from "ol/interaction/Draw";
+import { string } from "io-ts";
 
 // To use rating dialogs
 export interface DialogData {
@@ -485,29 +486,17 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 					this.loadedProject,
 					sketchLayerName,
 				);
+		const styleConfig = this.mapQgsStyleService.getLayerStyleConfig(sketchLayerName);
 		const newVector = new VectorLayer({
 			source: sketchSource,
 			zIndex: 101, // check this #TODO
 			visible: defaultVisible,
 			// getting default style
-			style: (feature) => {
-				// this equiv to style: function(feature)
-				let layerStyle = self.mapQgsStyleService.findJsonStyle(
-					feature,
-					sketchLayerName,
-				);
-				if (!layerStyle) {
-					layerStyle = self.mapQgsStyleService.findDefaultStyleProvisional(
-						feature.getGeometry().getType(),
-						sketchLayerName,
-					);
-				}
-				return layerStyle;
-			},
+			style: styleConfig.styleFunc
 		});
 		newVector.set("name", sketchLayerName);
-		// add the layer to the map
 
+		// add the layer to the map
 		var fieldsToShow;
 		if (showDefaultFields) {
 			fieldsToShow = [
@@ -544,6 +533,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 	) {
 		this.mapQgsStyleService.setSketchStyle(customSketchLayerName);
 		const self = this;
+		const styleConfig = this.mapQgsStyleService.getLayerStyleConfig(customSketchLayerName);
 		const newVector = new VectorLayer({
 			source: source,
 			zIndex: 102, // check this #TODO
@@ -551,20 +541,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 				this.loadedProject.defaultVisibleLayers?.includes(customSketchLayerName) ||
 				false,
 			// getting default style
-			style: (feature) => {
-				// this equiv to style: function(feature)
-				let layerStyle = self.mapQgsStyleService.findJsonStyle(
-					feature,
-					customSketchLayerName,
-				);
-				if (!layerStyle) {
-					layerStyle = self.mapQgsStyleService.findDefaultStyleProvisional(
-						feature.getGeometry().getType(),
-						customSketchLayerName,
-					);
-				}
-				return layerStyle;
-			},
+			style: styleConfig.styleFunc
 		});
 		newVector.set("name", customSketchLayerName);
 
@@ -755,17 +732,6 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 		}
 	}
 
-	saveRating(layerName: string, feature: any) {
-		// update the database
-		const attrRanking =
-			AppConstants.ratingPrex[layerName] + this.rating.toString();
-		const newRating = feature.get(attrRanking) + 1; // the number of times that people ranked with 3, 4, 5 starts;
-		// assign attributes
-		feature.set(attrRanking, newRating);
-		// add the changes to the edit buffer
-		this.saveFeatinBuffer(this.curEditingLayer.layerName, feature, "rating");
-	}
-
 	saveRatingMeasures(layerName: string, feature: Feature, rating: any) {
 		/**
 		 * saves in the DB the rating given to a measure.
@@ -820,7 +786,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 		const xmlParser = new DOMParser();
 		const xmlText = xmlParser.parseFromString(gqsProjectinfo, "text/xml");
 		const WFSLayers = xmlText.getElementsByTagName("WFSLayers")[0];
-		const wfsLayerList = [];
+		const wfsLayerList: string[] = [];
 		if (WFSLayers !== undefined) {
 			for (let k = 0; k < WFSLayers.getElementsByTagName("WFSLayer").length; k++) {
 				const layerName =
@@ -2049,11 +2015,12 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 		 * Updates the observable that allows to show/hide the symbolPanel
 		 */
 		if (!optHeader) {
-			this.openLayersService.updateShowSymbolPanel({ visible: visible });
+			this.openLayersService.updateShowSymbolPanel({ visible: visible, selectable: true });
 		} else {
 			this.openLayersService.updateShowSymbolPanel({
 				visible: visible,
 				optHeader: optHeader,
+				selectable: true
 			});
 		}
 		this.symbolPanelOpen = visible;
@@ -2331,27 +2298,18 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 							}
 						}
 					});
+					
 					const wfsVectorLayer = new VectorLayer({
 						source: vectorSource,
 						visible: layerName
 							? this.loadedProject.defaultVisibleLayers?.includes(layerName)
 							: false, // only visible if it is in the visible layers list of the project
 						zIndex: nLayers - i, // highest zIndex for the first layer and so on.
-						style(feature) {
-							// this equiv to style: function(feature)
-							// get style in a json style
-							let layerStyle = self.mapQgsStyleService.findJsonStyle(
-								feature,
-								layerName,
-							);
-							if (!layerStyle) {
-								layerStyle = self.mapQgsStyleService.findDefaultStyleProvisional(
-									feature.getGeometry().getType(),
-									layerName,
-								);
-							}
-							return layerStyle;
-						},
+						style: (feature, resolution) => {
+							//wrap style func from style service because service loads the styles asynchronously and the style func needs to be updated when the styles are loaded
+							const styleConfig = this.mapQgsStyleService.getLayerStyleConfig(layerName);
+							return styleConfig.styleFunc(feature as Feature, resolution);
+						}
 					});
 					wfsVectorLayer.set("name", layerName);
 					tnodes[layerName] = {

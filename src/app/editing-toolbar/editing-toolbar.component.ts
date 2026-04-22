@@ -110,7 +110,6 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
   this.subsToGeomTypeEditing = this.openLayersService.layerEditing$.subscribe(
     (data: any) => {
       this.updateLayerTypeRanking(data.layerName);
-      this.updateLayerTypeRating(data.layerName);
       this.updateLayerTypeEdit(data.layerGeom);
 
       if(data.layerGeom.toLowerCase() !== 'multi'){ //auto enable draw shape mode for single geom layers
@@ -152,14 +151,6 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
       this.layerTypeRateMeasures$ = true;
     }
   }
-
-  updateLayerTypeRating(layerName: string) {
-    this.layerTypeRate$ = false;
-    if (Object.keys(AppConstants.ratingPrex).findIndex(x => x.toLowerCase() === layerName.toLowerCase()) > -1) {
-      this.layerTypeRate$ = true;
-    }
-  }
-
 
   closeEditingToolbar(){
     this.isVisible$ = observableOf(false);
@@ -219,9 +210,9 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
      * Updates the observable that allows to show/hide the symbolPanel
      */
     if(optHeader){
-      this.openLayersService.updateShowSymbolPanel({visible: visible});
+      this.openLayersService.updateShowSymbolPanel({visible: visible, selectable: false});
     }else{
-      this.openLayersService.updateShowSymbolPanel({visible: visible, optHeader: optHeader});
+      this.openLayersService.updateShowSymbolPanel({visible: visible, optHeader: optHeader, selectable: false});
     }
 
     if(canceled){

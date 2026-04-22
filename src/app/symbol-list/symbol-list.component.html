@@ -1,27 +1,29 @@
-<div class ="example-list"   *ngIf="displaySymbolList$ | async"
-     cdkDrag
-     cdkDragBoundary=".app-content" >
-<mat-card class="symbol-list"  #symListCard>
-  <mat-card-title-group>
-    <mat-card-title class="panelTitle" *ngIf= "getHeader()" >{{getHeader()}}</mat-card-title>
-    <mat-card-title class="panelTitle" *ngIf= "!getHeader()">Symbols</mat-card-title>
-    <button mat-flat-button (click)="showSymbolList({visible: false}, true)" >
-      <mat-icon class="matCloseWrapper" matTooltip="close">close</mat-icon>
-    </button>
+<div class="example-list" *ngIf="displaySymbolList$ | async" cdkDrag cdkDragBoundary=".app-content">
+  <mat-card class="symbol-list" #symListCard>
+    
+    <mat-card-title-group>
+      <mat-card-title class="panelTitle">{{ getHeader() || 'Symbols' }}</mat-card-title>
+      <button mat-flat-button (click)="showSymbolList({visible: false, selectable: false}, true)">
+        <mat-icon class="matCloseWrapper" matTooltip="close">close</mat-icon>
+      </button>
+    </mat-card-title-group>
 
-  </mat-card-title-group>
+    <mat-divider class="toolbarDivider"></mat-divider>
+    
+    <span *ngIf="symbolsLength === 0"> ..creating List of Symbols</span>
+    <span *ngIf="variable">{{variable}}</span>
+    
+    <div #symbol class="symbol" [class.is-selectable]="isSelectable" *ngFor="let symbol of symbols; let i = index">
+       
+       <div [id]="'+' + i" 
+            (click)="updateActivesymbol(symbol, i)"
+            [ngClass]="isSelectable ? (symbolActiveKey === symbol.title ? 'active' : 'normal') : 'read-only'">
+        
+        <img [src]="symbol.iconSrc" class="canvasSymbol" [alt]="symbol.title" />
+        <span class="symbolLabel"> {{symbol.title}} </span>
+        
+       </div>
+    </div>
 
-  <mat-divider class = "toolbarDivider"></mat-divider>
-  <span *ngIf= "symbolsLength == 0"> ..creating List of Symbols</span>
-  <span>{{variable}}</span>
-  <div #symbol class="symbol" *ngFor="let symbol of symbols$ | keyvalue">
-     <div id = "+{{symbol.key}}"  (click)="updateActivesymbol(symbol)"
-      [ngClass]="symbolActiveKey == symbol.key? 'active': 'normal'" >
-      <canvas id ={{symbol.key}} class="canvasSymbol" #cmp></canvas>
-      <span class="symbolLabel"> {{symbol.value.label}} </span>
-     </div>
-  </div>
-
-</mat-card>
+  </mat-card>
 </div>
-

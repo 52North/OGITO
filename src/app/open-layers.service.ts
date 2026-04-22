@@ -2,6 +2,7 @@ import  Feature  from 'ol/Feature';
 import { Injectable } from '@angular/core';
 import {Subject} from 'rxjs';
 import { ProjectConfiguration } from './config/project-config';
+import { LegendSymbol } from './map-qgs-style.service';
 
 @Injectable({
   providedIn: 'root'
@@ -171,7 +172,7 @@ export class OpenLayersService {
 }
 
 export interface SelectedSymbol{
-    symbol: any,
+    symbol: LegendSymbol,
     selectedValue: {
       property: string,
       value: string
@@ -180,7 +181,8 @@ export interface SelectedSymbol{
 
 export interface SymbolListVisibility{
   visible: boolean,
-  optHeader?: string
+  optHeader?: string,
+  selectable: boolean
 }
 
 export interface SketchLayerDescriptor{
