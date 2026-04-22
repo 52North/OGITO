@@ -29,4 +29,5 @@ export interface CustomLayerDefinition {
     header?: string,
     categories: CategoriesConfig[];
     fields: FieldConfig[];
+    labelField?: string; // the field whose value should be shown as label on the map
 }

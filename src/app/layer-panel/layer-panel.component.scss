@@ -155,40 +155,7 @@
   padding-top: 9px !important;
 }
 
-.mat-icon-button {
- // width: 1.2vw !important;
-  // height: 1.2vw !important;
-  // top: 0.3vw !important;
-}
-.mat-icon {
-  //top: 0.3vw !important;
-//  margin-top: -1.3vw !important;
- // width: 1vw !important;
-  //height: 1vw !important;
-}
 
-/*
-.closeLayerPanel {
-  padding: 0 0 0 0 !important;
-  width: 1.7vw !important;
-  height: 1.7vw !important;
-  // line-height: 18px !important;
-  margin-top: 0 !important;
-}
-
-.matCloseWrapper{
-  padding: 0 0 0 0 !important;
-  width: 1.7vw !important;
-  height: 1.7vw !important;
-  // line-height: 18px !important;
-  margin-top: 0 !important;
-}
-*/
-
-/*.panelTitle {
-  padding-left: 1vw;
-  padding-top: 0.3vw;
-} */
 .active {
   background: #fff2e1;
 }
@@ -231,4 +198,15 @@
 .mat-list-text{
   height: 100%;
   font-weight: bold;
+}
+
+.legend-image-wrapper {
+  padding: 10px 0;
+  display: flex;
+  justify-content: flex-start;
+  
+  img {
+    max-width: 100%; // Prevents large WMS legends from overflowing the panel
+    height: auto;
+  }
 }

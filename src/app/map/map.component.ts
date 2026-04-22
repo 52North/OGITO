@@ -583,7 +583,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 			layerTittle: layerName,
 			fields: fieldsToShow, // add a generic name
 			geometryType,
-			layerForNewFeatures: newFeats,
+			layerForNewFealayerItemstures: newFeats,
 			layerForRanking: false,
 			layerLegendUrl: null, // que hacer aqui?
 			legendLayer: null,
@@ -864,7 +864,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 				const groupTittle =
 					layerList[i].getElementsByTagName("Title")[0].childNodes[0].nodeValue;
 				const layersinGroup = layerList[i].querySelectorAll("Layer > Layer"); // devuelve in node
-				const listLayersinGroup = [];
+				const listLayersinGroup: QGISLayerInfo[] = [];
 				for (let j = 0; j < layersinGroup.length; j++) {
 					let layerIsWfs = false;
 					let layerForRanking = false;
@@ -874,7 +874,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 					const layerName =
 						layer.getElementsByTagName("Name")[0].childNodes[0].nodeValue;
 
-					const layerTittle =
+					const layerTitle =
 						layer.getElementsByTagName("Title")[0].childNodes[0].nodeValue;
 					const urlResource = layer
 						.querySelector("OnlineResource")
@@ -905,8 +905,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 					}
 					listLayersinGroup.push({
 						layerName,
-						layerTittle,
-						layerLegendUrl: urlResource,
+						layerTitle,
+						legendUrl: urlResource,
 						legendLayer,
 						wfs: layerIsWfs,
 						geometryType,
@@ -919,6 +919,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 						layerForNewFeatures: true,
 						layerForRanking,
 						fields,
+						removable: false,
+						sketch: "NONE",
 					});
 				}
 				// get url for wms, wfs, getLegend and getStyles
@@ -4134,3 +4136,23 @@ export interface EditLayer {
 	operations: string[];
 	source: VectorSource;
 }
+
+export interface QGISLayerInfo {
+	layerName: string;
+	layerTitle: string;
+	legendUrl?: string;
+	legendLayer?: any;
+	wfs: boolean;
+	geometryType: string;
+	onEdit: boolean;
+	onIdentify: boolean;
+	onRanking: boolean;
+	visible: boolean;
+	layerForNewFeatures: boolean;
+	layerForRanking: boolean;
+	fields: Record<string, any>;
+	removable: boolean;
+	sketch: SketchType;
+}
+
+export type SketchType = "NONE" | "SKETCH" | "CUSTOM_SKETCH";

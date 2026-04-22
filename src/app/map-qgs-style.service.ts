@@ -1,19 +1,18 @@
 import { Injectable } from "@angular/core";
-import { DomSanitizer, SafeUrl } from "@angular/platform-browser";
 import { Subscription } from "rxjs";
-import { Fill, Stroke, Style, Icon } from "ol/style";
+import { Fill, Stroke, Style, Icon, Text } from "ol/style";
 import Feature from "ol/Feature";
-
 import { OpenLayersService } from "./open-layers.service";
 import { ProjectConfiguration } from "./config/project-config";
 import { AppconfigService } from "./config/appconfig.service";
 import { CustomSketchLayerService } from "./config/custom-sketch-layer-service";
 import { AppConstants } from "./app-constants";
+import { SketchType } from "./map/map.component";
 
 export interface LegendSymbol {
 	iconSrc: string;
 	title: string;
-  id: string;
+	id: string;
 }
 
 export interface WFSLayerStyle {
@@ -22,8 +21,6 @@ export interface WFSLayerStyle {
 	legendUrl?: string;
 	isSketch: SketchType;
 }
-
-export type SketchType = "NONE" | "SKETCH" | "CUSTOM_SKETCH";
 
 @Injectable({
 	providedIn: "root",
@@ -98,8 +95,9 @@ export class MapQgsStyleService {
 							parsedSymbols = [
 								{
 									title: targetNode.title || "default",
-                  id: targetNode.title || "default",
-									iconSrc: `data:image/png;base64,${targetNode.icon}`,								},
+									id: targetNode.title || "default",
+									iconSrc: `data:image/png;base64,${targetNode.icon}`,
+								},
 							];
 						}
 					}
@@ -167,7 +165,11 @@ export class MapQgsStyleService {
 				styleDict[this.normalizeString(category.id)] = this.defineCustomSketchStyle(
 					category.icon,
 				);
-				symbols.push({ title: category.label, iconSrc: category.icon, id: category.id });
+				symbols.push({
+					title: category.label,
+					iconSrc: category.icon,
+					id: category.id,
+				});
 			});
 		} else {
 			const defaultColors = [
@@ -193,8 +195,35 @@ export class MapQgsStyleService {
 			: AppConstants.sketchStyleAttr;
 		const sketchStyleFunc = (feature: Feature) => {
 			const value = this.normalizeString(feature.get(attr));
-      const style = styleDict[value];
-			return style || this.defineSketchStyle();
+			const style = styleDict[value];
+
+			//add label if labelField is defined in the config and the feature has a value for this field
+			const customLayerDef =
+				this.customSketchLayerService.getConfigByLayerName(layerName);
+			if (customLayerDef && customLayerDef.labelField) {
+				const propsJSON = feature.get("payload"); //json
+				if (propsJSON) {
+					const propsObj = JSON.parse(propsJSON);
+					if (propsObj && propsObj[customLayerDef.labelField]) {
+						const labelText = String(propsObj[customLayerDef.labelField]);
+						const label = new Text({
+							text: labelText,
+							font: "bold 16px Calibri,sans-serif",
+							textBaseline: "bottom",
+							offsetY: -20, // move label above the icon
+							fill: new Fill({
+								color: "black",
+							}),
+							stroke: new Stroke({
+								color: "white",
+								width: 2,
+							}),
+						});
+						style.setText(label);
+					}
+				}
+				return style || this.defineSketchStyle();
+			}
 		};
 
 		this.layerStyles[layerName] = {
@@ -253,7 +282,7 @@ export class MapQgsStyleService {
 		}
 	}
 
-  //re-colors the default svg marker
+	//re-colors the default svg marker
 	private getColoredSvgBase64(colorHex: string): string {
 		try {
 			// 1. Safely strip the "data:..." prefix if it exists in your Constant
@@ -276,12 +305,9 @@ export class MapQgsStyleService {
 		}
 	}
 
-  //use for keys in style dict
-  private normalizeString(val: any): string {
-    if (!val) return '';
-    return String(val)
-      .trim()
-      .toLowerCase()
-      .replace(/['"]/g, ''); // Instantly strips any literal single or double quotes
-  }
+	//use for keys in style dict
+	private normalizeString(val: any): string {
+		if (!val) return "";
+		return String(val).trim().toLowerCase().replace(/['"]/g, ""); // Instantly strips any literal single or double quotes
+	}
 }
