@@ -67,7 +67,7 @@ import { fromCircle } from "ol/geom/Polygon";
 import { touchOnly } from "ol/events/condition";
 import Geolocation from "ol/Geolocation";
 import { OpenLayersService } from "../open-layers.service";
-import { MapQgsStyleService } from "../map-qgs-style.service";
+import { LegendSymbol, LayerStyleService } from "../layer-styles.service";
 import { AuthService } from "../auth.service";
 import { unByKey } from "ol/Observable";
 import { toStringHDMS } from "ol/coordinate";
@@ -91,6 +91,12 @@ import { CustomLayerDefinition } from "../config/custom-sketch-layer-config";
 import { Type } from "ol/geom/Geometry";
 import { createRegularPolygon, DrawEvent } from "ol/interaction/Draw";
 import { string } from "io-ts";
+import {
+	LayerPanelGroupEvent,
+	LayerPanelGroupsEvent,
+	LayerPanelLayerEvent,
+} from "../layer-panel/layer-panel.component";
+import ImageSource from "ol/source/Image";
 
 // To use rating dialogs
 export interface DialogData {
@@ -159,13 +165,13 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 	dragAndDropLayerPrefix = "Drag & Drop Layer ";
 	// the project selected by the user
 	selectedProject: any;
-	loadedWfsLayers = []; // [{layerName: 'uno', layerTitle: 'Layer 1'}, {layerName: 'dos', layerTitle: 'layer 2'}];
-	loadedSketchLayers = [];
-	groupsLayers: any[] = [];
+	loadedWfsLayers: EditLayer[] = []; // [{layerName: 'uno', layerTitle: 'Layer 1'}, {layerName: 'dos', layerTitle: 'layer 2'}];
+	loadedSketchLayers: EditLayer[] = [];
+	groupsLayers: GroupLayerInfo[] = [];
 	loadedWmsLayers = []; // [{layerName: 'uno', layerTitle: 'Layer 1'}, {layerName: 'dos', layerTitle: 'layer 2'}];
 	formQuestions = [];
 	curEditingLayer: EditLayer | null = null;
-	curInfoLayer = null; // a real OL layer object
+	curInfoLayer: Layer| null = null; // OL Layer Object
 	cacheFeatures = [];
 	canBeUndo = false;
 	editBuffer = []; // Try one array for everything.
@@ -212,7 +218,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 	subsToGeolocation: Subscription;
 
 	constructor(
-		private mapQgsStyleService: MapQgsStyleService,
+		private mapQgsStyleService: LayerStyleService,
 		private openLayersService: OpenLayersService,
 		private questionService: QuestionService,
 		public auth: AuthService,
@@ -287,8 +293,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 
 		this.subsToAddSketchLayer = this.openLayersService.addSketchLayer$.subscribe(
 			(data) => {
-				if (data)
-					this.createSketchLayer(data.name, data.showDefaultFields, data.editable);
+				if (data) this.createSketchLayer(data.name, data.showDefaultFields);
 			},
 			(error) => {
 				console.log("Error creating sketch layer", error);
@@ -458,7 +463,6 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 	createSketchLayer(
 		sketchLayerName: string,
 		showDefaultFields = true,
-		editable = true,
 		source?: VectorSource,
 	) {
 		/**
@@ -486,13 +490,18 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 					this.loadedProject,
 					sketchLayerName,
 				);
-		const styleConfig = this.mapQgsStyleService.getLayerStyleConfig(sketchLayerName);
+		const styleConfig =
+			this.mapQgsStyleService.getLayerStyleConfig(sketchLayerName);
 		const newVector = new VectorLayer({
 			source: sketchSource,
 			zIndex: 101, // check this #TODO
 			visible: defaultVisible,
 			// getting default style
-			style: styleConfig.styleFunc
+			style: (feature, resolution) => {
+				const styleConfig =
+					this.mapQgsStyleService.getLayerStyleConfig(sketchLayerName);
+				return styleConfig.styleFunc(feature as Feature, resolution);
+			},
 		});
 		newVector.set("name", sketchLayerName);
 
@@ -511,17 +520,20 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 		const fieldsToEdit = [
 			{ name: "detail", type: "QString", typeName: "varchar", comment: "" },
 		];
-		this.addSessionLayer(newVector, fieldsToShow, editable);
-		// add tp the group of sketch layers
-		this.loadedSketchLayers.push({
+		const newEditLayer: EditLayer = {
 			layerName: sketchLayerName,
 			//layerGeom,
 			layerTitle: sketchLayerName,
 			defaultSRS: this.config.getAppConfig().srs,
 			operations: ["insert", "modify", "delete"], // #Check  this #TODO
 			geometryType: "Multi", // Dependent of QGIS project as the styles.
-			source: sketchSource,
-		});
+			olLayer: newVector,
+			sketch: "SKETCH",
+		};
+
+		this.addSessionLayer(newEditLayer, fieldsToShow);
+		// add tp the group of sketch layers
+		this.loadedSketchLayers.push(newEditLayer);
 		// set the questions for the form
 		this.questionService.setSketchQuestions(sketchLayerName, fieldsToEdit);
 	}
@@ -531,9 +543,9 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 		source: VectorSource,
 		groupName: string,
 	) {
-		this.mapQgsStyleService.setSketchStyle(customSketchLayerName);
-		const self = this;
-		const styleConfig = this.mapQgsStyleService.getLayerStyleConfig(customSketchLayerName);
+		const styleConfig = this.mapQgsStyleService.getLayerStyleConfig(
+			customSketchLayerName,
+		);
 		const newVector = new VectorLayer({
 			source: source,
 			zIndex: 102, // check this #TODO
@@ -541,59 +553,63 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 				this.loadedProject.defaultVisibleLayers?.includes(customSketchLayerName) ||
 				false,
 			// getting default style
-			style: styleConfig.styleFunc
+			style: styleConfig.styleFunc,
 		});
 		newVector.set("name", customSketchLayerName);
 
 		const fields =
 			this.customSketchLayerService.getQGISFieldsForCustomSketchLayers();
 
-		this.addSessionLayer(newVector, fields, true, groupName);
-		// add tp the group of sketch layers
-		this.loadedSketchLayers.push({
+		const newEditLayer: EditLayer = {
 			layerName: customSketchLayerName,
 			// layerGeom,
 			layerTitle: customSketchLayerName,
 			defaultSRS: this.config.getAppConfig().srs,
 			operations: ["insert", "modify", "delete"], // #Check  this #TODO
 			geometryType: "Point", // Dependent of QGIS project as the styles.
-			source: source,
-		});
+			olLayer: newVector,
+			sketch: "CUSTOM_SKETCH",
+		};
+		this.addSessionLayer(newEditLayer, fields, groupName);
+		// add tp the group of sketch layers
+		this.loadedSketchLayers.push(newEditLayer);
 	}
 
-	addSessionLayerToLayerPanel(
-		layer: Layer,
+	private addSessionLayerToLayerPanel(
+		layer: EditLayer,
 		groupName: string,
 		fieldsToShow: any,
-		sketch = false,
 	) {
 		// add configuration to the layer to be added in a group
-		const layerName = layer.get("name");
-		let newFeats = false;
-		let geometryType = null;
-		let removable = true;
-		if (sketch) {
-			newFeats = true;
-			geometryType = "multi";
-			removable = false; // test
+		const layerName = layer.layerName;
+		const sketch = layer.sketch;
+		let newFeats = true;
+		let geometryType: GeometryType | undefined = undefined;
+		let removable = false;
+		let legendSymbols: LegendSymbol[] | undefined = undefined;
+		if (sketch !== "NONE") {
+			geometryType = sketch === "CUSTOM_SKETCH" ? "Point" : "Multi";
+			if (sketch === "CUSTOM_SKETCH") {
+				legendSymbols =
+					this.mapQgsStyleService.getLayerStyleConfig(layerName)?.symbols;
+			}
 		}
-		const layerItems = [];
-		const layerItem = {
+		const layerItems: LayerInfo[] = [];
+		const layerItem: LayerInfo = {
 			layerName,
-			layerTittle: layerName,
+			layerTitle: layerName,
 			fields: fieldsToShow, // add a generic name
 			geometryType,
-			layerForNewFealayerItemstures: newFeats,
+			layerForNewFeatures: newFeats,
 			layerForRanking: false,
-			layerLegendUrl: null, // que hacer aqui?
-			legendLayer: null,
 			onEdit: false,
 			onIdentify: false,
 			onRanking: false,
-			visible: layer.getVisible(),
+			visible: layer.olLayer.getVisible(),
 			wfs: false, // #TODO add forremove..
 			removable,
-			sketch,
+			sketch: layer.sketch,
+			legendLayer: legendSymbols,
 		}; // sketch will be used to activate editing mode.. #TODO
 		layerItems.push(layerItem);
 		// group does not exist in the variable
@@ -604,8 +620,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 		if (!sessionGroupLayerItem) {
 			sessionGroupLayerItem = {
 				groupName: groupName,
-				groupTittle: groupName,
-				visible: layer.getVisible(),
+				groupTitle: groupName,
+				visible: layerItem.visible,
 				layers: layerItems,
 			};
 			// add the group at the beginning
@@ -620,9 +636,9 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 		}
 	}
 
-	removeSessionLayer(layerToRemove: any) {
-		const layerName = layerToRemove.layer.layerName;
-		const groupName = layerToRemove.groupName;
+	removeSessionLayer(event: LayerPanelLayerEvent) {
+		const layerName = event.layer.layerName;
+		const groupName = event.group.groupName;
 
 		// 1. Remove from the OpenLayers Map
 		this.map.getLayers().forEach((layer) => {
@@ -661,9 +677,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	addSessionLayer(
-		layer: Layer,
+		layer: EditLayer,
 		fieldstoShow: any,
-		sketch = false,
 		groupName: string | undefined = undefined,
 	) {
 		/**
@@ -689,13 +704,13 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 			// group does not exist, create it.
 			const newGroup = new LayerGroup({
 				layers: [],
-				visible: layer.getVisible(), // visible by default
+				visible: layer.olLayer.getVisible(), // visible by default
 				zIndex: 100, // at the end of the layers by default
 			});
 			this.map.addLayer(newGroup);
-			layer.setZIndex(newGroup.getZIndex() + 1);
-			newGroup.getLayers().push(layer);
-			this.addSessionLayerToLayerPanel(layer, groupName, fieldstoShow, sketch);
+			layer.olLayer.setZIndex(newGroup.getZIndex() + 1);
+			newGroup.getLayers().push(layer.olLayer);
+			this.addSessionLayerToLayerPanel(layer, groupName, fieldstoShow);
 			newGroup.set("name", groupName);
 			return;
 		}
@@ -713,15 +728,15 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 			});
 			// add the layer
 			const layerIndex = group.getLayers().length;
-			layer.setZIndex(group.getZIndex() + layerIndex);
-			group.getLayers().push(layer);
+			layer.olLayer.setZIndex(group.getZIndex() + layerIndex);
+			group.getLayers().push(layer.olLayer);
 			group.setVisible(
 				group
 					.getLayers()
 					.getArray()
 					.some((l) => l.getVisible()),
 			); // if at least one layer is visible, the group is visible
-			this.addSessionLayerToLayerPanel(layer, groupName, fieldstoShow, sketch);
+			this.addSessionLayerToLayerPanel(layer, groupName, fieldstoShow);
 		} catch (e) {
 			this.snackBar.open("Error adding results", "ok", {
 				horizontalPosition: "center",
@@ -861,16 +876,19 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 			if (node.getElementsByTagName("Layer").length > 0) {
 				const groupName =
 					layerList[i].getElementsByTagName("Name")[0].childNodes[0].nodeValue;
-				const groupTittle =
+				const groupTitle =
 					layerList[i].getElementsByTagName("Title")[0].childNodes[0].nodeValue;
 				const layersinGroup = layerList[i].querySelectorAll("Layer > Layer"); // devuelve in node
-				const listLayersinGroup: QGISLayerInfo[] = [];
+				const listLayersinGroup: LayerInfo[] = [];
 				for (let j = 0; j < layersinGroup.length; j++) {
 					let layerIsWfs = false;
 					let layerForRanking = false;
 
 					const layer = layersinGroup.item(j);
-					const geometryType = layer.getAttribute("geometryType");
+					const geometryTypeStr = layer.getAttribute("geometryType");
+					const geometryType = geometryTypeStr
+						? (geometryTypeStr as GeometryType)
+						: undefined;
 					const layerName =
 						layer.getElementsByTagName("Name")[0].childNodes[0].nodeValue;
 
@@ -879,7 +897,6 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 					const urlResource = layer
 						.querySelector("OnlineResource")
 						.getAttribute("xlink:href");
-					const legendLayer = await this.createLegendLayer(urlResource, layerName);
 					const fields = [];
 					if (wfsLayerList.find((element) => element === layerName)) {
 						layerIsWfs = true;
@@ -907,9 +924,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 						layerName,
 						layerTitle,
 						legendUrl: urlResource,
-						legendLayer,
 						wfs: layerIsWfs,
-						geometryType,
+						geometryType: geometryType,
 						onEdit: false,
 						onIdentify: false,
 						onRanking: false,
@@ -927,7 +943,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 				if (listLayersinGroup.length > 0) {
 					this.groupsLayers.push({
 						groupName,
-						groupTittle,
+						groupTitle: groupTitle,
 						visible: false, //will be determined when ol layers are added to the map
 						layers: listLayersinGroup,
 					});
@@ -995,24 +1011,6 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 			}
 		});
 		return symbolList;
-	}
-
-	async createLegendLayer(urlResource: any, layerName: any) {
-		/**
-		 * Creates the legend nodes for each layer
-		 */
-		// expresion regular para cubrin png and jpg
-		const re = /([image/])*(?:jpeg|png)/g;
-		const url = urlResource.replace(re, "application/json");
-		const legend = fetch(url)
-			.then((response) => response.json()) // the return is implicit
-			.then((json) => {
-				const symbols = this.createIconSymbols(json, layerName);
-				return symbols;
-			})
-			.then((symbols) => symbols)
-			.catch((error) => console.log("Error retrieving symbology", error));
-		return legend;
 	}
 
 	ngOnInit(): void {
@@ -1318,7 +1316,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 					.retrieveExistingSketchLayers(this.loadedProject)
 					.then((sketchSources) => {
 						sketchSources.forEach((sketchSource: VectorSource, layername: string) => {
-							this.createSketchLayer(layername, true, true, sketchSource);
+							this.createSketchLayer(layername, true, sketchSource);
 						});
 					});
 			})
@@ -1492,7 +1490,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 
 		// the layer is the group (WMTS case), add it to the map and return
 		if (
-			this.groupsLayers.findIndex((x) => x.layerName === layerName) > -1 &&
+			this.groupsLayers.findIndex((x) => x.groupName === layerName) > -1 &&
 			!groupLayerPanelItem
 		) {
 			// the layer is a group and i does not exist
@@ -1737,7 +1735,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 		}
 
 		const self = this;
-		const tsource = this.curEditingLayer.source;
+		const tsource = this.curEditingLayer.olLayer.getSource();
 		let type: any;
 		let geometryFunction: any;
 		this.removeInteractions(); // remove select, modify, delete interactions
@@ -2006,7 +2004,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 				}
 
 				if (this.addedFeature && this.curEditingLayer) {
-					this.curEditingLayer.source.removeFeature(this.addedFeature); //clean feature if user closed symbol list before selecting list item
+					this.curEditingLayer.olLayer.getSource().removeFeature(this.addedFeature); //clean feature if user closed symbol list before selecting list item
 				}
 			}
 		}
@@ -2017,12 +2015,15 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 		 * Updates the observable that allows to show/hide the symbolPanel
 		 */
 		if (!optHeader) {
-			this.openLayersService.updateShowSymbolPanel({ visible: visible, selectable: true });
+			this.openLayersService.updateShowSymbolPanel({
+				visible: visible,
+				selectable: true,
+			});
 		} else {
 			this.openLayersService.updateShowSymbolPanel({
 				visible: visible,
 				optHeader: optHeader,
-				selectable: true
+				selectable: true,
 			});
 		}
 		this.symbolPanelOpen = visible;
@@ -2077,7 +2078,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 				return;
 			}
 			const self = this;
-			const tsource = this.curEditingLayer.source;
+			const tsource = this.curEditingLayer.olLayer.getSource();
 			this.removeInteractions();
 			this.select = new Select({
 				condition: click, // check if this work on touch
@@ -2130,14 +2131,14 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 						lastFeat.setId(f.getId()); // to enable adding the feat again?
 						const tempId = f.getId();
 						// remove feature from the source
-						self.curEditingLayer.source.removeFeature(f);
+						self.curEditingLayer.olLayer.getSource().removeFeature(f);
 						// insert feature in a cache --> for undo
 						self.editBuffer.push({
 							layerName: self.curEditingLayer.layerName,
 							transaction: "delete",
 							feats: lastFeat,
 							dirty,
-							source: self.curEditingLayer.source,
+							source: self.curEditingLayer.olLayer.getSource(),
 						});
 					});
 					// clear the selection --> the style will also be clear
@@ -2152,9 +2153,9 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 							transaction: "delete", // would it be better to add the opposite operation already, e.g., insert?
 							feats: f.clone(), // #TODO check id
 							dirty: true,
-							source: self.curEditingLayer.source,
+							source: self.curEditingLayer.olLayer.getSource(),
 						});
-						self.curEditingLayer.source.removeFeature(f);
+						self.curEditingLayer.olLayer.getSource().removeFeature(f);
 					});
 				}
 			});
@@ -2194,9 +2195,9 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 		const xmlParser = new DOMParser();
 		const xmlText = xmlParser.parseFromString(XmlCapText, "text/xml");
 		const featureTypeList = xmlText.getElementsByTagName("FeatureTypeList")[0];
-		const tnodes = {};
-		const otherSrsLst = [];
-		const operationsLst = [];
+		const tnodes: Record<string, EditLayer> = {};
+		const otherSrsLst: string[] = [];
+		const operationsLst: string[] = [];
 		let srs: any;
 		let operation: any;
 		const nLayers = featureTypeList.children.length - 1;
@@ -2300,7 +2301,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 							}
 						}
 					});
-					
+
 					const wfsVectorLayer = new VectorLayer({
 						source: vectorSource,
 						visible: layerName
@@ -2309,48 +2310,59 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 						zIndex: nLayers - i, // highest zIndex for the first layer and so on.
 						style: (feature, resolution) => {
 							//wrap style func from style service because service loads the styles asynchronously and the style func needs to be updated when the styles are loaded
-							const styleConfig = this.mapQgsStyleService.getLayerStyleConfig(layerName);
+							const styleConfig =
+								this.mapQgsStyleService.getLayerStyleConfig(layerName);
 							return styleConfig.styleFunc(feature as Feature, resolution);
-						}
+						},
 					});
 					wfsVectorLayer.set("name", layerName);
-					tnodes[layerName] = {
+					const wfsLayer: EditLayer = {
 						layerName, // equivalent to "layerName" : layerName --> k:v
 						// layerGeom,
 						layerTitle,
 						defaultSRS,
-						otherSrs: otherSrsLst,
-						lowCorner: [lowCorner.split(" ")[0], lowCorner.split(" ")[1]],
-						upperCorner: [upperCorner.split(" ")[0], upperCorner.split(" ")[1]],
+						otherSRS: otherSrsLst,
+						lowerCorner: [
+							Number(lowCorner.split(" ")[0]),
+							Number(lowCorner.split(" ")[1]),
+						],
+						upperCorner: [
+							Number(upperCorner.split(" ")[0]),
+							Number(upperCorner.split(" ")[1]),
+						],
 						operations: operationsLst,
 						geometryType: geom, // Dependent of QGIS project as the styles.
-						source: vectorSource,
+						olLayer: wfsVectorLayer,
+						sketch: "NONE",
 					};
+					tnodes[layerName] = wfsLayer;
 					this.addOWSLayerToLayerPanel(layerName, wfsVectorLayer);
-					this.loadedWfsLayers.push(tnodes[layerName]); // wfsVectorLayer
+					this.loadedWfsLayers.push(wfsLayer); // wfsVectorLayer
 				} catch (e) {}
 			}
 		}
 		return this.loadedWfsLayers;
 	}
 
-	updateMapVisibleGroupLayer(selectedGroupLayer) {
+	//handle event from layer panel
+	updateMapVisibleGroup(event: LayerPanelGroupEvent) {
 		/** updates the visibility of a group layer in the map
 		 * @param selectedGroupLayer the layer that was clicked to show/hide
 		 */
 		this.map.getLayers().forEach((layer) => {
-			if (selectedGroupLayer.groupName === layer.get("name")) {
+			if (event.group.groupName === layer.get("name")) {
 				layer.setVisible(!layer.getVisible());
 			}
 		});
 	}
 
-	updateMapVisibleLayer(selectedLayer: any) {
+	//handle event from layer panel
+	updateMapVisibleLayer(event: LayerPanelLayerEvent) {
 		/**
 		 * updates the visibility of a layer in the map
 		 */
-		const layerName = selectedLayer.layer.layerName;
-		const groupName = selectedLayer.groupName;
+		const layerName = event.layer.layerName;
+		const groupName = event.group.groupName;
 
 		this.map.getLayers().forEach((layer) => {
 			// Use instanceof to tell TypeScript this is a group
@@ -2420,7 +2432,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 		});
 	}
 
-	updateEditingLayer(layerOnEdit: any) {
+	updateEditingLayer(event: LayerPanelLayerEvent | null) {
 		/**  starts or stops the editing mode for the layerName given
 		 * if there were some edits --> asks for saving changes
 		 * @param layerOnEdit: the oject layer that the user select to start/stop editing
@@ -2428,7 +2440,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 		 *  #TODO catch exception
 		 */
 		let layer: any;
-		if (layerOnEdit === null) {
+		if (event === null) {
 			if (this.curEditingLayer) {
 				// a layer was being edited - ask for saving changes
 				this.stopEditing();
@@ -2440,11 +2452,11 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 			// a layer was being edited - ask for saving changes
 			this.stopEditing(); // test is changes are save to the right layer, otherwise it should go #
 			layer = this.loadedWfsLayers.find(
-				(x) => x.layerName === layerOnEdit.layer.layerName,
+				(x) => x.layerName === event.layer.layerName,
 			);
 			if (!layer) {
 				layer = this.loadedSketchLayers.find(
-					(x) => x.layerName === layerOnEdit.layer.layerName,
+					(x) => x.layerName === event.layer.layerName,
 				);
 				if (!layer) {
 					alert("Layer not found in starting editing");
@@ -2458,11 +2470,11 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 			}
 		}
 		layer = this.loadedWfsLayers.find(
-			(x) => x.layerName === layerOnEdit.layer.layerName,
+			(x) => x.layerName === event.layer.layerName,
 		);
 		if (!layer) {
 			layer = this.loadedSketchLayers.find(
-				(x) => x.layerName === layerOnEdit.layer.layerName,
+				(x) => x.layerName === event.layer.layerName,
 			);
 			if (!layer) {
 				alert("Layer not found in update editing ");
@@ -2591,7 +2603,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 			return;
 		}
 		try {
-			const tsource = editLayer.source;
+			const tsource = editLayer.olLayer.getSource();
 			if (!tsource) {
 				this.snackBar.open("No source found in current sketch layer", "ok", {
 					horizontalPosition: "center",
@@ -2664,7 +2676,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 		switch (lastOperation.transaction) {
 			case "insert": {
 				// remove from the source
-				this.curEditingLayer.source.removeFeature(lastOperation.feats);
+				this.curEditingLayer.olLayer.getSource().removeFeature(lastOperation.feats);
 				break;
 			}
 			case "update": {
@@ -2691,7 +2703,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 			case "delete": {
 				// insert back
 				lastOperation.feats.setStyle(null); // to allow the style function of the layer to render the feat properly
-				this.curEditingLayer.source.addFeature(lastOperation.feats); // TODO styling  //lastOperation.feats
+				this.curEditingLayer.olLayer.getSource().addFeature(lastOperation.feats); // TODO styling  //lastOperation.feats
 			}
 		}
 		// remove from the edit Buffer
@@ -2742,7 +2754,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 		layerTrs[editLayer.layerName].insert = [];
 		layerTrs[editLayer.layerName].delete = [];
 		layerTrs[editLayer.layerName].update = [];
-		layerTrs[editLayer.layerName].source = editLayer.source;
+		layerTrs[editLayer.layerName].source = editLayer.olLayer.getSource();
 
 		const deletedFeatureInsertTransactions = []; //features that were inserted (temporarily) and immediatly deleted before saving to wfs
 
@@ -3122,7 +3134,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * @param editLayer
 	 */
 	private refreshEditLayer(editLayer: EditLayer) {
-		const source = editLayer.source;
+		const source = editLayer.olLayer.getSource();
 		source.refresh();
 		console.info("refresh edit layer " + editLayer.layerName);
 	}
@@ -3219,7 +3231,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 		});
 		this.map.addInteraction(this.dragBox);
 		const self = this;
-		const tsource = this.curEditingLayer.source;
+		const tsource = this.curEditingLayer.olLayer.getSource();
 		// clear a previous selection
 		this.dragBox.on("boxend", () => {
 			const extent = this.dragBox.getGeometry().getExtent();
@@ -3236,7 +3248,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 					layerName: self.curEditingLayer.layerName,
 					transaction: "translate", // would it be better to add the opposite operation already, e.g., insert?
 					feats: lastFeat,
-					source: self.curEditingLayer.source,
+					source: self.curEditingLayer.olLayer.getSource(),
 				});
 			});
 		});
@@ -3572,7 +3584,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 		this.overlay.setPosition(evt.coordinate);
 		console.log("evt.coordinate", evt.coordinate);
 		const viewResolution = Number(this.view.getResolution());
-		const wmsSource = layerOnIdentifying.getSource();
+		const wmsSource = layerOnIdentifying.getSource() as ImageWMS;
 		const wmsUrl = wmsSource.getFeatureInfoUrl(
 			evt.coordinate, // how to check this with EPSG # 4326 and 3857
 			viewResolution,
@@ -3607,7 +3619,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 		}
 	}
 
-	searchLayer(layerName: string, groupName: string) {
+	searchLayer(layerName: string, groupName: string): Layer | null {
 		/**
 		 * finds a layer in the map and returns it.
 		 * @param layerName the name of the layer
@@ -3630,11 +3642,12 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 		return layer;
 	}
 
-	startIdentifying(layerOnIdentifying: any) {
+	startIdentifying(event: LayerPanelLayerEvent) {
 		/** enables recovering the infor at certain coordinate
 		 * @param layer, the object containing name and wfs property as well as onEdit property
 		 */
-		if (layerOnIdentifying === null) {
+		
+		if (event === null) {
 			this.map.getTargetElement().style.cursor = "";
 			this.curInfoLayer = null;
 			this.container.nativeElement.style.display = "none";
@@ -3642,8 +3655,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 		}
 
 		const layer = this.searchLayer(
-			layerOnIdentifying.layer.layerName,
-			layerOnIdentifying.groupName,
+			event.layer.layerName,
+			event.group.groupName,
 		); // find the layer in its group
 		if (!layer) {
 			return;
@@ -3651,7 +3664,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 		this.curInfoLayer = layer; // this is a real OL layer
 		console.log(
 			"layerOnIdentifying  startIdentifying",
-			layerOnIdentifying,
+			event,
 			"name curInfoLayer",
 			this.curInfoLayer.get("name"),
 		);
@@ -3941,8 +3954,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 		});
 	}
 
-	updateOrderGroupsLayers(groupsLayers: any[]) {
-		const nGroups = groupsLayers.length;
+	updateOrderGroupsLayers(event: LayerPanelGroupsEvent) {
+		const nGroups = event.groups.length;
 
 		this.map.getLayers().forEach((layer) => {
 			// 1. Type Guard: Only process if it's a Group
@@ -3950,10 +3963,10 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 				const layerName = layer.get("name");
 
 				// Find the corresponding group config
-				const groupConfig = groupsLayers.find((g) => g.groupName === layerName);
+				const groupConfig = event.groups.find((g) => g.groupName === layerName);
 
 				if (groupConfig) {
-					const grpZIndex = (nGroups - groupsLayers.indexOf(groupConfig)) * 10;
+					const grpZIndex = (nGroups - event.groups.indexOf(groupConfig)) * 10;
 					layer.setZIndex(grpZIndex);
 
 					// 2. Access the collection safely
@@ -3980,7 +3993,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 
 	printLayerOrder() {
 		this.map.getLayers().forEach((layer) => {
-			// 1. Type Guard: Only groups have sub-layers
+			//Type Guard: Only groups have sub-layers
 			if (layer instanceof LayerGroup) {
 				const subLayers = layer.getLayers();
 				if (subLayers.getLength() > 0) {
@@ -4010,7 +4023,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 		}
 	}
 
-	findGeometryType(layerName) {
+	private findGeometryType(layerName): GeometryType | undefined {
 		/** Finds the geometry type of the layerName by looking in the dictionary filled when parsing the QGS project
 		 * @oaram layerName: the name of the layer to look for the geometry type
 		 */
@@ -4123,27 +4136,24 @@ export class DialogRatingMeasureDialog {
 
 export interface EditLayer {
 	defaultSRS: string;
-	geometryType:
-		| "Multi"
-		| "Line"
-		| "Polygon"
-		| "Point"
-		| "MultiPolygon"
-		| "MultiPolygonZ"
-		| "MultiPoint";
+	otherSRS?: string[];
+	geometryType: GeometryType;
 	layerName: string;
 	layerTitle: string;
 	operations: string[];
-	source: VectorSource;
+	olLayer: VectorLayer<VectorSource>;
+	sketch: SketchType;
+	lowerCorner?: number[];
+	upperCorner?: number[];
 }
 
-export interface QGISLayerInfo {
+export interface LayerInfo {
 	layerName: string;
 	layerTitle: string;
 	legendUrl?: string;
-	legendLayer?: any;
+	legendLayer?: LegendSymbol[];
 	wfs: boolean;
-	geometryType: string;
+	geometryType?: GeometryType;
 	onEdit: boolean;
 	onIdentify: boolean;
 	onRanking: boolean;
@@ -4155,4 +4165,20 @@ export interface QGISLayerInfo {
 	sketch: SketchType;
 }
 
+export interface GroupLayerInfo {
+	groupName: string;
+	groupTitle: string;
+	visible: boolean;
+	layers: LayerInfo[];
+}
+
 export type SketchType = "NONE" | "SKETCH" | "CUSTOM_SKETCH";
+
+export type GeometryType =
+	| "Multi"
+	| "Line"
+	| "Polygon"
+	| "Point"
+	| "MultiPolygon"
+	| "MultiPolygonZ"
+	| "MultiPoint";

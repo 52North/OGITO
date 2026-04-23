@@ -30,4 +30,5 @@ export interface CustomLayerDefinition {
     categories: CategoriesConfig[];
     fields: FieldConfig[];
     labelField?: string; // the field whose value should be shown as label on the map
+    iconHeightPxl: number; // the height in pixel of the custom icons on the map
 }

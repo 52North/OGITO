@@ -30,6 +30,8 @@ export class AppConstants{
     'g0IgogICAgIHNvZGlwb2RpOm5vZGV0eXBlcz0ic3NjY2Nzc2Nzc3NjIgogICAgIHN0eWxlPSJmaWxsOiNkZDFjNzc7ZmlsbC1vcGFjaXR5OjEiIC8+Cjwvc3ZnPgo=';
 
 
+  static svgFallbackIcon = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+CiAgPHRleHQgeD0iNTAiIHk9IjgwIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iOTAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9ImJsYWNrIj4/PC90ZXh0Pgo8L3N2Zz4=";
+
   // Values for range in slider in dynamic form
   static slider_range = { min: 0, max: 10};
 

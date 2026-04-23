@@ -11,7 +11,7 @@
     <!--[groupLayers] = "groupsLayers"-->
   <app-layer-panel   [groupLayers] = "groupsLayersSubject.asObservable()"
                   (layerVisClick)="updateMapVisibleLayer($event)"
-  (editLayerClick)="updateEditingLayer($event)"  (groupLayerVisClick)="updateMapVisibleGroupLayer($event)"
+  (editLayerClick)="updateEditingLayer($event)"  (groupLayerVisClick)="updateMapVisibleGroup($event)"
   (layersOrder) = "updateOrderGroupsLayers($event)"
   (identifyLayerClick)="startIdentifying($event)"
   (removeLayerClick) = "removeSessionLayer($event)">

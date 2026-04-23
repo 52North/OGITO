@@ -2,7 +2,7 @@ import { Component, ElementRef, OnInit, OnDestroy, ViewChild } from "@angular/co
 import { Observable, Subscription, of as observableOf } from "rxjs";
 
 import { OpenLayersService, SelectedSymbol, SymbolListVisibility } from "../open-layers.service";
-import { MapQgsStyleService, WFSLayerStyle, LegendSymbol } from "../map-qgs-style.service";
+import { LayerStyleService, WFSLayerStyle, LegendSymbol } from "../layer-styles.service";
 import { AppConstants } from "../app-constants"; // Adjust path if necessary
 
 @Component({
@@ -32,7 +32,7 @@ export class SymbolListComponent implements OnInit, OnDestroy {
 
 	constructor(
 		private openLayersService: OpenLayersService,
-		private mapQgsStyleService: MapQgsStyleService,
+		private mapQgsStyleService: LayerStyleService,
 	) {
 		this.subscriptionToShowSymbols = this.openLayersService.showSymbolPanel$.subscribe(
 			(data) => {

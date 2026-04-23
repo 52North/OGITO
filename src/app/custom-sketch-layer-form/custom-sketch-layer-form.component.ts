@@ -111,7 +111,7 @@ export class CustomSketchLayerFormComponent{
     // If you need to clean up the feature from the map layer on abort, do it here
     if (this.feature && this.layer) {
       try {
-        this.layer.source.removeFeature(this.feature);
+        this.layer.olLayer.getSource().removeFeature(this.feature);
       } catch (err) {
         console.error("Error while removing edit feature", err);
       }

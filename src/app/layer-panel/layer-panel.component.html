@@ -24,7 +24,7 @@
 			cdkDropList
 			(cdkDropListDropped)="dropExpansion($event)"
 		>
-			<mat-expansion-panel *ngFor="let group of sgroupLayers" cdkDrag>
+			<mat-expansion-panel *ngFor="let group of currentGroupLayers" cdkDrag>
 				<!--togglePosition='before'-->
 				<mat-expansion-panel-header>
 					<mat-panel-title>
@@ -59,7 +59,7 @@
 										<mat-list-option
 											class="example-box mat-primary"
 											[value]="layer.layerName"
-											(click)="onLayerVisClick($event, layer, group.groupName)"
+											(click)="onLayerVisClick($event, layer, group)"
 											checkboxPosition="before"
 											[ngClass]="layerActive == layer.layerName ? 'active' : 'normal'"
 											[(selected)]="layer.visible"
@@ -87,7 +87,7 @@
 															mat-icon-button
 															matTooltip="Query element"
 															aria-label="Identify elements in the layer"
-															(click)="onIdentifyLayerClick($event, layer, group.groupName)"
+															(click)="onIdentifyLayerClick($event, layer, group)"
 															[ngClass]="layer.onIdentify ? 'activeAction' : 'normal'"
 														>
 															<mat-icon>info_outline</mat-icon>
@@ -99,7 +99,7 @@
 														mat-icon-button
 														matTooltip="Remove layer"
 														aria-label="Remove layer"
-														(click)="onRemoveLayerClick($event, layer, group.groupName)"
+														(click)="onRemoveLayerClick($event, layer, group)"
 													>
 														<mat-icon>delete</mat-icon>
 													</button>

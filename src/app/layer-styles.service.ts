@@ -18,16 +18,15 @@ export interface LegendSymbol {
 export interface WFSLayerStyle {
 	styleFunc: (feature: Feature, resolution: number) => Style | Style[];
 	symbols: LegendSymbol[];
-	legendUrl?: string;
 	isSketch: SketchType;
 }
 
 @Injectable({
 	providedIn: "root",
 })
-export class MapQgsStyleService {
+export class LayerStyleService {
 	public layerStyles: Record<string, WFSLayerStyle> = {};
-	public readonly iconHeightPxl = 38;
+	public readonly defaultIconHeightPxl = 42;
 
 	private readonly projectSelectedSubscription: Subscription;
 	private loadedProject?: ProjectConfiguration;
@@ -139,7 +138,6 @@ export class MapQgsStyleService {
 			this.layerStyles[layerName] = {
 				styleFunc: olStyleFunction,
 				symbols: parsedSymbols,
-				legendUrl: legendImageUrl,
 				isSketch: "NONE",
 			};
 		}
@@ -162,14 +160,21 @@ export class MapQgsStyleService {
 			const layerDef =
 				this.customSketchLayerService.getConfigByLayerName(layerName)!;
 			layerDef.categories.forEach((category) => {
-				styleDict[this.normalizeString(category.id)] = this.defineCustomSketchStyle(
-					category.icon,
-				);
-				symbols.push({
+				const symbol = {
 					title: category.label,
 					iconSrc: category.icon,
 					id: category.id,
-				});
+				};
+				styleDict[this.normalizeString(category.id)] = this.defineCustomSketchStyle(
+					category.icon,
+					layerDef.iconHeightPxl || this.defaultIconHeightPxl,
+					() => {
+						const fallback = this.getFallbackStyle(); //fallback icon style if error loading the custom icon
+						styleDict[this.normalizeString(category.id)] = fallback.style;
+						symbol.iconSrc = fallback.iconSrc; 
+					}			
+				);
+				symbols.push(symbol);
 			});
 		} else {
 			const defaultColors = [
@@ -197,39 +202,26 @@ export class MapQgsStyleService {
 			const value = this.normalizeString(feature.get(attr));
 			const style = styleDict[value];
 
-			//add label if labelField is defined in the config and the feature has a value for this field
+			//add label if labelField is defined in the config and the feature has a value for this field (custom sketch layers only)
 			const customLayerDef =
 				this.customSketchLayerService.getConfigByLayerName(layerName);
-			if (customLayerDef && customLayerDef.labelField) {
-				const propsJSON = feature.get("payload"); //json
+			if (customLayerDef && customLayerDef.labelField && style) {
+				const propsJSON = feature.get("payload"); //all properties are stored as JSON string for custom sketch layers
 				if (propsJSON) {
+					//parse property
 					const propsObj = JSON.parse(propsJSON);
 					if (propsObj && propsObj[customLayerDef.labelField]) {
 						const labelText = String(propsObj[customLayerDef.labelField]);
-						const label = new Text({
-							text: labelText,
-							font: "bold 16px Calibri,sans-serif",
-							textBaseline: "bottom",
-							offsetY: -20, // move label above the icon
-							fill: new Fill({
-								color: "black",
-							}),
-							stroke: new Stroke({
-								color: "white",
-								width: 2,
-							}),
-						});
-						style.setText(label);
+						style.setText(this.createLabelStyle(labelText)); //create and set label
 					}
 				}
-				return style || this.defineSketchStyle();
 			}
+			return style || this.defineSketchStyle();
 		};
 
 		this.layerStyles[layerName] = {
 			styleFunc: sketchStyleFunc,
 			symbols: symbols,
-			legendUrl: undefined,
 			isSketch: isCustomSketchLayer ? "CUSTOM_SKETCH" : "SKETCH",
 		};
 
@@ -255,7 +247,11 @@ export class MapQgsStyleService {
 		return style;
 	}
 
-	private defineCustomSketchStyle(iconURL: string): Style {
+	private defineCustomSketchStyle(
+		iconURL: string,
+		targetHeightPxl?: number,
+		onImageErrorHandler?: () => void,
+	): Style {
 		const newIcon = new Icon({
 			opacity: 1,
 			crossOrigin: "anonymous",
@@ -263,12 +259,17 @@ export class MapQgsStyleService {
 		});
 
 		const style = new Style({ image: newIcon });
-		this.addIconScaler(newIcon);
+		this.addIconScaler(newIcon, targetHeightPxl); //scales icons after loading based on the defined iconHeightPxl and the original image width to ensure consistent display size regardless of the original icon dimensions
+
+		if (onImageErrorHandler) {
+			this.addOnErrorHandler(newIcon, onImageErrorHandler);
+		}
+
 		newIcon.load();
 		return style;
 	}
 
-	private addIconScaler(icon: Icon) {
+	private addIconScaler(icon: Icon, targetHeightPxl: number = this.defaultIconHeightPxl) {
 		const pixelRatio = window.devicePixelRatio || 1;
 		const imgElement = icon.getImage(pixelRatio) as HTMLImageElement;
 
@@ -276,10 +277,51 @@ export class MapQgsStyleService {
 			imgElement.onload = () => {
 				const originalWidth = imgElement.naturalWidth;
 				if (originalWidth > 0) {
-					icon.setScale(this.iconHeightPxl / originalWidth);
+					icon.setScale(targetHeightPxl / originalWidth);
 				}
 			};
 		}
+	}
+
+	private addOnErrorHandler(icon: Icon, onErrorHandler: () => void) {
+		const pixelRatio = window.devicePixelRatio || 1;
+		const imgElement = icon.getImage(pixelRatio) as HTMLImageElement;
+
+		if (imgElement) {
+			imgElement.onerror = onErrorHandler;
+		}
+	}
+
+	private createLabelStyle(labelText: string): Text {
+		const label = new Text({
+			text: labelText,
+			font: "bold 17px Calibri,sans-serif",
+			textBaseline: "bottom",
+			offsetY: -(this.defaultIconHeightPxl / 2), // move label above the icon
+			fill: new Fill({
+				color: "black",
+			}),
+			stroke: new Stroke({
+				color: "white",
+				width: 2,
+			}),
+		});
+
+		return label;
+	}
+
+	private getFallbackStyle() {
+		const newIcon = new Icon({
+			src: AppConstants.svgFallbackIcon,
+		});
+		const style = new Style({
+			image: newIcon,
+		});
+
+		this.addIconScaler(newIcon);
+		newIcon.load();
+
+		return {style: style, iconSrc: AppConstants.svgFallbackIcon};
 	}
 
 	//re-colors the default svg marker

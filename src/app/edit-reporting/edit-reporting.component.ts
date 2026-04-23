@@ -77,7 +77,7 @@ export class EditReportingComponent implements OnInit {
   public abbortDialog(){
     if(this.feature && this.layer){
       try{
-      this.layer.source.removeFeature(this.feature); //clean feature if dialog is abborted
+      this.layer.olLayer.getSource().removeFeature(this.feature); //clean feature if dialog is abborted
       }catch(err){
         console.error("error while removing edit feautre" , err);
       }

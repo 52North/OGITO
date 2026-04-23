@@ -3,210 +3,211 @@
   color: blue;
 } */
 
-@media  (orientation:portrait) {
-  .layer-panel{
-    left: 10%;
-    max-width: 40%;
-  }
+@media (orientation: portrait) {
+	.layer-panel {
+		left: 10%;
+		max-width: 40%;
+	}
 }
 
 .spacer {
-  flex: 1 1 auto;
-  width: 0.7vw;
+	flex: 1 1 auto;
+	width: 0.7vw;
 }
 .toolbarDivider {
-  padding-top: 5px !important;
+	padding-top: 5px !important;
 }
 .example-box {
- // border-bottom: solid 1px #ccc;
-  color: rgba(0, 20, 0, 0.87);
-  display: flex;
-  flex-direction: column;
-  align-items: baseline;
-  background: white;
-  font-size: 0.8vw;
-  width: 100%;
-  //max-width: 20%;
-  position: relative;
-  padding-left: 0.1vw !important;
-  align-self: center;
-  white-space: nowrap;
+	// border-bottom: solid 1px #ccc;
+	color: rgba(0, 20, 0, 0.87);
+	display: flex;
+	flex-direction: column;
+	align-items: baseline;
+	background: white;
+	font-size: 0.8vw;
+	width: 100%;
+	//max-width: 20%;
+	position: relative;
+	padding-left: 0.1vw !important;
+	align-self: center;
+	white-space: nowrap;
 }
 
-@media  (orientation:portrait) {
-  .example-box{
-    font-size: 1.6vw !important;
-  }
+@media (orientation: portrait) {
+	.example-box {
+		font-size: 1.6vw !important;
+	}
 }
 
-@media  (orientation:portrait) {
-  .panelTitle{
-    font-size: 2vw !important;
-  }
+@media (orientation: portrait) {
+	.panelTitle {
+		font-size: 2vw !important;
+	}
 }
 
 .example-box:last-child {
-  border: none;
+	border: none;
 }
 .group {
-  color: rgba(0, 20, 0, 0.87);
- // border-bottom: solid 1px #ccc;
-  // border-top: solid 1px #ccc;
-  display: flex;
-  flex-direction: column;
-  align-items: baseline;
-  background: white;
-  font-size: 1.0vw;
-  font-weight:bold;
-  width: 100%;
-  //max-width: 20%;
-  position: relative;
-  padding-top: 1px !important;
-  padding-bottom: 0px !important;
-  overflow: visible !important;
+	color: rgba(0, 20, 0, 0.87);
+	// border-bottom: solid 1px #ccc;
+	// border-top: solid 1px #ccc;
+	display: flex;
+	flex-direction: column;
+	align-items: baseline;
+	background: white;
+	font-size: 1vw;
+	font-weight: bold;
+	width: 100%;
+	//max-width: 20%;
+	position: relative;
+	padding-top: 1px !important;
+	padding-bottom: 0px !important;
+	overflow: visible !important;
 }
 
-@media  (orientation:portrait) {
-  .group{
-    font-size: 1.8vw;
-  }
+@media (orientation: portrait) {
+	.group {
+		font-size: 1.8vw;
+	}
 }
 
-
-.selectLayer{
-  display:flex;
-  justify-content:space-between;
-  font-size: 0.9vw !important;
-  font-weight:bold !important;
-  // align-items: left; //center;
+.selectLayer {
+	display: flex;
+	justify-content: space-between;
+	font-size: 0.9vw !important;
+	font-weight: bold !important;
+	// align-items: left; //center;
 }
 
 .iconLegend {
-  max-width:20px;
-  max-height:20px;
+	width: 24px;
+	max-width: 50px;
+	max-height: 50px;
 }
-.iconTitle{
-  display:inline-block;
-  padding-left: 5px;
-  font-weight: bold;
-  font-size: 18px;
+.iconTitle {
+	display: inline-block;
+	padding-left: 5px;
+	font-weight: bold;
+	font-size: 18px;
 }
-.iconImage{
-  display:inline-block;
-  padding-left: 0px;
+.iconImage {
+	display: inline-block;
+	padding-left: 0px;
 }
 
 .cdk-drag-preview {
-  box-sizing: border-box;
-  border-radius: 4px;
-  box-shadow: 0 5px 5px -3px rgba(0, 0, 0, 0.2),
-  0 8px 10px 1px rgba(0, 0, 0, 0.14),
-  0 3px 14px 2px rgba(0, 0, 0, 0.12);
+	box-sizing: border-box;
+	border-radius: 4px;
+	box-shadow:
+		0 5px 5px -3px rgba(0, 0, 0, 0.2),
+		0 8px 10px 1px rgba(0, 0, 0, 0.14),
+		0 3px 14px 2px rgba(0, 0, 0, 0.12);
 }
 .cdk-drag-placeholder {
-  opacity: 0;
+	opacity: 0;
 }
 .cdk-drag-animating {
-  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+	transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
 }
 
-.layer-panel-list.cdk-drop-list-dragging .example-box:not(.cdk-drag-placeholder) {
-  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+.layer-panel-list.cdk-drop-list-dragging
+	.example-box:not(.cdk-drag-placeholder) {
+	transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
 }
 
 .mat-list-option {
-  height: 100% !important;
-  vertical-align:middle !important;
-  padding-top: 1px !important;  // #TODO hacerlo differente responsive design
- // border-bottom: solid 1px #ccc;
+	height: 100% !important;
+	vertical-align: middle !important;
+	padding-top: 1px !important; // #TODO hacerlo differente responsive design
+	// border-bottom: solid 1px #ccc;
 }
 
-:host ::ng-deep  .mat-pseudo-checkbox {
-  border: solid 1px;
-  margin-right: 4px;
-  transform: scale(1.4);
+:host ::ng-deep .mat-pseudo-checkbox {
+	border: solid 1px;
+	margin-right: 4px;
+	transform: scale(1.4);
 }
 
 :host ::ng-deep .mat-pseudo-checkbox::after {
-  color: darkred !important;
+	color: darkred !important;
 }
 
 // to remove the padding in mat-list
 :host ::ng-deep .mat-list-item-content {
-  //padding: 0 !important;
-  padding-left: 4px !important;
-  height:1.2vw !important;
+	//padding: 0 !important;
+	padding-left: 4px !important;
+	height: 1.2vw !important;
 }
 
 :host ::ng-deep .mat-card {
-  //padding: 0 !important;
-  padding: 0px;
-  //height:1.2vw !important;
+	//padding: 0 !important;
+	padding: 0px;
+	//height:1.2vw !important;
 }
 
 // to remove the padding on the text of the list
 :host ::ng-deep .mat-list-text {
-  padding-left: 4px !important;  // rigth left
-  padding-top: 0px !important;  // rigth left
-  overflow: visible !important;
+	padding-left: 4px !important; // rigth left
+	padding-top: 0px !important; // rigth left
+	overflow: visible !important;
 }
 
 :host ::ng-deep .mat-list-base {
-  padding-top: 9px !important;
+	padding-top: 9px !important;
 }
-
 
 .active {
-  background: #fff2e1;
+	background: #fff2e1;
 }
 .activeAction {
-  background: #ad1457;
-  border-color: #ad1457;
-  border-style: solid;
-  border-width: 4px;
-  height: 48px;
-  width: 48px;
+	background: #ad1457;
+	border-color: #ad1457;
+	border-style: solid;
+	border-width: 4px;
+	height: 48px;
+	width: 48px;
 }
-.onEdit{
-  background: #ad1457;
-  border-color: #ad1457;
-  border-width: 4px;
-  border-style: solid;
-  // padding-top: -0.3vw;
+.onEdit {
+	background: #ad1457;
+	border-color: #ad1457;
+	border-width: 4px;
+	border-style: solid;
+	// padding-top: -0.3vw;
 }
 
 :host ::ng-deep .mat-expansion-panel-header {
-  padding: 0 8px;
-  border-bottom-width: 1px;
-  border-bottom-style: solid;
-  border-bottom-color: #e9e9e9;
-  flex: 1 1 auto;
-  align-items: normal;
+	padding: 0 8px;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+	border-bottom-color: #e9e9e9;
+	flex: 1 1 auto;
+	align-items: normal;
 }
 
-:host ::ng-deep  .mat-expansion-panel:not([class*=mat-elevation-z]) {
-  box-shadow: 0px 0px 0px 0px;
+:host ::ng-deep .mat-expansion-panel:not([class*="mat-elevation-z"]) {
+	box-shadow: 0px 0px 0px 0px;
 }
 :host ::ng-deep .mat-expansion-panel-body {
-  padding: 0 24px 6px;
+	padding: 0 24px 6px;
 }
 
-:host ::ng-deep  .mat-button  {
-  vertical-align: top !important;
+:host ::ng-deep .mat-button {
+	vertical-align: top !important;
 }
 
-.mat-list-text{
-  height: 100%;
-  font-weight: bold;
+.mat-list-text {
+	height: 100%;
+	font-weight: bold;
 }
 
 .legend-image-wrapper {
-  padding: 10px 0;
-  display: flex;
-  justify-content: flex-start;
-  
-  img {
-    max-width: 100%; // Prevents large WMS legends from overflowing the panel
-    height: auto;
-  }
+	padding: 10px 0;
+	display: flex;
+	justify-content: flex-start;
+
+	img {
+		max-width: 100%; // Prevents large WMS legends from overflowing the panel
+		height: auto;
+	}
 }

@@ -5,6 +5,7 @@ import { MatIconRegistry } from "@angular/material/icon";
 import {DomSanitizer} from "@angular/platform-browser";
 import {AppConstants} from '../app-constants';
 import { ProjectConfiguration } from '../config/project-config';
+import { GeometryType } from '../map/map.component';
 
 
 @Component({
@@ -24,7 +25,7 @@ export class EditingToolbarComponent implements OnInit, OnDestroy {
   stopSave = false;
   stopSaveAll = false;
   isVisible$: Observable<boolean>;
-  layerTypeEdit$: string;  // type of geometry of the layer in editing
+  layerTypeEdit$: GeometryType;  // type of geometry of the layer in editing
   layerTypeRateMeasures$ = false; // if the layer is for ranking;
   layerTypeRate$ = false;
   styles: any;
