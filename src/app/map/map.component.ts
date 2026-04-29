@@ -185,6 +185,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 	private geolocationVectorSource: VectorSource;
 	private addedFeature: Feature;
 	private loadedProject?: ProjectConfiguration;
+
 	private afterSymbolSelectedHandler: (layer: any, feature: any) => void =
 		this.popAttrForm;
 	measureTooltipElement: any; // The measure tooltip element.  * @type {HTMLElement}
@@ -202,6 +203,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 	// variables to use in the ranking dialog
 	ranking: any;
 	// subscriptions
+	isGeocoderConfigured: boolean = false; //updated when project is loaded
 	subsToShapeEdit: Subscription;
 	subsTocurrentSymbol: Subscription;
 	subsToSaveCurrentLayer: Subscription;
@@ -774,6 +776,13 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 		this.qGsServerUrl = this.config.getAppConfig().qgisServerUrl;
 		this.mapZoom = projectConfig.initZoom;
 		this.srsID = this.config.getAppConfig().srs;
+
+		if(projectConfig.geocoder !== undefined && projectConfig.geocoder.baseUrl){
+			this.isGeocoderConfigured = true; //show address search in toolbar
+		}else{
+			this.isGeocoderConfigured = false;
+		}
+		this.openLayersService.updateGeocodingConfigured(this.isGeocoderConfigured);
 
 		this.updateMap(this.qgsProjectFile);
 	}

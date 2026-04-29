@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import {Subject} from 'rxjs';
 import { ProjectConfiguration } from './config/project-config';
 import { LegendSymbol } from './layer-styles.service';
+import { Map } from 'ol';
 
 @Injectable({
   providedIn: 'root'
@@ -46,6 +47,10 @@ export class OpenLayersService {
   zoomToLocation$ = this.zoomToLocation.asObservable();
   private streetSearchConfigured = new Subject<boolean>();
   streetSearchConfigured$ = this.streetSearchConfigured.asObservable();
+  private showGeocodingComponent = new Subject<{visible: boolean}>();
+  showGeocodingComponent$ = this.showGeocodingComponent.asObservable();
+  private geocodingConfigured = new Subject<boolean>();
+  geocodingConfigured$ = this.geocodingConfigured.asObservable();
 
   constructor() { }
 
@@ -167,6 +172,14 @@ export class OpenLayersService {
 
   updateStreetSearchConfigured(isConfigured: boolean){
     this.streetSearchConfigured.next(isConfigured)
+  }
+
+  updateShowGeocodingComponent(visible: boolean){
+    this.showGeocodingComponent.next({visible});
+  }
+
+  updateGeocodingConfigured(isConfigured: boolean){
+    this.geocodingConfigured.next(isConfigured);
   }
 
 }

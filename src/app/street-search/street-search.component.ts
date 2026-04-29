@@ -1,18 +1,12 @@
-import { AppComponent } from './../app.component';
-import { catchError } from 'rxjs/operators';
 import { AppConstants } from '../app-constants';
 import { OpenLayersService } from './../open-layers.service';
 import { Subscription } from 'rxjs';
-import { Component, OnInit, OnDestroy, ViewChild, ChangeDetectorRef, Input } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ChangeDetectorRef } from '@angular/core';
 import {
-  and as AndFilter,
-  equalTo as EqualToFilter,
   like,
-  like as LikeFilter,
 } from 'ol/format/filter';
-import VectorSource from 'ol/source/Vector'
 import Feature from 'ol/Feature';
-import { GeoJSON, WFS } from 'ol/format';
+import { WFS } from 'ol/format';
 import {GML} from 'ol/format'
 import { HttpClient } from '@angular/common/http';
 import { MatLegacySelect as MatSelect } from '@angular/material/legacy-select';

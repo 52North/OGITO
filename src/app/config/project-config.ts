@@ -25,6 +25,11 @@ export interface ProjectConfiguration{
     layerName : string,
     property: string
   };
+  geocoder?: {
+    baseUrl: string,
+    autoComplete?: boolean,
+    limit?: number 
+  }
   sketchLayerPolygons: string,
   sketchLayerLinestrings: string,
   sketchLayerPoints: string
@@ -67,6 +72,12 @@ export const StreetSearchCodec = t.type({
   property: t.string
 });
 
+export const GeocoderCodec = t.type({
+  baseUrl: t.string,
+  autoComplete: t.union([t.boolean, t.undefined]),
+  limit: t.union([t.number, t.undefined])
+});
+
 export const ProjectConfigurationCodec = t.type({
   name: t.string,
   qgisProjectFilename: t.string,
@@ -81,6 +92,7 @@ export const ProjectConfigurationCodec = t.type({
   backgroundLayers : t.array(BackgroundLayerCodec),
   defaultVisibleLayers: t.union([t.array(t.string), t.undefined]),
   streetSearch: t.union([StreetSearchCodec, t.undefined]),
+  geocoder: t.union([GeocoderCodec, t.undefined]),
   sketchLayerPolygons: t.string,
   sketchLayerLinestrings: t.string,
   sketchLayerPoints: t.string,

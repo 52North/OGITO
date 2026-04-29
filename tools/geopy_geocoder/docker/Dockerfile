@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Enable required Apache modules
-RUN a2enmod fcgid alias
+RUN a2enmod fcgid alias headers
 
 # Create the working directory
 WORKDIR /var/www/scripts

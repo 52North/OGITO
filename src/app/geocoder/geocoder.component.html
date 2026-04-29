@@ -1,0 +1,53 @@
+<div class="geocoder-panel" *ngIf="this.isGeocoderVisible()" cdkDrag cdkDragBoundary=".app-content" role="region" aria-label="Address Search Panel">
+  
+  <div class="header-row">
+    <span class="panel-title">Address Search</span>
+    <button mat-icon-button (click)="this.setGeocoderVisible(false)" class="close-button" aria-label="Close address search panel">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <div class="input-row">
+    <mat-form-field class="geocoder-input" appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Enter address</mat-label>
+      <input
+        matInput
+        type="text"
+        [(ngModel)]="userInput"
+        aria-label="Address search text input"
+        (keyup.enter)="userInput.trim().length > 2 ? executeGeocodingRequest() : null"
+      />
+    </mat-form-field>
+    
+    <button
+      class="search-button"
+      mat-flat-button
+      color="primary"
+      aria-label="Execute search"
+      (click)="this.executeGeocodingRequest()"
+      [disabled]="userInput.trim().length <= 2"
+    >
+      <mat-icon>search</mat-icon>
+    </button>
+  </div>
+
+  <div class="select-geocoder-container" *ngIf="currentResults">
+    <mat-select 
+      [(ngModel)]="this.selectedResult" 
+      (selectionChange)="onResultSelected($event)" 
+      class="select-geocoder" 
+      placeholder="Select an address"
+      aria-label="Select address from search results"
+      #geocoderSelect
+    >
+      <ng-container *ngIf="currentResults.length > 0">
+        <mat-option *ngFor="let result of this.currentResults" [value]="result" [title]="result.label">
+          {{result.label}}
+        </mat-option>
+      </ng-container>
+      <mat-option *ngIf="currentResults.length === 0" [value]="null" disabled>
+        No matching address found
+      </mat-option>
+    </mat-select>
+  </div>
+</div>

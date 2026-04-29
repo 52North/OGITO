@@ -61,3 +61,7 @@ tools/image_upload/node_modules
 tools/street_names
 
 src/assets/configuration/
+
+
+#python virtual environment (tools)
+**/venv

@@ -17,6 +17,7 @@ import { DynamicFormComponent } from './dynamic-form/dynamic-form.component';
 import { StreetSearchComponent } from './street-search/street-search.component';
 import { EditReportingComponent } from './edit-reporting/edit-reporting.component';
 import { CustomSketchLayerFormComponent } from './custom-sketch-layer-form/custom-sketch-layer-form.component';
+import { GeocoderComponent } from './geocoder/geocoder.component';
 
 @NgModule({
   declarations: [
@@ -33,7 +34,8 @@ import { CustomSketchLayerFormComponent } from './custom-sketch-layer-form/custo
     DialogLayerNameDialog,
     StreetSearchComponent,
     EditReportingComponent,
-    CustomSketchLayerFormComponent
+    CustomSketchLayerFormComponent,
+    GeocoderComponent
   ],
     imports: [
         BrowserModule,
