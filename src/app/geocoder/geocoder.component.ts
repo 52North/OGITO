@@ -1,5 +1,12 @@
 import { HttpClient } from "@angular/common/http";
-import { ChangeDetectorRef, Component, Input, OnDestroy, OnInit, ViewChild } from "@angular/core";
+import {
+	ChangeDetectorRef,
+	Component,
+	Input,
+	OnDestroy,
+	OnInit,
+	ViewChild,
+} from "@angular/core";
 import { Feature, Map as OlMap } from "ol";
 import { Vector } from "ol/layer";
 import VectorSource from "ol/source/Vector";
@@ -8,10 +15,12 @@ import { AppconfigService } from "../config/appconfig.service";
 import { ProjectConfiguration } from "../config/project-config";
 import { OpenLayersService } from "../open-layers.service";
 import { fromLonLat } from "ol/proj";
-import { Circle, Point } from "ol/geom";
 import { Style, Stroke, Fill } from "ol/style";
 import CircleStyle from "ol/style/Circle";
 import { MatSelect } from "@angular/material/select";
+import { Subject } from "rxjs";
+import { debounceTime, distinctUntilChanged } from "rxjs/operators";
+import Point from "ol/geom/Point";
 
 @Component({
 	selector: "app-geocoder",
@@ -21,20 +30,22 @@ import { MatSelect } from "@angular/material/select";
 export class GeocoderComponent implements OnInit, OnDestroy {
 	private showGeocoderSubscription: Subscription;
 	private projectSelectedSubscription: Subscription;
+	private userInputSubject = new Subject<string>();
+	private autoCompleteSubscription: Subscription;
 
 	@Input() olMap: OlMap;
-  @ViewChild ("geocoderSelect", {static: false})geocoderSelect : MatSelect;
+	@ViewChild("geocoderSelect", { static: false }) geocoderSelect: MatSelect;
 
-	
 	private clientCache: Map<string, GeocodingResult[]> = new Map(); // Simple in-memory cache
 	private projectConfig?: ProjectConfiguration;
 	private bboxRequestParam?: string; //derived from project config
 	private proximityRequestParam?: string; //derived from project config
 	private geocodingVectorSource: VectorSource;
 	private geocodingVectorLayer: Vector;
-  private geocoderBaseUrl: string = "";
-  private autoComplete = false;
-  private  limit: number = 5;
+	private autocompleteDebounceMillis = 500;
+	private geocoderBaseUrl: string = "";
+	private autoComplete = false;
+	private limit: number = 5;
 
 	isVisible: boolean = false;
 	userInput: string = "";
@@ -45,7 +56,7 @@ export class GeocoderComponent implements OnInit, OnDestroy {
 		private openLayersService: OpenLayersService,
 		private http: HttpClient,
 		private config: AppconfigService,
-    private changeDetectorRef: ChangeDetectorRef
+		private changeDetectorRef: ChangeDetectorRef,
 	) {
 		this.geocodingVectorSource = new VectorSource();
 		this.geocodingVectorLayer = new Vector({
@@ -85,22 +96,32 @@ export class GeocoderComponent implements OnInit, OnDestroy {
 						this.bboxRequestParam = this.getBboxParam(data);
 						this.proximityRequestParam = this.getProximityParam(data);
 
-            if(data.geocoder){
-              this.geocoderBaseUrl = data.geocoder.baseUrl;
-              if(data.geocoder.autoComplete !== undefined){
-                this.autoComplete = data.geocoder.autoComplete;
-              }
-              if(data.geocoder.limit !== undefined && data.geocoder.limit > 0){
-                this.limit = data.geocoder.limit;
-              }
-            }
-
+						if (data.geocoder) {
+							this.geocoderBaseUrl = data.geocoder.baseUrl;
+							if (data.geocoder.autoComplete !== undefined) {
+								this.autoComplete = data.geocoder.autoComplete;
+							}
+							if (data.geocoder.limit !== undefined && data.geocoder.limit > 0) {
+								this.limit = data.geocoder.limit;
+							}
+						}
 					}
 				},
 				(error) => {
 					console.error("error on project selection", error);
 				},
 			);
+		this.autoCompleteSubscription = this.userInputSubject
+			.pipe(
+				debounceTime(this.autocompleteDebounceMillis), // wait after last keystroke
+				distinctUntilChanged(), // only fire if the value actually changed
+			)
+			.subscribe(() => {
+				// only execute if autoComplete is enabled and input is long enough
+				if (this.autoComplete && this.isSearchEnabled()) {
+					this.executeGeocodingRequest();
+				}
+			});
 	}
 
 	public isGeocoderVisible(): boolean {
@@ -138,12 +159,27 @@ export class GeocoderComponent implements OnInit, OnDestroy {
 			resultFeature.set("label", this.selectedResult.label);
 
 			this.geocodingVectorSource.addFeature(resultFeature); //add feature for selected result to map
-			this.olMap
-				.getView()
-				.fit(this.geocodingVectorSource.getExtent(), {
-					maxZoom: this.olMap.getView().getMaxZoom() - 5,
-				});
+			this.olMap.getView().fit(this.geocodingVectorSource.getExtent(), {
+				maxZoom: this.olMap.getView().getMaxZoom() - 5,
+			});
 		}
+	}
+
+  //handle user input changed if auto complete is enabled
+  public onInputChange(value: string) {
+    if (this.autoComplete) {
+      this.userInputSubject.next(value);
+    }
+    
+    // clear result if users clears input
+    if (value.trim().length === 0) {
+      this.currentResults = [];
+      this.selectedResult = undefined;
+    }
+  }
+
+	public isSearchEnabled() {
+		return this.userInput.trim().length > 2;
 	}
 
 	public executeGeocodingRequest() {
@@ -156,7 +192,7 @@ export class GeocoderComponent implements OnInit, OnDestroy {
 		// check cache first
 		if (this.clientCache.has(query)) {
 			this.currentResults = this.clientCache.get(query) || [];
-      this.openSelectOptions(true);
+			this.openSelectOptions(true);
 			return;
 		}
 
@@ -180,7 +216,7 @@ export class GeocoderComponent implements OnInit, OnDestroy {
 					const filteredItems = this.filterResultsByProjectExtent(resultItems);
 					this.currentResults = filteredItems;
 					this.clientCache.set(params.address, this.currentResults); // Cache results
-          this.openSelectOptions(true);
+					this.openSelectOptions(true);
 				},
 				(error) => {
 					console.error("Error during geocoding request", error);
@@ -246,18 +282,19 @@ export class GeocoderComponent implements OnInit, OnDestroy {
 		this.geocodingVectorSource.clear();
 	}
 
-  private openSelectOptions(open: boolean){
-    this.changeDetectorRef.detectChanges(); //detect changes first because streetselect Element is conditional (*ngIf)
-    if(open){
-      this.geocoderSelect.open();
-    }else{
-      this.geocoderSelect.close();
-    }
-  }
+	private openSelectOptions(open: boolean) {
+		this.changeDetectorRef.detectChanges(); //detect changes first because streetselect Element is conditional (*ngIf)
+		if (open) {
+			this.geocoderSelect.open();
+		} else {
+			this.geocoderSelect.close();
+		}
+	}
 
 	ngOnDestroy(): void {
 		this.showGeocoderSubscription.unsubscribe();
 		this.projectSelectedSubscription.unsubscribe();
+    this.autoCompleteSubscription.unsubscribe();
 		this.isVisible = false;
 		this.olMap = undefined;
 	}

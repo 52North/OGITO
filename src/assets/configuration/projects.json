@@ -23,7 +23,12 @@
   "labels": {"Rating":{"rankingA": "Ranking A", "rankingB": "Ranking B", "description": "Text"}},
   "customSketchLayerPoints": "sketch_custom_points",
   "customSketchLayerDefinitionsFiles": ["./assets/configuration/customlayer_poi.json"],
-  "defaultVisibleLayers": ["Topographic Map (OSM)"]
+  "defaultVisibleLayers": ["Topographic Map (OSM)"],
+  "geocoder": {
+    "baseUrl": "http://localhost:8080/geocode",
+    "limit": 10,
+    "autoComplete": true
+  }
 },
   {
     "name": "OGITO Starter copy",

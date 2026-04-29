@@ -81,19 +81,41 @@
     }
   }
 }
-
 ::ng-deep {
   .geocoder-panel {
-    .mat-form-field-outline { border-radius: 0 !important; }
-    .mat-form-field-outline-start, 
-    .mat-form-field-outline-end, 
-    .mat-form-field-outline-gap { border-radius: 0 !important; }
-
+    // Keep the selected value (trigger) contained with an ellipsis
     .mat-select-value {
       max-width: 100%;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+    }
+    
+    // Ensure the form field doesn't expand
+    .mat-form-field {
+      max-width: 100%;
+    }
+  }
+
+  // Styles for the dropdown overlay list
+  .mat-select-panel.geocoder-custom-panel {
+    // Allow the dropdown to be wider than the 340px panel
+    min-width: 340px !important; 
+    width: auto !important; 
+    max-width: none !important;
+    
+    // Aesthetic consistency: sharp corners and no extra shadows
+    border-radius: 0 !important;
+    border: 1px solid #ccc;
+    box-shadow: none !important;
+
+    .mat-option {
+      // Allow the options to show full text if the panel expands
+      .mat-option-text {
+        white-space: nowrap;
+        overflow: visible; 
+        text-overflow: clip; 
+      }
     }
   }
 }

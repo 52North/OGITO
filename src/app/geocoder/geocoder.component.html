@@ -14,8 +14,9 @@
         matInput
         type="text"
         [(ngModel)]="userInput"
+        (ngModelChange)="onInputChange($event)"
         aria-label="Address search text input"
-        (keyup.enter)="userInput.trim().length > 2 ? executeGeocodingRequest() : null"
+        (keyup.enter)="isSearchEnabled() ? executeGeocodingRequest() : null"
       />
     </mat-form-field>
     
@@ -25,7 +26,7 @@
       color="primary"
       aria-label="Execute search"
       (click)="this.executeGeocodingRequest()"
-      [disabled]="userInput.trim().length <= 2"
+      [disabled]="!isSearchEnabled()"
     >
       <mat-icon>search</mat-icon>
     </button>
@@ -38,6 +39,7 @@
       class="select-geocoder" 
       placeholder="Select an address"
       aria-label="Select address from search results"
+      panelClass="geocoder-custom-panel"
       #geocoderSelect
     >
       <ng-container *ngIf="currentResults.length > 0">
