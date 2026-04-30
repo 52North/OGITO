@@ -47,7 +47,7 @@ export class SymbolListComponent implements OnInit, OnDestroy {
 
 		this.subscriptionToLayerEditing = this.openLayersService.layerEditing$.subscribe(
 			(data) => {
-				this.wfsLayerStyle = this.mapQgsStyleService.getLayerStyleConfig(data.layerName);
+				this.wfsLayerStyle = this.mapQgsStyleService.getLayerStyleConfig(data.layerName, false); //ToDO
 				
 				// Pull the clean array of symbols directly from the new service
 				this.symbols = this.wfsLayerStyle?.symbols || [];

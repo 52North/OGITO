@@ -8,6 +8,7 @@ import { AppconfigService } from "./config/appconfig.service";
 import { CustomSketchLayerService } from "./config/custom-sketch-layer-service";
 import { AppConstants } from "./app-constants";
 import { SketchType } from "./map/map.component";
+import { single } from "rxjs/operators";
 
 export interface LegendSymbol {
 	iconSrc: string;
@@ -19,6 +20,7 @@ export interface WFSLayerStyle {
 	styleFunc: (feature: Feature, resolution: number) => Style | Style[];
 	symbols: LegendSymbol[];
 	isSketch: SketchType;
+	isSingleSymbol: boolean;
 }
 
 @Injectable({
@@ -30,6 +32,11 @@ export class LayerStyleService {
 
 	private readonly projectSelectedSubscription: Subscription;
 	private loadedProject?: ProjectConfiguration;
+	private readonly defaultSymbol: LegendSymbol = {
+		id: "default",
+		title: "default",
+		iconSrc: this.getColoredSvgBase64("#FFA500")
+	} 
 
 	public readonly sketchStyleAttr = "style";
 	public readonly customSketchStyleAttr = "category";
@@ -56,6 +63,7 @@ export class LayerStyleService {
 		qGsServerUrl: string,
 		qgsProjectFile: string,
 		layerList: string[],
+		layerWithDefaultStyle: string[] = []
 	): Promise<void> {
 		const wmsVersion = this.config.getAppConfig().wmsVersion;
 
@@ -66,9 +74,10 @@ export class LayerStyleService {
 
 			// Generate the WMS URLs for this specific layer
 			const legendJsonUrl = `${qGsServerUrl}SERVICE=WMS&VERSION=${wmsVersion}&REQUEST=GetLegendGraphic&FORMAT=application/json&map=${qgsProjectFile}&LAYER=${layerName}`;
-			const legendImageUrl = `${qGsServerUrl}SERVICE=WMS&VERSION=${wmsVersion}&REQUEST=GetLegendGraphic&FORMAT=image/png&TRANSPARENT=true&map=${qgsProjectFile}&LAYER=${layerName}`;
+			//const legendImageUrl = `${qGsServerUrl}SERVICE=WMS&VERSION=${wmsVersion}&REQUEST=GetLegendGraphic&FORMAT=image/png&TRANSPARENT=true&map=${qgsProjectFile}&LAYER=${layerName}`;
 
 			let parsedSymbols: LegendSymbol[] = [];
+			let isSingleSymbol = false;
 
 			// 1. Fetch the JSON Legend to extract base64 symbols for the UI and the Map
 			try {
@@ -85,12 +94,14 @@ export class LayerStyleService {
 						// Scenario A: Categorized / Rule-based (Has a 'symbols' array)
 						if (targetNode.symbols && targetNode.symbols.length > 0) {
 							parsedSymbols = targetNode.symbols.map((sym: any) => ({
+								id: this.normalizeString(sym.title),
 								title: sym.title,
 								iconSrc: `data:image/png;base64,${sym.icon}`,
 							}));
 						}
 						// Scenario B: Single Symbol (Icon is directly on the node)
 						else if (targetNode.icon) {
+							isSingleSymbol = true;
 							parsedSymbols = [
 								{
 									title: targetNode.title || "default",
@@ -112,18 +123,27 @@ export class LayerStyleService {
 					return this.defineSketchStyle();
 				}
 
+				if (isSingleSymbol){
+					return new Style({
+					image: new Icon({
+						src: parsedSymbols[0]!.iconSrc,
+						crossOrigin: "anonymous",
+					}),
+				});
+				}
+
 				// Get the category from the feature properties and convert to lowercase safely
 				const rawCategoryValue = feature.get(AppConstants.wfsLAyerStyleAttr);
 				const searchCategory = rawCategoryValue
-					? String(rawCategoryValue).toLowerCase()
+					? this.normalizeString(rawCategoryValue)
 					: "";
 
 				// Find the matching symbol based on case-insensitive title, OR fallback to the first symbol
 				const matchedSymbol =
 					parsedSymbols.find((sym) => {
-						const safeTitle = sym.title ? String(sym.title).toLowerCase() : "";
-						return safeTitle === searchCategory;
-					}) || parsedSymbols[0];
+						const safeId = sym.id ? this.normalizeString(sym.id) : "";
+						return safeId === searchCategory;
+					}) || this.defaultSymbol;
 
 				// Return the native OpenLayers style using the JSON base64 string
 				return new Style({
@@ -139,13 +159,20 @@ export class LayerStyleService {
 				styleFunc: olStyleFunction,
 				symbols: parsedSymbols,
 				isSketch: "NONE",
+				isSingleSymbol: isSingleSymbol
 			};
 		}
 	}
 
-	public getLayerStyleConfig(layerName: string): WFSLayerStyle {
+	public getLayerStyleConfig(layerName: string, isSketch: boolean): WFSLayerStyle {
 		if (this.layerStyles[layerName]) {
 			return this.layerStyles[layerName];
+		}else {
+			if(isSketch){
+				return this.setSketchStyle(layerName)
+			}else{
+				return this.setDefaultStyle(layerName, "NONE");
+			}
 		}
 		return this.setSketchStyle(layerName);
 	}
@@ -200,7 +227,7 @@ export class LayerStyleService {
 			: AppConstants.sketchStyleAttr;
 		const sketchStyleFunc = (feature: Feature) => {
 			const value = this.normalizeString(feature.get(attr));
-			const style = styleDict[value];
+			let style = styleDict[value];
 
 			//add label if labelField is defined in the config and the feature has a value for this field (custom sketch layers only)
 			const customLayerDef =
@@ -212,6 +239,7 @@ export class LayerStyleService {
 					const propsObj = JSON.parse(propsJSON);
 					if (propsObj && propsObj[customLayerDef.labelField]) {
 						const labelText = String(propsObj[customLayerDef.labelField]);
+						style = style.clone();  //create copy of style object for individual label
 						style.setText(this.createLabelStyle(labelText)); //create and set label
 					}
 				}
@@ -223,10 +251,28 @@ export class LayerStyleService {
 			styleFunc: sketchStyleFunc,
 			symbols: symbols,
 			isSketch: isCustomSketchLayer ? "CUSTOM_SKETCH" : "SKETCH",
+			isSingleSymbol: false
 		};
 
 		return this.layerStyles[layerName];
 	}
+
+
+	private setDefaultStyle(layerName: string, sketch: SketchType){
+		const defaultStyleColor = "#6082B6"
+		const defaultStyle = this.defineSketchStyle(defaultStyleColor)
+		const styleConfig = {
+			styleFunc: () => {return defaultStyle},
+			isSketch: sketch,
+			symbols: [{id: layerName, title: layerName, iconSrc: this.getColoredSvgBase64(defaultStyleColor)}],
+			isSingleSymbol: true
+		};
+		this.layerStyles[layerName] = styleConfig;
+
+		return styleConfig;
+	}
+
+
 
 	private defineSketchStyle(colorHex: string = "#FFA500"): Style {
 		const newIcon = new Icon({

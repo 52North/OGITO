@@ -1,14 +1,12 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import {Subject, Subscription} from 'rxjs';
-import  VectorLayer from 'ol/layer/Vector';
 import Feature from 'ol/Feature';
 import { OpenLayersService } from './open-layers.service';
 import { ProjectConfiguration } from './config/project-config';
 import { CustomSketchLayerService } from './config/custom-sketch-layer-service';
 import { CustomLayerDefinition } from './config/custom-sketch-layer-config';
-import VectorSource from 'ol/source/Vector';
 import { EditLayer } from './map/map.component';
-
+import { QuestionService } from './dynamic-form-questions/question-service.service';
 @Injectable({
   providedIn: 'root'
 })
@@ -24,7 +22,7 @@ export class CustomDialogService {
   dialogClosed$ = this.customDialogClosedSource.asObservable();
 
 
-  constructor (private openLayersService: OpenLayersService, private customLayerService: CustomSketchLayerService){
+  constructor (private openLayersService: OpenLayersService, private customLayerService: CustomSketchLayerService, private questionService: QuestionService){
     this.openLayersService.qgsProjectUrl$.subscribe(
       (data) => {
         if (data) {
@@ -73,7 +71,11 @@ export class CustomDialogService {
       }
 
       if(!isSketchLayer && (!this.loadedProject.rateMeasureLayers || !this.loadedProject.rateMeasureLayers.includes(layerName))){ //if not layer for measure ranking, use custom dialog
-        return this.customDialogs[0];
+        if(this.detectEditMeldingenLayer(layerName)){
+          return this.customDialogs[0];
+        }else{
+          return null;
+        }
       }else{
         return null;
       }
@@ -94,6 +96,30 @@ export class CustomDialogService {
     this.customLayerDefinitionSource.next(data);
   }
 
+  /**
+   * check if question fit to EditMeldingen (Reporting) layer
+   * @param layeName 
+   * @returns 
+   */
+  private detectEditMeldingenLayer(layeName: string) : boolean {
+    //this is a raw workaround to detect if dynamic question layer or EditMeldingen (Reporting) layer
+    //we check if layer is as matching properties/question for EditMeldingen (Reporting) layer
+    //currently, there is no way to distinguish between dynmic quesiton layer (no custom handler) and EditMeldingen (Reporting) layer
+    //Would be better to indicate EditMeldingen (Reporting) layers in project configuration (breaking change)
+
+    const questions = this.questionService.getQuestions(layeName);
+    if(!questions){
+      return false;
+    }
+
+
+    const expectedQuestionKeys = ["text", "category", "date", "helpfulness", "priority"]
+    const existingQuestionKeys = new Set(questions.map(obj => obj.key));
+    const allKeysPresent = expectedQuestionKeys.every(key => existingQuestionKeys.has(key));
+    const isEditMeldingenLayer = allKeysPresent;
+
+    return isEditMeldingenLayer;
+  }
 }
 
 export interface EditedFeature{

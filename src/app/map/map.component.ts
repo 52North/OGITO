@@ -492,8 +492,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 					this.loadedProject,
 					sketchLayerName,
 				);
-		const styleConfig =
-			this.mapQgsStyleService.getLayerStyleConfig(sketchLayerName);
+
 		const newVector = new VectorLayer({
 			source: sketchSource,
 			zIndex: 101, // check this #TODO
@@ -501,7 +500,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 			// getting default style
 			style: (feature, resolution) => {
 				const styleConfig =
-					this.mapQgsStyleService.getLayerStyleConfig(sketchLayerName);
+					this.mapQgsStyleService.getLayerStyleConfig(sketchLayerName, true);
 				return styleConfig.styleFunc(feature as Feature, resolution);
 			},
 		});
@@ -547,6 +546,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 	) {
 		const styleConfig = this.mapQgsStyleService.getLayerStyleConfig(
 			customSketchLayerName,
+			true
 		);
 		const newVector = new VectorLayer({
 			source: source,
@@ -593,7 +593,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 			geometryType = sketch === "CUSTOM_SKETCH" ? "Point" : "Multi";
 			if (sketch === "CUSTOM_SKETCH") {
 				legendSymbols =
-					this.mapQgsStyleService.getLayerStyleConfig(layerName)?.symbols;
+					this.mapQgsStyleService.getLayerStyleConfig(layerName, true)?.symbols;
 			}
 		}
 		const layerItems: LayerInfo[] = [];
@@ -810,7 +810,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 		const xmlParser = new DOMParser();
 		const xmlText = xmlParser.parseFromString(gqsProjectinfo, "text/xml");
 		const WFSLayers = xmlText.getElementsByTagName("WFSLayers")[0];
-		const wfsLayerList: string[] = [];
+		let wfsLayerList: string[] = [];
 		if (WFSLayers !== undefined) {
 			for (let k = 0; k < WFSLayers.getElementsByTagName("WFSLayer").length; k++) {
 				const layerName =
@@ -960,66 +960,39 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 			}
 		}
 
+		// update the observable for layerPanel
+		this.groupsLayersSubject.next(this.groupsLayers);
+		this.questionService.setQuestions(this.groupsLayers);
+
 		// get the styles for WFS layers
 		if (wfsLayerList.length > 0) {
+			//do not create styles for dynamic form wfs layers, they use default style 
+
+			wfsLayerList.filter((l) => this.isDynamicFormLayer(l)).forEach((l) => {
+				const layerInfo = this.findLayerinGroups(l);
+				if(layerInfo){
+					layerInfo.legendUrl = undefined;
+					layerInfo.legendLayer = this.mapQgsStyleService.getLayerStyleConfig(l, false).symbols
+				}
+			})
+
+			wfsLayerList = wfsLayerList.filter((l) => {
+				return !this.isDynamicFormLayer(l);
+			})
+			wfsLayerList.forEach(l => console.log(this.findLayerinGroups(l)))
 			this.mapQgsStyleService.createAllLayerStyles(
 				this.qGsServerUrl,
 				this.qgsProjectFile,
 				wfsLayerList,
 			);
+
+
+
 		}
-		// update the observable for layerPanel
-		this.groupsLayersSubject.next(this.groupsLayers);
-		this.questionService.setQuestions(this.groupsLayers);
 	}
 
 	updateMap(qgsfile: string) {
 		this.requestProjectInfo(qgsfile);
-	}
-
-	sanitizeImageUrl(imageUrl: string): SafeUrl {
-		return this.sanitizer.bypassSecurityTrustUrl(imageUrl);
-	}
-
-	createIconSymbols(iconSymbols: any, layerName: any): any {
-		if (iconSymbols.nodes.length === 0) {
-			// layer does not have symbols, raster
-			return [
-				{
-					iconSrc: this.sanitizeImageUrl(AppConstants.rasterIcon),
-					title: layerName,
-				},
-			];
-		}
-		const symbolList = [];
-		iconSymbols.nodes.forEach((icon) => {
-			if (icon.hasOwnProperty("icon")) {
-				if (icon.icon !== "") {
-					symbolList.push({
-						iconSrc: "data:image/png;base64," + icon.icon,
-						title: icon.title,
-					});
-				} else {
-					// workaround issue with OSM in GECCO
-					symbolList.push({
-						iconSrc: this.sanitizeImageUrl(AppConstants.rasterIcon),
-						title: layerName,
-					});
-				}
-			}
-			if (icon.hasOwnProperty("symbols")) {
-				// it has an array of symbols
-				icon.symbols.forEach((symbol) => {
-					if (symbol.title.length > 0) {
-						symbolList.push({
-							iconSrc: "data:image/png;base64," + symbol.icon,
-							title: symbol.title,
-						});
-					}
-				});
-			}
-		});
-		return symbolList;
 	}
 
 	ngOnInit(): void {
@@ -1609,19 +1582,15 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 		 */
 		try {
 			this.formOpen = true;
-			// highlight the element
-			this.select = new Select({
-				condition: click, // check if this work on touch
-				layers: [layer], // check if tis works
-				hitTolerance: 7, // check if this is enough
-			});
-			this.map.addInteraction(this.select);
-			const selectedFeatures = this.select.getFeatures();
-			selectedFeatures.push(feature);
-			this.select.dispatchEvent("select");
 			// triggering the form
-
 			this.formQuestions = this.questionService.getQuestions(layer.layerName);
+			
+			if(!this.formQuestions.some(question => question.key === AppConstants.wfsLAyerStyleAttr)){
+				console.log(feature.getProperties());
+				feature.unset(AppConstants.wfsLAyerStyleAttr);
+			}
+
+
 			this.updateFormQuestions(this.formQuestions, layer.layerName, feature);
 			this.updateShowForm(true);
 		} catch (e) {
@@ -1637,6 +1606,13 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 		this.updateShowForm(false);
 		// enable adding features
 		this.formOpen = false;
+
+
+		if(data.payload === null){
+			this.curEditingLayer.olLayer.getSource().removeFeature(data.feature);
+			return;
+		}
+
 		// unselect the feature in the map
 		if (this.select) {
 			this.select.getFeatures().clear();
@@ -1883,7 +1859,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 					self.curEditingLayer.geometryType.indexOf("Polygon") > -1
 				) {
 					// valid for multipolygon and multipolygonz
-					const geom = e.feature.getProperties().geometry;
+					const geom = e.feature.getGeometry() as LineString
 					const threshold = AppConstants.threshold;
 					const last = geom.getLastCoordinate();
 					const first = geom.getFirstCoordinate();
@@ -1941,6 +1917,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 		this.curEditingLayer = layer;
 
 		const layername = layer.layerName;
+
+		
 		const customHandler = this.getCustomHandlerForLayer(layername);
 
 		var customHeader: string;
@@ -1962,7 +1940,10 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 				return;
 			}
 
+			
 			this.afterSymbolSelectedHandler = this.popAttrForm; //use default dynamic form
+			this.curEditingLayer
+			feature.unset(AppConstants.wfsLAyerStyleAttr, true)
 		}
 
 		if (customHeader) {
@@ -2130,7 +2111,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 				}
 				if (
 					self.curEditingLayer.geometryType === "Point" ||
-					self.curEditingLayer.geometryType === "Line" ||
+					self.curEditingLayer.geometryType === "LineString" ||
 					self.curEditingLayer.geometryType === "MultiPoint" ||
 					self.curEditingLayer.geometryType === "Polygon" ||
 					self.curEditingLayer.geometryType === "Multi"
@@ -2320,7 +2301,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 						style: (feature, resolution) => {
 							//wrap style func from style service because service loads the styles asynchronously and the style func needs to be updated when the styles are loaded
 							const styleConfig =
-								this.mapQgsStyleService.getLayerStyleConfig(layerName);
+								this.mapQgsStyleService.getLayerStyleConfig(layerName, false);
 							return styleConfig.styleFunc(feature as Feature, resolution);
 						},
 					});
@@ -2387,7 +2368,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 		});
 	}
 
-	findLayerinGroups(layerName: string): any {
+	findLayerinGroups(layerName: string): LayerInfo | undefined {
 		/**
 		 * finds a layer in the groups dictionary
 		 */
@@ -4084,6 +4065,10 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 		);
 	}
 
+	private isDynamicFormLayer(layerName: string){
+		return !this.getCustomHandlerForLayer(layerName) && !this.isRateMeasureLayer(layerName);
+	}
+
 	ngOnDestroy() {
 		// prevent memory leak when component destroyed
 		// unsubscribe all the subscriptions
@@ -4169,7 +4154,7 @@ export interface LayerInfo {
 	visible: boolean;
 	layerForNewFeatures: boolean;
 	layerForRanking: boolean;
-	fields: Record<string, any>;
+	fields: any[];
 	removable: boolean;
 	sketch: SketchType;
 }
@@ -4185,7 +4170,7 @@ export type SketchType = "NONE" | "SKETCH" | "CUSTOM_SKETCH";
 
 export type GeometryType =
 	| "Multi"
-	| "Line"
+	| "LineString"
 	| "Polygon"
 	| "Point"
 	| "MultiPolygon"

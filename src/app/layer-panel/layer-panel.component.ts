@@ -113,7 +113,6 @@ export class LayerPanelComponent implements OnInit, OnDestroy {
 		/**
 		 * updates the status of the action  in layerName
 		 * @param layerName: layerName for exception
-		 * #TODO declare layer as a class and use setters and getters
 		 */
 		for (const group of this.currentGroupLayers) {
 			group.layers.forEach((layer) => {
@@ -136,6 +135,9 @@ export class LayerPanelComponent implements OnInit, OnDestroy {
 		 */
 		$event.preventDefault();
 		$event.stopImmediatePropagation();
+
+		this.editLayerClick.emit(null);
+
 		// not layer active
 		if (this.layerActive === null) {
 			// set the clicked layer as active
@@ -172,6 +174,9 @@ export class LayerPanelComponent implements OnInit, OnDestroy {
 			this.updateIdentifyActionInLayers(this.layerActive);
 			this.layerActive = layer.layerName;
 			layer.onEdit = true;
+			//close and re-open edit toolbar to ensure correct settings (questions, symbols ...)
+			this.openLayersService.updateShowEditToolbar(false);
+			this.openLayersService.raiseSymbolPanelClosed(true);
 			this.openLayersService.updateShowEditToolbar(true);
 			this.editLayerClick.emit({ layer, group });
 		}
