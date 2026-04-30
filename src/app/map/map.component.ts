@@ -220,13 +220,12 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 	subsToGeolocation: Subscription;
 
 	constructor(
-		private mapQgsStyleService: LayerStyleService,
+		private layerStyleService: LayerStyleService,
 		private openLayersService: OpenLayersService,
 		private questionService: QuestionService,
 		public auth: AuthService,
 		private snackBar: MatSnackBar,
 		public dialog: MatDialog,
-		private sanitizer: DomSanitizer,
 		private customDialogInitializer: CustomDialogService,
 		private config: AppconfigService,
 		private sketchLayerInitializer: InitializeSketchlayersService,
@@ -484,7 +483,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 		const defaultVisible = !source
 			? true
 			: this.loadedProject.defaultVisibleLayers?.includes(sketchLayerName);
-		this.mapQgsStyleService.setSketchStyle(sketchLayerName);
+		this.layerStyleService.setSketchStyle(sketchLayerName);
 		const self = this;
 		const sketchSource = source
 			? source
@@ -500,7 +499,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 			// getting default style
 			style: (feature, resolution) => {
 				const styleConfig =
-					this.mapQgsStyleService.getLayerStyleConfig(sketchLayerName, true);
+					this.layerStyleService.getLayerStyleConfig(sketchLayerName, true);
 				return styleConfig.styleFunc(feature as Feature, resolution);
 			},
 		});
@@ -544,7 +543,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 		source: VectorSource,
 		groupName: string,
 	) {
-		const styleConfig = this.mapQgsStyleService.getLayerStyleConfig(
+		const styleConfig = this.layerStyleService.getLayerStyleConfig(
 			customSketchLayerName,
 			true
 		);
@@ -593,7 +592,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 			geometryType = sketch === "CUSTOM_SKETCH" ? "Point" : "Multi";
 			if (sketch === "CUSTOM_SKETCH") {
 				legendSymbols =
-					this.mapQgsStyleService.getLayerStyleConfig(layerName, true)?.symbols;
+					this.layerStyleService.getLayerStyleConfig(layerName, true)?.symbols;
 			}
 		}
 		const layerItems: LayerInfo[] = [];
@@ -972,7 +971,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 				const layerInfo = this.findLayerinGroups(l);
 				if(layerInfo){
 					layerInfo.legendUrl = undefined;
-					layerInfo.legendLayer = this.mapQgsStyleService.getLayerStyleConfig(l, false).symbols
+					layerInfo.legendLayer = this.layerStyleService.getLayerStyleConfig(l, false).symbols
 				}
 			})
 
@@ -980,7 +979,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 				return !this.isDynamicFormLayer(l);
 			})
 			wfsLayerList.forEach(l => console.log(this.findLayerinGroups(l)))
-			this.mapQgsStyleService.createAllLayerStyles(
+			this.layerStyleService.createAllLayerStyles(
 				this.qGsServerUrl,
 				this.qgsProjectFile,
 				wfsLayerList,
@@ -2301,7 +2300,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 						style: (feature, resolution) => {
 							//wrap style func from style service because service loads the styles asynchronously and the style func needs to be updated when the styles are loaded
 							const styleConfig =
-								this.mapQgsStyleService.getLayerStyleConfig(layerName, false);
+								this.layerStyleService.getLayerStyleConfig(layerName, false);
 							return styleConfig.styleFunc(feature as Feature, resolution);
 						},
 					});
