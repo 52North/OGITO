@@ -76,7 +76,7 @@
       <button mat-icon-button aria-label="Revert last edit" (click)="startEditAction('Undo');" matTooltip="Revert last edit">
         <mat-icon>undo</mat-icon>
       </button>
-      <button mat-icon-button (click)="showSymbolPanel(true)" matTooltip="Open list of symbols" aria-label="Open list of symbols"
+      <button mat-icon-button (click)="showSymbolPanel(true)" matTooltip="Open list of symbols" aria-label="Open list of symbols" [disabled]="this.symbolPanelVisible"
               [ngClass]="actionActive['showSymbols'] ? 'active': 'normal'">
         <mat-icon>category</mat-icon>
       </button>
