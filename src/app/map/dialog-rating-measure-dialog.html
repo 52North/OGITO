@@ -4,10 +4,10 @@
     <div [formGroup]="formGroup">
     <div *ngFor="let field of data.fieldNames" >
 
-      <label >{{getLabel(field)}} (1-5): </label>
+      <label >{{getLabel(field)}} ({{min}}-{{max}}): </label>
       <br/>
-      <mat-slider  color = 'primary' [formControlName]="field" [max]= 5
-                   [min]=1 [thumbLabel]=true  [value]="field.min"
+      <mat-slider  color = 'primary' [formControlName]="field" [max]= "max"
+                   [min]="min" [thumbLabel]=true  [value]="min"
                    (change) = "showQuestionValue(field, $event.value)">{{field.value}}</mat-slider>
       <label id={{field}}> 0 </label>
     </div>

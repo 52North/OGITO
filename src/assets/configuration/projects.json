@@ -28,7 +28,12 @@
     "baseUrl": "http://localhost:8080/geocode",
     "limit": 10,
     "autoComplete": true
-  }
+  },
+  "ratingLayerLimits": [
+    {
+      "layerName": "Rating", "min": 1, "max": 15
+    }
+  ]
 },
   {
     "name": "OGITO Starter copy",

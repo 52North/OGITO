@@ -106,6 +106,7 @@ export interface DialogData {
 	fieldNames: any;
 	desc: string;
 	layerName: string;
+	limits: {min: number, max: number}
 }
 
 @Component({
@@ -421,6 +422,22 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 		 */
 		const ratingName = "Measure Ranking";
 		const layer = this.findLayerinGroups(layerName);
+		let min = 1, max = 5;
+
+		//get slider min max values from project config
+		if (this.loadedProject && this.loadedProject.ratingLayerLimits){
+			const limitsConfig = this.loadedProject.ratingLayerLimits.find((c) => c.layerName.toLowerCase() === layerName.toLowerCase());
+			if(limitsConfig){
+				if(limitsConfig.min !== undefined && limitsConfig.min >= 0){
+					min = limitsConfig.min;
+				}
+				if (limitsConfig.max !== undefined && limitsConfig.max > min){
+					max = limitsConfig.max;
+				}
+			}
+		} 
+
+
 		let fieldsToRank = layer.fields
 			.filter(
 				(l) =>
@@ -435,6 +452,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 				desc: "",
 				ranking: this.ranking,
 				layerName: layerName,
+				limits: {min: min, max: max}
 			},
 		});
 		dialogRef.afterClosed().subscribe((result) => {
@@ -4093,6 +4111,9 @@ export class DialogRatingMeasureDialog {
 	selectedRating = 0;
 	fieldNames: any; // esto debe ir a data.fieldNames..
 	formGroup: UntypedFormGroup;
+	min: number;
+	max: number;
+
 	constructor(
 		public dialogRef: MatDialogRef<DialogRatingMeasureDialog>,
 		@Inject(MAT_DIALOG_DATA) public data: DialogData,
@@ -4107,6 +4128,8 @@ export class DialogRatingMeasureDialog {
 		});
 		this.formGroup = new UntypedFormGroup(group);
 		this.measureDesc = data.desc;
+		this.min = data.limits.min ?? 1;
+		this.max = data.limits.max ?? 5;
 	}
 	showQuestionValue(elementID: any, value: any) {
 		// show the value of the slider

@@ -97,7 +97,7 @@ export class SymbolListComponent implements OnInit, OnDestroy {
 		this.symbolActiveKey = symbol.title;
 
 		// Set the property mapping for the OpenLayers styling evaluation
-		// We use the same constant used by your style function to ensure they match
+		// We use the same constant used by style function to ensure they match
 		let propertyAttr = AppConstants.wfsLAyerStyleAttr;
 		if(this.wfsLayerStyle.isSketch === "CUSTOM_SKETCH"){
 			propertyAttr = AppConstants.customSketchStyleAttr;

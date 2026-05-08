@@ -37,6 +37,10 @@ export interface ProjectConfiguration{
   labels?: Object
   customSketchLayerDefinitionsFiles?: string[];
   customSketchLayerPoints: string;
+  ratingLayerLimits?: {
+    layerName: string,
+    min: number, max: number
+  }[]
 }
 
 
@@ -78,6 +82,12 @@ export const GeocoderCodec = t.type({
   limit: t.union([t.number, t.undefined])
 });
 
+export const RatingLimitCodec = t.type({
+  layerName: t.string,
+  min: t.number,
+  max: t.number
+})
+
 export const ProjectConfigurationCodec = t.type({
   name: t.string,
   qgisProjectFilename: t.string,
@@ -99,6 +109,7 @@ export const ProjectConfigurationCodec = t.type({
   rateMeasureLayers: t.union([t.array(t.string), t.undefined]),
   label: t.union([t.UnknownRecord, t.undefined]),
   customSketchLayerDefinitionsFiles: t.union([t.array(t.string), t.undefined]),
-  customSketchLayerPoints: t.string
+  customSketchLayerPoints: t.string,
+  ratingLayerLimits: t.union([t.array(RatingLimitCodec), t.undefined])
 });
 

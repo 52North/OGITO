@@ -169,7 +169,6 @@ export class EditingToolbarComponent implements OnInit, OnDestroy {
     //events used to disable symbol panel button if symbol panel is open from editing
 		this.subsToShowSymbolPanel =
 			this.openLayersService.showSymbolPanel$.subscribe((data) => {
-				console.log(data);
 				this.symbolPanelVisible = data.visible;
 			});
 		this.subsToSymbolPanelClosed =
