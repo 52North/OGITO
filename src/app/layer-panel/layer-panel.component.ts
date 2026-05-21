@@ -284,9 +284,12 @@ export class LayerPanelComponent implements OnInit, OnDestroy {
 	}
 
 	isLayerQueryable(layerName: string): boolean {
-		return !this.loadedProject.backgroundLayers.find(
-			(bl) => bl.title === layerName,
-		);
+		const layerInfo =this.findLayerinGroups(layerName);
+		if(!layerInfo){
+			return false;
+		}else{
+			return layerInfo.isQueryable === true;
+		}
 	}
 
 	/** This function emit an event to allow the map component to know that a layer was clicked

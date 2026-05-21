@@ -97,6 +97,7 @@ import {
 	LayerPanelLayerEvent,
 } from "../layer-panel/layer-panel.component";
 import ImageSource from "ol/source/Image";
+import { OSM } from "ol/source";
 
 // To use rating dialogs
 export interface DialogData {
@@ -355,21 +356,12 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 						this.startTranslating();
 						break;
 					}
-					case "Rating": {
-						// this.startRating();
-						console.log("rating quiet areas hidden");
-						break;
-					}
 					case "Rotate": {
 						this.startRotating();
 						break;
 					}
 					case "Copy": {
 						this.startCopying();
-						break;
-					}
-					case "Identify": {
-						console.log("identifying?..");
 						break;
 					}
 					case "Delete": {
@@ -629,6 +621,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 			removable,
 			sketch: layer.sketch,
 			legendLayer: legendSymbols,
+			isQueryable: true
 		}; // sketch will be used to activate editing mode.. #TODO
 		layerItems.push(layerItem);
 		// group does not exist in the variable
@@ -716,7 +709,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 					.getLayers()
 					.getArray()
 					.findIndex(
-						(x) => groupName.toLowerCase() === x.get("name").toLowerCase(),
+						(x) => x.get("name") &&  groupName.toLowerCase() === x.get("name").toLowerCase(),
 					) > 0
 			)
 		) {
@@ -818,6 +811,61 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 				});
 			})
 			.catch((error) => console.error(error));
+	}
+
+
+	private addDefaultBackgroundLayer() {
+		const defaultBackgroundGroupName = "Background";
+		const defaultBackgroundLayerName = "Default (OpenStreetMap)";
+		const defaultBackgroundLayer = new TileLayer({
+			source: new OSM()
+		});
+		defaultBackgroundLayer.set("name", defaultBackgroundLayerName);
+
+		const layerInfo: LayerInfo = {
+			layerName: defaultBackgroundLayer.get("name"),
+			layerTitle: defaultBackgroundLayer.get("name"),
+			fields: [],
+			geometryType: undefined,	
+			wfs: false,
+			removable: false,
+			sketch: "NONE",
+			legendLayer: undefined,
+			layerForNewFeatures: false,
+			layerForRanking: false,
+			onEdit: false,
+			onIdentify: false,
+			onRanking: false,
+			visible: true,
+			isQueryable: false
+		}
+
+		if(this.findLayerinGroups(defaultBackgroundLayerName)) { // check if the default background layer is already in the groupsLayers variable, it could be the case if the project file contains a WMS layer with the same name as the default background layer
+			console.warn("Default background layer already exists in the project, do not add it again");
+			return;
+		}
+
+		let groupLayerInfo = this.groupsLayers.find(
+			(g) => g.groupName.toLowerCase() === defaultBackgroundGroupName.toLowerCase(),
+		);
+		if (!groupLayerInfo) {
+			groupLayerInfo = {
+				groupName: defaultBackgroundGroupName,
+				groupTitle: defaultBackgroundGroupName,
+				visible: true,
+				layers: [],
+			};
+			this.groupsLayers.push(groupLayerInfo);
+			this.groupsLayersSubject.next(this.groupsLayers);
+		}
+		groupLayerInfo.layers.push(layerInfo);
+
+		this.addOWSLayerToLayerPanel(defaultBackgroundLayer.get("name"), defaultBackgroundLayer)
+		this.loadedWmsLayers.unshift({
+			layerName: defaultBackgroundLayer.get("name"),
+			layerTitle: defaultBackgroundLayer.get("name"),
+			source: defaultBackgroundLayer.getSource(),
+		});
 	}
 
 	async parseQgsProject(gqsProjectinfo: any) {
@@ -963,6 +1011,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 						fields,
 						removable: false,
 						sketch: "NONE",
+						isQueryable: !this.loadedProject.backgroundLayers?.map((bl) => bl.title.toLowerCase()).includes(layerName?.toLowerCase()) //background layers are not queryable
 					});
 				}
 				// get url for wms, wfs, getLegend and getStyles
@@ -975,6 +1024,12 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 					});
 				}
 			}
+		}
+
+		//Experimental: add default OSM background layer that is not proxied via QGIS server
+		// to be tested if improves performance and decreases server load
+		if (this.loadedProject.defaultBackgroundLayer) {
+			this.addDefaultBackgroundLayer();
 		}
 
 		// update the observable for layerPanel
@@ -1474,7 +1529,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 
 	addOWSLayerToLayerPanel(layerName: string, olWebServiceLayer: Layer) {
 		// find the layer in a group
-		let groupLayerPanelItem: any = undefined;
+		let groupLayerPanelItem: GroupLayerInfo = undefined;
 		let olGroupLayer: LayerGroup;
 		this.groupsLayers.forEach((group) => {
 			if (
@@ -4179,6 +4234,7 @@ export interface LayerInfo {
 	fields: any[];
 	removable: boolean;
 	sketch: SketchType;
+	isQueryable?: boolean;
 }
 
 export interface GroupLayerInfo {

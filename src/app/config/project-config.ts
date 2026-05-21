@@ -40,7 +40,8 @@ export interface ProjectConfiguration{
   ratingLayerLimits?: {
     layerName: string,
     min: number, max: number
-  }[]
+  }[],
+  defaultBackgroundLayer?: boolean
 }
 
 
@@ -110,6 +111,7 @@ export const ProjectConfigurationCodec = t.type({
   label: t.union([t.UnknownRecord, t.undefined]),
   customSketchLayerDefinitionsFiles: t.union([t.array(t.string), t.undefined]),
   customSketchLayerPoints: t.string,
-  ratingLayerLimits: t.union([t.array(RatingLimitCodec), t.undefined])
+  ratingLayerLimits: t.union([t.array(RatingLimitCodec), t.undefined]),
+  defaultBackgroundLayer: t.union([t.boolean, t.undefined])
 });
 

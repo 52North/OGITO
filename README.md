@@ -106,8 +106,11 @@ Each project must registered in the project configuration (JSON) file. The locat
 | customSketchLayerDefinitionsFiles | list of files (paths) that contain custom sketch layer definitions, see [Custom Sketch Layers](#custom-sketch-layers) | `["./assets/configuration/customlayer_1.json", "./assets/configuration/customlayer_2.json" ]`, optional |
 | labels | look up table to override property names in dialogs (e.g. feature info) per layer, unlike layer properties in the QGIS project file the overrides can contain special or whitespace characters | e.g. `{"MyLayer":{ "propertyOne": "Property 1!"}}`, optional |
 | rateMeasureLayers | list of layers with ranked properties (measures); ranked properties can receive a (single) rating (1-5) for each feature; for _rateMeasureLayers_ there is a additional _Rate Measures_ button in the editing toolbar; also see [requirements](#qgis-project-requirements) for setting up rating layers  | e.g. `["rankingLayerA", "RankingLayerB"]` |
-| streetSearch | configures the technical street search layer and feature property containing the street name (optional, street search deactivated if not set) | e.g. `{"layerName": "streets_layer", "property": "streetname"}`, optional | 
+| streetSearch | configures the technical street search layer and feature property containing the street name (optional, street search deactivated if not set) | e.g. `{"layerName": "streets_layer", "property": "streetname"}`, optional, **Deprecated**: Street Search is considered deprecated and might be removed in the future, consider using the `geocoder` option instead | 
+| geocoder | configures geocoding background services, (optional, geocoding component is deactivated if not configured) | e.g. `{"baseUrl": "http://localhost:8080/geocode", "limit": 10, autoComplete": true}`, optional| 
 |defaultVisibleLayers | list of layers that are visible by default when app is started | e.g `["Topographic Map (OSM)", "My Custom Layer"]` , optional |
+|ratingLayerLimits | overrides min and max values for rating sliders for a specific rating layer | e.g `"[{"layerName": "Rating", "min": 1, "max": 15}]`, optional, **Experimental**: this option is experimental and might be changed or removed in the future,  |
+|defaultBackgroundLayer | if `defaultBackgroundLayer: true` a OSM background layer is automatically added to the map; the map tiles are directly retrieved from OSM and not proxied via QGIS server | optional, **Experimental**: this option is experimental and might be changed or removed in the future |
 
 
 
@@ -137,7 +140,16 @@ Each project must registered in the project configuration (JSON) file. The locat
       "sketchLayerPolygons": "sketch_polygons",
       "sketchLayerLinestrings": "sketch_linestrings",
       "sketchLayerPoints": "sketch_points", 
-      "streetsearch": {"layerName": "steets_layer", "property": "streetname"}
+      "customSketchLayerPoints": "sketch_custom_points",
+      "geocoder": {
+        "baseUrl": "http://localhost:8080/geocode",
+        "limit": 10,
+        "autoComplete": true
+      },
+      "rateMeasureLayers": ["Rating"],
+      "labels": {"Rating":{"rankingA": "Ranking A", "rankingB": "Ranking B", "description": "Text"}},
+      "customSketchLayerDefinitionsFiles": ["./assets/configuration/mycustomlayer.json"],
+      "defaultVisibleLayers": ["Topographic Map (OSM)"],
     },
     {
       "name": "Second OGITO Project",
@@ -149,15 +161,18 @@ Each project must registered in the project configuration (JSON) file. The locat
 
 </details>
 
-
 ### Starter Project
 The directory `starter_project` contains a minmal QGIS project which meets the technical requirements of OGITO. The (Postgis) database dump can be used to setup all required database tables.
 
 ### QGIS Project Requirements
-- the three separate layers for sketch geometries (points, polygons, linestrings) must be part of QGIS project (part of the QGIS start project)
+- the three separate layers for sketch geometries (points, polygons, linestrings) must be part of QGIS project (part of the QGIS starter project)
   - each of these layer must be associated to database tables (contained in the starter database backup)
   - these layer must be published as WFS (read, delete and update must be activated)
   - these are technical layers and should be added to the `hiddenLayers` in the [project configuration](#project-configuration)
+- a seperate point layer for custom sketch layer geometries must be part of the QGIS project (part of the QGIS starter project)
+  - thes layer must be associated to a database table (contained in the starter database backup)
+  - the layer must be published as WFS (read, delete and update must be activated)
+  - his is a technical layer and should be added to the `hiddenLayers` in the [project configuration](#project-configuration)
 - reporting layers & rating layers
   - reporting layer must be connected to `user_observation` table (part of starter project database dump)
     - schema and user dialog is currently not changable
@@ -178,7 +193,11 @@ The directory `starter_project` contains a minmal QGIS project which meets the t
   - QGIS: project -> properties -> qgis server -> wms capabilities -> crs restrictions 
 - technical layer for [street search](street-search) should be added to the `hiddenLayers` in the [project configuration](#project-configuration)
 
+### Geocoder
+ToDo: integrate external geocoding service
+
 ### Street Search
+**Deprecated**: Street Search is deprecated and is not developed any further, consider using the integration for [external geocding providers  instead](#geocoder).  
 To activate the street search in the OGITO app a layer with street data must be provided in the QGIS-project. This layer **must be published as WFS** in QGIS Server (read-only). 
 The [Python script for extracting road data](https://github.com/52North/OGITO/tree/main/tools/street_names) from the OpenStreetMap database can be used to generate the road data. See the [documentation](https://github.com/52North/OGITO/tree/main/tools/street_names) of the street.  
 Additionaly street search must be configured in the [project configuration](#project-configuration). The `layerName` value is the name of the layer containing the street data in the QGIS project. The `property` value is the name of the field of the layer that contains the street names.
