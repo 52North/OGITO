@@ -39,7 +39,7 @@
       <customproperties>
         <Option/>
       </customproperties>
-      <layer-tree-layer expanded="1" legend_split_behavior="0" source="dbname='ogito_data' service='ogito' sslmode=allow key='id' srid=3857 type=Point checkPrimaryKeyUnicity='1' table=&quot;public&quot;.&quot;custom_sketch_points&quot; (geom)" providerKey="postgres" id="custom_sketch_points_b03cc2ad_6955_419b_9a0a_204387ef59a8" checked="Qt::Checked" patch_size="-1,-1" legend_exp="" name="sketch_custom_points">
+      <layer-tree-layer expanded="1" legend_split_behavior="0" source="dbname='ogito_data' service='ogito' sslmode=disable key='id' srid=3857 type=Point checkPrimaryKeyUnicity='1' table=&quot;public&quot;.&quot;custom_sketch_points&quot; (geom)" providerKey="postgres" id="custom_sketch_points_b03cc2ad_6955_419b_9a0a_204387ef59a8" checked="Qt::Checked" patch_size="-1,-1" legend_exp="" name="sketch_custom_points">
         <customproperties>
           <Option type="Map">
             <Option type="int" value="0" name="showFeatureCount"/>
@@ -741,7 +741,7 @@
         <ymax>51.97495880269945445</ymax>
       </wgs84extent>
       <id>custom_sketch_points_b03cc2ad_6955_419b_9a0a_204387ef59a8</id>
-      <datasource>dbname='ogito_data' service='ogito' sslmode=allow key='id' srid=3857 type=Point checkPrimaryKeyUnicity='1' table="public"."custom_sketch_points" (geom)</datasource>
+      <datasource>dbname='ogito_data' service='ogito' sslmode=disable key='id' srid=3857 type=Point checkPrimaryKeyUnicity='1' table="public"."custom_sketch_points" (geom)</datasource>
       <layername>sketch_custom_points</layername>
       <srs>
         <spatialrefsys nativeFormat="Wkt">
