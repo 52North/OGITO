@@ -1,6 +1,4 @@
 # See http://help.github.com/ignore-files/ for more about ignoring files.
-#ignore all files in any directory named Compressed..
-Compressed Imagery_Denai Lama/
 
 # compiled output
 # commented to allow cloning from github to the linux server /dist
@@ -60,7 +58,7 @@ tools/image_upload/images
 tools/image_upload/node_modules
 tools/street_names
 
-src/assets/configuration/
+#src/assets/configuration/
 
 
 #python virtual environment (tools)
