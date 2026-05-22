@@ -36,7 +36,7 @@ export interface ProjectConfiguration{
   rateMeasureLayers: string[]
   labels?: Object
   customSketchLayerDefinitionsFiles?: string[];
-  customSketchLayerPoints: string;
+  customSketchLayerPoints?: string;
   ratingLayerLimits?: {
     layerName: string,
     min: number, max: number
@@ -110,7 +110,7 @@ export const ProjectConfigurationCodec = t.type({
   rateMeasureLayers: t.union([t.array(t.string), t.undefined]),
   label: t.union([t.UnknownRecord, t.undefined]),
   customSketchLayerDefinitionsFiles: t.union([t.array(t.string), t.undefined]),
-  customSketchLayerPoints: t.string,
+  customSketchLayerPoints: t.union([t.string, t.undefined]),
   ratingLayerLimits: t.union([t.array(RatingLimitCodec), t.undefined]),
   defaultBackgroundLayer: t.union([t.boolean, t.undefined])
 });

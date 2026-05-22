@@ -47,6 +47,11 @@ export class InitializeSketchlayersService{
   }
 
   public retrieveConfiguredCustomSketchLayers(project: ProjectConfiguration): Map<string, VectorSource> {
+    //fallback for older projects that do not support custom sketch layers
+    if(!project.customSketchLayerPoints){
+      return new Map<string, VectorSource>();
+    }
+
     const serverUrl = this.getServerUrl(project);
     const featureTypes = [project.customSketchLayerPoints]
     const layernames = this.customSketchLayerService.getAllCustomDefinitionLayernames();

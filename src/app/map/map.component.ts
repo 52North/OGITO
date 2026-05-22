@@ -2971,11 +2971,13 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 			update: [],
 			delete: [],
 		};
-		transactionIndex[this.loadedProject.customSketchLayerPoints] = {
-			insert: [],
-			update: [],
-			delete: [],
-		};
+		if(this.loadedProject.customSketchLayerPoints){
+			transactionIndex[this.loadedProject.customSketchLayerPoints] = {
+				insert: [],
+				update: [],
+				delete: [],
+			};
+		}
 
 		const bufferedInserts = this.editBuffer.filter(
 			(t) => t.layerName === sketchLayer.layerName && t.transaction === "insert",
@@ -3096,8 +3098,12 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 			this.loadedProject.sketchLayerPolygons,
 			this.loadedProject.sketchLayerPoints,
 			this.loadedProject.sketchLayerLinestrings,
-			this.loadedProject.customSketchLayerPoints,
+			
 		];
+		if(this.loadedProject.customSketchLayerPoints){
+			featureTypes.push(this.loadedProject.customSketchLayerPoints);
+		}
+
 		for (let featureType of featureTypes) {
 			//different featuretype (layer) per geometry type or custom sketch layer (only points)
 			// Edits should be done in chain... 1)insert, 2)updates, 3) deletes

@@ -102,7 +102,7 @@ Each project must registered in the project configuration (JSON) file. The locat
 | sketchLayerPolygons | name of the technical polygon layer to store polygon features for all simple sketch layers | e.g. "sketch_polygons" |
 | sketchLayerLinestrings | name of the technical linestring layer to store linestring features for all simple sketch layers | e.g. "sketch_linestrings" |
 | sketchLayerPoints | name of the technical point layer to store point features for all simple sketch layers | e.g. "sketch_points" |
-| customSketchLayerPoints | name of the technical point layer to store point features for all custom sketch layers | e.g. "sketch_custom_points" | 
+| customSketchLayerPoints | name of the technical point layer to store point features for all custom sketch layers | e.g. "sketch_custom_points", **Warning** This property is currently optional but will become mandatory in the future | 
 | customSketchLayerDefinitionsFiles | list of files (paths) that contain custom sketch layer definitions, see [Custom Sketch Layers](#custom-sketch-layers) | `["./assets/configuration/customlayer_1.json", "./assets/configuration/customlayer_2.json" ]`, optional |
 | labels | look up table to override property names in dialogs (e.g. feature info) per layer, unlike layer properties in the QGIS project file the overrides can contain special or whitespace characters | e.g. `{"MyLayer":{ "propertyOne": "Property 1!"}}`, optional |
 | rateMeasureLayers | list of layers with ranked properties (measures); ranked properties can receive a (single) rating (1-5) for each feature; for _rateMeasureLayers_ there is a additional _Rate Measures_ button in the editing toolbar; also see [requirements](#qgis-project-requirements) for setting up rating layers  | e.g. `["rankingLayerA", "RankingLayerB"]` |
@@ -252,7 +252,7 @@ A example for a Custom Sketch Layer definition is provided in [`./src/assets/con
 | :--- | :--- | :--- |
 | `id` | String | Unique ID used to identify the category internally. |
 | `label` | String | The human-readable name displayed in the UI. |
-| `icon` | String | The image source reference. Supports local paths (`/assets/...`), external URLs (`https://...`), or Base64 encoded images (e.g SVGs) (`data:image/svg+xml;base64,...`). |
+| `icon` | String | The image source reference. Supports relative paths (`/assets/...`), external URLs (`https://...`), or Base64 encoded images (e.g SVGs) (`data:image/svg+xml;base64,...`). |
 
 **Field Properties**   
 Every object within the `fields` array creates a dynamic input component in the feature creation/edit form.
