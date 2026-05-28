@@ -133,7 +133,7 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
           // stop editing
           layer.onEdit = false;
           this.openLayersService.updateShowEditToolbar(false);
-          this.openLayersService.raiseSymbolPanelClosed(true)
+          this.openLayersService.updateShowSymbolPanel({visible: false})
           this.editLayerClick.emit(null);
           return;
         }
@@ -193,7 +193,7 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
       layer.onEdit = false;
       this.editLayerClick.emit(null);
       this.openLayersService.updateShowEditToolbar(false);
-      this.openLayersService.raiseSymbolPanelClosed(true)
+      this.openLayersService.updateShowSymbolPanel({visible: false})
       layer.onIdentify = true;
       this.identifyLayerClick.emit({layer, groupName});
       return;
@@ -205,7 +205,7 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
     this.updateEditActionInLayers(this.layerActive);
     // workaround..
     this.openLayersService.updateShowEditToolbar(false);
-    this.openLayersService.raiseSymbolPanelClosed(true)
+    this.openLayersService.updateShowSymbolPanel({visible: false})
     this.editLayerClick.emit(null);
     // set the selected layer as active
     this.layerActive = layer.layerName;

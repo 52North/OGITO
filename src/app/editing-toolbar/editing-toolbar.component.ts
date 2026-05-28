@@ -225,7 +225,7 @@ constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private open
     }
 
     if(canceled){
-      this.openLayersService.raiseSymbolPanelClosed(true)
+      this.openLayersService.updateShowSymbolPanel({visible: false})
     }
    }
 
