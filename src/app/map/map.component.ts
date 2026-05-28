@@ -204,7 +204,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
   subsToSaveAllLayers: Subscription;
   subsToStreetSelected: Subscription;
   subsToCustomDialogClosed: Subscription;
-  subsToSymbolPanelClosed: Subscription;
+  subsToShowSymbolPanel: Subscription;
   subsToEditAborted: Subscription;
   subsToGeolocation: Subscription;
 
@@ -318,16 +318,16 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
         console.error('Error while adding street feature to map', error);
       }
     );
-    this.subsToSymbolPanelClosed=  this.openLayersService.symbolPanelClosed$.subscribe(
-      (isCanceled) => {
-        console.log(isCanceled)
-          this.symbolPanelOpen = !isCanceled;
-        },
-      (error) => {
-        console.error('Error while adding street feature to map', error);
-      }
-    );
-
+this.subsToShowSymbolPanel =
+  this.openLayersService.showSymbolPanel$.subscribe(
+    (showPanel) => {
+      console.log(showPanel);
+      this.symbolPanelOpen = showPanel;
+    },
+    (error) => {
+      console.error('Error while updating symbol panel state', error);
+    }
+  );
     this.subsToCustomDialogClosed = this.customDialogInitializer.dialogClosed$.subscribe(
       (data) =>{
         console.log("received dialog closed event")

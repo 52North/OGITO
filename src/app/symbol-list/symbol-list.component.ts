@@ -68,7 +68,7 @@ export class SymbolListComponent implements OnInit, AfterViewInit {
       this.symbolActiveKey = null;
       // updates the selected symbol
       this.openLayersService.updateCurrentSymbol(null);
-      this.openLayersService.raiseSymbolPanelClosed(isCanceled)
+      this.openLayersService.updateShowSymbolPanel({visible: false})
     }
     this.displaySymbolList$ = observableOf(visibility.visible);
   }

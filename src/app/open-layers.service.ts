@@ -43,8 +43,6 @@ export class OpenLayersService {
   showStreetSearch$ = this.showStreetSearchSource.asObservable();
   private streetSelectedSource = new Subject<Feature>();
   streetSelected$ = this.streetSelectedSource.asObservable();
-  private symbolPanelClosed = new Subject<boolean>();
-  symbolPanelClosed$ = this.symbolPanelClosed.asObservable();
   private zoomToLocation = new Subject<any>();
   zoomToLocation$ = this.zoomToLocation.asObservable();
   private streetSearchConfigured = new Subject<boolean>();
@@ -176,10 +174,6 @@ export class OpenLayersService {
      * @param data: the result of the query returned by the API
      */
     this.findInstitutionsExposedSource.next(data);
-  }
-
-  raiseSymbolPanelClosed(isAborted: boolean){
-    this.symbolPanelClosed.next(isAborted)
   }
 
   updateStreetSearchConfigured(isConfigured: boolean){
