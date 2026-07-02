@@ -627,7 +627,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 		// group does not exist in the variable
 
 		let sessionGroupLayerItem = this.groupsLayers.find(
-			(x) => x.groupName === this.loadedProject.nameSessionGroup,
+			(x) => x.groupName === groupName,
 		);
 		if (!sessionGroupLayerItem) {
 			sessionGroupLayerItem = {
@@ -710,7 +710,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 					.getArray()
 					.findIndex(
 						(x) => x.get("name") &&  groupName.toLowerCase() === x.get("name").toLowerCase(),
-					) > 0
+					) !== -1
 			)
 		) {
 			// group does not exist, create it.
@@ -732,8 +732,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 			let group: any;
 			this.map.getLayers().forEach((grp) => {
 				if (
-					grp.get("name").toLowerCase() ===
-					this.loadedProject.nameSessionGroup.toLowerCase()
+					grp.get("name")?.toLowerCase() === groupName.toLowerCase()
 				) {
 					group = grp;
 				}

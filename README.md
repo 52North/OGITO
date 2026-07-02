@@ -36,10 +36,10 @@ The backend mainly consists of an instance of [QGIS Server](https://docs.qgis.or
 
 ## Deployment
 ### Requirements
-- Web Server (e.g Apache2 or NGINX) for serving the OGITO app and hosting QGIS Server
+- Web Server with FastCGI runtime (e.g Apache2 or NGINX) for hosting QGIS Server and serving the OGITO app
 - QGIS Server (3.x)
 - PostGIS (other Database supported by QGIS can be used as well)
-- NodeJS (14.20.x, 16.13.x or 18.10.x), only required for image upload and developemnt
+- NodeJS (14.20.x, 16.13.x or 18.10.x), only required for image upload and development
 - (Python (3.x), only required to execute the [script to extract street data](#street-search))
 
 ### Login
