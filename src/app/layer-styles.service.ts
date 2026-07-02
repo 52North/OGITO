@@ -320,12 +320,21 @@ export class LayerStyleService {
 		const imgElement = icon.getImage(pixelRatio) as HTMLImageElement;
 
 		if (imgElement) {
-			imgElement.onload = () => {
+			const applyScale = () => {
 				const originalWidth = imgElement.naturalWidth;
 				if (originalWidth > 0) {
 					icon.setScale(targetHeightPxl / originalWidth);
 				}
 			};
+			// OpenLayers caches icon images by URL, so layers sharing the same icon
+			// share one HTMLImageElement. If it is already loaded, "load" won't fire
+			// again -> scale now. Otherwise use addEventListener (not onload=) so a
+			// second layer's scaler doesn't overwrite the first layer's handler.
+			if (imgElement.complete && imgElement.naturalWidth > 0) {
+				applyScale();
+			} else {
+				imgElement.addEventListener("load", applyScale, { once: true });
+			}
 		}
 	}
 
@@ -334,7 +343,16 @@ export class LayerStyleService {
 		const imgElement = icon.getImage(pixelRatio) as HTMLImageElement;
 
 		if (imgElement) {
-			imgElement.onerror = onErrorHandler;
+			// Shared cached image that already failed to load (src set, complete, but
+			// no size) won't fire "error" again -> handle immediately. The src guard
+			// avoids misfiring on a fresh image that hasn't started loading yet (also
+			// complete with zero size). Use addEventListener so handlers from layers
+			// sharing the icon don't overwrite each other.
+			if (imgElement.src && imgElement.complete && imgElement.naturalWidth === 0) {
+				onErrorHandler();
+			} else {
+				imgElement.addEventListener("error", onErrorHandler, { once: true });
+			}
 		}
 	}
 
