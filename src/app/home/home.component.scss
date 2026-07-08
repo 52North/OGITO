@@ -9,9 +9,13 @@
   align-items: center;
   font-weight: 600;
   //border: dashed;
- }
+  /* The map spans the full viewport height and tucks behind this strip, so keep
+     the toolbar above the map (z-index 200) but below the floating panels (250). */
+  z-index: 210;
+}
+
 .toolbarWrapper {
-  display:flex;
+  display: flex;
   flex-direction: column;
   height: 7%;
 }
@@ -19,15 +23,19 @@
 .userNickName {
   font-size: 0.9vw;
 }
+
 .title {
   padding-left: 20px;
 }
+
 .spacer {
   flex: 1 1 auto;
 }
-.mat-toolbar{
+
+.mat-toolbar {
   height: 100%;
 }
+
 footer {
   margin-top: 8px;
   display: flex;
@@ -50,21 +58,22 @@ footer a {
   overflow: hidden;
   background-color: rgb(15, 15, 16);
 }
-.app-content{
+
+.app-content {
   width: 100%;
   height: 93%;
- // border-color: #ffcc33;
+  // border-color: #ffcc33;
   // border-style: solid;
-  z-index:100;
+  z-index: 100;
 }
 
-.app-content-container:fullscreen{
+.app-content-container:fullscreen {
   width: 100%;
   height: 100%;
   background-color: whitesmoke;
 }
 
-.app-content-container:-webkit-full-screen{
+.app-content-container:-webkit-full-screen {
   width: 100%;
   height: 100%;
   background-color: whitesmoke;
@@ -75,37 +84,43 @@ footer a {
   .mat-toolbar {
     background-color: #ad1457;
   }
+
   .mat-icon {
     font-size: 24px;
   }
+
   .title {
     padding-left: 25px;
   }
 }
-  @media screen and (min-width: 1400px){
-    .mat-toolbar {
-      background-color: #ad1457;
-    }
+
+@media screen and (min-width: 1400px) {
+  .mat-toolbar {
+    background-color: #ad1457;
+  }
+
+  .mat-icon {
+    font-size: 36px;
+    overflow: visible;
+  }
+
+}
+
+@media screen and (min-width: 1900px) {
+  .mat-toolbar {
+    background-color: #ad1457;
+
     .mat-icon {
-        font-size: 36px;
-        overflow: visible;
-     }
-
-  }
-
-  @media screen and (min-width: 1900px){
-    .mat-toolbar  {
-      background-color: #ad1457;
-      .mat-icon {
-        font-size: 48px;
-      }
+      font-size: 48px;
     }
   }
+}
 
 // iiyama 24'' // resolution is 1920 x 1080 //viewable area 521.28 x 293.22mm //Pixel pitch	0.272mm
-@media screen and (min-width: 5200px){
-  .mat-toolbar  {
+@media screen and (min-width: 5200px) {
+  .mat-toolbar {
     background-color: #ad1457;
+
     .mat-icon {
       font-size: 72px;
     }
@@ -113,13 +128,12 @@ footer a {
 }
 
 // iiyama 27'' // resolution is 1920 x 1080// viewable area 597.6 x 336.2mm //Pixel pitch	0.311mm
-@media screen and (min-width: 5800px){
-  .mat-toolbar  {
+@media screen and (min-width: 5800px) {
+  .mat-toolbar {
     background-color: #ad1457;
+
     .mat-icon {
       font-size: 72px;
     }
   }
 }
-
-

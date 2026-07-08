@@ -1,17 +1,21 @@
-
 .map {
   width: 100%;
-  height: 100% ;
+  height: 100%;
+  /* Pin to the top of the containing block so the full-height map fills from the
+     top edge (viewport when windowed, fullscreen container when fullscreen) and its
+     bottom lands at the viewport bottom instead of overflowing. */
+  top: 0;
+  left: 0;
   z-index: 200;
   position: absolute;
   border-color: #e35183;
   border-style: solid;
   border-width: 1px;
- //padding-top: 0%;
+  //padding-top: 0%;
 }
 
 ::ng-deep .ol-tooltip {
- // tooltip fr measuring distances or areas
+  // tooltip fr measuring distances or areas
   position: relative;
   background: rgba(0, 0, 0, 0.5);
   border-radius: 4px;
@@ -21,15 +25,18 @@
   white-space: nowrap;
   font-size: 12px;
 }
+
 ::ng-deep .ol-tooltip-measure {
   opacity: 1;
   font-weight: bold;
 }
+
 ::ng-deep .ol-tooltip-static {
   background-color: #ffcc33;
   color: black;
   border: 1px solid white;
 }
+
 ::ng-deep .ol-tooltip-measure:before,
 .ol-tooltip-static:before {
   border-top: 3px solid rgba(0, 0, 0, 0.5);
@@ -42,6 +49,7 @@
   margin-left: -7px;
   left: 50%;
 }
+
 ::ng-deep .ol-tooltip-static:before {
   border-top-color: #ffcc33;
 }
@@ -51,16 +59,17 @@
   height: 0px;
   width: 0px;
   z-index: 100;
-  opacity:0;
+  opacity: 0;
 }
 
 .cdkDrag {
   display: inline-block;
 }
+
 .ol-popup {
   position: absolute;
   background-color: white;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
   padding: 10px;
   border-radius: 10px;
   border: 1px solid #cccccc;
@@ -68,7 +77,9 @@
   left: -50px;
   min-width: 280px;
 }
-.ol-popup:after, .ol-popup:before {
+
+.ol-popup:after,
+.ol-popup:before {
   top: 100%;
   border: solid transparent;
   content: " ";
@@ -77,24 +88,28 @@
   position: absolute;
   pointer-events: none;
 }
+
 .ol-popup:after {
   border-top-color: white;
   border-width: 10px;
   left: 48px;
   margin-left: -10px;
 }
+
 .ol-popup:before {
   border-top-color: #cccccc;
   border-width: 11px;
   left: 48px;
   margin-left: -11px;
 }
+
 .ol-popup-closer {
   text-decoration: none;
   position: absolute;
   top: 2px;
   right: 8px;
 }
+
 .ol-popup-closer:after {
   content: "✖";
   font-size: x-large;
@@ -122,12 +137,13 @@
 ::ng-deep th {
   text-align: left !important;
 }
+
 th[scope="row"] {
   background-color: #d7d9f2;
 }
 
 // styles for the rating
-.star{
+.star {
   margin: 0px 0px;
   color: #a9a5a5;
   display: inline-block;
@@ -135,34 +151,40 @@ th[scope="row"] {
   transition: all .3s;
   transform: scale(1);
 }
-.star .mat-icon{
+
+.star .mat-icon {
   width: 30px;
   height: 30px;
 }
-.star-gold{
+
+.star-gold {
   color: orange;
 }
 
 /* make all stars orange*/
-.star-rating-animation:hover .star-hover{
+.star-rating-animation:hover .star-hover {
   color: orange;
 
 }
+
 /* make all stars right from selected gray*/
-.star-rating-animation .star-hover:hover ~ .star-hover{
+.star-rating-animation .star-hover:hover~.star-hover {
   color: #ddd;
 }
-.star-rating-animation .star-hover:hover{
+
+.star-rating-animation .star-hover:hover {
   transform: scale(1.2);
 }
-.simple-keyboard-hidden{
+
+.simple-keyboard-hidden {
   display: none;
 }
+
 .hide-keyboard {
   overflow: hidden;
   height: 0;
 }
 
-.ratingHint{
+.ratingHint {
   margin-bottom: 10px;
 }
