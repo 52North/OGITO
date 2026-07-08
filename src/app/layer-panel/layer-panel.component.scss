@@ -14,6 +14,29 @@
 	flex: 1 1 auto;
 	width: 0.7vw;
 }
+
+/* Cap the panel to the viewport and let the groups list scroll, keeping the header fixed */
+.layerPanelCard {
+	display: flex;
+	flex-direction: column;
+	max-height: 85vh;
+	min-height: 0;
+	overflow: hidden;
+}
+
+/* The title bar is the drag handle for the floating window */
+.layerPanelCard > mat-card-title-group {
+	cursor: move;
+}
+
+.layerPanelCard > mat-accordion {
+	display: block;
+	flex: 1 1 auto;
+	min-height: 0;
+	overflow-y: auto;
+	/* Gutter so the scrollbar doesn't render over the layer rows / action buttons */
+	padding-right: 8px;
+}
 .toolbarDivider {
 	padding-top: 5px !important;
 }

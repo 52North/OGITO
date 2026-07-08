@@ -1,7 +1,7 @@
 <div class="parent">
   <div class="example-list" *ngIf="getVisibility()" cdkDrag cdkDragBoundary=".app-content" cdkRes>
     <mat-card>
-      <mat-card-title-group>
+      <mat-card-title-group cdkDragHandle>
         <mat-card-title>{{ layerName }}</mat-card-title>
         <button mat-flat-button (click)="abbortDialog()" class="matCloseWrapper">
           <mat-icon>close</mat-icon>

@@ -10,7 +10,7 @@
 	<!-- <div class ="example-list"   *ngIf="showLayerPanel$ | async" [style.left.px]="x" [style.top.px]="y"
       (panstart)="onPanStart($event)" (panmove)="onPan($event)" cdkDragBoundary=".mapBoundary" cdkDrag >  -->
 	<mat-card class="layerPanelCard">
-		<mat-card-title-group>
+		<mat-card-title-group cdkDragHandle>
 			<mat-card-title class="panelTitle">Layers</mat-card-title>
 			<button mat-flat-button (click)="closeLayerPanel(false)">
 				<mat-icon class="matCloseWrapper" aria-label="Close layer Panel"

@@ -23,6 +23,20 @@
   flex-direction: column;
 }
 
+/* Cap the card to the viewport so its body can scroll instead of growing off-screen */
+mat-card {
+  display: flex;
+  flex-direction: column;
+  max-height: 85vh;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* The title bar is the drag handle for the floating window */
+mat-card-title-group {
+  cursor: move;
+}
+
 mat-label {
   white-space: nowrap;
 }
@@ -62,6 +76,19 @@ mat-label {
   flex-direction: column;
   padding: 16px;
   /* Removed gap: 8px to let padding-bottom from legacy CSS control spacing */
+  /* Take the remaining card height; children (scroll area + button) manage overflow */
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Scroll only the fields, keeping the header and the Ok button fixed */
+.dynamic-form-container {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  /* Gutter so the scrollbar doesn't render over the input fields */
+  padding-right: 8px;
 }
 
 .matCloseWrapper {
