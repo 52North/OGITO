@@ -60,7 +60,7 @@
             <div class="number-input" *ngSwitchCase="'number'">
               <mat-form-field appearance="outline" class="full-width">
                 <mat-label>{{ field.label }} {{ getMinMaxLabel(field) }}</mat-label>
-                <input matInput type="number" [formControlName]="field.id" [min]="field.min" [max]="field.max">
+                <input matInput type="number" [formControlName]="field.id" [attr.min]="field.min ?? null" [attr.max]="field.max ?? null">
                 <mat-error *ngIf="form.get(field.id)?.hasError('required')">This field is required</mat-error>
                 <mat-error *ngIf="form.get(field.id)?.hasError('min')">
                   Value must be at least {{ field.min }}
