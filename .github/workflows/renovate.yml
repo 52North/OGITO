@@ -1,6 +1,10 @@
 name: Renovate
 
 on:
+  push:
+    branches: [test/renovate]
+
+    
   schedule:
     # Runs daily at 00:00 UTC
     - cron: '0 0 * * *'
