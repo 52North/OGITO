@@ -1,0 +1,32 @@
+{
+    "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+    "extends": [
+        "config:recommended"
+    ],
+    "baseBranches": [
+        "test/renovate"
+    ],
+    "major": {
+        "enabled": false
+    },
+    "packageRules": [
+        {
+            "description": "Group all @angular core dependencies into a single PR",
+            "matchPackagePatterns": [
+                "^@angular/",
+                "^@angular-devkit/"
+            ],
+            "groupName": "Angular core packages"
+        },
+        {
+            "description": "Group Angular CLI and RxJS together",
+            "matchPackageNames": [
+                "@angular/cli",
+                "rxjs",
+                "zone.js",
+                "typescript"
+            ],
+            "groupName": "Angular toolchain"
+        }
+    ]
+}
