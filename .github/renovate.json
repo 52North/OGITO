@@ -24,9 +24,9 @@
             "matchDepTypes": [
                 "dependencies"
             ],
-            "excludeFileNames": [
-                "tools/**",
-                "starter_project/**"
+            "matchFileNames": [
+                "!tools/**",
+                "!starter_project/**"
             ],
             "groupName": "production dependencies"
         },
@@ -35,9 +35,9 @@
             "matchDepTypes": [
                 "devDependencies"
             ],
-            "excludeFileNames": [
-                "tools/**",
-                "starter_project/**"
+            "matchFileNames": [
+                "!tools/**",
+                "!starter_project/**"
             ],
             "groupName": "dev dependencies"
         },
@@ -46,9 +46,6 @@
             "matchFileNames": [
                 "starter_project/**"
             ],
-            "excludeFileNames": [
-                "tools/**"
-            ],
             "groupName": "starter project dependencies"
         },
         {
@@ -56,20 +53,12 @@
             "matchFileNames": [
                 "tools/image_upload/**"
             ],
-            "excludeFileNames": [
-                "starter_project/**",
-                "src/**"
-            ],
             "groupName": "tool image upload dependencies"
         },
         {
             "description": "All dependencies of geopy geocoder script",
             "matchFileNames": [
                 "tools/geopy_geocoder/**"
-            ],
-            "excludeFileNames": [
-                "starter_project/**",
-                "src/**"
             ],
             "groupName": "tool geopy geocoder dependencies"
         }
