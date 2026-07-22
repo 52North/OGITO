@@ -6,6 +6,9 @@
     "baseBranches": [
         "test/renovate"
     ],
+    "ignorePresets": [
+        "group:monorepos"
+    ],
     "major": {
         "enabled": false
     },
