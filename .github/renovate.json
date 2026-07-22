@@ -9,24 +9,69 @@
     "major": {
         "enabled": false
     },
+    "ignorePaths": [
+        "**/node_modules/**",
+        "**/e2e/**",
+        "**/dist/**",
+        "img/**",
+        "src/assets/**",
+        "src/environments/**",
+        "tools/street_names/**"
+    ],
     "packageRules": [
         {
-            "description": "Group all @angular core dependencies into a single PR",
-            "matchPackagePatterns": [
-                "^@angular/",
-                "^@angular-devkit/"
+            "description": "All production dependencies (excluding subfolders)",
+            "matchDepTypes": [
+                "dependencies"
             ],
-            "groupName": "Angular core packages"
+            "excludeFileNames": [
+                "tools/**",
+                "starter_project/**"
+            ],
+            "groupName": "production dependencies"
         },
         {
-            "description": "Group Angular CLI and RxJS together",
-            "matchPackageNames": [
-                "@angular/cli",
-                "rxjs",
-                "zone.js",
-                "typescript"
+            "description": "All devDependencies (excluding subfolders)",
+            "matchDepTypes": [
+                "devDependencies"
             ],
-            "groupName": "Angular toolchain"
+            "excludeFileNames": [
+                "tools/**",
+                "starter_project/**"
+            ],
+            "groupName": "dev dependencies"
+        },
+        {
+            "description": "All dependencies inside starter project folder (Docker images, etc.)",
+            "matchFileNames": [
+                "starter_project/**"
+            ],
+            "excludeFileNames": [
+                "tools/**"
+            ],
+            "groupName": "starter project dependencies"
+        },
+        {
+            "description": "All dependencies of image upload script",
+            "matchFileNames": [
+                "tools/image_upload/**"
+            ],
+            "excludeFileNames": [
+                "starter_project/**",
+                "src/**"
+            ],
+            "groupName": "tool image upload dependencies"
+        },
+        {
+            "description": "All dependencies of geopy geocoder script",
+            "matchFileNames": [
+                "tools/geopy_geocoder/**"
+            ],
+            "excludeFileNames": [
+                "starter_project/**",
+                "src/**"
+            ],
+            "groupName": "tool geopy geocoder dependencies"
         }
     ]
 }
