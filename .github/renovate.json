@@ -21,6 +21,7 @@
         "src/environments/**",
         "tools/street_names/**"
     ],
+    "minimumReleaseAge": "7 days",
     "packageRules": [
         {
             "description": "All production dependencies (excluding subfolders)",
