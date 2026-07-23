@@ -1,0 +1,145 @@
+/* --- 1. Overlay & Draggable Container --- */
+.parent {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1000;
+  pointer-events: none; /* Allows clicks to pass through to the map behind it */
+}
+
+/* Aligned exactly with edit-reporting.component.scss */
+.example-list {
+  position: absolute; /* Necessary for the top/left properties to work */
+  pointer-events: auto; /* Re-enables clicks for the card itself */
+  left: 40% !important;
+  max-width: 28%;
+  width: 22%;
+  top: 15% !important;
+  opacity: 0.9;
+  background-color: white;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Cap the card to the viewport so its body can scroll instead of growing off-screen */
+mat-card {
+  display: flex;
+  flex-direction: column;
+  max-height: 85vh;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* The title bar is the drag handle for the floating window */
+mat-card-title-group {
+  cursor: move;
+}
+
+mat-label {
+  white-space: nowrap;
+}
+
+/* --- 2. Input Field Alignments --- */
+.radio-input {
+  padding-bottom: 0.9em;
+
+  ::ng-deep .mat-radio-inner-circle {
+    background-color: black !important;
+  }
+
+  ::ng-deep .mat-radio-checked .mat-radio-outer-circle {
+    border-color: black !important;
+  }
+}
+
+.select-input {
+  padding-bottom: 0.9em;
+  mat-label {
+    padding-bottom: 0.45em;
+    color: rgba(0, 0, 0, 0.54);
+  }
+}
+
+.text-input, .date-input {
+  width: 100%;
+}
+
+.full-width {
+  width: 100%;
+}
+
+/* --- 3. Dynamic Form Specifics --- */
+.form {
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  /* Removed gap: 8px to let padding-bottom from legacy CSS control spacing */
+  /* Take the remaining card height; children (scroll area + button) manage overflow */
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Scroll only the fields, keeping the header and the Ok button fixed */
+.dynamic-form-container {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  /* Gutter so the scrollbar doesn't render over the input fields */
+  padding-right: 8px;
+}
+
+.matCloseWrapper {
+  min-width: unset;
+  padding: 0;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  background: transparent;
+  box-shadow: none;
+  position: absolute;
+  right: 8px;
+  top: 8px;
+}
+
+.custom-field-margin {
+  padding-bottom: 0.9em; /* Aligned with .radio-input padding */
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+.radio-label {
+  margin-right: 12px;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.54); /* Aligned with select mat-label */
+}
+
+.radio-btn {
+  margin-right: 8px;
+}
+
+/* Custom Validation Errors */
+.custom-error {
+  color: #f44336; 
+  font-size: 12px;
+  margin-top: 4px;
+  display: block;
+}
+
+.text-error {
+  color: #f44336;
+}
+
+/* --- 4. Submit Button --- */
+.submit-button {
+  text-align: right;
+  margin-top: 16px;
+}
+
+.textarea-input {
+  textarea{
+    resize: none;;
+  }
+}

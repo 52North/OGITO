@@ -1,19 +1,23 @@
-import VectorLayer from 'ol/layer/Vector.js';
 import VectorSource from 'ol/source/Vector.js';
-import { Feature } from 'ol/Feature';
-import { Injectable, OnDestroy, OnInit } from '@angular/core';
-import { OpenLayersService } from './open-layers.service';
+import  Feature  from 'ol/Feature';
+import { Injectable } from '@angular/core';
 import { AppconfigService } from './config/appconfig.service';
 import { ProjectConfiguration } from './config/project-config';
-import { Subscription } from 'rxjs';
 import WFS from 'ol/format/WFS.js';
 import { HttpClient } from '@angular/common/http';
 import EqualTo from 'ol/format/filter/EqualTo.js';
 
-import GML from 'ol/format/GML.js';
 import GeoJSON from 'ol/format/GeoJSON.js';
-import { ApplicationConfiguration } from './config/app-config';
+import { CustomSketchLayerService } from './config/custom-sketch-layer-service';
+import { AppConstants } from './app-constants';
 
+
+/**
+ * Service used to create OL Vector Sources for (Custom) Sketch Layers.
+ * 
+ * Retrieves features via WFS GetFeature requests to the QGIS Server and creates a VectorSource for each existing sketch layer.
+ * 
+ */
 @Injectable({
   providedIn: 'root'
 })
@@ -22,7 +26,7 @@ export class InitializeSketchlayersService{
   private wfsFormat : WFS;
   private readonly retrieveFeaturesSrs: string = "EPSG:4326" //retrieve features in Geojson in WGS84 and transform to app srs, since OL GML/WFS format cannot read polygons properly (bug?)
 
-  constructor(private config: AppconfigService, private http: HttpClient) {
+  constructor(private config: AppconfigService, private customSketchLayerService: CustomSketchLayerService, private http: HttpClient) {
     this.wfsFormat =  new WFS({
       version: config.getAppConfig().wfsVersion,
       featureNS: config.getAppConfig().hostname
@@ -42,9 +46,24 @@ export class InitializeSketchlayersService{
     return sources;
   }
 
-  public createSourceForSketchLayer(project: ProjectConfiguration, sketchLayerName : string){
+  public retrieveConfiguredCustomSketchLayers(project: ProjectConfiguration): Map<string, VectorSource> {
+    //fallback for older projects that do not support custom sketch layers
+    if(!project.customSketchLayerPoints){
+      return new Map<string, VectorSource>();
+    }
+
     const serverUrl = this.getServerUrl(project);
-    const featureTypes = [project.sketchLayerPoints, project.sketchLayerLinestrings, project.sketchLayerPolygons]
+    const featureTypes = [project.customSketchLayerPoints]
+    const layernames = this.customSketchLayerService.getAllCustomDefinitionLayernames();
+    const sources = this.createVectorSources(serverUrl, layernames, featureTypes);
+    return sources;
+  }
+
+  public createSourceForSketchLayer(project: ProjectConfiguration, sketchLayerName : string, featureTypes: string[] =  null) : VectorSource{
+    if(!featureTypes){
+      featureTypes = [project.sketchLayerPoints, project.sketchLayerLinestrings, project.sketchLayerPolygons]
+    }    
+    const serverUrl = this.getServerUrl(project);
     const layernames = [sketchLayerName]
     const source = this.createVectorSources(serverUrl, layernames, featureTypes).get(sketchLayerName);
 
@@ -56,7 +75,9 @@ export class InitializeSketchlayersService{
       srsName: this.config.getAppConfig().srs,
       featureTypes: featuresTypes,
       outputFormat: 'application/json',
-      propertyNames: [this.layernameProperty]
+      propertyNames: [this.layernameProperty],
+      featureNS: AppConstants.wfs_feature_namespace,
+      featurePrefix: AppConstants.wfs_feature_prefix
     });
     const features = await this.postGetFeatureRequest(serverUrl, featureRequest)
     const layernames: string[] = []
@@ -73,14 +94,16 @@ export class InitializeSketchlayersService{
     const sources = new Map<string, VectorSource>();
     for(let layername of layernames){
       const source = new VectorSource({
-        wrapx: false,
+        wrapX: false,
         format: this.wfsFormat,
         loader: (extent, resolution, projection, success, failure) => {
           const featureRequest = this.wfsFormat.writeGetFeature({
             srsName: this.retrieveFeaturesSrs,
             featureTypes: featureTypes,
             outputFormat: 'application/json',
-            filter: new EqualTo(this.layernameProperty , layername, false)
+            filter: new EqualTo(this.layernameProperty , layername, false),
+            featureNS: AppConstants.wfs_feature_namespace,
+            featurePrefix: AppConstants.wfs_feature_prefix
           });
           this.postGetFeatureRequest(serverUrl, featureRequest).then((features) => {
             source.addFeatures(features)
@@ -95,12 +118,12 @@ export class InitializeSketchlayersService{
     return sources;
   }
 
-  private async postGetFeatureRequest(serverUrl : string, featureRequest: Node) : Promise<Feature>{
+  private async postGetFeatureRequest(serverUrl : string, featureRequest: Node) : Promise<Feature[]>{
     //post request
     const body = new XMLSerializer().serializeToString(featureRequest) //xml node object to xml string
     const response = await this.http.post(serverUrl, body, {responseType: 'text' as any}).toPromise();
     if(response){
-      const features : Feature[] = new GeoJSON().readFeatures(response, {dataProjection: this.retrieveFeaturesSrs , featureProjection: this.config.getAppConfig().srs}); //retrieve and parse as geojson wgs84 and transform to app srs; workaround for OL GML format not able to parse polygons properly
+      const features : Feature[] = new GeoJSON().readFeatures(response, {dataProjection: this.retrieveFeaturesSrs , featureProjection: this.config.getAppConfig().srs}) as Feature[]; //retrieve and parse as geojson wgs84 and transform to app srs; workaround for OL GML format not able to parse polygons properly
       return features;
     }else{
       console.warn("error while retrieving features for sketch layer initialization")

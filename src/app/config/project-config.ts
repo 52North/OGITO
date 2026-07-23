@@ -20,15 +20,28 @@ export interface ProjectConfiguration{
   nameSessionGroup: string,
   hiddenLayers : string[],
   backgroundLayers : BackgroundLayer[]
+  defaultVisibleLayers?: string[]
   streetSearch?: {
     layerName : string,
     property: string
   };
+  geocoder?: {
+    baseUrl: string,
+    autoComplete?: boolean,
+    limit?: number 
+  }
   sketchLayerPolygons: string,
   sketchLayerLinestrings: string,
   sketchLayerPoints: string
   rateMeasureLayers: string[]
   labels?: Object
+  customSketchLayerDefinitionsFiles?: string[];
+  customSketchLayerPoints?: string;
+  ratingLayerLimits?: {
+    layerName: string,
+    min: number, max: number
+  }[],
+  defaultBackgroundLayer?: boolean
 }
 
 
@@ -64,6 +77,18 @@ export const StreetSearchCodec = t.type({
   property: t.string
 });
 
+export const GeocoderCodec = t.type({
+  baseUrl: t.string,
+  autoComplete: t.union([t.boolean, t.undefined]),
+  limit: t.union([t.number, t.undefined])
+});
+
+export const RatingLimitCodec = t.type({
+  layerName: t.string,
+  min: t.number,
+  max: t.number
+})
+
 export const ProjectConfigurationCodec = t.type({
   name: t.string,
   qgisProjectFilename: t.string,
@@ -76,11 +101,17 @@ export const ProjectConfigurationCodec = t.type({
   nameSessionGroup: t.string,
   hiddenLayers : t.array(t.string),
   backgroundLayers : t.array(BackgroundLayerCodec),
+  defaultVisibleLayers: t.union([t.array(t.string), t.undefined]),
   streetSearch: t.union([StreetSearchCodec, t.undefined]),
+  geocoder: t.union([GeocoderCodec, t.undefined]),
   sketchLayerPolygons: t.string,
   sketchLayerLinestrings: t.string,
   sketchLayerPoints: t.string,
   rateMeasureLayers: t.union([t.array(t.string), t.undefined]),
-  label: t.union([t.UnknownRecord, t.undefined])
+  label: t.union([t.UnknownRecord, t.undefined]),
+  customSketchLayerDefinitionsFiles: t.union([t.array(t.string), t.undefined]),
+  customSketchLayerPoints: t.union([t.string, t.undefined]),
+  ratingLayerLimits: t.union([t.array(RatingLimitCodec), t.undefined]),
+  defaultBackgroundLayer: t.union([t.boolean, t.undefined])
 });
 

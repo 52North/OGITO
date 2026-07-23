@@ -11,7 +11,7 @@
     <!--[groupLayers] = "groupsLayers"-->
   <app-layer-panel   [groupLayers] = "groupsLayersSubject.asObservable()"
                   (layerVisClick)="updateMapVisibleLayer($event)"
-  (editLayerClick)="updateEditingLayer($event)"  (groupLayerVisClick)="updateMapVisibleGroupLayer($event)"
+  (editLayerClick)="updateEditingLayer($event)"  (groupLayerVisClick)="updateMapVisibleGroup($event)"
   (layersOrder) = "updateOrderGroupsLayers($event)"
   (identifyLayerClick)="startIdentifying($event)"
   (removeLayerClick) = "removeSessionLayer($event)">
@@ -27,3 +27,6 @@
 </app-dynamic-form>
 <!--custiom meldingen dialog-->
 <app-edit-reporting (formSubmitted)="getFormData($event)"></app-edit-reporting>
+<!--custom sketch layer dialog-->
+<app-custom-sketch-layer-form (formSubmitted)="getFormData($event)"></app-custom-sketch-layer-form>
+<app-geocoder [olMap]="this.map"></app-geocoder>

@@ -1,13 +1,15 @@
 import { map, catchError } from "rxjs/operators";
 import { AppConstants } from '../app-constants';
-import { VectorLayer } from 'ol/layer/Vector';
-import { Feature } from 'ol/Feature';
+import  VectorLayer  from 'ol/layer/Vector';
+import Feature  from 'ol/Feature';
 import { Observable, Subscription } from 'rxjs';
 import { CustomDialogService, EditedFeature } from '../custom-dialog.service';
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { HttpClient, HttpEvent, HttpEventType } from '@angular/common/http';
 import { AppconfigService } from "../config/appconfig.service";
 import { LabelLutService } from "../config/label-lut.service";
+import VectorSource from "ol/source/Vector";
+import { EditLayer } from "../map/map.component";
 
 @Component({
   selector: 'app-edit-reporting',
@@ -21,7 +23,7 @@ export class EditReportingComponent implements OnInit {
   private subToInitDialog : Subscription;
   private isVisible: boolean = false;
   private feature : Feature;
-  private layer: VectorLayer;
+  private layer: EditLayer;
   //form values
   public priorities = ["none", "low", "medium", "high"]
   private nonePriority = this.priorities[0];
@@ -75,7 +77,7 @@ export class EditReportingComponent implements OnInit {
   public abbortDialog(){
     if(this.feature && this.layer){
       try{
-      this.layer.source.removeFeature(this.feature); //clean feature if dialog is abborted
+      this.layer.olLayer.getSource().removeFeature(this.feature); //clean feature if dialog is abborted
       }catch(err){
         console.error("error while removing edit feautre" , err);
       }

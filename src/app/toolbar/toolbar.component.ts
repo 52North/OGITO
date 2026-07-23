@@ -1,9 +1,8 @@
-import {Component, Inject, OnInit} from '@angular/core';
+import {Component, OnDestroy, OnInit} from '@angular/core';
 import {Subscription} from 'rxjs';
 import {OpenLayersService} from '../open-layers.service';
 import {MatIconRegistry} from '@angular/material/icon';
 import {DomSanitizer} from '@angular/platform-browser';
-import {AppConstants} from '../app-constants';
 import {MatLegacyDialog as MatDialog, MatLegacyDialogRef as MatDialogRef} from '@angular/material/legacy-dialog';
 
 @Component({
@@ -11,7 +10,7 @@ import {MatLegacyDialog as MatDialog, MatLegacyDialogRef as MatDialogRef} from '
   templateUrl: './toolbar.component.html',
   styleUrls: ['./toolbar.component.scss']
 })
-export class ToolbarComponent implements OnInit {
+export class ToolbarComponent implements OnInit, OnDestroy {
   x = 0;
   y = 0;
   startX = 0;
@@ -19,7 +18,9 @@ export class ToolbarComponent implements OnInit {
   layerSketchName: string;
   private subscriptionExistingProject: Subscription;
   private subscriptionStreetSearchConfigured: Subscription;
+  private subscriptionGeocoderConfigured: Subscription;
   isStreetSearchConfigured: boolean = false;
+  isGeocoderConfigured: boolean = false;
   existingProject = true;
   constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer,
               private openLayersService: OpenLayersService,
@@ -52,6 +53,7 @@ export class ToolbarComponent implements OnInit {
   }
 
 
+
   zoomHome(){
     this.openLayersService.updateZoomHome(true);
   }
@@ -80,21 +82,10 @@ export class ToolbarComponent implements OnInit {
     this.openLayersService.updateShowStreetSearch(true);
   }
 
-  searchOnMap(){
-    alert('Search elements in a OSM layer #TODO');
+  openGeocoder(){
+    this.openLayersService.updateShowGeocodingComponent(true)
   }
 
-  findExposedPeople() {
-    this.openLayersService.updateFindPopExposed(true);
-  }
-
-  processPopLden(data){
-    // to process the data, get the sum
-   const popExposed = data.nodes.reduce((sum, current) => sum + Number(current.value), 0);
-  }
-  findExposedInstitutions() {
-    this.openLayersService.updateFindInstitutionsExposed(true);
-  }
   ngOnInit(): void {
     this.subscriptionExistingProject = this.openLayersService.existingProject$.subscribe(
       (data: any) => this.existingProject = true,
@@ -105,16 +96,20 @@ export class ToolbarComponent implements OnInit {
     this.subscriptionStreetSearchConfigured = this.openLayersService.streetSearchConfigured$.subscribe(
       (isConfigured: boolean) => this.isStreetSearchConfigured = isConfigured
     )
+    this.subscriptionGeocoderConfigured = this.openLayersService.geocodingConfigured$.subscribe(
+      (isConfigured: boolean) => this.isGeocoderConfigured = isConfigured
+    )
   }
-  startAction(action: string){
-    /**
-     *  Sends an action (not edit to the openlayersService)
-     */
+
+  ngOnDestroy(): void {
+    this.subscriptionExistingProject.unsubscribe();
+    this.subscriptionStreetSearchConfigured.unsubscribe();
+    this.subscriptionGeocoderConfigured.unsubscribe();
   }
 
   toggleFullScreen(){
   if(!document.fullscreenElement){ //if not in fullscreen mode
-      document.getElementById("app-content-container").requestFullscreen()
+      document.getElementById("app-content-container")?.requestFullscreen()
     }else{
       document.exitFullscreen()
     }
@@ -126,7 +121,9 @@ export class ToolbarComponent implements OnInit {
 }
 
 
-
+/**
+ * Dialog asks for name of new sketch layer to create
+ */
 @Component({
   selector: 'dialog-layer-name-dialog',
   templateUrl: 'dialog-layer-name-dialog.html',

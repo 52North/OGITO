@@ -15,39 +15,25 @@
     <button mat-icon-button aria-labelledby="Toggle fullscreen mode" matTooltip="Toggle fullscreen mode" (click)="toggleFullScreen()" >
       <mat-icon class="svgIconToolbar" svgIcon="fullscreen"></mat-icon>
     </button>
-    <button mat-icon-button aria-labelledby="Show list of layers" matTooltip="Show map overview" (click)="openLayerPanel()" >
+    <button mat-icon-button aria-labelledby="Show list of layers" matTooltip="Show table of content" (click)="openLayerPanel()" >
       <mat-icon class="svgIconToolbar">layers</mat-icon>
     </button>
-    <!--<button mat-icon-button aria-labelledby="Edit layers" matTooltip="Edit layers" (click)="layerEditingChange()">
-      <mat-icon>edit</mat-icon>
-    </button> !-->
     <button mat-icon-button aria-labelledby="Add a sketch layer" matTooltip="Add a sketch layer" (click)="createScratchLayer()" >
     <mat-icon class="svgIconToolbar" svgIcon="layerScratch"></mat-icon>
     </button>
     <button mat-icon-button aria-labelledby="Show your location" matTooltip="Show your location" (click)="updateCurrentPosition()" >
       <mat-icon class="svgIconToolbar" svgIcon="geolocation"></mat-icon>
     </button>
+    <button *ngIf="isGeocoderConfigured" mat-icon-button aria-labelledby="Open Geocoder" matTooltip="Search for addresses" (click)="openGeocoder()" >
+      <mat-icon class="svgIconToolbar" svgIcon="magnifier"></mat-icon>
+    </button>
     <button *ngIf="isStreetSearchConfigured" mat-icon-button aria-labelledby="Open search by street name" matTooltip="Search by street name" (click)="openStreetSearch()" >
       <mat-icon class="svgIconToolbar" svgIcon="magnifier"></mat-icon>
     </button>
-   <!-- disable noise related queries for Herne and Zwolle Case Study
-    <button mat-icon-button (click)="startAction('Identify')"  aria-label="identify" matTooltip="Identify element">
-      <mat-icon svgIcon="identify"></mat-icon>
-    </button> -->
-    <!--<button mat-icon-button (click)="findExposedPeople()"  aria-label="identify" matTooltip="dentificeer de bevolking die wordt beïnvloed door geluid.">
-      <mat-icon class="svgIconToolbar" svgIcon="noiseAnnoyance"></mat-icon>
-    </button>
-    <button mat-icon-button (click)="findExposedInstitutions()"  aria-label="identify" matTooltip="Identificeer de faciliteiten die worden beïnvloed door geluid.">
-      <mat-icon class="svgIconToolbar" svgIcon="noiseOrgAnnoyance"></mat-icon>
-    </button>
-  -->
 
-    <!--<button mat-icon-button (click)="searchOnMap()"  aria-label="identify" matTooltip="Search in map">
-      <mat-icon >search</mat-icon>
-    </button>  -->
+
   </mat-toolbar>
 </mat-card>
- <!--  <div class="location">({{x}}, {{y}})</div> esto muestra las coordenas que se usan para la nueva pos-->
 </div>
 
 

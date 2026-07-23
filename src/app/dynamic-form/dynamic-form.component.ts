@@ -1,11 +1,12 @@
 import {AfterViewInit, Component, EventEmitter, Input, OnInit, Output, NgModule, ElementRef, ViewChild} from '@angular/core';
 import {Observable, of, of as observableOf, Subject, Subscription} from 'rxjs';
-import {QuestionService} from '../question-service.service';
+import {QuestionService} from '../dynamic-form-questions/question-service.service';
 import {UntypedFormGroup, Validators, FormsModule} from '@angular/forms';
-import { QuestionBase } from '../question-base';
+import { QuestionBase } from '../dynamic-form-questions/question-base';
 import {MatLegacySnackBar as MatSnackBar} from '@angular/material/legacy-snack-bar';
 import Keyboard from 'simple-keyboard';
 import { LabelLutService } from '../config/label-lut.service';
+import { Feature } from 'ol';
 @Component({
   selector: 'app-dynamic-form',
   templateUrl: './dynamic-form.component.html',
@@ -16,7 +17,7 @@ export class DynamicFormComponent implements OnInit, AfterViewInit {
   @Input() questions: Observable<QuestionBase<string>[]>;
   @Input() showForm: Observable<boolean>;
   @Input() featureLayer: any;
-  @Output() formSubmitted = new EventEmitter<any>();
+  @Output() formSubmitted = new EventEmitter<{payload: any | null, feature: Feature, layerName: string}>();
   @Input() dataForm: any;
   @ViewChild('keyboard') elRef: ElementRef;
   @ViewChild('input') input;
@@ -114,18 +115,15 @@ export class DynamicFormComponent implements OnInit, AfterViewInit {
   };
 
 
-  closeForm(){
-    this.showForm$ = observableOf(false);
+  abort(){
+    this.onSubmit(true); //submit abborted
   }
 
 
-  onSubmit() {
-    //What is this for?
-    /*if (this.input && this.input.nativeElement.value.length > 0){
-      this.controlInput.setValue( this.input.nativeElement.value);
-    }*/
+  onSubmit(isAborted = false) {
+
     // prepare and submit the event
-    this.payLoad = this.form.getRawValue(); // get the values in JSON
+    this.payLoad = (!isAborted)? this.form.getRawValue() : null; // get the values in JSON
     this.dataForm = this.payLoad;
     this.payLoadSource.next(this.payLoad);
     this.formSubmitted.emit({payload: this.payLoad, feature: this.featureLayer.feature, layerName: this.featureLayer.layerName});

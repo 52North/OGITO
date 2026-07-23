@@ -28,7 +28,7 @@ export class LabelLutService {
   }
 
   /**
-   * returns label if defined in project configuration, otherwise simply retruns propertyName
+   * returns label if defined in project configuration, otherwise simply returns propertyName
    * @param layerName
    * @param propertyName
    * @returns
@@ -38,7 +38,6 @@ export class LabelLutService {
         if(this.labelLookUp[layerName]){
           if(this.labelLookUp[layerName][propertyName]){
             const label = this.labelLookUp[layerName][propertyName]
-            console.log("return label for property " + layerName + "." + propertyName + ": " + label);
             return label
           }else{
             return propertyName;

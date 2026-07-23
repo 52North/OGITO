@@ -1,7 +1,9 @@
-import { Feature } from 'ol/Feature';
+import  Feature  from 'ol/Feature';
 import { Injectable } from '@angular/core';
 import {Subject} from 'rxjs';
 import { ProjectConfiguration } from './config/project-config';
+import { LegendSymbol } from './layer-styles.service';
+import { Map } from 'ol';
 
 @Injectable({
   providedIn: 'root'
@@ -33,10 +35,6 @@ export class OpenLayersService {
   zoomHome$ = this.zoomHomeSource.asObservable();
   private qgsProjectUrlSource = new Subject<ProjectConfiguration>();
   qgsProjectUrl$ = this.qgsProjectUrlSource.asObservable();
-  private findPopExposedSource = new Subject<any>();  // Population exposed to certain level of noise
-  findPopExposed$ = this.findPopExposedSource.asObservable();
-  private findInstitutionsExposedSource = new Subject<any>();  // Population exposed to certain level of noise
-  findInstitutionsExposed$ = this.findInstitutionsExposedSource.asObservable();
   private addSketchLayerSource = new Subject<SketchLayerDescriptor>();
   addSketchLayer$ = this.addSketchLayerSource.asObservable();
   private showStreetSearchSource = new Subject<boolean>();
@@ -49,6 +47,10 @@ export class OpenLayersService {
   zoomToLocation$ = this.zoomToLocation.asObservable();
   private streetSearchConfigured = new Subject<boolean>();
   streetSearchConfigured$ = this.streetSearchConfigured.asObservable();
+  private showGeocodingComponent = new Subject<{visible: boolean}>();
+  showGeocodingComponent$ = this.showGeocodingComponent.asObservable();
+  private geocodingConfigured = new Subject<boolean>();
+  geocodingConfigured$ = this.geocodingConfigured.asObservable();
 
   constructor() { }
 
@@ -164,20 +166,6 @@ export class OpenLayersService {
     this.streetSelectedSource.next(selectedStreet);
   }
 
-  updateFindPopExposed(data: any) {
-    /** Updates the observable popExposed to the next value
-     * @param data: the result of the query returned by the API
-     */
-    this.findPopExposedSource.next(data);
-  }
-
-  updateFindInstitutionsExposed(data: any) {
-    /** Updates the observable popExposed to the next value
-     * @param data: the result of the query returned by the API
-     */
-    this.findInstitutionsExposedSource.next(data);
-  }
-
   raiseSymbolPanelClosed(isAborted: boolean){
     this.symbolPanelClosed.next(isAborted)
   }
@@ -186,10 +174,18 @@ export class OpenLayersService {
     this.streetSearchConfigured.next(isConfigured)
   }
 
+  updateShowGeocodingComponent(visible: boolean){
+    this.showGeocodingComponent.next({visible});
+  }
+
+  updateGeocodingConfigured(isConfigured: boolean){
+    this.geocodingConfigured.next(isConfigured);
+  }
+
 }
 
 export interface SelectedSymbol{
-    symbol: any,
+    symbol: LegendSymbol,
     selectedValue: {
       property: string,
       value: string
@@ -198,7 +194,8 @@ export interface SelectedSymbol{
 
 export interface SymbolListVisibility{
   visible: boolean,
-  optHeader?: string
+  optHeader?: string,
+  selectable: boolean
 }
 
 export interface SketchLayerDescriptor{

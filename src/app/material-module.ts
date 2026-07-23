@@ -93,4 +93,4 @@ import { FullscreenOverlayContainer, OverlayContainer } from '@angular/cdk/overl
     { provide: OverlayContainer, useClass: FullscreenOverlayContainer },
   ]
 })
-export class DemoMaterialModule {}
+export class MaterialModule {}

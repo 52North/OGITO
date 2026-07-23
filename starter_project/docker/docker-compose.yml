@@ -1,5 +1,5 @@
 version: "3.3"
-
+name: ogito_starter
 services:
   qgis_server:
     image: camptocamp/qgis-server:3.26
@@ -31,7 +31,7 @@ services:
     volumes:
       - postgresdata_starter:/var/lib/postgresql/data
       - './init_db.sh:/docker-entrypoint-initdb.d/init_db.sh'
-      - '../ogito_starter_db.sql:/tmp/ogito_starter_db.sql'
+      - '../ogito_starter_db.dump:/tmp/ogito_starter_db.dump'
 volumes:
   postgresdata_starter:
 

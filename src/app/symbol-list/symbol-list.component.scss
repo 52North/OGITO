@@ -23,18 +23,25 @@
   background-color: #e35183;  //to focus the icons
 }
 .canvasSymbol {
- // background-color:  #fff2e1;
-  // border: 1px solid #fff2e1;
-  width: 3vw;  // responsive to the size of the VW
-  height: 1.5vw;
+  // set a smaller maximum height (adjust this vw value to your liking)
+  height: 1.2vw; 
+  // Let the browser calculate the exact width needed to keep the aspect ratio
+  width: auto;   
+ //Prevent exceptionally wide symbols from overflowing your side panel
+  max-width: 2.5vw; 
+  //Ensures the image scales down to fit inside the box without distortion
+  object-fit: contain; 
+  
+  // Optional: adds a tiny bit of spacing so the icon doesn't touch the text
+  margin-right: 8px; 
+  margin-top: 5px;
+  margin-bottom: 5px;
 }
+
 .symbolLabel {
   font-size: 0.7vw;
- }
-.symbol:hover {
-  background-color: #fff2e1;  //to focus the icons
-  cursor: pointer;
 }
+
 .active {
   // background: #fff2e1;
   background-color: #f198b6; //lighter than primary color
@@ -45,3 +52,32 @@
   //height:1.2vw !important;
 }
 
+// ... (rest of your SCSS remains the same)
+
+.symbolLabel {
+  font-size: 0.7vw;
+}
+
+// ONLY apply hover and pointer cursor if the list is selectable
+.symbol.is-selectable:hover {
+  background-color: #fff2e1;  // to focus the icons
+  cursor: pointer;
+}
+
+// Reset cursor if it is NOT selectable
+.symbol:not(.is-selectable) {
+  cursor: default;
+}
+
+.active {
+  background-color: #f198b6; // lighter than primary color
+}
+
+// Optional: Give a slight visual indicator that the list is read-only
+.read-only {
+  opacity: 0.9;
+}
+
+:host ::ng-deep .mat-card {
+  padding: 0 10px;
+}

@@ -5,6 +5,7 @@ import {Observable, of as observableOf} from 'rxjs';
 import {OpenLayersService} from '../open-layers.service';
 import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
 import { ProjectConfiguration } from '../config/project-config';
+import { CustomSketchLayerService } from '../config/custom-sketch-layer-service';
 
 @Component({
   selector: 'app-projlist',
@@ -16,7 +17,7 @@ export class ProjlistComponent implements OnInit {
   showProjectList$: Observable<boolean>;
   private projects: ProjectConfiguration[];
 
-  constructor( private  openLayersService: OpenLayersService, private sanitizer: DomSanitizer, private projectsConfig : ProjectloaderService) {}
+  constructor( private  openLayersService: OpenLayersService, private sanitizer: DomSanitizer, private projectsConfig : ProjectloaderService, private customLayerService: CustomSketchLayerService) {}
 
   ngOnInit(): void {
     console.info("load project configuration")
@@ -31,12 +32,18 @@ export class ProjlistComponent implements OnInit {
   updateShowProjectList(value) {
     this.showProjectList$ = observableOf(value);
   }
-  setProject(project: any) {
+
+  async setProject(project: ProjectConfiguration) {
+    //load custom sketch layer definitions for new selected project
+    await this.customLayerService.loadCustomLayerDefinitions(project) //await -> make sure custom layer definitions are available when project selection is propagated
+    console.info("loaded custom layer definitions for project " + project.name);
+ 
+
     this.openLayersService.updateQgsProjectUrl(project);
     this.updateShowProjectList(false);
   }
 
-  getProjects() {
+  getProjects() : ProjectConfiguration[]{
     return this.projects;
   }
 }

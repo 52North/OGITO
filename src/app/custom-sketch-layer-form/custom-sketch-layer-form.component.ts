@@ -1,0 +1,212 @@
+import { Component, EventEmitter, Output } from '@angular/core';
+import { FormBuilder, FormGroup, FormControl, Validators } from '@angular/forms';
+import { FieldConfig } from '../config/custom-sketch-layer-config';
+import { CustomDialogService, EditedFeatureCustomSketchLayer } from '../custom-dialog.service';
+import { Subscription } from 'rxjs';
+import  VectorLayer  from 'ol/layer/Vector';
+import Feature  from 'ol/Feature';
+import VectorSource from 'ol/source/Vector';
+import { EditLayer } from '../map/map.component';
+
+@Component({
+  selector: 'app-custom-sketch-layer-form',
+  templateUrl: './custom-sketch-layer-form.component.html',
+  styleUrls: ['./custom-sketch-layer-form.component.scss']
+})
+export class CustomSketchLayerFormComponent{
+@Output() formSubmitted = new EventEmitter<any>();
+
+  private subToInitDialog!: Subscription;
+  private isVisible: boolean = false;
+  
+  public form!: FormGroup;
+  public fields: FieldConfig[] = [];
+  public layerName: string = '';
+  public category = '';
+  
+  private feature: Feature;
+  private layer: EditLayer;
+
+  constructor(
+    private fb: FormBuilder,
+    private customDialogInitializer: CustomDialogService
+  ) {}
+
+  ngOnInit(): void {
+    // Listen for the external event to open the dynamic form
+    // You may need to adjust the observable name to match your service
+    this.subToInitDialog = this.customDialogInitializer.customLayerDefinition$.subscribe(
+      (data: EditedFeatureCustomSketchLayer) => {
+        console.log("Received dynamic form init event");
+        this.startDialog(data);
+      },
+      (error) => { console.log('Error in subscription to dynamic form service', error); }
+    );
+  }
+
+  ngOnDestroy(): void {
+    if (this.subToInitDialog) {
+      this.subToInitDialog.unsubscribe();
+    }
+  }
+
+  public getVisibility(): boolean {
+    return this.isVisible;
+  }
+
+  public startDialog(data: EditedFeatureCustomSketchLayer): void {
+    this.feature = data.feature;
+    this.layer = data.layer;
+    this.layerName = data.layerDefinition.layername;
+    this.fields = data.layerDefinition.fields;
+    this.category = data.feature.get("category");
+
+    // Build the Reactive Form based on the new configuration
+    const formControls: { [key: string]: FormControl } = {};
+
+    this.fields.forEach(field => {
+      const fieldValidators = [];
+      if (field.required) {
+        fieldValidators.push(Validators.required);
+      }
+
+      if (field.type === 'text' || field.type === 'textarea') {
+        if (field.minLength !== undefined) {
+          fieldValidators.push(Validators.minLength(field.minLength));
+        }
+        if (field.maxLength !== undefined) {
+          fieldValidators.push(Validators.maxLength(field.maxLength));
+        }
+      }
+
+      if(field.type === 'number'){
+        if (field.min !== undefined) {
+          fieldValidators.push(Validators.min(field.min));
+        }
+        if (field.max !== undefined) {
+          fieldValidators.push(Validators.max(field.max));
+        }
+      }
+
+      let initialValue = field.default !== undefined ? field.default : null;
+      if (initialValue === 'now' && (field.type === 'date' || field.type === 'datetime')) {
+        initialValue = this.getNowFormatted(field.type);
+      }
+
+      formControls[field.id] = new FormControl(
+        {
+          value: initialValue,
+          disabled: field.readonly || false
+        },
+        fieldValidators
+      );
+    });
+
+    this.form = this.fb.group(formControls);
+    this.isVisible = true;
+
+  }
+
+  public abbortDialog(): void {
+    // If you need to clean up the feature from the map layer on abort, do it here
+    if (this.feature && this.layer) {
+      try {
+        this.layer.olLayer.getSource().removeFeature(this.feature);
+      } catch (err) {
+        console.error("Error while removing edit feature", err);
+      }
+    }
+
+    if (this.layer) {
+      this.customDialogInitializer.raiseCustomDialogClosed(this.layerName, true);
+    }
+    this.resetValues();
+  }
+
+  public submitDialog(): void {
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
+
+    const formValues = this.form.getRawValue();
+
+    // Emit the payload matching your edit-reporting component output signature
+    const now = new Date();
+    this.feature.set("inserted", now.toISOString());
+    this.feature.set("layername", this.layerName);
+    this.feature.set("payload", JSON.stringify(formValues));
+    this.feature.set("category", this.category); // Assuming there's a category field in the form
+
+    this.formSubmitted.emit({
+      payload: formValues, 
+      feature: this.feature, 
+      layerName: this.layerName
+    });
+
+    if (this.layer) {
+      this.customDialogInitializer.raiseCustomDialogClosed(this.layerName, false);
+    }
+    this.resetValues();
+  }
+
+  public getMinMaxLabel(field: FieldConfig): string {
+    let label = "";
+
+    if(field.type === 'number'){
+      const min = field.min !== undefined ? `min: ${field.min}` : '';
+      const max = field.max !== undefined ? `max: ${field.max}` : '';
+      label = [min, max].filter(part => part).join(', ');
+    }
+
+    if(label !== ""){
+      label = `(${label})`;
+    }
+
+    return label;
+  }
+
+
+  public getMinMaxLengthLabel(field: FieldConfig): string {
+    let label = "";    
+    if(field.type === 'text' || field.type === 'textarea'){
+      const minLength = field.minLength !== undefined ? `min: ${field.minLength}` : '';
+      const maxLength = field.maxLength !== undefined ? `max: ${field.maxLength}` : '';
+      label = [minLength, maxLength].filter(part => part).join(', ');
+    }
+
+    if(label !== ""){
+      label = `(${label})`;
+    }
+
+    return label;
+  }
+
+  private resetValues(): void {
+    this.isVisible = false;
+    this.feature = null;
+    this.layer = null;
+    this.fields = [];
+    this.category = '';
+    if (this.form) {
+      this.form.reset();
+    }
+  }
+
+  // Helper method to format the current date/time for default values as string for date and datetime fields
+  private getNowFormatted(type: 'date' | 'datetime'): string {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    
+    if (type === 'date') {
+      return `${year}-${month}-${day}`;
+    } else {
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      return `${year}-${month}-${day}T${hours}:${minutes}`;
+    }
+  }
+
+}

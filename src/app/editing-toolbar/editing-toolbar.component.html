@@ -11,7 +11,7 @@
         <mat-icon>add_location</mat-icon>
       </button>
 
-      <button mat-icon-button *ngIf="(layerTypeEdit$ == 'Line' || layerTypeEdit$ =='Multi' || layerTypeEdit$ == 'Polygon'|| layerTypeEdit$ == 'MultiPolygon'|| layerTypeEdit$ == 'MultiPolygonZ') "
+      <button mat-icon-button *ngIf="(layerTypeEdit$ == 'LineString' || layerTypeEdit$ =='Multi' ) "
               (click)="drawingShapes('LineString')" matTooltip="Add Line/Linestring" aria-label="Add line" [ngClass]="actionActive['LineString'] ? 'active': 'normal'">
         <mat-icon    svgIcon="add_line"></mat-icon>
       </button>
@@ -76,7 +76,7 @@
       <button mat-icon-button aria-label="Revert last edit" (click)="startEditAction('Undo');" matTooltip="Revert last edit">
         <mat-icon>undo</mat-icon>
       </button>
-      <button mat-icon-button (click)="showSymbolPanel(true)" matTooltip="Open list of symbols" aria-label="Open list of symbols"
+      <button mat-icon-button (click)="showSymbolPanel(true)" matTooltip="Open list of symbols" aria-label="Open list of symbols" [disabled]="this.symbolPanelVisible"
               [ngClass]="actionActive['showSymbols'] ? 'active': 'normal'">
         <mat-icon>category</mat-icon>
       </button>

@@ -21,7 +21,7 @@
       <span class="title">&nbsp;OGITO </span>
       <span class="spacer"></span>
       <span class = "userNickName" *ngIf="auth.userProfile$ | async as profile">
-      <code>{{ profile["nickname"] }}</code>
+      <code>{{ $any(profile).nickname }}</code>
       </span> <pre>  </pre>
       <button mat-button (click)="handleLogin()" *ngIf="!auth.isLoggedIn()"> Log in</button>
       <button mat-button (click)="handleLogin()" *ngIf="auth.isLoggedIn()"> Log out</button>

@@ -1,0 +1,131 @@
+<div class="parent">
+  <div class="example-list" *ngIf="getVisibility()" cdkDrag cdkDragBoundary=".app-content" cdkRes>
+    <mat-card>
+      <mat-card-title-group cdkDragHandle>
+        <mat-card-title>{{ layerName }}</mat-card-title>
+        <button mat-flat-button (click)="abbortDialog()" class="matCloseWrapper">
+          <mat-icon>close</mat-icon>
+        </button>
+      </mat-card-title-group>
+      <mat-divider></mat-divider>
+      
+      <div class="form">
+        <form [formGroup]="form" class="dynamic-form-container">
+          
+          <ng-container *ngFor="let field of fields" [ngSwitch]="field.type">
+
+            <div class="text-input" *ngSwitchCase="'text'">
+              <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>{{ field.label }} {{ getMinMaxLengthLabel(field) }}</mat-label>
+                  <input 
+                    matInput 
+                    [formControlName]="field.id" 
+                    [placeholder]="field.placeholder || ''"
+                    [attr.maxlength]="field.maxLength || null"
+                  >
+                  <mat-error *ngIf="form.get(field.id)?.hasError('required')">
+                    This field is required
+                  </mat-error>
+                  <mat-error *ngIf="form.get(field.id)?.hasError('minlength')">
+                    Must be at least {{ field.minLength }} characters
+                  </mat-error>
+                  <mat-error *ngIf="form.get(field.id)?.hasError('maxlength')">
+                    Cannot exceed {{ field.maxLength }} characters
+                  </mat-error>
+                </mat-form-field>
+            </div>
+
+            <div class="text-input textarea-input" *ngSwitchCase="'textarea'">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>{{ field.label }} {{ getMinMaxLengthLabel(field) }}</mat-label>
+                <textarea 
+                  matInput 
+                  [formControlName]="field.id" 
+                  [placeholder]="field.placeholder || ''" 
+                  [rows]="field.rows || 6"
+                  [attr.maxlength]="field.maxLength || null"
+                ></textarea>
+                <mat-error *ngIf="form.get(field.id)?.hasError('required')">
+                  This field is required
+                </mat-error>
+                <mat-error *ngIf="form.get(field.id)?.hasError('minlength')">
+                  Must be at least {{ field.minLength }} characters
+                </mat-error>
+                <mat-error *ngIf="form.get(field.id)?.hasError('maxlength')">
+                  Cannot exceed {{ field.maxLength }} characters
+                </mat-error>
+              </mat-form-field>
+            </div>
+
+            <div class="number-input" *ngSwitchCase="'number'">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>{{ field.label }} {{ getMinMaxLabel(field) }}</mat-label>
+                <input matInput type="number" [formControlName]="field.id" [attr.min]="field.min ?? null" [attr.max]="field.max ?? null">
+                <mat-error *ngIf="form.get(field.id)?.hasError('required')">This field is required</mat-error>
+                <mat-error *ngIf="form.get(field.id)?.hasError('min')">
+                  Value must be at least {{ field.min }}
+                </mat-error>
+                <mat-error *ngIf="form.get(field.id)?.hasError('max')">
+                  Value cannot exceed {{ field.max }}
+                </mat-error>
+              </mat-form-field>
+            </div>
+
+            <div class="select-input" *ngSwitchCase="'select'">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>{{ field.label }}</mat-label>
+                <mat-select [formControlName]="field.id"  >
+                  <mat-option *ngIf="!field.required" [value]="null"><em>----</em></mat-option> <!-- allows to clear selection if field not required -->
+                  <mat-option *ngFor="let opt of field.options" [value]="opt">{{ opt }}</mat-option>
+                </mat-select>
+                <mat-error *ngIf="form.get(field.id)?.hasError('required')">This field is required</mat-error>
+              </mat-form-field>
+            </div>
+
+            <div class="custom-field-margin" *ngSwitchCase="'checkbox'">
+              <mat-checkbox [formControlName]="field.id" [required]="field.required || false" color="primary">{{ field.label }}</mat-checkbox>
+              <span class="custom-error" *ngIf="form.get(field.id)?.hasError('required')">
+                This checkbox is required
+              </span>
+            </div>
+
+            <div class="radio-input custom-field-margin" *ngSwitchCase="'radio'">
+              <label class="radio-label" [class.text-error]="form.get(field.id)?.hasError('required') && form.get(field.id)?.touched">
+                {{ field.label }}<span *ngIf="field.required"> *</span>:
+              </label>
+              <mat-radio-group [formControlName]="field.id" [required]="field.required || false">
+                <mat-radio-button *ngFor="let opt of field.options" [value]="opt" class="radio-btn">{{ opt }}</mat-radio-button>
+              </mat-radio-group>
+              <span class="custom-error" *ngIf="form.get(field.id)?.hasError('required')">
+                Please select an option
+              </span>
+            </div>
+
+            <div class="date-input" *ngSwitchCase="'datetime'">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>{{ field.label }}</mat-label>
+                <input matInput type="datetime-local" [formControlName]="field.id">
+                <mat-error *ngIf="form.get(field.id)?.hasError('required')">This field is required</mat-error>
+              </mat-form-field>
+            </div>
+
+           <div class="date-input" *ngSwitchCase="'date'">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>{{ field.label }}</mat-label>
+                <input matInput type="date" [formControlName]="field.id">
+                <mat-error *ngIf="form.get(field.id)?.hasError('required')">This field is required</mat-error>
+              </mat-form-field>
+            </div>
+
+          </ng-container>
+
+        </form>
+
+        <div class="submit-button">
+          <button mat-flat-button color="primary" type="submit" (click)="submitDialog()" [disabled]="form?.invalid" [ngStyle]="{'cursor': form?.invalid ? 'not-allowed' : 'pointer'}">Ok</button>
+        </div>
+
+      </div>
+    </mat-card>
+  </div>
+</div>

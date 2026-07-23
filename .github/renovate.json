@@ -1,0 +1,70 @@
+{
+    "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+    "extends": [
+        "config:recommended"
+    ],
+    "baseBranches": [
+        "main"
+    ],
+    "ignorePresets": [
+        "group:monorepos"
+    ],
+    "major": {
+        "enabled": false
+    },
+    "ignorePaths": [
+        "**/node_modules/**",
+        "**/e2e/**",
+        "**/dist/**",
+        "img/**",
+        "src/assets/**",
+        "src/environments/**",
+        "tools/street_names/**"
+    ],
+    "minimumReleaseAge": "7 days",
+    "packageRules": [
+        {
+            "description": "All production dependencies (excluding subfolders)",
+            "matchDepTypes": [
+                "dependencies"
+            ],
+            "matchFileNames": [
+                "!tools/**",
+                "!starter_project/**"
+            ],
+            "groupName": "production dependencies"
+        },
+        {
+            "description": "All devDependencies (excluding subfolders)",
+            "matchDepTypes": [
+                "devDependencies"
+            ],
+            "matchFileNames": [
+                "!tools/**",
+                "!starter_project/**"
+            ],
+            "groupName": "dev dependencies"
+        },
+        {
+            "description": "All dependencies inside starter project folder (Docker images, etc.)",
+            "matchFileNames": [
+                "starter_project/**"
+            ],
+            "groupName": "starter project dependencies"
+        },
+        {
+            "description": "All dependencies of image upload script",
+            "matchFileNames": [
+                "tools/image_upload/**"
+            ],
+            "groupName": "tool image upload dependencies"
+        },
+        {
+            "description": "All dependencies of geopy geocoder script",
+            "matchFileNames": [
+                "tools/geopy_geocoder/**"
+            ],
+            "groupName": "tool geopy geocoder dependencies"
+        }
+    ]
+}
