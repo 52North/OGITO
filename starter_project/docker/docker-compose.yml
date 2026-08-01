@@ -2,7 +2,7 @@ version: "3.3"
 name: ogito_starter
 services:
   qgis_server:
-    image: camptocamp/qgis-server:3.26
+    image: camptocamp/qgis-server:3.42
     volumes:
       - '../ogito_starter.qgs:/etc/qgisserver/ogito_starter.qgs'
       - './pg_service.conf:/etc/qgisserver/pg_service.conf'
