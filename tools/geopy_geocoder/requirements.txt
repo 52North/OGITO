@@ -1,2 +1,2 @@
-geopy == 2.4.1
+geopy ==2.5.0
 flipflop == 1.0.0
