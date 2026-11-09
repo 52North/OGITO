@@ -3,11 +3,10 @@ import { FormBuilder, FormGroup, FormControl, ValidatorFn, Validators } from '@a
 import { FieldConfig } from '../config/custom-sketch-layer-config';
 import { CustomDialogService, EditedFeatureCustomSketchLayer } from '../custom-dialog.service';
 import { Subscription } from 'rxjs';
-import  VectorLayer  from 'ol/layer/Vector';
 import Feature  from 'ol/Feature';
-import VectorSource from 'ol/source/Vector';
 import { EditLayer } from '../map/map.component';
 import { evaluateFieldCondition } from './field-condition-evaluator';
+import { getFormFieldsForCategory } from '../config/custom-sketch-layer-utils';
 
 @Component({
   selector: 'app-custom-sketch-layer-form',
@@ -25,6 +24,7 @@ export class CustomSketchLayerFormComponent{
   public fields: FieldConfig[] = [];
   public layerName: string = '';
   public category = '';
+  public categoryLabel: string = '';
   public allVisibleFieldIds = new Set<string>(); // track currently visible field IDs (for conditional fields)
   
   private feature: Feature;
@@ -94,8 +94,9 @@ export class CustomSketchLayerFormComponent{
     this.feature = data.feature;
     this.layer = data.layer;
     this.layerName = data.layerDefinition.layername;
-    this.fields = data.layerDefinition.fields;
     this.category = data.feature.get("category");
+    this.categoryLabel = data.layerDefinition.categories.find(c => c.id === this.category)?.label || '';
+    this.fields = getFormFieldsForCategory(data.layerDefinition, this.category);
 
     if (this.subToFormValueChanges) {
       this.subToFormValueChanges.unsubscribe();
@@ -219,6 +220,7 @@ export class CustomSketchLayerFormComponent{
     this.layer = null;
     this.fields = [];
     this.category = '';
+    this.categoryLabel = '';
     this.allVisibleFieldIds = new Set<string>();
     if (this.form) {
       this.form.reset();

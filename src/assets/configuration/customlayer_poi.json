@@ -24,6 +24,31 @@
             "id": "recreation",
             "label": "Recreation",
             "icon": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Legenda_park_narodowy.svg/960px-Legenda_park_narodowy.svg.png"
+        },
+        {
+            "id": "other",
+            "label": "Other",
+            "icon": "https://example.com/icon.png",
+            "fields": [
+                {
+                    "id": "name",
+                    "label": "Name of Place",
+                    "type": "text",
+                    "placeholder": "type the name of the place",
+                    "required": true,
+                    "minLength": 3
+                },
+                {
+                    "id": "description",
+                    "label": "Description",
+                    "type": "textarea",
+                    "placeholder": "Describe the place",
+                    "readonly": false,
+                    "required": true,
+                    "maxLength": 50,
+                    "rows": 8
+                }
+            ]
         }
     ],
     "fields": [

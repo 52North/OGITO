@@ -233,6 +233,7 @@ Currently, Custom Sketch Layers are limited to Point geometries.
 ##### Templates
 
 A example for a Custom Sketch Layer definition is provided in [`./src/assets/configuration/customlayer_poi.json`](./src/assets//configuration/customlayer_poi.json).
+The templates (and technial layers) must be configured in the [project configuration](#project-configuration) for each project specically.
 
 ###### Configuration Properties
 
@@ -253,6 +254,7 @@ A example for a Custom Sketch Layer definition is provided in [`./src/assets/con
 | `id` | String | Unique ID used to identify the category internally. |
 | `label` | String | The human-readable name displayed in the UI. |
 | `icon` | String | The image source reference. Supports relative paths (`/assets/...`), external URLs (`https://...`), or Base64 encoded images (e.g SVGs) (`data:image/svg+xml;base64,...`). |
+| `fields` | Array | Optional. If set, **overrides** the top-level `fields` list entirely for this specific category. If not set `fields` list from root properties is used as default. |
 
 **Field Properties**   
 Every object within the `fields` array creates a dynamic input component in the feature creation/edit form.
@@ -315,7 +317,6 @@ A condition's `field` can also target the (pre-)selected category of the feature
 </details>
 
 **Supported Field Types**
-The templates (and technial layers) must be configured in the [project configuration](#project-configuration) for each project specically.
 | Field Type | UI Component | Supported Schema Attributes | Best Use Case |
 | :--- | :--- | :--- | :--- |
 | **`text`** | Single-line input box | `id`, `label`, `placeholder`, `required`, `minLength` | Short string entries like names, addresses, or titles. |

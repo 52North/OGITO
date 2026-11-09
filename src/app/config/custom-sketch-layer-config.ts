@@ -39,6 +39,7 @@ export interface CategoriesConfig{
     id: string
     label: string
     icon: string
+    fields?: FieldConfig[]; // if set, overrides the top-level `fields` list for this category
 }
 
 export interface CustomLayerDefinition {
@@ -46,7 +47,7 @@ export interface CustomLayerDefinition {
     groupname: string;
     header?: string,
     categories: CategoriesConfig[];
-    fields: FieldConfig[];
+    fields: FieldConfig[]; //default fields for all categories, can be overridden by category-specific fields
     labelField?: string; // the field whose value should be shown as label on the map
     iconHeightPxl: number; // the height in pixel of the custom icons on the map
 }
