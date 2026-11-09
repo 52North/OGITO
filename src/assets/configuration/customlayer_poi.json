@@ -28,7 +28,7 @@
         {
             "id": "other",
             "label": "Other",
-            "icon": "https://example.com/icon.png",
+            "icon": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0Ij4KICA8Y2lyY2xlIGN4PSIxMiIgY3k9IjEyIiByPSIxMSIgZmlsbD0iIzYwN2Q4YiIvPgogIDx0ZXh0IHg9IjEyIiB5PSIxNyIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE0IiBmb250LXdlaWdodD0iYm9sZCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmZmZmZiI+PzwvdGV4dD4KPC9zdmc+Cg==",
             "fields": [
                 {
                     "id": "name",
