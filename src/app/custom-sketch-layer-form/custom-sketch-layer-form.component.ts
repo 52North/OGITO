@@ -247,9 +247,13 @@ export class CustomSketchLayerFormComponent{
    */
   private updateFieldVisibility(values: Record<string, any>): void {
     const nextVisible = new Set<string>();
+    const evaluationValues: Record<string, any> = {
+      ...values,
+      'form.categories': this.category, // add the pre-selected category to the evaluation values so conditional fields can depend on it
+    };
 
     this.fields.forEach(field => {
-      const isVisible = evaluateFieldCondition(field.condition, values);
+      const isVisible = evaluateFieldCondition(field.condition, evaluationValues);
       if (isVisible) {
         nextVisible.add(field.id);
       }

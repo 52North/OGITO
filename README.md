@@ -287,6 +287,8 @@ A `condition` is a structured object that contais one or multiple conditions for
 
 `all`/`any` can nest arbitrarily (e.g. an `all` containing an `any`). A field with no `condition` is always shown.
 
+A condition's `field` can also target the (pre-)selected category of the feature, using `form.categories` as the selector, e.g. `{ "field": "form.categories", "equals": "transport" }` is `true` when the currently selected category id is `transport`.
+
 <details>
   <summary>example conditional fields</summary>
 
