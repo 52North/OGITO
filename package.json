@@ -42,7 +42,7 @@
     "@angular/cli": "^15.2.10",
     "@angular/compiler-cli": "^15.2.10",
     "@types/hammerjs": "^2.0.39",
-    "@types/jasmine": "~3.5.0",
+    "@types/jasmine": "~3.10.0",
     "@types/jasminewd2": "~2.0.3",
     "@types/node": "^12.11.1",
     "codelyzer": "^6.0.2",
@@ -60,6 +60,7 @@
   },
   "overrides": {
     "glob@>=10.x <= 11.0.3": "^11.1.0",
-    "form-data@<2.5.4 ": "^2.5.4"
+    "form-data@<2.5.4 ": "^2.5.4",
+    "tar@<7.5.7": "^7.5.7"
   }
 }
