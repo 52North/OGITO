@@ -3519,7 +3519,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 									continue;
 								}
 
-								if (payload[payloadKey]) {
+								if (payload[payloadKey] !== null && payload[payloadKey] !== undefined) {
 									text = text.concat(
 										"<tr><td>" +
 											this.getPayloadLabelCustomSketchLayer(

@@ -14,7 +14,7 @@
           
           <ng-container *ngFor="let field of fields" [ngSwitch]="field.type">
 
-            <div class="text-input" *ngSwitchCase="'text'">
+            <div class="text-input" *ngSwitchCase="'text'" [hidden]="!isFieldVisible(field)">
               <mat-form-field appearance="outline" class="full-width">
                   <mat-label>{{ field.label }} {{ getMinMaxLengthLabel(field) }}</mat-label>
                   <input 
@@ -35,7 +35,7 @@
                 </mat-form-field>
             </div>
 
-            <div class="text-input textarea-input" *ngSwitchCase="'textarea'">
+            <div class="text-input textarea-input" *ngSwitchCase="'textarea'" [hidden]="!isFieldVisible(field)">
               <mat-form-field appearance="outline" class="full-width">
                 <mat-label>{{ field.label }} {{ getMinMaxLengthLabel(field) }}</mat-label>
                 <textarea 
@@ -57,7 +57,7 @@
               </mat-form-field>
             </div>
 
-            <div class="number-input" *ngSwitchCase="'number'">
+            <div class="number-input" *ngSwitchCase="'number'" [hidden]="!isFieldVisible(field)">
               <mat-form-field appearance="outline" class="full-width">
                 <mat-label>{{ field.label }} {{ getMinMaxLabel(field) }}</mat-label>
                 <input matInput type="number" [formControlName]="field.id" [attr.min]="field.min ?? null" [attr.max]="field.max ?? null">
@@ -71,7 +71,7 @@
               </mat-form-field>
             </div>
 
-            <div class="select-input" *ngSwitchCase="'select'">
+            <div class="select-input" *ngSwitchCase="'select'" [hidden]="!isFieldVisible(field)">
               <mat-form-field appearance="outline" class="full-width">
                 <mat-label>{{ field.label }}</mat-label>
                 <mat-select [formControlName]="field.id"  >
@@ -82,14 +82,14 @@
               </mat-form-field>
             </div>
 
-            <div class="custom-field-margin" *ngSwitchCase="'checkbox'">
+            <div class="custom-field-margin" *ngSwitchCase="'checkbox'" [hidden]="!isFieldVisible(field)">
               <mat-checkbox [formControlName]="field.id" [required]="field.required || false" color="primary">{{ field.label }}</mat-checkbox>
               <span class="custom-error" *ngIf="form.get(field.id)?.hasError('required')">
                 This checkbox is required
               </span>
             </div>
 
-            <div class="radio-input custom-field-margin" *ngSwitchCase="'radio'">
+            <div class="radio-input custom-field-margin" *ngSwitchCase="'radio'" [hidden]="!isFieldVisible(field)">
               <label class="radio-label" [class.text-error]="form.get(field.id)?.hasError('required') && form.get(field.id)?.touched">
                 {{ field.label }}<span *ngIf="field.required"> *</span>:
               </label>
@@ -101,7 +101,7 @@
               </span>
             </div>
 
-            <div class="date-input" *ngSwitchCase="'datetime'">
+            <div class="date-input" *ngSwitchCase="'datetime'" [hidden]="!isFieldVisible(field)">
               <mat-form-field appearance="outline" class="full-width">
                 <mat-label>{{ field.label }}</mat-label>
                 <input matInput type="datetime-local" [formControlName]="field.id">
@@ -109,7 +109,7 @@
               </mat-form-field>
             </div>
 
-           <div class="date-input" *ngSwitchCase="'date'">
+           <div class="date-input" *ngSwitchCase="'date'" [hidden]="!isFieldVisible(field)">
               <mat-form-field appearance="outline" class="full-width">
                 <mat-label>{{ field.label }}</mat-label>
                 <input matInput type="date" [formControlName]="field.id">

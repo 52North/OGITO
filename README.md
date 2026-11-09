@@ -272,6 +272,45 @@ Every object within the `fields` array creates a dynamic input component in the 
 | `max` | Number | `number` | The maximum allowable numeric value. |
 | `options` | Array | `select` | A list of string options for a dropdown list menu. |
 | `showInFeatureInfo` | Boolean | All Fields | Determines if this attribute should be visible in the feature's information popup on the map. Default is true. |
+| `condition` | Object | All Fields | If set, the field is only shown when the condition evaluates to `true` against the other fields' current values. See [Conditional Fields](#conditional-fields). |
+
+###### Conditional Fields
+
+A `condition` is a structured object that contais one or multiple conditions for field visibilty. A condition is either a single comparison against another field's value, or an `all` (AND) / `any` (OR) list of nested conditions:
+
+| Condition Shape | Description |
+| :--- | :--- |
+| `{ "field": "<id>", "equals": <value> }` | `true` if the field `<id>`'s current value equals `<value>`. |
+| `{ "field": "<id>", "notEquals": <value> }` | `true` if the field `<id>`'s current value does not equal `<value>`. |
+| `{ "all": [ <condition>, ... ] }` | `true` if every nested condition is `true` (AND). |
+| `{ "any": [ <condition>, ... ] }` | `true` if at least one nested condition is `true` (OR). |
+
+`all`/`any` can nest arbitrarily (e.g. an `all` containing an `any`). A field with no `condition` is always shown.
+
+<details>
+  <summary>example conditional fields</summary>
+
+  ```json
+  {
+    "id": "issue",
+    "label": "What was the issue?",
+    "type": "text",
+    "condition": { "field": "recommended", "equals": false }
+  },
+  {
+    "id": "time mins",
+    "label": "How long did it take?",
+    "type": "number",
+    "condition": {
+      "any": [
+        { "field": "accessed by", "equals": "Bike" },
+        { "field": "accessed by", "equals": "Pedestrian" }
+      ]
+    }
+  }
+  ```
+
+</details>
 
 **Supported Field Types**
 The templates (and technial layers) must be configured in the [project configuration](#project-configuration) for each project specically.
@@ -283,7 +322,7 @@ The templates (and technial layers) must be configured in the [project configura
 | **`select`** | Dropdown selection list | `id`, `label`, `options`, `readonly`, `required` | Standardized parameters where the user must choose from a predefined list of values. |
 | **`date`** | Native calendar picker | `id`, `label`, `readonly`, `required` | Selection of a Date in Calender input. |
 | **`datetime`** | Native calendar + time picker | `id`, `label`, `readonly`, `required` | Same as `date` but with additional time selection. |
-| **`checkbox`** | Binary toggle switch | `id`, `label`, `default`, `required`, `showInFeatureInfo` | Simple yes/no flags |
+| **`checkbox`** | Binary toggle switch | `id`, `label`, `default`, `required` | Simple yes/no flags |
 
 #### Rating Layers
 

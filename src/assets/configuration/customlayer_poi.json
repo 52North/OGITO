@@ -4,31 +4,29 @@
     "header": "Select a Category",
     "labelField": "name",
     "iconHeightPxl": 38,
-    "categories": 
-        [
-            {
-                "id": "transport",
-                "label": "Transport",
-                "icon": "https://upload.wikimedia.org/wikipedia/commons/8/8e/Traintransportation.svg"
-            },
-            {
-                "id": "health",
-                "label": "Health",
-                "icon": "https://upload.wikimedia.org/wikipedia/commons/a/a3/BSicon_HOSPITAL.svg"
-            }, 
-            {
-                "id": "sightseeing",
-                "label": "Sightseeing",
-                "icon": "https://upload.wikimedia.org/wikipedia/commons/1/1b/Map_Icon_-_Attractions.png"
-            },
-            {
-                "id": "recreation",
-                "label": "Recreation",
-                "icon": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Legenda_park_narodowy.svg/960px-Legenda_park_narodowy.svg.png"
-            }
-        ]
-    ,
-    "fields" : [
+    "categories": [
+        {
+            "id": "transport",
+            "label": "Transport",
+            "icon": "https://upload.wikimedia.org/wikipedia/commons/8/8e/Traintransportation.svg"
+        },
+        {
+            "id": "health",
+            "label": "Health",
+            "icon": "https://upload.wikimedia.org/wikipedia/commons/a/a3/BSicon_HOSPITAL.svg"
+        },
+        {
+            "id": "sightseeing",
+            "label": "Sightseeing",
+            "icon": "https://upload.wikimedia.org/wikipedia/commons/1/1b/Map_Icon_-_Attractions.png"
+        },
+        {
+            "id": "recreation",
+            "label": "Recreation",
+            "icon": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Legenda_park_narodowy.svg/960px-Legenda_park_narodowy.svg.png"
+        }
+    ],
+    "fields": [
         {
             "id": "name",
             "label": "Name of Place",
@@ -60,25 +58,83 @@
             "id": "accessed by",
             "label": "Accessed By",
             "type": "select",
-            "options": ["Car", "Bike", "Pedestrian", "Public Transport"],
+            "options": [
+                "Car",
+                "Bike",
+                "Pedestrian",
+                "Public Transport"
+            ],
             "readonly": false,
             "required": false
+        },
+        {
+            "id": "time mins",
+            "label": "How long did it take (minutes)?",
+            "type": "number",
+            "min": 0,
+            "readonly": false,
+            "required": false,
+            "default": 25,
+            "condition": {
+                "any": [
+                    {
+                        "field": "accessed by",
+                        "equals": "Bike"
+                    },
+                    {
+                        "field": "accessed by",
+                        "equals": "Pedestrian"
+                    },
+                    {
+                        "field": "accessed by",
+                        "equals": "Car"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "service quality",
+            "label": "How do you rate the service quality?",
+            "type": "number",
+            "min": 1,
+            "max": 5,
+            "readonly": false,
+            "required": true,
+            "condition": {
+                "all": [
+                    {
+                        "field": "accessed by",
+                        "equals": "Public Transport"
+                    }
+                ]
+            }
         },
         {
             "id": "date visited",
             "label": "Date Visited",
             "type": "date",
             "readonly": false,
-            "required": true
+            "required": true,
+            "showInFeatureInfo": false
         },
         {
             "id": "recommended",
             "label": "Would you recommend this place?",
             "type": "checkbox",
-            "default": false,
-            "required": false,
-            "showInFeatureInfo": false
+            "default": true,
+            "required": false
+        },
+        {
+            "id": "issue",
+            "label": "What was the issue?",
+            "type": "text",
+            "placeholder": "describe the issue",
+            "readonly": false,
+            "required": true,
+            "condition": {
+                "field": "recommended",
+                "equals": false
+            }
         }
-
     ]
 }
