@@ -67,6 +67,14 @@ footer a {
   z-index: 100;
 }
 
+.app-content-container {
+  /* gives the map (position: absolute inside) a positioned containing block
+     sized to the space below the toolbar, instead of falling back to the
+     viewport and rendering under it */
+  position: relative;
+  height: 100%;
+}
+
 .app-content-container:fullscreen {
   width: 100%;
   height: 100%;
