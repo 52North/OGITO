@@ -1,12 +1,12 @@
 import { Component, EventEmitter, Output } from '@angular/core';
-import { FormBuilder, FormGroup, FormControl, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, FormControl, ValidatorFn, Validators } from '@angular/forms';
 import { FieldConfig } from '../config/custom-sketch-layer-config';
 import { CustomDialogService, EditedFeatureCustomSketchLayer } from '../custom-dialog.service';
 import { Subscription } from 'rxjs';
-import  VectorLayer  from 'ol/layer/Vector';
 import Feature  from 'ol/Feature';
-import VectorSource from 'ol/source/Vector';
 import { EditLayer } from '../map/map.component';
+import { evaluateFieldCondition } from './field-condition-evaluator';
+import { getFormFieldsForCategory } from '../config/custom-sketch-layer-utils';
 
 @Component({
   selector: 'app-custom-sketch-layer-form',
@@ -17,12 +17,15 @@ export class CustomSketchLayerFormComponent{
 @Output() formSubmitted = new EventEmitter<any>();
 
   private subToInitDialog!: Subscription;
+  private subToFormValueChanges: Subscription | null = null;
   private isVisible: boolean = false;
-  
+
   public form!: FormGroup;
   public fields: FieldConfig[] = [];
   public layerName: string = '';
   public category = '';
+  public categoryLabel: string = '';
+  public allVisibleFieldIds = new Set<string>(); // track currently visible field IDs (for conditional fields)
   
   private feature: Feature;
   private layer: EditLayer;
@@ -34,7 +37,6 @@ export class CustomSketchLayerFormComponent{
 
   ngOnInit(): void {
     // Listen for the external event to open the dynamic form
-    // You may need to adjust the observable name to match your service
     this.subToInitDialog = this.customDialogInitializer.customLayerDefinition$.subscribe(
       (data: EditedFeatureCustomSketchLayer) => {
         console.log("Received dynamic form init event");
@@ -48,46 +50,62 @@ export class CustomSketchLayerFormComponent{
     if (this.subToInitDialog) {
       this.subToInitDialog.unsubscribe();
     }
+    if (this.subToFormValueChanges) {
+      this.subToFormValueChanges.unsubscribe();
+    }
   }
 
   public getVisibility(): boolean {
     return this.isVisible;
   }
 
+  public isFieldVisible(field: FieldConfig): boolean {
+    return this.allVisibleFieldIds.has(field.id);
+  }
+
+  private buildValidatorsFor(field: FieldConfig): ValidatorFn[] {
+    const fieldValidators: ValidatorFn[] = [];
+    if (field.required) {
+      fieldValidators.push(Validators.required);
+    }
+
+    if (field.type === 'text' || field.type === 'textarea') {
+      if (field.minLength !== undefined) {
+        fieldValidators.push(Validators.minLength(field.minLength));
+      }
+      if (field.maxLength !== undefined) {
+        fieldValidators.push(Validators.maxLength(field.maxLength));
+      }
+    }
+
+    if (field.type === 'number') {
+      if (field.min !== undefined) {
+        fieldValidators.push(Validators.min(field.min));
+      }
+      if (field.max !== undefined) {
+        fieldValidators.push(Validators.max(field.max));
+      }
+    }
+
+    return fieldValidators;
+  }
+
   public startDialog(data: EditedFeatureCustomSketchLayer): void {
     this.feature = data.feature;
     this.layer = data.layer;
     this.layerName = data.layerDefinition.layername;
-    this.fields = data.layerDefinition.fields;
     this.category = data.feature.get("category");
+    this.categoryLabel = data.layerDefinition.categories.find(c => c.id === this.category)?.label || '';
+    this.fields = getFormFieldsForCategory(data.layerDefinition, this.category);
+
+    if (this.subToFormValueChanges) {
+      this.subToFormValueChanges.unsubscribe();
+    }
 
     // Build the Reactive Form based on the new configuration
     const formControls: { [key: string]: FormControl } = {};
 
     this.fields.forEach(field => {
-      const fieldValidators = [];
-      if (field.required) {
-        fieldValidators.push(Validators.required);
-      }
-
-      if (field.type === 'text' || field.type === 'textarea') {
-        if (field.minLength !== undefined) {
-          fieldValidators.push(Validators.minLength(field.minLength));
-        }
-        if (field.maxLength !== undefined) {
-          fieldValidators.push(Validators.maxLength(field.maxLength));
-        }
-      }
-
-      if(field.type === 'number'){
-        if (field.min !== undefined) {
-          fieldValidators.push(Validators.min(field.min));
-        }
-        if (field.max !== undefined) {
-          fieldValidators.push(Validators.max(field.max));
-        }
-      }
-
       let initialValue = field.default !== undefined ? field.default : null;
       if (initialValue === 'now' && (field.type === 'date' || field.type === 'datetime')) {
         initialValue = this.getNowFormatted(field.type);
@@ -98,11 +116,17 @@ export class CustomSketchLayerFormComponent{
           value: initialValue,
           disabled: field.readonly || false
         },
-        fieldValidators
+        this.buildValidatorsFor(field)
       );
     });
 
     this.form = this.fb.group(formControls);
+    //check initial visibility of conditional fields
+    this.updateFieldVisibility(this.form.getRawValue());
+    //subscribe to form value changes to handle conditional field visibility
+    this.subToFormValueChanges = this.form.valueChanges.subscribe(values => {
+      this.updateFieldVisibility(values);
+    });
     this.isVisible = true;
 
   }
@@ -129,6 +153,14 @@ export class CustomSketchLayerFormComponent{
       return;
     }
 
+    // reset values of hidden conditional fields to undefined before submitting the form so they don't get included in the payload
+    // a conditional field's visibility may have flipped back and forth while the user filled in the form
+    this.fields.forEach(field => {
+      if (!this.allVisibleFieldIds.has(field.id)) {
+        this.form.get(field.id)?.setValue(undefined, { emitEvent: false });
+      }
+    });
+
     const formValues = this.form.getRawValue();
 
     // Emit the payload matching your edit-reporting component output signature
@@ -139,8 +171,8 @@ export class CustomSketchLayerFormComponent{
     this.feature.set("category", this.category); // Assuming there's a category field in the form
 
     this.formSubmitted.emit({
-      payload: formValues, 
-      feature: this.feature, 
+      payload: formValues,
+      feature: this.feature,
       layerName: this.layerName
     });
 
@@ -188,6 +220,8 @@ export class CustomSketchLayerFormComponent{
     this.layer = null;
     this.fields = [];
     this.category = '';
+    this.categoryLabel = '';
+    this.allVisibleFieldIds = new Set<string>();
     if (this.form) {
       this.form.reset();
     }
@@ -207,6 +241,42 @@ export class CustomSketchLayerFormComponent{
       const minutes = String(now.getMinutes()).padStart(2, '0');
       return `${year}-${month}-${day}T${hours}:${minutes}`;
     }
+  }
+
+  /**
+   * updates set of visible field IDs (this.allVisibleFieldIds) based on the current form values and the conditions defined for each field
+   * @param values current form values
+   */
+  private updateFieldVisibility(values: Record<string, any>): void {
+    const nextVisible = new Set<string>();
+    const evaluationValues: Record<string, any> = {
+      ...values,
+      'form.categories': this.category, // add the pre-selected category to the evaluation values so conditional fields can depend on it
+    };
+
+    this.fields.forEach(field => {
+      const isVisible = evaluateFieldCondition(field.condition, evaluationValues);
+      if (isVisible) {
+        nextVisible.add(field.id);
+      }
+
+      const control = this.form.get(field.id);
+      if (!control) {
+        return;
+      }
+
+      if (isVisible) {
+        //add validators for conditional field if it becomes visible
+        // e.g. if a field is required but hidden, it should not be validated until it becomes visible
+        control.setValidators(this.buildValidatorsFor(field));
+      } else {
+        control.clearValidators();
+      }
+      // emitEvent: false avoids re-triggering the valueChanges subscription that called this method
+      control.updateValueAndValidity({ emitEvent: false });
+    });
+
+    this.allVisibleFieldIds = nextVisible;
   }
 
 }
