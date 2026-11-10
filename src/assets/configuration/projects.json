@@ -1,46 +1,94 @@
 [
-{
-  "name": "OGITO Starter",
-  "qgisProjectFilename": "ogito_starter.qgs",
-  "thumbnail": "https://raw.githubusercontent.com/52North/OGITO/refs/heads/main/company_logo.png",
-  "minZoom": 14,
-  "maxZoom": 21,
-  "initZoom": 15,
-  "nameSessionGroup": "Sketch Layers",
-  "hiddenLayers" : ["sketch_polygons", "sketch_points", "sketch_linestrings", "sketch_custom_points"],
-  "backgroundLayers" : [{"title": "Topographic Map (OSM)", "format": "image/jpeg"}],
-  "centerWGS84": {"lat": 51.935, "lon": 7.6521},
-  "extentWGS84": {
-    "minLon": 7.1,
-    "minLat": 32.88,
-    "maxLon": 40.18,
-    "maxLat": 84.73
-  },
-  "sketchLayerPolygons": "sketch_polygons",
-  "sketchLayerLinestrings": "sketch_linestrings",
-  "sketchLayerPoints": "sketch_points",
-  "rateMeasureLayers": ["Rating"],
-  "labels": {"Rating":{"rankingA": "Ranking A", "rankingB": "Ranking B", "description": "Text"}},
-  "customSketchLayerPoints": "sketch_custom_points",
-  "customSketchLayerDefinitionsFiles": ["./assets/configuration/customlayer_poi.json"],
-  "defaultVisibleLayers": ["Topographic Map (OSM)"]
-},
   {
-    "name": "OGITO Starter copy",
+    "name": "OGITO Starter",
+    "qgisProjectFilename": "ogito_starter.qgs",
+    "thumbnail": "https://raw.githubusercontent.com/52North/OGITO/refs/heads/main/company_logo.png",
+    "minZoom": 14,
+    "maxZoom": 21,
+    "initZoom": 15,
+    "nameSessionGroup": "Sketch Layers",
+    "hiddenLayers": [
+      "sketch_polygons",
+      "sketch_points",
+      "sketch_linestrings",
+      "sketch_custom_points"
+    ],
+    "backgroundLayers": [
+      {
+        "title": "Topographic Map (OSM)",
+        "format": "image/jpeg"
+      }
+    ],
+    "centerWGS84": {
+      "lat": 51.935,
+      "lon": 7.6521
+    },
+    "extentWGS84": {
+      "minLon": 7.1,
+      "minLat": 32.88,
+      "maxLon": 40.18,
+      "maxLat": 84.73
+    },
+    "sketchLayerPolygons": "sketch_polygons",
+    "sketchLayerLinestrings": "sketch_linestrings",
+    "sketchLayerPoints": "sketch_points",
+    "rateMeasureLayers": [
+      "Rating"
+    ],
+    "labels": {
+      "Rating": {
+        "rankingA": "Ranking A",
+        "rankingB": "Ranking B",
+        "description": "Text"
+      }
+    },
+    "customSketchLayerPoints": "sketch_custom_points",
+    "customSketchLayerDefinitionsFiles": [
+      "./assets/configuration/customlayer_poi.json"
+    ],
+    "defaultVisibleLayers": [
+      "Topographic Map (OSM)"
+    ],
+    "requiredRoles": []
+  },
+  {
+    "name": "OGITO Starter Copy",
     "qgisProjectFilename": "ogito_starter.qgs",
     "thumbnail": "https://raw.githubusercontent.com/52North/OGITO/refs/heads/main/company_logo.png",
     "minZoom": 10,
     "maxZoom": 21,
     "initZoom": 15,
     "nameSessionGroup": "Sketch Layers",
-    "hiddenLayers" : ["sketch_polygons", "sketch_points", "sketch_linestrings", "sketch_custom_points"],
-    "backgroundLayers" : [{"title": "Topographic Map (OSM)", "format": "image/jpeg"}],
-    "centerWGS84": {"lat": 51.935, "lon": 7.6521},
+    "hiddenLayers": [
+      "sketch_polygons",
+      "sketch_points",
+      "sketch_linestrings",
+      "sketch_custom_points"
+    ],
+    "backgroundLayers": [
+      {
+        "title": "Topographic Map (OSM)",
+        "format": "image/jpeg"
+      }
+    ],
+    "centerWGS84": {
+      "lat": 51.935,
+      "lon": 7.6521
+    },
     "sketchLayerPolygons": "sketch_polygons",
     "sketchLayerLinestrings": "sketch_linestrings",
     "sketchLayerPoints": "sketch_points",
     "customSketchLayerPoints": "sketch_custom_points",
-    "rateMeasureLayers": ["Rating"],
-    "labels": {"Rating":{"rankingA": "Ranking A", "rankingB": "Ranking B", "description": "Text"}}
+    "rateMeasureLayers": [
+      "Rating"
+    ],
+    "labels": {
+      "Rating": {
+        "rankingA": "Ranking A",
+        "rankingB": "Ranking B",
+        "description": "Text"
+      }
+    },
+    "requiredRoles": []
   }
 ]
