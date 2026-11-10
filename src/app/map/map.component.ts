@@ -27,7 +27,7 @@ import {
 	createAuthenticatedTileLoadFunction,
 	createAuthenticatedImageLoadFunction,
 	createAuthenticatedWfsLoader,
-} from "./ol-http-loaders";
+} from "../auth/ol-http-loaders";
 import { AppConstants } from "../app-constants";
 import { Map, MapBrowserEvent, View } from "ol";
 import Feature from "ol/Feature";
