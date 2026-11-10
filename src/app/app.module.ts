@@ -11,7 +11,8 @@ import { LayerPanelComponent } from './layer-panel/layer-panel.component';
 import { SymbolListComponent } from './symbol-list/symbol-list.component';
 import { ToolbarComponent, DialogLayerNameDialog } from './toolbar/toolbar.component';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
-import {HttpClientModule } from '@angular/common/http';
+import {HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
+import { BackendAuthInterceptor } from './auth/backend-auth.interceptor';
 import { ProjlistComponent } from './projlist/projlist.component';
 import { DynamicFormComponent } from './dynamic-form/dynamic-form.component';
 import { StreetSearchComponent } from './street-search/street-search.component';
@@ -47,7 +48,10 @@ import { GeocoderComponent } from './geocoder/geocoder.component';
         HttpClientModule,
         ReactiveFormsModule,
     ],
-  providers: [LayerPanelComponent],
+  providers: [
+    LayerPanelComponent,
+    { provide: HTTP_INTERCEPTORS, useClass: BackendAuthInterceptor, multi: true },
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

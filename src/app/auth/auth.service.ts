@@ -4,8 +4,8 @@ import {Auth0Client} from '@auth0/auth0-spa-js/dist/typings/Auth0Client';
 import { from, of, Observable, BehaviorSubject, combineLatest, throwError } from 'rxjs';
 import { tap, catchError, concatMap, shareReplay } from 'rxjs/operators';
 import { Router } from '@angular/router';
-import { AppconfigService } from './config/appconfig.service';
-import { ApplicationConfiguration } from './config/app-config';
+import { AppconfigService } from '../config/appconfig.service';
+import { ApplicationConfiguration } from '../config/app-config';
 
 @Injectable({
   providedIn: 'root'
@@ -36,7 +36,8 @@ export class AuthService {
             domain: config.auth.domain,
             clientId: config.auth.clientId,
             authorizationParams: {
-              redirect_uri: `${window.location.origin}`
+              redirect_uri: `${window.location.origin}`,
+              audience: config.auth.audience
             }
           })
         ) as Observable<Auth0Client>).pipe(
@@ -75,12 +76,29 @@ export class AuthService {
       return this.loggedIn;
   }
 
+  public async getAccessToken(): Promise<string | undefined> {
+    await this.config.getAppConfigPromise();
+    if (this.allowAnonLogin || !this.auth0Client$) {
+      return undefined;
+    }
+    try {
+      const client = await this.auth0Client$.toPromise();
+      return await client.getTokenSilently();
+    } catch (err) {
+      console.error('Failed to get access token', err);
+      return undefined;
+    }
+  }
+
 
   private getUser$(): Observable<any> {
     if(!this.allowAnonLogin){
       return this.auth0Client$.pipe(
         concatMap((client: Auth0Client) => from(client.getUser())),
-        tap(user => this.userProfileSubject$.next(user))
+        tap(user => {
+          console.log(user);
+          this.userProfileSubject$.next(user);
+        })
       );
     }
   }

@@ -9,8 +9,10 @@ export interface ApplicationConfiguration{
   wfsVersion: string,
   srs: string,
   requireAuth?: boolean,
+  protectedBackendUrls?: string[],
   auth?: {
     domain: string,
     clientId: string,
+    audience?: string,
   }
 }

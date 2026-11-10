@@ -22,6 +22,12 @@ import {
 	MAT_LEGACY_DIALOG_DATA as MAT_DIALOG_DATA,
 } from "@angular/material/legacy-dialog";
 import { Subject, Subscription } from "rxjs";
+import { HttpClient, HttpErrorResponse, HttpResponse } from "@angular/common/http";
+import {
+	createAuthenticatedTileLoadFunction,
+	createAuthenticatedImageLoadFunction,
+	createAuthenticatedWfsLoader,
+} from "./ol-http-loaders";
 import { AppConstants } from "../app-constants";
 import { Map, MapBrowserEvent, View } from "ol";
 import Feature from "ol/Feature";
@@ -68,7 +74,7 @@ import { touchOnly } from "ol/events/condition";
 import Geolocation from "ol/Geolocation";
 import { OpenLayersService } from "../open-layers.service";
 import { LegendSymbol, LayerStyleService } from "../layer-styles.service";
-import { AuthService } from "../auth.service";
+import { AuthService } from "../auth/auth.service";
 import { unByKey } from "ol/Observable";
 import { toStringHDMS } from "ol/coordinate";
 import { QuestionService } from "../dynamic-form-questions/question-service.service";
@@ -234,6 +240,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 		private sketchLayerInitializer: InitializeSketchlayersService,
 		private customSketchLayerService: CustomSketchLayerService,
 		private lableLookUpTable: LabelLutService,
+		private http: HttpClient,
 	) {
 		this.subsToShapeEdit = this.openLayersService.shapeEditType$.subscribe(
 			(data) => {
@@ -800,8 +807,9 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 	requestProjectInfo(qgsfile: string) {
 		const strRequest =
 			this.qGsServerUrl + "service=WMS&request=GetProjectSettings&MAP=" + qgsfile;
-		const projectSettings = fetch(strRequest)
-			.then((response) => response.text())
+		const projectSettings = this.http
+			.get(strRequest, { responseType: "text" })
+			.toPromise()
 			.then((data) => {
 				this.parseQgsProject(data).then(() => {
 					this.updateMapView();
@@ -1313,10 +1321,9 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 		const urlWMS = qGsServerUrl + wmsVersion + capRequest + qGsProject;
 		let parser: any;
 		parser = new WMSCapabilities();
-		fetch(urlWMS)
-			.then((response) => {
-				return response.text();
-			})
+		this.http
+			.get(urlWMS, { responseType: "text" })
+			.toPromise()
 			.then((text) => {
 				const xmlWMStext = parser.read(text);
 				this.loadWMSlayers(qGsServerUrl + wmsVersion + qGsProject, xmlWMStext);
@@ -1336,8 +1343,9 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 		const wfsVersion =
 			"SERVICE=WFS&VERSION=" + this.config.getAppConfig().wfsVersion;
 		const urlWFS = qGsServerUrl + wfsVersion + capRequest + qGsProject;
-		fetch(urlWFS)
-			.then((response) => response.text())
+		this.http
+			.get(urlWFS, { responseType: "text" })
+			.toPromise()
 			.then((text) => {
 				this.loadWFSlayers(text);
 				return text;
@@ -1503,6 +1511,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 				serverType: "qgis",
 				crossOrigin: null,
 				attributions: [attributionText],
+				tileLoadFunction: createAuthenticatedTileLoadFunction(this.http),
 			});
 			const wmsLayer = new TileLayer({
 				source: wmsSource,
@@ -1517,6 +1526,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 				serverType: "qgis",
 				crossOrigin: null,
 				attributions: [attributionText],
+				imageLoadFunction: createAuthenticatedImageLoadFunction(this.http),
 			});
 			const wmsLayer = new ImageLayer({
 				source: wmsSource,
@@ -2345,11 +2355,11 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 				try {
 					const vectorSource = new VectorSource({
 						format: new GML(),
-						// getting WFS set to the view extent
-						url: (extent) => {
-							return urlWFS;
-						},
 					});
+					// getting WFS set to the view extent
+					vectorSource.setLoader(
+						createAuthenticatedWfsLoader(this.http, vectorSource, urlWFS),
+					);
 					vectorSource.on("addfeature", (e) => {
 						//handle xml/database null values
 						const feat = e.feature;
@@ -2799,12 +2809,14 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 		return transactStr;
 	}
 
-	private async executeHTTPPost(url: string, body: string): Promise<Response> {
-		return fetch(url, {
-			//execute transaction and return promise
-			method: "POST",
-			body: body,
-		});
+	private async executeHTTPPost(
+		url: string,
+		body: string,
+	): Promise<HttpResponse<string> | HttpErrorResponse> {
+		return this.http
+			.post(url, body, { observe: "response", responseType: "text" })
+			.toPromise()
+			.catch((err: HttpErrorResponse) => err);
 	}
 
 	private async executeWFSTransactions(editLayer: EditLayer) {
@@ -2876,7 +2888,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 				layerTrs[editLayer.layerName].insert,
 			);
 			const resp = await this.executeHTTPPost(strUrl, transaction);
-			if (resp.ok || (resp.type.toLowerCase() === "opaque" && resp.status === 0)) {
+			if (resp.ok) {
 				layerTrs[editLayer.layerName].insert = [];
 				console.log(
 					"succesfully executed wfs insert transaction, featureType",
@@ -2891,7 +2903,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 				console.warn(
 					"wfs insert transaction failed, featureType: " + editLayer.layerName,
 				);
-				console.error(resp.text);
+				console.error(resp);
 				alert("inserting features failed for layer " + editLayer.layerName);
 			}
 		}
@@ -2902,7 +2914,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 				layerTrs[editLayer.layerName].update,
 			);
 			const resp = await this.executeHTTPPost(strUrl, transaction);
-			if (resp.ok || (resp.type.toLowerCase() === "opaque" && resp.status === 0)) {
+			if (resp.ok) {
 				layerTrs[editLayer.layerName].update = [];
 				console.log(
 					"succesfully executed wfs update transaction, featureType",
@@ -2912,7 +2924,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 				console.warn(
 					"wfs update transaction failed, featureType: " + editLayer.layerName,
 				);
-				console.error(resp.text);
+				console.error(resp);
 				alert("updating features failed for layer " + editLayer.layerName);
 			}
 		}
@@ -2924,7 +2936,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 				layerTrs[editLayer.layerName].delete,
 			);
 			const resp = await this.executeHTTPPost(strUrl, transaction);
-			if (resp.ok || (resp.type.toLowerCase() === "opaque" && resp.status === 0)) {
+			if (resp.ok) {
 				layerTrs[editLayer.layerName].delete = [];
 				console.log(
 					"succesfully executed wfs delete transaction, featureType",
@@ -2934,7 +2946,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 				console.warn(
 					"wfs delete transaction failed, featureType: " + editLayer.layerName,
 				);
-				console.error(resp.text);
+				console.error(resp);
 				alert("deleting features failed for layer " + editLayer.layerName);
 			}
 		}
@@ -3113,10 +3125,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 					transactionIndex[featureType].insert,
 				);
 				const resp = await this.executeHTTPPost(strUrl, transaction);
-				if (
-					resp.ok ||
-					(resp.type.toLowerCase() === "opaque" && resp.status === 0)
-				) {
+				if (resp.ok) {
 					transactionIndex[featureType].insert = [];
 					console.log(
 						"succesfully executed wfs insert transaction, featureType",
@@ -3130,7 +3139,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 				} else {
 					failedOnInsert = true;
 					console.warn("wfs insert transaction failed, featureType: " + featureType);
-					console.error(resp.text);
+					console.error(resp);
 					alert("inserting features failed for layer " + sketchLayer.layerName);
 				}
 			}
@@ -3141,10 +3150,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 					transactionIndex[featureType].update,
 				);
 				const resp = await this.executeHTTPPost(strUrl, transaction);
-				if (
-					resp.ok ||
-					(resp.type.toLowerCase() === "opaque" && resp.status === 0)
-				) {
+				if (resp.ok) {
 					transactionIndex[featureType].update = [];
 					console.log(
 						"succesfully executed wfs update transaction, featureType",
@@ -3152,7 +3158,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 					);
 				} else {
 					console.warn("wfs update transaction failed, featureType: " + featureType);
-					console.error(resp.text);
+					console.error(resp);
 					alert("updating features failed for layer " + sketchLayer.layerName);
 				}
 			}
@@ -3164,10 +3170,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 					transactionIndex[featureType].delete,
 				);
 				const resp = await this.executeHTTPPost(strUrl, transaction);
-				if (
-					resp.ok ||
-					(resp.type.toLowerCase() === "opaque" && resp.status === 0)
-				) {
+				if (resp.ok) {
 					transactionIndex[featureType].delete = [];
 					console.log(
 						"succesfully executed wfs delete transaction, featureType",
@@ -3175,7 +3178,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 					);
 				} else {
 					console.warn("wfs delete transaction failed, featureType: " + featureType);
-					console.error(resp.text);
+					console.error(resp);
 					alert("deleting features failed for layer " + sketchLayer.layerName);
 				}
 			}
@@ -3674,8 +3677,9 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 			}, // //'text/html'
 		);
 		if (wmsUrl) {
-			fetch(wmsUrl)
-				.then((response) => response.text())
+			this.http
+				.get(wmsUrl, { responseType: "text" })
+				.toPromise()
 				.then((json) => {
 					// this.content.nativeElement.innerHTML = html;
 					this.content.nativeElement.innerHTML = this.formatHtmlInfoResponse(

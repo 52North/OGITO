@@ -35,6 +35,7 @@ export class OpenLayersService {
   zoomHome$ = this.zoomHomeSource.asObservable();
   private qgsProjectUrlSource = new Subject<ProjectConfiguration>();
   qgsProjectUrl$ = this.qgsProjectUrlSource.asObservable();
+  private currentProjectConfig?: ProjectConfiguration;
   private addSketchLayerSource = new Subject<SketchLayerDescriptor>();
   addSketchLayer$ = this.addSketchLayerSource.asObservable();
   private showStreetSearchSource = new Subject<boolean>();
@@ -121,7 +122,12 @@ export class OpenLayersService {
   }
   updateQgsProjectUrl(url: any)
   {
+    this.currentProjectConfig = url;
     this.qgsProjectUrlSource.next(url);
+  }
+
+  getCurrentProjectConfiguration(): ProjectConfiguration | undefined {
+    return this.currentProjectConfig;
   }
 
   updateShowLayerPanel(visible: boolean) {
