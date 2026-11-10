@@ -48,8 +48,7 @@
     ],
     "defaultVisibleLayers": [
       "Topographic Map (OSM)"
-    ],
-    "requiredRoles": []
+    ]
   },
   {
     "name": "OGITO Starter Copy",
@@ -89,6 +88,9 @@
         "description": "Text"
       }
     },
-    "requiredRoles": []
+    "requiredRoles": [
+      "Role A",
+      "Role B"
+    ]
   }
 ]

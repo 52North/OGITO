@@ -1,8 +1,6 @@
 import { Injectable } from '@angular/core';
-import {createAuth0Client} from '@auth0/auth0-spa-js';
-import {Auth0Client} from '@auth0/auth0-spa-js/dist/typings/Auth0Client';
-import { from, of, Observable, BehaviorSubject, combineLatest, throwError } from 'rxjs';
-import { tap, catchError, concatMap, shareReplay } from 'rxjs/operators';
+import { OAuthService, AuthConfig } from 'angular-oauth2-oidc';
+import { of, Observable, BehaviorSubject } from 'rxjs';
 import { Router } from '@angular/router';
 import { AppconfigService } from '../config/appconfig.service';
 import { ApplicationConfiguration } from '../config/app-config';
@@ -11,67 +9,70 @@ import { ApplicationConfiguration } from '../config/app-config';
   providedIn: 'root'
 })
 export class AuthService {
-  private static readonly ROLES_CLAIM = 'https://ogito.app/roles';
+  // default claim key for roles, used when `auth.rolesClaim` is not configured
+  private static readonly DEFAULT_ROLES_CLAIM = 'https://ogito.app/roles';
 
-  // Create an observable of Auth0 instance of client
-  private auth0Client$;
-  // Define observables for SDK methods that return promises by default
-  // For each Auth0 SDK method, first ensure the client instance is ready
-  // concatMap: Using the client instance, call SDK method; SDK returns a promise
-  // from: Convert that resulting promise into an observable
-  private isAuthenticated$;
-  private handleRedirectCallback$;
-  private userProfileSubject$;
-  public userProfile$;
+  private userProfileSubject$: BehaviorSubject<any>;
+  public userProfile$: Observable<any>;
   public allowAnonLogin: boolean = false;
 
-  // Create subject and public observable of user profile data
   // Create a local property for login status
   private loggedIn: boolean = null;
 
-  constructor(private router: Router, private config: AppconfigService) {
+  constructor(private router: Router, private config: AppconfigService, private oauthService: OAuthService) {
     this.config.getAppConfigPromise().then((config: ApplicationConfiguration) =>{
       this.allowAnonLogin = !config.requireAuth;
       if(!this.allowAnonLogin){
-        this.auth0Client$ = (from(
-          createAuth0Client({
-            domain: config.auth.domain,
-            clientId: config.auth.clientId,
-            authorizationParams: {
-              redirect_uri: `${window.location.origin}`,
-              audience: config.auth.audience
-            }
-          })
-        ) as Observable<Auth0Client>).pipe(
-          shareReplay(1), // Every subscription receives the same shared value
-          catchError(err => throwError(err))
-        );
-
-        this.isAuthenticated$ = this.auth0Client$.pipe(
-          concatMap((client: Auth0Client) => from(client.isAuthenticated())),
-          tap((res: boolean) => this.loggedIn = res)
-        );
-
-        this.handleRedirectCallback$ = this.auth0Client$.pipe(
-          concatMap((client: Auth0Client) => from(client.handleRedirectCallback()))
-        );
-
-        this.auth0Client$.pipe(
-          concatMap((client: Auth0Client) => from(client.handleRedirectCallback()))
-        );
-
+        const authConfig: AuthConfig = {
+          issuer: config.auth.issuer,
+          clientId: config.auth.clientId,
+          redirectUri: window.location.origin,
+          postLogoutRedirectUri: window.location.origin,
+          responseType: 'code',
+          scope: 'openid profile email',
+          customQueryParams: config.auth.customQueryParams,
+        };
+        this.oauthService.configure(authConfig);
 
         this.userProfileSubject$ = new BehaviorSubject<any>(null);
         this.userProfile$ = this.userProfileSubject$.asObservable();
 
-        // On initial load, check authentication state with authorization server
-        // Set up local auth streams if user is already authenticated
-        this.localAuthSetup();
-        // Handle redirect from Auth0 login
-        this.handleAuthCallback();
+        // Keep login status and user profile in sync with token lifecycle events
+        this.oauthService.events.subscribe(event => {
+          if (event.type === 'token_received' || event.type === 'token_refreshed') {
+            this.updateUserState();
+          }
+          if (event.type === 'logout') {
+            this.loggedIn = false;
+            this.userProfileSubject$.next(null);
+          }
+        });
+
+        // Loads the discovery document, and - if the browser just came back from the
+        // IDP's login page with an authorization code - completes the login automatically
+        this.oauthService.loadDiscoveryDocumentAndTryLogin().then(() => {
+          this.updateUserState();
+          this.oauthService.setupAutomaticSilentRefresh();
+          // if a redirect happened just now, `state` holds the redirectPath passed to login().
+          // angular-oauth2-oidc encodes the custom state twice when building the login URL
+          // (once for the value itself, once for the nonce+state composite) but only decodes
+          // once on the way back, so one layer of percent-encoding remains here - decode it,
+          // otherwise router.navigate() would percent-encode it again (e.g. '/' -> '%2F' -> '%252F').
+          if (this.oauthService.state) {
+            const redirectPath = decodeURIComponent(this.oauthService.state);
+            this.router.navigate([redirectPath]);
+          }
+        });
       } //end if anon login
     })
 
+  }
+
+  private updateUserState(): void {
+    this.loggedIn = this.oauthService.hasValidIdToken() && this.oauthService.hasValidAccessToken();
+    if (this.loggedIn) {
+      this.userProfileSubject$.next(this.oauthService.getIdentityClaims());
+    }
   }
 
   public isLoggedIn() : boolean {
@@ -82,8 +83,10 @@ export class AuthService {
     if (this.allowAnonLogin) {
       return [];
     }
-    const profile = this.userProfileSubject$?.value;
-    return profile?.[AuthService.ROLES_CLAIM] ?? [];
+    const claims = this.userProfileSubject$?.value;
+    const rolesClaimPath = this.config.getAppConfig()?.auth?.rolesClaim ?? AuthService.DEFAULT_ROLES_CLAIM;
+    const roles = this.resolveClaim(claims, rolesClaimPath);
+    return Array.isArray(roles) ? roles : [];
   }
 
   public isAdmin(): boolean {
@@ -91,66 +94,40 @@ export class AuthService {
     return !!adminRole && this.getUserRoles().includes(adminRole);
   }
 
+  /**
+   * Resolves a configured claim key/path against the decoded ID token claims.
+   * Tries the whole path as a flat key first - this correctly handles Auth0-style
+   * namespaced custom claims (e.g. "https://ogito.app/roles") which contain literal
+   * dots but are not a nested path. Only if that misses and the path contains a dot,
+   * falls back to splitting on '.' and traversing nested objects - this handles
+   * Keycloak-style paths (e.g. "realm_access.roles").
+   */
+  private resolveClaim(claims: Record<string, any> | null | undefined, path: string): any {
+    if (!claims || !path) {
+      return undefined;
+    }
+    if (Object.prototype.hasOwnProperty.call(claims, path)) {
+      return claims[path];
+    }
+    if (path.includes('.')) {
+      return path.split('.').reduce((acc, key) => (acc == null ? undefined : acc[key]), claims);
+    }
+    return undefined;
+  }
+
   public async getAccessToken(): Promise<string | undefined> {
     await this.config.getAppConfigPromise();
-    if (this.allowAnonLogin || !this.auth0Client$) {
+    if (this.allowAnonLogin) {
       return undefined;
     }
-    try {
-      const client = await this.auth0Client$.toPromise();
-      return await client.getTokenSilently();
-    } catch (err) {
-      console.error('Failed to get access token', err);
-      return undefined;
-    }
-  }
-
-
-  private getUser$(): Observable<any> {
-    if(!this.allowAnonLogin){
-      return this.auth0Client$.pipe(
-        concatMap((client: Auth0Client) => from(client.getUser())),
-        tap(user => {
-          console.log(user);
-          this.userProfileSubject$.next(user);
-        })
-      );
-    }
-  }
-
-  private localAuthSetup() {
-    // This should only be called on app initialization
-    // Set up local authentication streams
-    const checkAuth$ = this.isAuthenticated$.pipe(
-      concatMap((loggedIn: boolean) => {
-        if (loggedIn) {
-          // If authenticated, get user and set in app
-          // NOTE: you could pass options here if needed
-          return this.getUser$();
-        }
-        // If not authenticated, return stream that emits 'false'
-        return of(loggedIn);
-      })
-    );
-    checkAuth$.subscribe();
+    const token = this.oauthService.getAccessToken();
+    return token || undefined;
   }
 
   login(redirectPath: string = '/') {
     if(!this.allowAnonLogin){
-      if(this.auth0Client$){
-        // A desired redirect path can be passed to login method
-        // (e.g., from a route guard)
-        // Ensure Auth0 client instance exists
-        this.auth0Client$.subscribe((client: Auth0Client) => {
-          // Call method to log in
-          client.loginWithRedirect({
-            authorizationParams:{
-              redirect_uri: `${window.location.origin}`
-            },
-            appState: { target: redirectPath }
-          });
-        });
-      }
+      // Redirects to the IDP's login page; redirectPath is restored from `oauthService.state` after the redirect back
+      this.oauthService.initCodeFlow(redirectPath);
     }else{
       this.loggedIn = true;
       this.userProfile$ = of({
@@ -159,48 +136,10 @@ export class AuthService {
     }
   }
 
-  private handleAuthCallback() {
-    // Call when app reloads after user logs in with Auth0
-    const params = window.location.search;
-    if (params.includes('code=') && params.includes('state=')) {
-      let targetRoute: string; // Path to redirect to after login processsed
-      const authComplete$ = this.handleRedirectCallback$.pipe(
-        // Have client, now call method to handle auth callback redirect
-        tap((cbRes : any) => {
-          // Get and set target redirect route from callback results
-          targetRoute = cbRes.appState && cbRes.appState.target ? cbRes.appState.target : '/';
-        }),
-        concatMap(() => {
-          // Redirect callback complete; get user and login status
-          return combineLatest([
-            this.getUser$(),
-            this.isAuthenticated$
-          ]);
-        })
-      );
-      // Subscribe to authentication completion observable
-      // Response will be an array of user and login status
-      authComplete$.subscribe(([user, loggedIn]) => {
-        // Redirect to target route after callback processing
-        this.router.navigate([targetRoute]);
-      });
-    }
-  }
-
   logout() {
     if(!this.allowAnonLogin){
-      if(this.auth0Client$){
-        // Ensure Auth0 client instance exists
-        this.auth0Client$.subscribe((client: Auth0Client) => {
-          // Call method to log out
-          client.logout({
-            clientId: this.config.getAppConfig().auth.clientId,
-            logoutParams: {
-              returnTo: `${window.location.origin}`
-            }
-          });
-        });
-      }
+      // Standards-based RP-Initiated Logout via the IDP's discovery document
+      this.oauthService.logOut();
    }else{
     this.loggedIn = false;
     window.location.href = `${window.location.origin}`;

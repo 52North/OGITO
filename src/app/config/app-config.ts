@@ -11,9 +11,10 @@ export interface ApplicationConfiguration{
   requireAuth?: boolean,
   protectedBackendUrls?: string[],
   auth?: {
-    domain: string,
+    issuer: string,
     clientId: string,
-    audience?: string,
     adminRole?: string,
+    rolesClaim?: string,
+    customQueryParams?: Record<string, string>,
   }
 }

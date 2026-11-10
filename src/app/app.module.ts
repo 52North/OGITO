@@ -12,6 +12,7 @@ import { SymbolListComponent } from './symbol-list/symbol-list.component';
 import { ToolbarComponent, DialogLayerNameDialog } from './toolbar/toolbar.component';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
+import { OAuthModule } from 'angular-oauth2-oidc';
 import { BackendAuthInterceptor } from './auth/backend-auth.interceptor';
 import { ProjlistComponent } from './projlist/projlist.component';
 import { DynamicFormComponent } from './dynamic-form/dynamic-form.component';
@@ -47,6 +48,7 @@ import { GeocoderComponent } from './geocoder/geocoder.component';
         HammerModule,
         HttpClientModule,
         ReactiveFormsModule,
+        OAuthModule.forRoot(),
     ],
   providers: [
     LayerPanelComponent,
