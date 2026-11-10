@@ -56,9 +56,10 @@ export class ProjlistComponent implements OnInit {
   }
 
   private hasAccess(project: ProjectConfiguration, userRoles: string[]): boolean {
-    if (!project.requiredRoles || project.requiredRoles.length === 0) {
-      return true; //no roles required -> accessible to everyone
+    if (project.requiredRole === undefined) {
+      return true; //property not set -> accessible to everyone
     }
-    return project.requiredRoles.some(role => userRoles.includes(role));
+    //property set (including an empty array) -> only users with a matching role can see it
+    return project.requiredRole.some(role => userRoles.includes(role));
   }
 }
