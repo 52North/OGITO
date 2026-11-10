@@ -14,5 +14,6 @@ export interface ApplicationConfiguration{
     domain: string,
     clientId: string,
     audience?: string,
+    adminRole?: string,
   }
 }

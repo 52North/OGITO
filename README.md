@@ -75,6 +75,9 @@ OGITO has a global app configuration file for settings that affect the deploymen
 | requireAuth | if `false` anonymous login is allowed, should be `true` for production deployment | default: `false` |
 | auth.domain | authentication: domain of the [auth0](https://auth0.com/) application| e.g. "dev-abcabc123.us.auth0.com", only required if `requireAuth: true` | 
 |auth.clientId| authentication: client id of the [auth0](https://auth0.com/) application| e.g. "abeadsadssaDJo12das", only required if `requireAuth: true`|
+|auth.audience| identifier of the API registered in [auth0](https://auth0.com/) for which access tokens are issued; required to receive a JWT (instead of an opaque) access token that carries custom claims (e.g. roles) to protected backends | e.g. "https://ogito.app/api", optional, only relevant if `requireAuth: true` |
+|auth.adminRole| name of a role that, if present on the current user, grants access to all projects regardless of their `requiredRoles` (see [project configuration](#project-coniguration)) | e.g. "admin", optional |
+| protectedBackendUrls | list of additional backend base URLs (beyond `qgisServerUrl` and the current project's `geocoder.baseUrl`) that should receive the user's access token as an `Authorization` header; only ever list your own backends here, never a third-party service | e.g. `["http://localhost:5001/images/"]`, optional |
 
 ### Image Upload
 The mapping of user observations supports the upload of user images. For this purpose the Image Upload Service must be deployed and configured. See [documentation for the image upload service](https://github.com/52North/OGITO/tree/main/tools/image_upload) and [application configuration](#app-configuration) parameters `imageUploadService` and `imageUploadFolder`.
@@ -111,6 +114,7 @@ Each project must registered in the project configuration (JSON) file. The locat
 |defaultVisibleLayers | list of layers that are visible by default when app is started | e.g `["Topographic Map (OSM)", "My Custom Layer"]` , optional |
 |ratingLayerLimits | overrides min and max values for rating sliders for a specific rating layer | e.g `"[{"layerName": "Rating", "min": 1, "max": 15}]`, optional, **Experimental**: this option is experimental and might be changed or removed in the future,  |
 |defaultBackgroundLayer | if `defaultBackgroundLayer: true` a OSM background layer is automatically added to the map; the map tiles are directly retrieved from OSM and not proxied via QGIS server | optional, **Experimental**: this option is experimental and might be changed or removed in the future |
+| requiredRoles | restricts the project to users that have at least one of the listed roles (role names are compared against the current user's roles); if not set, the project is shown to everyone; users with the configured `auth.adminRole` (see [application configuration](#app-configuration)) always see all projects regardless of this setting | e.g `["admin", "surveyor"]`, optional. This is a UI-only convenience (it only hides the project from the list) and must not be relied on for actual access control - the QGIS server/backend must enforce authorization independently |
 
 
 

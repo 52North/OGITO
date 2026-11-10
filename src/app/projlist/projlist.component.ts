@@ -6,6 +6,7 @@ import {OpenLayersService} from '../open-layers.service';
 import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
 import { ProjectConfiguration } from '../config/project-config';
 import { CustomSketchLayerService } from '../config/custom-sketch-layer-service';
+import { AuthService } from '../auth/auth.service';
 
 @Component({
   selector: 'app-projlist',
@@ -17,7 +18,7 @@ export class ProjlistComponent implements OnInit {
   showProjectList$: Observable<boolean>;
   private projects: ProjectConfiguration[];
 
-  constructor( private  openLayersService: OpenLayersService, private sanitizer: DomSanitizer, private projectsConfig : ProjectloaderService, private customLayerService: CustomSketchLayerService) {}
+  constructor( private  openLayersService: OpenLayersService, private sanitizer: DomSanitizer, private projectsConfig : ProjectloaderService, private customLayerService: CustomSketchLayerService, private auth: AuthService) {}
 
   ngOnInit(): void {
     console.info("load project configuration")
@@ -43,7 +44,21 @@ export class ProjlistComponent implements OnInit {
     this.updateShowProjectList(false);
   }
 
+  /**
+   * get all projects visible with current user's roles
+   */
   getProjects() : ProjectConfiguration[]{
-    return this.projects;
+    if (this.auth.isAdmin()) {
+      return this.projects; //admin role grants access to all projects
+    }
+    const userRoles = this.auth.getUserRoles();
+    return this.projects?.filter(project => this.hasAccess(project, userRoles));
+  }
+
+  private hasAccess(project: ProjectConfiguration, userRoles: string[]): boolean {
+    if (!project.requiredRoles || project.requiredRoles.length === 0) {
+      return true; //no roles required -> accessible to everyone
+    }
+    return project.requiredRoles.some(role => userRoles.includes(role));
   }
 }

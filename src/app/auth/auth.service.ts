@@ -11,6 +11,8 @@ import { ApplicationConfiguration } from '../config/app-config';
   providedIn: 'root'
 })
 export class AuthService {
+  private static readonly ROLES_CLAIM = 'https://ogito.app/roles';
+
   // Create an observable of Auth0 instance of client
   private auth0Client$;
   // Define observables for SDK methods that return promises by default
@@ -74,6 +76,19 @@ export class AuthService {
 
   public isLoggedIn() : boolean {
       return this.loggedIn;
+  }
+
+  public getUserRoles(): string[] {
+    if (this.allowAnonLogin) {
+      return [];
+    }
+    const profile = this.userProfileSubject$?.value;
+    return profile?.[AuthService.ROLES_CLAIM] ?? [];
+  }
+
+  public isAdmin(): boolean {
+    const adminRole = this.config.getAppConfig()?.auth?.adminRole;
+    return !!adminRole && this.getUserRoles().includes(adminRole);
   }
 
   public async getAccessToken(): Promise<string | undefined> {

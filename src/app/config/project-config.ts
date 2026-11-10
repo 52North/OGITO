@@ -42,6 +42,7 @@ export interface ProjectConfiguration{
     min: number, max: number
   }[],
   defaultBackgroundLayer?: boolean
+  requiredRoles?: string[]
 }
 
 
@@ -112,6 +113,7 @@ export const ProjectConfigurationCodec = t.type({
   customSketchLayerDefinitionsFiles: t.union([t.array(t.string), t.undefined]),
   customSketchLayerPoints: t.union([t.string, t.undefined]),
   ratingLayerLimits: t.union([t.array(RatingLimitCodec), t.undefined]),
-  defaultBackgroundLayer: t.union([t.boolean, t.undefined])
+  defaultBackgroundLayer: t.union([t.boolean, t.undefined]),
+  requiredRoles: t.union([t.array(t.string), t.undefined])
 });
 

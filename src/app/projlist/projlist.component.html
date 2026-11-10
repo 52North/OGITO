@@ -21,5 +21,7 @@
               </mat-nav-list>
 
       </ng-container>
+
+      <p *ngIf="getProjects()?.length === 0" class="noProjectsMessage">No projects available</p>
   </mat-card>
 </div>
