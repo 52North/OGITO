@@ -1,5 +1,22 @@
 export type FieldType = 'text' | 'textarea' | 'number' | 'select' | 'checkbox' | 'radio' | 'datetime' | 'date';
 
+// a leaf compares one other field's value; "all"/"any" combine conditions with AND/OR, recursively
+export interface FieldConditionLeaf {
+    field: string; // id of the controlling field
+    equals?: any;
+    notEquals?: any; // exactly one of equals/notEquals should be set
+}
+
+export interface FieldConditionAll {
+    all: FieldCondition[]; // AND
+}
+
+export interface FieldConditionAny {
+    any: FieldCondition[]; // OR
+}
+
+export type FieldCondition = FieldConditionLeaf | FieldConditionAll | FieldConditionAny;
+
 export interface FieldConfig {
     id: string;
     label: string;
@@ -15,12 +32,14 @@ export interface FieldConfig {
     readonly?: boolean;
     required?: boolean;
     showInFeatureInfo?: boolean; // whether to show this field in the feature info popup
+    condition?: FieldCondition; // if set, the field is only shown/required when this evaluates to true
 }
 
 export interface CategoriesConfig{
     id: string
     label: string
     icon: string
+    fields?: FieldConfig[]; // if set, overrides the top-level `fields` list for this category
 }
 
 export interface CustomLayerDefinition {
@@ -28,7 +47,7 @@ export interface CustomLayerDefinition {
     groupname: string;
     header?: string,
     categories: CategoriesConfig[];
-    fields: FieldConfig[];
+    fields: FieldConfig[]; //default fields for all categories, can be overridden by category-specific fields
     labelField?: string; // the field whose value should be shown as label on the map
     iconHeightPxl: number; // the height in pixel of the custom icons on the map
 }

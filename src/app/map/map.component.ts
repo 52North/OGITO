@@ -88,6 +88,7 @@ import MultiLineString from "ol/geom/MultiLineString.js";
 import { LabelLutService } from "../config/label-lut.service";
 import { CustomSketchLayerService } from "../config/custom-sketch-layer-service";
 import { CustomLayerDefinition } from "../config/custom-sketch-layer-config";
+import { getFormFieldsForCategory } from "../config/custom-sketch-layer-utils";
 import { Type } from "ol/geom/Geometry";
 import { createRegularPolygon, DrawEvent } from "ol/interaction/Draw";
 import { string } from "io-ts";
@@ -3515,17 +3516,24 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 							const payload = JSON.parse(featureValues[key]);
 							// Instead of a nested table, add each entry of the JSON object directly to the main table
 							for (const payloadKey in payload) {
-								if (!this.showPropertyCustomSketchLayer(payloadKey, layerDefinition)) {
+								if (
+									!this.showPropertyCustomSketchLayer(
+										payloadKey,
+										layerDefinition,
+										featureValues.category,
+									)
+								) {
 									continue;
 								}
 
-								if (payload[payloadKey]) {
+								if (payload[payloadKey] !== null && payload[payloadKey] !== undefined) {
 									text = text.concat(
 										"<tr><td>" +
 											this.getPayloadLabelCustomSketchLayer(
 												layerOnIdentifyingName,
 												payloadKey,
 												layerDefinition,
+												featureValues.category,
 											) +
 											"</td><td>" +
 											payload[payloadKey] +
@@ -3603,6 +3611,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 		layerName: string,
 		payloadKey: string,
 		layerDefinition: CustomLayerDefinition,
+		categoryId: string,
 	): string {
 		let label = this.lableLookUpTable.getLabelForPropertyName(
 			layerName,
@@ -3613,7 +3622,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 			return label;
 		} else {
 			//find label in custom form configuration
-			const fieldConfig = layerDefinition.fields.find(
+			const fieldConfig = getFormFieldsForCategory(layerDefinition, categoryId).find(
 				(field) => field.id === payloadKey,
 			);
 			if (fieldConfig) {
@@ -3627,8 +3636,9 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 	private showPropertyCustomSketchLayer(
 		payloadKey: string,
 		layerDefinition: CustomLayerDefinition,
+		categoryId: string,
 	): boolean {
-		const fieldConfig = layerDefinition.fields.find(
+		const fieldConfig = getFormFieldsForCategory(layerDefinition, categoryId).find(
 			(field) => field.id === payloadKey,
 		);
 		if (fieldConfig) {

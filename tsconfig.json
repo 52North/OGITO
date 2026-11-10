@@ -20,7 +20,6 @@
     "skipLibCheck": true
   },
   "angularCompilerOptions": {
-    "fullTemplateTypeCheck": true,
     "strictInjectionParameters": true
   }
 }
