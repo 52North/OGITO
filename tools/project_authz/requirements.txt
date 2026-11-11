@@ -1,0 +1,2 @@
+flipflop == 1.0.0
+PyJWT[crypto] == 2.15.1
