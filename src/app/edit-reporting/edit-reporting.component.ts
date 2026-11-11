@@ -10,6 +10,8 @@ import { AppconfigService } from "../config/appconfig.service";
 import { LabelLutService } from "../config/label-lut.service";
 import VectorSource from "ol/source/Vector";
 import { EditLayer } from "../map/map.component";
+import { AuthService } from "../auth/auth.service";
+import { OpenLayersService } from "../open-layers.service";
 
 @Component({
   selector: 'app-edit-reporting',
@@ -39,7 +41,7 @@ export class EditReportingComponent implements OnInit {
   private uploadPending = false;
   private uploadProgress = 0;
 
-  constructor(private customDialogInitializer: CustomDialogService, private http: HttpClient, private config: AppconfigService, private labelLUT: LabelLutService) {
+  constructor(private customDialogInitializer: CustomDialogService, private http: HttpClient, private config: AppconfigService, private labelLUT: LabelLutService, private auth: AuthService, private openLayersService: OpenLayersService) {
 
     this.subToInitDialog = this.customDialogInitializer.editMeldingen$.subscribe(
       (data) => {
@@ -188,9 +190,23 @@ export class EditReportingComponent implements OnInit {
   private uploadImage(file: File, destPath: string) : Observable<any>{
     const formData = new FormData();
     formData.append("image", file, file.name);
+
+    const mapParam = this.getMapParam();
+    const options: any = {reportProgress: true, observe: 'events'};
+    if (mapParam) {
+      options.params = { map: mapParam }; //send same ?map parameter to match a request to a (qgis) project; can be used for authorization on the backend
+    }
+
     //post image to backend server
     return this.http
-    .post(destPath , formData ,  {reportProgress: true, observe: 'events'});
+    .post(destPath , formData , options);
 
+  }
+
+  private getMapParam(): string | undefined {
+    if (this.auth.allowAnonLogin) {
+      return undefined;
+    }
+    return this.openLayersService.getCurrentProjectConfiguration()?.qgisProjectFilename;
   }
 }

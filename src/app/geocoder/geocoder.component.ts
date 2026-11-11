@@ -14,6 +14,7 @@ import { Subscription } from "rxjs";
 import { AppconfigService } from "../config/appconfig.service";
 import { ProjectConfiguration } from "../config/project-config";
 import { OpenLayersService } from "../open-layers.service";
+import { AuthService } from "../auth/auth.service";
 import { fromLonLat } from "ol/proj";
 import { Style, Stroke, Fill } from "ol/style";
 import CircleStyle from "ol/style/Circle";
@@ -57,6 +58,7 @@ export class GeocoderComponent implements OnInit, OnDestroy {
 		private http: HttpClient,
 		private config: AppconfigService,
 		private changeDetectorRef: ChangeDetectorRef,
+		private auth: AuthService,
 	) {
 		this.geocodingVectorSource = new VectorSource();
 		this.geocodingVectorLayer = new Vector({
@@ -202,9 +204,18 @@ export class GeocoderComponent implements OnInit, OnDestroy {
 			limit: this.limit,
 			bbox: this.bboxRequestParam,
 			proximity: this.proximityRequestParam,
+			map: this.getMapParam(),
 		};
 
 		this.sendGeocodingRequest(params);
+	}
+
+	//send same ?map parameter to match a request to a (qgis) project; can be used for authorization on the backend
+	private getMapParam(): string | undefined {
+		if (this.auth.allowAnonLogin) {
+			return undefined;
+		}
+		return this.projectConfig?.qgisProjectFilename;
 	}
 
 	private sendGeocodingRequest(params: GeocodingRequestParams) {
@@ -320,4 +331,5 @@ interface GeocodingRequestParams {
 	raw?: boolean;
 	bbox?: string; // format: "minLat,minLon,maxLat,maxLon"
 	proximity?: string; // format: "lat,lon"
+	map?: string; // qgs project filename, only set when auth is enabled
 }
