@@ -12,9 +12,8 @@ By default, the public [Photon geocoder](https://photon.komoot.io/) is used as g
 ## API Reference
 
 ### Geocode Endpoint
-`GET /geocode`
 
-Execute geocoding request
+Executing the fcgi script calls the `geocode()` function
 
 #### Query Parameters
 
