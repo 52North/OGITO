@@ -9,6 +9,8 @@ services:
       - './qgis.conf:/etc/apache2/conf-enabled/qgis.conf'
       - './rewrite.load:/etc/apache2/mods-enabled/rewrite.load'
       - './000-default.conf:/etc/apache2/sites-enabled/000-default.conf'
+      - '../../tools/qgis_server_plugins:/etc/qgisserver/plugins'
+      - '../../src/assets/configuration/projects.json:/etc/ogito/projects.json:ro'
     ports:
       - 8380:80
     depends_on:
@@ -21,6 +23,21 @@ services:
       - QGIS_SERVER_LOG_LEVEL=0
       - QGIS_SERVER_LANDING_PAGE_PROJECTS_DIRECTORIES=/etc/qgisserver
       - PGSERVICEFILE=/etc/qgisserver/pg_service.conf
+      - QGIS_PLUGINPATH=/etc/qgisserver/plugins
+  geocoder:
+    build:
+      context: ../../tools/geopy_geocoder
+      dockerfile: docker/Dockerfile
+    ports:
+      - 5002:80
+  project-authz-service:
+    build:
+      context: ../../tools/project_authz
+      dockerfile: docker/Dockerfile
+    volumes:
+      - '../../src/assets/configuration/projects.json:/etc/ogito/projects.json:ro'
+    ports:
+      - 5003:80
   db:
     image: postgis/postgis:16-3.4-alpine
     environment:

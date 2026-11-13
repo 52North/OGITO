@@ -1,0 +1,9 @@
+[general]
+name=KoboToolbox Service
+qgisMinimumVersion=3.0
+description=QGIS Server custom service exposing KoboToolbox form submissions as a GeoJSON FeatureCollection, requested via &SERVICE=KOBOTOOLBOX.
+about=Fetches the configured KoboToolbox form's schema and submissions (see submissions_to_geojson.py) and returns them as GeoJSON when QGIS Server receives a request with &SERVICE=KOBOTOOLBOX. Internal OGITO tool, not published to the QGIS plugin repository.
+version=0.1.0
+author=OGITO
+email=noreply@example.com
+server=True

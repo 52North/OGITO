@@ -110,6 +110,16 @@
   right: 8px;
 }
 
+#popup-content {
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.imgInfo {
+  max-width: 100%;
+  height: auto;
+}
+
 .ol-popup-closer:after {
   content: "✖";
   font-size: x-large;

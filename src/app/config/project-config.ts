@@ -43,12 +43,19 @@ export interface ProjectConfiguration{
   }[],
   defaultBackgroundLayer?: boolean
   requiredRole?: string[]
+  kobotoolbox_layer?: KoboToolboxLayer[]
 }
 
 
 export interface BackgroundLayer{
   title: string,
   format: "image/jpeg" | "image/png"
+}
+
+export interface KoboToolboxLayer{
+  name: string,
+  group: string,
+  asset: string
 }
 
 
@@ -90,6 +97,12 @@ export const RatingLimitCodec = t.type({
   max: t.number
 })
 
+export const KoboToolboxLayerCodec = t.type({
+  name: t.string,
+  group: t.string,
+  asset: t.string
+});
+
 export const ProjectConfigurationCodec = t.type({
   name: t.string,
   qgisProjectFilename: t.string,
@@ -114,6 +127,7 @@ export const ProjectConfigurationCodec = t.type({
   customSketchLayerPoints: t.union([t.string, t.undefined]),
   ratingLayerLimits: t.union([t.array(RatingLimitCodec), t.undefined]),
   defaultBackgroundLayer: t.union([t.boolean, t.undefined]),
-  requiredRole: t.union([t.array(t.string), t.undefined])
+  requiredRole: t.union([t.array(t.string), t.undefined]),
+  kobotoolbox_layer: t.union([t.array(KoboToolboxLayerCodec), t.undefined])
 });
 

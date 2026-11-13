@@ -63,3 +63,6 @@ tools/street_names
 
 #python virtual environment (tools)
 **/venv
+
+#python
+**/__pycache__/

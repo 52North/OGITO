@@ -1,4 +1,9 @@
 import { ProjectConfiguration } from "./../config/project-config";
+import { createKoboToolboxLayers } from "./kobotoolbox-utils/kobotoolbox-layers";
+import {
+	buildKoboToolboxFeatureInfoTable,
+	loadKoboToolboxAttachmentPreview,
+} from "./kobotoolbox-utils/kobotoolbox-feature-info";
 import { CustomDialogService } from "./../custom-dialog.service";
 import {
 	AfterViewInit,
@@ -194,6 +199,12 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 	private geolocationVectorSource: VectorSource;
 	private addedFeature: Feature;
 	private loadedProject?: ProjectConfiguration;
+	private koboToolboxLayers: VectorLayer<VectorSource>[] = [];
+	// bumped on every displayFeatureInfoKoboToolbox() call so a slow attachment
+	// response for a feature the user already navigated away from can tell it's
+	// stale and not overwrite whatever feature is showing now - see
+	// loadKoboToolboxAttachmentPreview()
+	private koboFeatureInfoRequestId = 0;
 
 	private afterSymbolSelectedHandler: (layer: any, feature: any) => void =
 		this.popAttrForm;
@@ -793,6 +804,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 		this.qGsServerUrl = this.config.getAppConfig().qgisServerUrl;
 		this.mapZoom = projectConfig.initZoom;
 		this.srsID = this.config.getAppConfig().srs;
+		this.koboToolboxLayers = [];
 
 		if(projectConfig.geocoder !== undefined && projectConfig.geocoder.baseUrl){
 			this.isGeocoderConfigured = true; //show address search in toolbar
@@ -874,6 +886,29 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 			layerTitle: defaultBackgroundLayer.get("name"),
 			source: defaultBackgroundLayer.getSource(),
 		});
+	}
+
+	private loadKoboToolboxLayers() {
+		/**
+		 * Creates one OpenLayers vector layer per KoboToolbox layer configured
+		 * on the current project (ProjectConfiguration.kobotoolbox_layer), and
+		 * registers each one in the layer panel under its configured group.
+		 * See kobotoolbox-utils/kobotoolbox-layers.ts for the actual layer
+		 * construction.
+		 */
+		const createdLayers = createKoboToolboxLayers({
+			loadedProject: this.loadedProject,
+			qGsServerUrl: this.qGsServerUrl,
+			qgsProjectFile: this.qgsProjectFile,
+			srsID: this.srsID,
+			http: this.http,
+			groupsLayers: this.groupsLayers,
+			addOWSLayerToLayerPanel: (layerName, layer) =>
+				this.addOWSLayerToLayerPanel(layerName, layer),
+		});
+		this.koboToolboxLayers.push(...createdLayers);
+
+		this.groupsLayersSubject.next(this.groupsLayers);
 	}
 
 	async parseQgsProject(gqsProjectinfo: any) {
@@ -1091,6 +1126,11 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 				return;
 			}
 			this.container.nativeElement.style.display = "block";
+
+			if (this.koboToolboxLayers.includes(this.curInfoLayer as VectorLayer<VectorSource>)) {
+				this.displayFeatureInfoKoboToolbox(evt);
+				return;
+			}
 			if (this.curInfoLayer.getSource() instanceof ImageWMS) {
 				this.displayFeatureInfoWMS(evt);
 				return;
@@ -1354,6 +1394,9 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 				this.prepareLoadWMSLayers(qGsServerUrl, capRequest, qGsProject),
 			)
 			.then(() => {
+				//load KoboToolbox layers configured for this project
+				this.loadKoboToolboxLayers();
+
 				//load configured custom sketch layers first
 				const customSketchSources =
 					this.sketchLayerInitializer.retrieveConfiguredCustomSketchLayers(
@@ -3651,6 +3694,64 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 		} else {
 			return true; //if no config for the field, show it by default
 		}
+	}
+
+	displayFeatureInfoKoboToolbox(evt: any) {
+		/**
+		 * Custom feature info for KoboToolbox layers (see loadKoboToolboxLayers()):
+		 * renders every feature property in a table, and for any property value
+		 * that matches this app's own KoboToolbox attachment-proxy URL shape
+		 * fetches that attachment through the authenticated HttpClient and
+		 * renders it inline as an image/audio/video element once its real
+		 * Content-Type is known. See kobotoolbox-utils/kobotoolbox-feature-info.ts
+		 * for the table/attachment-loading logic itself.
+		 */
+		// a new request generation - any attachment response belonging to a
+		// previous generation (i.e. the user already navigated to a different
+		// feature before it arrived) is ignored in loadKoboToolboxAttachmentPreview()
+		const requestId = ++this.koboFeatureInfoRequestId;
+
+		const hdms = toStringHDMS(evt.coordinate);
+		this.content.nativeElement.innerHTML =
+			"<p>Searching at:</p><code>" + hdms + "</code>";
+		this.overlay.setPosition(evt.coordinate);
+
+		const layerOnIdentifyingName = this.curInfoLayer.get("name");
+		const featureValues = this.map.forEachFeatureAtPixel(
+			evt.pixel,
+			(feature) => {
+				const properties = feature.getProperties();
+				return (({ geometry, ...o }) => o)(properties); // clone without geometry property
+			},
+			{
+				layerFilter: (layer) => layer.get("name") === layerOnIdentifyingName,
+				hitTolerance: 10,
+			},
+		);
+
+		if (!featureValues) {
+			this.content.nativeElement.innerHTML = "<p>Not elements found :</p>";
+			return;
+		}
+
+		const { html, attachmentCells } = buildKoboToolboxFeatureInfoTable(
+			featureValues,
+			requestId,
+			this.qGsServerUrl,
+		);
+		this.content.nativeElement.innerHTML = html;
+		this.adjustMapView();
+
+		attachmentCells.forEach(({ url, cellId }) =>
+			loadKoboToolboxAttachmentPreview(
+				url,
+				cellId,
+				requestId,
+				this.http,
+				() => this.koboFeatureInfoRequestId,
+				() => this.adjustMapView(),
+			),
+		);
 	}
 
 	displayFeatureInfoWMS(evt: { coordinate: any }) {
