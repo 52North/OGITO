@@ -66,3 +66,6 @@ tools/street_names
 
 #python
 **/__pycache__/
+
+#local env files - never commit real secrets/deployment values (.sample.env files stay tracked)
+.env
