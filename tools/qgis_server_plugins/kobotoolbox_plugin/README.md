@@ -8,7 +8,7 @@ Requests to QGIS Server with `&SERVICE=KOBOTOOLBOX` are routed to this service.
 
 - **`SERVICE`'s value must match `KOBOTOOLBOX` exactly** (verified live - `&SERVICE=kobotoolbox` lowercase is not routed here at all and falls through to QGIS Server's generic "unsupported service" error instead).
 - **Parameter names themselves are case-insensitive** (`&asset=`, `&ASSET=`, `&Asset=` all work - QGIS Server normalizes parameter keys to uppercase before this service ever sees them).
-- **Only `service`, `map`, `asset`, `submission` and `attachment` are accepted** - any other query parameter gets `400 Bad Request` (`Unexpected parameter(s): ...`).
+- **Only `service`, `map`, `asset`, `submission`, `attachment`, `lang` and `full_labels` are accepted** - any other query parameter gets `400 Bad Request` (`Unexpected parameter(s): ...`).
 
 `map` and `asset` are always mandatory - a request missing either gets `400 Bad Request`, before anything else runs. Unlike a "normal" QGIS WMS/WFS request, `map` isn't used to render anything here - it's purely an authorization check: **the `(map, asset)` pair must be registered in `projects.json`**, i.e. some entry's `qgisProjectFilename` (joined with the `QGIS_PROJECT_FOLDER` constant) must equal `map` exactly, AND that entry's `kobotoolbox_layer[]` array must contain an item whose `asset` equals the request's `asset`. This is checked **before** any KoboToolbox API call is made, closing off the service to assets that aren't actually wired up to any project. Since the same `.qgs` file can legitimately be referenced by multiple `projects.json` entries (see `tools/project_authz/README.md`'s "What this actually protects"), every entry sharing a matching `qgisProjectFilename` is checked, not just the first - an asset registered only on a later entry sharing that file is still accepted.
 
@@ -16,11 +16,15 @@ If no entry satisfies both, the request gets a deliberately generic **`404 Not F
 
 There are then two modes, depending on whether `submission`/`attachment` are also given:
 
-### `&map=<qgs project path>&asset=<kobo asset uid>` - submissions as GeoJSON
+### `&map=<qgs project path>&asset=<kobo asset uid>[&lang=<language>][&full_labels=true]` - submissions as GeoJSON
 
 1. fetches that KoboToolbox form's schema and submissions from the KoboToolbox API,
 2. builds a GeoJSON `FeatureCollection` out of them (see `submissions_to_geojson.py`'s `build_geojson()` - this is the same logic as its standalone CLI script, just returning the dict instead of writing it to a file), and
 3. returns that GeoJSON as the HTTP response body (`Content-Type: application/json`).
+
+Both `lang` and `full_labels` are optional, per-request (not static config):
+* **`lang`**: which translation of the form's question/choice labels to use, matching an entry of the form's `content.translations` exactly (e.g. `English (en)`). Omit it (default) to use the form's first/default language; an unrecognized value falls back to the first language too (logged as a warning).
+* **`full_labels`**: `true` to use each question's full label as its property key instead of its short technical field name (e.g. `qualify/type`). Defaults to `false` otherwise. **The OGITO frontend always sends `full_labels=true`** (see `src/app/map/kobotoolbox-utils/kobotoolbox-layers.ts`), so the layer panel's attribute table shows readable labels - a request made without it (e.g. plain `curl`) gets short technical keys instead.
 
 Any attachment field (e.g. a photo upload question) is **not** exposed as KoboToolbox's own direct `download_url` - it's rewritten to a same-origin proxy URL back to this same service's attachment mode below, carrying the same `map` value the GeoJSON request itself was authorized with, e.g.:
 ```
@@ -38,15 +42,20 @@ Fetches that one attachment directly from KoboToolbox (`fetch_attachment()`) and
 
 ## Configuration
 
-**Currently hardcoded at the top of `submissions_to_geojson.py`** (`TOKEN`, `KOBO_URL`, `STRIP_PROPERTIES`, `USE_FULL_LABELS`, `LANGUAGE`) - this is deliberate for now and will move to proper configuration later. `ASSET_UID` is also defined there as the default used by the standalone CLI script, but the service plugin always uses the request's own `&asset` parameter instead.
+**All of it lives in `config.py`** - every constant and every environment-variable-derived value this plugin uses, in one place. `LANGUAGE`/`USE_FULL_LABELS` are deliberately **not** here anymore - see `&lang`/`&full_labels` above, they're per-request now. `KOBO_ASSET_UID`/`OUTPUT_FILE` aren't here either - they're local variables inside `submissions_to_geojson.py`'s own `main()`, the only place that still needs them (fill in a real asset uid there for local/manual CLI runs).
 
-**Also hardcoded, at the top of `request_validation.py`** (same "for now" caveat):
-* **`QGIS_PROJECT_FOLDER`**: the folder QGIS project files actually live in (`/etc/qgisserver/`) - joined with each `projects.json` entry's `qgisProjectFilename` to build the exact full path `map` is compared against. Must match however QGIS Server itself is deployed - same convention as `tools/project_authz`'s `QGIS_PROJECTS_FOLDER`.
-* **`OGITO_PROJECTS_JSON_PATH`**: filesystem path to a copy of `src/assets/configuration/projects.json` mounted into this container (`/etc/ogito/projects.json`) - same path/convention `tools/project_authz` uses, mounted separately since this plugin runs inside the `qgis_server` container, not `project-authz-service`.
+* **`KOBO_API_KEY`**/**`KOBO_URL`**: read from the environment (see `starter_project/docker/docker-compose.yml`'s `qgis_server` service), falling back to `""` if unset. `KOBO_API_KEY` is a real credential - never commit a real value for it (or `KOBO_URL`, which is deployment-specific) into `docker-compose.yml`.
+* **`KOBO_HIDDEN_PROPERTIES`**: properties to drop from the GeoJSON output besides Kobo's own `_`-prefixed metadata. Read from the environment as a comma-separated list (e.g. `KOBO_HIDDEN_PROPERTIES=meta/instanceID,formhub/uuid`), falling back to a sensible default list if unset.
+* **`QGIS_PROJECT_FOLDER`**: the folder QGIS project files actually live in. Read from the environment, falling back to `/etc/qgisserver/` if unset - joined with each `projects.json` entry's `qgisProjectFilename` to build the exact full path `map` is compared against. Must match however QGIS Server itself is deployed - same convention as `tools/project_authz`'s `QGIS_PROJECTS_FOLDER`.
+* **`QGIS_PROJECTS_JSON_PATH`**: filesystem path to a copy of `src/assets/configuration/projects.json` mounted into this container. Read from the environment, falling back to `/etc/ogito/projects.json` if unset - same path/convention `tools/project_authz` uses, mounted separately since this plugin runs inside the `qgis_server` container, not `project-authz-service`.
+* **`ALLOWED_PARAMS`**, **`LOG_TAG`**: the request-shape allowlist and the shared QGIS Server log tag - plain constants, not env-backed.
+
+`kobotoolbox_service.py` and `request_validation.py` always `from . import config` (fine - they're only ever loaded as part of this package by QGIS Server). `submissions_to_geojson.py` falls back to a plain `import config` if the relative import fails, since it also still runs standalone (`python3 submissions_to_geojson.py`), where there's no parent package for a relative import to resolve against.
 
 ## Files
 
 * `__init__.py` - defines `serverClassFactory(serverIface)`, the entry point QGIS Server calls at startup.
+* `config.py` - every constant and env-var this plugin reads, see Configuration above.
 * `kobotoolbox_service.py` - the `QgsService` subclass (`KOBOTOOLBOX`/`1.0.0`) and the plugin class that registers it. Delegates request validation to `request_validation.py` and just maps its result onto an HTTP response.
 * `request_validation.py` - the allowed-parameters check and the `(map, asset)` vs. `projects.json` authorization check (`validate_request()`, `is_registered_map_asset()`, `load_projects()`). Raises `RequestValidationError(status_code, error, message=None)` on rejection; `kobotoolbox_service.py` just forwards those three fields into its own `_respond_error()`.
 * `submissions_to_geojson.py` - the actual KoboToolbox API logic. `build_geojson()` is used by both this plugin and the script's own CLI entry point (`python3 submissions_to_geojson.py`, unchanged - still fetches and writes `kobo_submissions.geojson` to disk, using KoboToolbox's own `download_url`s directly rather than proxy URLs, since there's no QGIS Server to proxy through in that case). `build_attachment_proxy_url()` and `fetch_attachment()` back the attachment-proxy mode described above.
@@ -56,14 +65,15 @@ Fetches that one attachment directly from KoboToolbox (`fetch_attachment()`) and
 
 QGIS Server loads server plugins from the directory named by the `QGIS_PLUGINPATH` environment variable (see the [server manual](https://docs.qgis.org/3.44/en/docs/server_manual/config.html#environment-variables)). Copy (or mount) this entire `kobotoolbox_plugin/` folder into that directory - no separate "enable" step is needed, QGIS Server picks up any plugin with `server=True` in its `metadata.txt`.
 
-Wired into `starter_project/docker/docker-compose.yml`'s `qgis_server` service: the whole `tools/qgis_server_plugins/` folder (not just this one plugin - any sibling plugin added there later is picked up the same way) is mounted to `/etc/qgisserver/plugins`, with `QGIS_PLUGINPATH=/etc/qgisserver/plugins` set accordingly. `src/assets/configuration/projects.json` is also mounted read-only to `/etc/ogito/projects.json`, matching `OGITO_PROJECTS_JSON_PATH` above. Verified live against that container:
+Wired into `starter_project/docker/docker-compose.yml`'s `qgis_server` service: the whole `tools/qgis_server_plugins/` folder (not just this one plugin - any sibling plugin added there later is picked up the same way) is mounted to `/etc/qgisserver/plugins`, with `QGIS_PLUGINPATH=/etc/qgisserver/plugins` set accordingly. `src/assets/configuration/projects.json` is also mounted read-only to `/etc/ogito/projects.json`, matching `QGIS_PROJECTS_JSON_PATH` above. Verified live against that container:
 ```
 GET /?SERVICE=KOBOTOOLBOX&map=<path>&asset=<uid>&evil=1                        -> 400 (unexpected parameter)
 GET /?SERVICE=KOBOTOOLBOX&asset=<real asset uid>                               -> 400 (missing &map)
 GET /?SERVICE=KOBOTOOLBOX&map=<path>                                           -> 400 (missing &asset)
 GET /?SERVICE=KOBOTOOLBOX&map=<unregistered path>&asset=<real asset uid>       -> 404 (generic - map/asset not registered in projects.json)
 GET /?SERVICE=KOBOTOOLBOX&map=<real path>&asset=<wrong asset uid>              -> 404 (generic - same response, indistinguishable from the above)
-GET /?SERVICE=KOBOTOOLBOX&map=<real path>&asset=<real asset uid>               -> 200, real GeoJSON FeatureCollection from KoboToolbox
+GET /?SERVICE=KOBOTOOLBOX&map=<real path>&asset=<real asset uid>               -> 200, real GeoJSON FeatureCollection, short technical property keys (full_labels defaults to false)
+GET /?SERVICE=KOBOTOOLBOX&map=<real path>&asset=<real asset uid>&full_labels=true  -> 200, same data with full question labels as property keys instead
 GET /?SERVICE=KOBOTOOLBOX&map=<path>&asset=<uid>&submission=<id>&attachment=<id>      -> 200, real attachment bytes with the correct Content-Type
 GET /?SERVICE=KOBOTOOLBOX&map=<path>&asset=<uid>&submission=<id>&attachment=<bad id>  -> 404, propagated from KoboToolbox itself (coincidentally the same status, but for an unrelated reason)
 ```

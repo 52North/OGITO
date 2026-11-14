@@ -7,8 +7,7 @@ from qgis.server import QgsService
 
 from .submissions_to_geojson import build_geojson, fetch_attachment
 from .request_validation import validate_request, RequestValidationError
-
-LOG_TAG = "KoboToolboxService"
+from . import config
 
 
 class KoboToolboxService(QgsService):
@@ -21,12 +20,18 @@ class KoboToolboxService(QgsService):
     be fetched through a `map` value it isn't associated with. No other
     query parameters are accepted. Two modes:
 
-    - &map=<path>&asset=<uid> alone: fetches that KoboToolbox form's
-      submissions (see submissions_to_geojson.py for the actual KoboToolbox
-      API logic and its remaining configuration) and returns them as a
-      GeoJSON FeatureCollection, whose attachment properties are proxy URLs
-      back to this same service (see the second mode) rather than
-      KoboToolbox's own direct download_url.
+    - &map=<path>&asset=<uid>[&lang=<label language>][&full_labels=true]:
+      fetches that KoboToolbox form's submissions (see
+      submissions_to_geojson.py for the actual KoboToolbox API logic and its
+      remaining configuration) and returns them as a GeoJSON
+      FeatureCollection, whose attachment properties are proxy URLs back to
+      this same service (see the second mode) rather than KoboToolbox's own
+      direct download_url. `lang` picks which translation of the form's
+      question/choice labels to use (default: the form's first/default
+      language). `full_labels=true` uses each question's full label as its
+      property key instead of its short technical field name (default:
+      false - the OGITO frontend always passes full_labels=true, see
+      kobotoolbox-layers.ts).
     - &map=<path>&asset=<uid>&submission=<id>&attachment=<id>: proxies one
       specific attachment's raw bytes straight through from KoboToolbox,
       with its real Content-Type.
@@ -66,20 +71,26 @@ class KoboToolboxService(QgsService):
             self._proxy_attachment(response, asset_uid, submission_id, attachment_id)
             return
 
-        self._respond_geojson(response, asset_uid, map_value)
+        # optional - see submissions_to_geojson.py's build_geojson() docstring
+        language = params.get("LANG") or None
+        use_full_labels = (params.get("FULL_LABELS") or "").strip().lower() == "true"
 
-    def _respond_geojson(self, response, asset_uid, map_value):
+        self._respond_geojson(response, asset_uid, map_value, language, use_full_labels)
+
+    def _respond_geojson(self, response, asset_uid, map_value, language, use_full_labels):
         try:
             geojson = build_geojson(
-                log=lambda msg: QgsMessageLog.logMessage(msg, LOG_TAG, Qgis.Info),
+                log=lambda msg: QgsMessageLog.logMessage(msg, config.LOG_TAG, Qgis.Info),
                 asset_uid=asset_uid,
                 proxy_attachments=True,
                 map_value=map_value,
+                language=language,
+                use_full_labels=use_full_labels,
             )
         except Exception as e:
             QgsMessageLog.logMessage(
                 f"Failed to build KoboToolbox GeoJSON: {e}\n{traceback.format_exc()}",
-                LOG_TAG,
+                config.LOG_TAG,
                 Qgis.Critical,
             )
             self._respond_error(response, 500, "Failed to fetch KoboToolbox submissions.", str(e))
@@ -100,7 +111,7 @@ class KoboToolboxService(QgsService):
         except Exception as e:
             QgsMessageLog.logMessage(
                 f"Failed to fetch KoboToolbox attachment: {e}\n{traceback.format_exc()}",
-                LOG_TAG,
+                config.LOG_TAG,
                 Qgis.Critical,
             )
             self._respond_error(response, 500, "Failed to fetch KoboToolbox attachment.", str(e))

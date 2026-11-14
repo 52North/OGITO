@@ -3,15 +3,7 @@ import os
 
 from qgis.core import Qgis, QgsMessageLog
 
-LOG_TAG = "KoboToolboxService"
-
-# Constants for now (see docker-compose.yml's qgis_server service for the
-# matching mounts) - may become configurable later, same as
-# tools/project_authz's OGITO_PROJECTS_JSON_PATH/QGIS_PROJECTS_FOLDER.
-QGIS_PROJECT_FOLDER = "/etc/qgisserver/"
-OGITO_PROJECTS_JSON_PATH = "/etc/ogito/projects.json"
-
-ALLOWED_PARAMS = {"SERVICE", "MAP", "ASSET", "SUBMISSION", "ATTACHMENT"}
+from . import config
 
 # in-memory cache of the parsed projects.json, refreshed when the file's
 # mtime changes (avoids re-reading/re-parsing it on every request) - same
@@ -38,7 +30,7 @@ def load_projects(projects_json_path):
     try:
         mtime = os.path.getmtime(projects_json_path)
     except OSError as e:
-        QgsMessageLog.logMessage(f"could not stat {projects_json_path}: {e}", LOG_TAG, Qgis.Warning)
+        QgsMessageLog.logMessage(f"could not stat {projects_json_path}: {e}", config.LOG_TAG, Qgis.Warning)
         return None
 
     if _projects_cache["mtime"] == mtime:
@@ -48,7 +40,7 @@ def load_projects(projects_json_path):
         with open(projects_json_path, "r", encoding="utf-8") as f:
             projects = json.load(f)
     except (OSError, json.JSONDecodeError) as e:
-        QgsMessageLog.logMessage(f"could not read/parse {projects_json_path}: {e}", LOG_TAG, Qgis.Warning)
+        QgsMessageLog.logMessage(f"could not read/parse {projects_json_path}: {e}", config.LOG_TAG, Qgis.Warning)
         return None
 
     _projects_cache["mtime"] = mtime
@@ -73,7 +65,7 @@ def is_registered_map_asset(projects, map_value, asset_uid):
         qgis_filename = proj.get("qgisProjectFilename")
         if not qgis_filename:
             continue
-        if map_value != os.path.join(QGIS_PROJECT_FOLDER, qgis_filename):
+        if map_value != os.path.join(config.QGIS_PROJECT_FOLDER, qgis_filename):
             continue
         for kobo_layer in proj.get("kobotoolbox_layer") or []:
             if kobo_layer.get("asset") == asset_uid:
@@ -94,7 +86,7 @@ def validate_request(params):
     "this asset isn't registered under it" from "this combination doesn't
     exist at all" - full detail still goes to the QGIS Server log instead.
     """
-    unexpected_params = set(params.keys()) - ALLOWED_PARAMS
+    unexpected_params = set(params.keys()) - config.ALLOWED_PARAMS
     if unexpected_params:
         raise RequestValidationError(
             400, "Unexpected parameter(s): " + ", ".join(sorted(unexpected_params))
@@ -111,14 +103,14 @@ def validate_request(params):
     if not asset_uid:
         raise RequestValidationError(400, "Missing mandatory 'asset' parameter.")
 
-    projects = load_projects(OGITO_PROJECTS_JSON_PATH)
+    projects = load_projects(config.QGIS_PROJECTS_JSON_PATH)
     if projects is None:
         raise RequestValidationError(500, "Unable to load project configuration.")
 
     if not is_registered_map_asset(projects, map_value, asset_uid):
         QgsMessageLog.logMessage(
             f"rejected unregistered map/asset combination: map={map_value!r} asset={asset_uid!r}",
-            LOG_TAG,
+            config.LOG_TAG,
             Qgis.Info,
         )
         raise RequestValidationError(404, "Not Found")

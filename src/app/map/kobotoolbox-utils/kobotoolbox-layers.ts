@@ -118,13 +118,16 @@ export function createKoboToolboxLayers(
 		// &SERVICE=KOBOTOOLBOX&map=<qgs project path>&asset=<asset> on the QGIS
 		// Server endpoint - qgisServerUrl already ends in "?". &map is required
 		// by kobotoolbox_service.py, which validates it against projects.json
-		// the same way a "normal" QGIS Server request would use it.
+		// the same way a "normal" QGIS Server request would use it. &full_labels=true
+		// asks for full question labels as property keys instead of short
+		// technical field names - the server defaults to false otherwise.
 		const koboUrl =
 			qGsServerUrl +
 			"service=KOBOTOOLBOX&map=" +
 			encodeURIComponent(qgsProjectFile) +
 			"&asset=" +
-			encodeURIComponent(koboLayerConfig.asset);
+			encodeURIComponent(koboLayerConfig.asset) +
+			"&full_labels=true";
 
 		const vectorSource = new VectorSource({
 			format: new GeoJSON({

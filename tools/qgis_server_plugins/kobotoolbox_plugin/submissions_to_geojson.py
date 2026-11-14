@@ -3,26 +3,17 @@ import re
 import urllib.request
 from urllib.parse import quote
 
-# ==========================================
-# 1. Configuration
-# ==========================================
-TOKEN = ""
-ASSET_UID = ""
-KOBO_URL = ""
-OUTPUT_FILE = "kobo_submissions.geojson"
+# config.py holds every constant/env-var this plugin uses. Relative import
+# so this still works when loaded as part of the kobotoolbox_plugin package
+# (by kobotoolbox_service.py); falls back to a plain import so this script
+# also still runs standalone (`python3 submissions_to_geojson.py`), where a
+# relative import would fail with "no known parent package".
+try:
+    from . import config
+except ImportError:
+    import config
 
-# Properties to drop from the output besides the "_"-prefixed Kobo metadata
-STRIP_PROPERTIES = ["meta/instanceID", "formhub/uuid", "GPS_Accuracy", "deviceid"]
-
-# True: use each question's full label (from content.survey.<entry>.label) as the property key.
-# False: keep the original technical/short field name (e.g. "qualify/type").
-USE_FULL_LABELS = True
-
-# Which language's labels to use, matching an entry of the form's content.translations
-# exactly (e.g. "English (en)"). None picks the form's first/default language.
-LANGUAGE = None
-
-headers = {"Authorization": f"Token {TOKEN}"}
+headers = {"Authorization": f"Token {config.KOBO_API_KEY}"}
 
 # Matches XLSForm relevant expressions like: selected(${develop},'6')
 OTHER_RELEVANT_RE = re.compile(r"selected\(\$\{(\w+)\},\s*'([^']+)'\)")
@@ -85,27 +76,27 @@ def fetch_attachment(asset_uid, submission_id, attachment_id):
     a redirect) - for the QGIS Server plugin to proxy back to its own
     caller. Returns (content_bytes, content_type).
     """
-    url = f"{KOBO_URL}/api/v2/assets/{asset_uid}/data/{submission_id}/attachments/{attachment_id}/"
+    url = f"{config.KOBO_URL}/api/v2/assets/{asset_uid}/data/{submission_id}/attachments/{attachment_id}/"
     request = urllib.request.Request(url, headers=headers)
     with urllib.request.urlopen(request) as response:
         content_type = response.headers.get("Content-Type", "application/octet-stream")
         return response.read(), content_type
 
-def build_geojson(log=print, asset_uid=None, proxy_attachments=False, map_value=None):
+def build_geojson(log=print, asset_uid=None, proxy_attachments=False, map_value=None, language=None, use_full_labels=False):
     """Fetches the KoboToolbox form schema and submissions, and builds a
     GeoJSON FeatureCollection dict from them. Does not write anything to
     disk - callers decide what to do with the result (main() below writes it
-    to OUTPUT_FILE for the CLI use case; the QGIS Server plugin instead
-    returns it directly as the HTTP response body).
+    to a local OUTPUT_FILE for the CLI use case; the QGIS Server plugin
+    instead returns it directly as the HTTP response body).
 
     `log` receives the same progress messages main() used to print()
     directly - the plugin passes a QGIS logging callback instead, since
     writing to stdout from within a running QGIS Server (FastCGI) process
     would corrupt its response stream.
 
-    `asset_uid` overrides the module-level ASSET_UID default - the service
-    plugin always passes the request's own `&asset` parameter here instead
-    of relying on this hardcoded default; the CLI (main()) still uses it.
+    `asset_uid` is mandatory - both callers (the service plugin, from the
+    request's own `&asset` parameter, and main(), from its own local
+    default) always pass it explicitly.
 
     `proxy_attachments`: if True, attachment fields are same-origin proxy
     URLs back to this QGIS Server service (see build_attachment_proxy_url())
@@ -119,23 +110,28 @@ def build_geojson(log=print, asset_uid=None, proxy_attachments=False, map_value=
     request's own validated &map value, threaded into each generated
     attachment proxy URL (see build_attachment_proxy_url()) since
     kobotoolbox_service.py requires &map on every request, including those.
-    """
-    asset_uid = asset_uid or ASSET_UID
 
+    `language`/`use_full_labels`: optional per-request overrides for which
+    translation to use and whether to use full question labels as property
+    keys at all - the service plugin threads these through from the
+    request's own &lang/&full_labels parameters (see kobotoolbox_service.py
+    and request_validation.py's ALLOWED_PARAMS); main() leaves them at their
+    defaults (first/default language, short technical field names).
+    """
     # ==========================================
     # 2. Fetch Form Schema & Build Label Map
     # ==========================================
     log("Fetching form schema...")
-    asset_data = fetch_json(f"{KOBO_URL}/api/v2/assets/{asset_uid}.json")
+    asset_data = fetch_json(f"{config.KOBO_URL}/api/v2/assets/{asset_uid}.json")
 
     # Resolve which translation index to read labels from
     translations = asset_data['content'].get('translations') or []
-    if LANGUAGE is None:
+    if language is None:
         lang_index = 0
-    elif LANGUAGE in translations:
-        lang_index = translations.index(LANGUAGE)
+    elif language in translations:
+        lang_index = translations.index(language)
     else:
-        log(f"Warning: LANGUAGE '{LANGUAGE}' not found in {translations}. Using the first language instead.")
+        log(f"Warning: language '{language}' not found in {translations}. Using the first language instead.")
         lang_index = 0
 
     # Build Label Map: {list_name: {name: label}}
@@ -208,7 +204,7 @@ def build_geojson(log=print, asset_uid=None, proxy_attachments=False, map_value=
     other_leaf_names = {info["other_field"] for info in other_field_map.values()}
 
     def resolve_display_key(key, leaf_name):
-        if USE_FULL_LABELS:
+        if use_full_labels:
             return question_labels.get(key) or question_labels.get(leaf_name) or key
         return key
 
@@ -304,7 +300,7 @@ def build_geojson(log=print, asset_uid=None, proxy_attachments=False, map_value=
     # 3. Fetch Submissions Data
     # ==========================================
     log("Fetching submissions...")
-    data = fetch_json(f"{KOBO_URL}/api/v2/assets/{asset_uid}/data.json")
+    data = fetch_json(f"{config.KOBO_URL}/api/v2/assets/{asset_uid}/data.json")
     submissions = data.get('results', [])
 
     if not submissions:
@@ -353,7 +349,7 @@ def build_geojson(log=print, asset_uid=None, proxy_attachments=False, map_value=
             ('id' if k == '_id' else 'submission_time' if k == '_submission_time' else k): v
             for k, v in properties.items()
             if (k in ('_id', '_submission_time') or not k.startswith('_'))
-            and k not in STRIP_PROPERTIES
+            and k not in config.KOBO_HIDDEN_PROPERTIES
         }
 
         # E. Ensure "submission_time" is always the last property
@@ -375,9 +371,13 @@ def build_geojson(log=print, asset_uid=None, proxy_attachments=False, map_value=
 
 def main():
     """CLI entry point: builds the GeoJSON (see build_geojson()) and writes
-    it to OUTPUT_FILE, printing progress straight to the console.
+    it to OUTPUT_FILE, printing progress straight to the console. KOBO_ASSET_UID/
+    OUTPUT_FILE are local here, not in config.py - nothing else needs them.
     """
-    geojson_output = build_geojson(log=print)
+    KOBO_ASSET_UID = ""  # fill in a real asset uid for local/manual runs
+    OUTPUT_FILE = "kobo_submissions.geojson"
+
+    geojson_output = build_geojson(log=print, asset_uid=KOBO_ASSET_UID)
 
     if not geojson_output["features"]:
         return
