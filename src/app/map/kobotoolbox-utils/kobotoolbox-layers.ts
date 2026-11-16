@@ -25,8 +25,7 @@ export interface CreateKoboToolboxLayersParams {
  * `addOWSLayerToLayerPanel` for each one, same as map.component.ts's other
  * layer-loading methods (e.g. addDefaultBackgroundLayer()).
  *
- * Returns the created OL layers so the caller can track them (e.g. to route
- * feature-info clicks to displayFeatureInfoKoboToolbox()).
+ * Returns the created OL layers
  */
 export function createKoboToolboxLayers(
 	params: CreateKoboToolboxLayersParams, http: HttpClient, styleService: LayerStyleService
@@ -53,9 +52,6 @@ export function createKoboToolboxLayers(
 		const visible = loadedProject.defaultVisibleLayers?.includes(layerName) || false;
 		const styleConfig = styleService.getOrCreateLayerStyleConfig(layerName, "KOBO_TOOLBOX");
 
-		// register the layer in the data model first - addOWSLayerToLayerPanel()
-		// only attaches the OL layer to a group that already has a matching
-		// LayerInfo entry
 		let groupLayerInfo = groupsLayers.find(
 			(g) => g.groupName.toLowerCase() === groupName.toLowerCase(),
 		);
@@ -66,7 +62,7 @@ export function createKoboToolboxLayers(
 				visible,
 				layers: [],
 			};
-			groupsLayers.push(groupLayerInfo);
+			groupsLayers.unshift(groupLayerInfo);
 		}
 		groupLayerInfo.layers.push({
 			layerName,
