@@ -44,7 +44,7 @@ class KoboToolboxService(QgsService):
         return "KOBOTOOLBOX"
 
     def version(self):
-        return "1.0.0"
+        return "0.1.0"
 
     def executeRequest(self, request, response, project):
         # request.parameters() keys are uppercased by QGIS Server regardless

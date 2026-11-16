@@ -300,7 +300,7 @@ def build_geojson(log=print, asset_uid=None, proxy_attachments=False, map_value=
     # 3. Fetch Submissions Data
     # ==========================================
     log("Fetching submissions...")
-    data = fetch_json(f"{config.KOBO_URL}/api/v2/assets/{asset_uid}/data.json")
+    data = fetch_json(f"{config.KOBO_URL}/api/v2/assets/{asset_uid}/data.json?offset=0&limit={config.KOBO_REQUEST_LIMIT}")
     submissions = data.get('results', [])
 
     if not submissions:
