@@ -1,6 +1,6 @@
 <!--suppress AngularUndefinedBinding -->  <!-- to fix a bug in webstorm -->
 
-<div class ="mapToolbar"   *ngIf="existingProject" cdkDrag cdkDragBoundary=".app-content"
+<div class ="mapToolbar"   *ngIf="existingProject && auth.isLoggedIn() && projectSelected" cdkDrag cdkDragBoundary=".app-content"
      [style.left.px]="x" [style.top.px]="y"
     >
 <mat-card class="spacetitle" color="primary">

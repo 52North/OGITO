@@ -4,6 +4,7 @@ import {OpenLayersService} from '../open-layers.service';
 import {MatIconRegistry} from '@angular/material/icon';
 import {DomSanitizer} from '@angular/platform-browser';
 import {MatLegacyDialog as MatDialog, MatLegacyDialogRef as MatDialogRef} from '@angular/material/legacy-dialog';
+import {AuthService} from '../auth/auth.service';
 
 @Component({
   selector: 'app-toolbar',
@@ -19,12 +20,15 @@ export class ToolbarComponent implements OnInit, OnDestroy {
   private subscriptionExistingProject: Subscription;
   private subscriptionStreetSearchConfigured: Subscription;
   private subscriptionGeocoderConfigured: Subscription;
+  private subscriptionQgsProjectUrl: Subscription;
   isStreetSearchConfigured: boolean = false;
   isGeocoderConfigured: boolean = false;
   existingProject = true;
+  projectSelected = false;
   constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer,
               private openLayersService: OpenLayersService,
-              public dialog: MatDialog) {
+              public dialog: MatDialog,
+              public auth: AuthService) {
 
     iconRegistry.addSvgIcon(
       'layerScratch',
@@ -99,12 +103,21 @@ export class ToolbarComponent implements OnInit, OnDestroy {
     this.subscriptionGeocoderConfigured = this.openLayersService.geocodingConfigured$.subscribe(
       (isConfigured: boolean) => this.isGeocoderConfigured = isConfigured
     )
+    this.subscriptionQgsProjectUrl = this.openLayersService.qgsProjectUrl$.subscribe(
+      (data) => {
+        if (data) {
+          this.projectSelected = true;
+        }
+      },
+      (error) => console.log('error while updating loaded project', error)
+    )
   }
 
   ngOnDestroy(): void {
     this.subscriptionExistingProject.unsubscribe();
     this.subscriptionStreetSearchConfigured.unsubscribe();
     this.subscriptionGeocoderConfigured.unsubscribe();
+    this.subscriptionQgsProjectUrl.unsubscribe();
   }
 
   toggleFullScreen(){
