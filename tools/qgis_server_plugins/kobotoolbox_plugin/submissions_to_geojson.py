@@ -56,17 +56,22 @@ def build_attachment_proxy_url(asset_uid, submission_id, attachment_id, map_valu
     whatever base URL the GeoJSON itself was requested from. See
     fetch_attachment() for the other half of this proxying.
 
-    `map_value` is required here too (kobotoolbox_service.py validates every
-    request's &map against projects.json, including this one) so it must be
-    threaded through from whatever &map the original GeoJSON request carried.
+    `map_value` is optional (mirroring &map on this plugin's own requests,
+    see request_validation.py) - threaded through from whatever &map the
+    original GeoJSON request carried, if any, so generated attachment URLs
+    stay authorizable the same way (see tools/project_authz's
+    kobotoolbox_authz.py). Omitted from the URL entirely when not given,
+    rather than embedding the literal string "None".
     """
-    return (
+    url = (
         "?service=KOBOTOOLBOX"
-        f"&map={quote(str(map_value), safe='')}"
         f"&asset={quote(str(asset_uid), safe='')}"
         f"&submission={quote(str(submission_id), safe='')}"
         f"&attachment={quote(str(attachment_id), safe='')}"
     )
+    if map_value is not None:
+        url += f"&map={quote(str(map_value), safe='')}"
+    return url
 
 def fetch_attachment(asset_uid, submission_id, attachment_id):
     """Fetches one attachment's raw bytes directly from KoboToolbox - the

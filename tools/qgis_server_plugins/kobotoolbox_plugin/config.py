@@ -37,16 +37,9 @@ KOBO_HIDDEN_PROPERTIES = (
 # ==========================================
 LOG_TAG = "KoboToolboxService"
 
-# The folder QGIS project files actually live in - joined with each
-# projects.json entry's qgisProjectFilename to build the exact full path
-# &map is compared against. Must match however QGIS Server itself is
-# deployed - same convention as tools/project_authz's QGIS_PROJECTS_FOLDER.
-QGIS_PROJECT_FOLDER = os.environ.get("QGIS_PROJECT_FOLDER", "/etc/qgisserver/")
-
-# Filesystem path to a copy of src/assets/configuration/projects.json
-# mounted into this container - same path/convention tools/project_authz
-# uses, mounted separately since this plugin runs inside the qgis_server
-# container, not project-authz-service.
-QGIS_PROJECTS_JSON_PATH = os.environ.get("QGIS_PROJECTS_JSON_PATH", "/etc/ogito/projects.json")
+# NOTE: QGIS_PROJECT_FOLDER/QGIS_PROJECTS_JSON_PATH used to live here, for
+# matching &map against projects.json - that authorization check has moved
+# upstream to tools/project_authz (see its kobotoolbox_authz.py), so this
+# plugin no longer reads projects.json at all.
 
 ALLOWED_PARAMS = {"SERVICE", "MAP", "ASSET", "SUBMISSION", "ATTACHMENT", "LANG", "FULL_LABELS"}

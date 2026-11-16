@@ -10,6 +10,8 @@ import os
 import sys
 import logging
 
+from kobotoolbox_authz import is_kobotoolbox_request, extract_param, is_registered_map_asset
+
 debug = False
 logging.basicConfig(
     stream=sys.stderr,
@@ -242,15 +244,30 @@ def authorize(environ, start_response):
     project = find_project(projects, map_value, qgis_projects_folder)
 
     if project is None:
-        if qgs_filename in open_project_files:
-            return respond('200 OK', {"project": qgs_filename, "allowed": True})
-        # unlisted and not explicitly whitelisted -> fail closed
-        return respond('403 Forbidden', {"project": qgs_filename, "allowed": False, "message": "project is not registered"})
+        if qgs_filename not in open_project_files:
+            # unlisted and not explicitly whitelisted -> fail closed
+            return respond('403 Forbidden', {"project": qgs_filename, "allowed": False, "message": "project is not registered"})
+    elif not is_authorized(project, user_roles, admin_role):
+        return respond('403 Forbidden', {"project": qgs_filename, "allowed": False, "message": "user roles do not satisfy this project's requiredRole"})
 
-    if is_authorized(project, user_roles, admin_role):
-        return respond('200 OK', {"project": qgs_filename, "allowed": True})
+    # project-level access is granted at this point (either an explicitly
+    # open unlisted file, or a registered project whose requiredRole the
+    # user satisfies) - a KoboToolbox request additionally needs its &asset
+    # registered under that same project's kobotoolbox_layer[], mirroring
+    # the check the kobotoolbox QGIS Server plugin used to perform itself
+    # (see kobotoolbox_authz.py)
+    if is_kobotoolbox_request(original_query):
+        asset_uid = extract_param(original_query, 'asset')
+        if not asset_uid:
+            return respond('400 Bad Request', {"errors": ["Provided 'query' does not contain an 'asset' parameter required for KoboToolbox requests."]})
+        if not is_registered_map_asset(projects, map_value, asset_uid, qgis_projects_folder):
+            logging.info(f"rejected unregistered KoboToolbox map/asset combination: map={map_value!r} asset={asset_uid!r}")
+            # deliberately generic - mirrors the plugin's own former 404,
+            # so a client can't distinguish "project not registered" from
+            # "asset not registered under it" from "doesn't exist at all"
+            return respond('404 Not Found', {"error": "Not Found"})
 
-    return respond('403 Forbidden', {"project": qgs_filename, "allowed": False, "message": "user roles do not satisfy this project's requiredRole"})
+    return respond('200 OK', {"project": qgs_filename, "allowed": True})
 
 
 if __name__ == '__main__':

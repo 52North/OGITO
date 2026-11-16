@@ -11,14 +11,16 @@ from . import config
 
 
 class KoboToolboxService(QgsService):
-    """QGIS Server custom service - a request with &SERVICE=KOBOTOOLBOX,
-    a mandatory &map=<qgis project path> (like any "normal" QGIS Server
-    request) and a mandatory &asset=<kobo asset uid> is routed here. `map`
-    is not used to render anything here - it only has to name a QGIS
-    project that projects.json actually registers `asset` under (see
-    request_validation.py's is_registered_map_asset()), so an asset can't
-    be fetched through a `map` value it isn't associated with. No other
-    query parameters are accepted. Two modes:
+    """QGIS Server custom service - a request with &SERVICE=KOBOTOOLBOX and
+    a mandatory &asset=<kobo asset uid> is routed here. &map=<qgis project
+    path> is optional and not validated by this plugin itself - whether a
+    request is allowed at all (including, for KoboToolbox requests, whether
+    `asset` is actually registered under the project named by `map`) is
+    decided upstream, by tools/project_authz's authorize.fcgi (see its
+    kobotoolbox_authz.py) before the request ever reaches here. `map`, when
+    given, is only used to build this request's own generated attachment
+    proxy URLs (see submissions_to_geojson.py's build_attachment_proxy_url()).
+    No other query parameters are accepted. Two modes:
 
     - &map=<path>&asset=<uid>[&lang=<label language>][&full_labels=true]:
       fetches that KoboToolbox form's submissions (see
@@ -56,10 +58,15 @@ class KoboToolboxService(QgsService):
         params = request.parameters()
 
         try:
-            map_value, asset_uid = validate_request(params)
+            asset_uid = validate_request(params)
         except RequestValidationError as e:
             self._respond_error(response, e.status_code, e.error, e.message)
             return
+
+        # optional - authorization (matching &map against projects.json) now
+        # happens upstream, in project_authz; still threaded into generated
+        # attachment proxy URLs when present, see build_attachment_proxy_url()
+        map_value = params.get("MAP")
 
         submission_id = params.get("SUBMISSION")
         attachment_id = params.get("ATTACHMENT")

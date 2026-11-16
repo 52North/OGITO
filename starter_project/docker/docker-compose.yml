@@ -10,7 +10,6 @@ services:
       - './rewrite.load:/etc/apache2/mods-enabled/rewrite.load'
       - './000-default.conf:/etc/apache2/sites-enabled/000-default.conf'
       - '../../tools/qgis_server_plugins:/etc/qgisserver/plugins'
-      - '../../src/assets/configuration/projects.json:/etc/ogito/projects.json:ro'
     ports:
       - 8380:80
     depends_on:

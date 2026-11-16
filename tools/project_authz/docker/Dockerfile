@@ -25,6 +25,7 @@ RUN ./venv/bin/pip install -r /tmp/requirements.txt
 # Copy configuration and code into the container
 COPY ./docker/000-default.conf /etc/apache2/sites-available/000-default.conf
 COPY ./authorize.fcgi /var/www/scripts/authorize.fcgi
+COPY ./kobotoolbox_authz.py /var/www/scripts/kobotoolbox_authz.py
 
 # Fix permissions so the Apache user (www-data) can execute the script
 RUN chmod +x /var/www/scripts/authorize.fcgi && \

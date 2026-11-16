@@ -26,12 +26,15 @@ Executing the fcgi script calls the `authorize()` function.
 * **`query`**: The **entire original query string** of the backend (QGIS Server) request, passed through verbatim (URL-encoded as this parameter's single value) (mandatory). The request must include the `&MAP=...` URL parameter (QGIS Server style) to identify the QGIS project that is attempted to be accessed.
   Example: for a real request to `.../?SERVICE=WMS&map=/etc/qgisserver/ogito_starter.qgs&REQUEST=GetMap`, the caller passes `query=SERVICE%3DWMS%26map%3D%2Fetc%2Fqgisserver%2Fogito_starter.qgs%26REQUEST%3DGetMap` to this script. The script extracts the `&map` value (`/etc/qgisserver/ogito_starter`) to control access to the corresponding QGIS project.
 
+  **KoboToolbox service plugin requests** (`&SERVICE=KOBOTOOLBOX`) go through an additional check, on top of the usual project/role check above: the query must also contain an `&asset` parameter, and that `(map, asset)` pair must be registered in the matched `projects.json` entry's `kobotoolbox_layer[]`.
+
 #### Response
 
-* **`200 OK`**: user has one of the `requiredRole` defined for that project in `projects.json` from OGITO app (or project is accessible for all users, `requiredRole` is defined but empty array)
+* **`200 OK`**: user has one of the `requiredRole` defined for that project in `projects.json` from OGITO app (or project is accessible for all users, `requiredRole` is defined but empty array) - and, for a KoboToolbox request, `asset` is registered under that project.
 * **`403 Forbidden`**: user has none of the `requiredRole` defined for that project in `projects.json` from OGITO app (or the QGOS project filename derived from `&MAP` URL parameter isn't found in `projects.json` and isn't listed in `OGITO_OPEN_PROJECT_FILES`).
-* **`400 Bad Request`**: missing `query` parameter, or the provided query string doesn't contain a `&MAP` URL parameter.
+* **`400 Bad Request`**: missing `query` parameter, the provided query string doesn't contain a `&MAP` URL parameter, or (KoboToolbox requests only) it doesn't contain an `&asset` parameter.
 * **`401 Unauthorized`**: missing/malformed `Authorization` header, or the token failed validation (bad signature, expired, wrong issuer/audience).
+* **`404 Not Found`**: KoboToolbox request only - `asset` isn't registered under the matched project's `kobotoolbox_layer[]`.
 * **`500 Internal Server Error`**: `projects.json` could not be read/parsed, or the service's own OIDC config (`OGITO_OIDC_JWKS_URI`/`OGITO_OIDC_ISSUER`) is missing.
 
 All responses include a small JSON body describing the decision, e.g.:
