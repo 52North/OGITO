@@ -55,7 +55,9 @@ export interface BackgroundLayer{
 export interface KoboToolboxLayer{
   name: string,
   group: string,
-  asset: string
+  asset: string,
+  icon?: string,
+  iconHeightPxl?: number
 }
 
 
@@ -100,7 +102,9 @@ export const RatingLimitCodec = t.type({
 export const KoboToolboxLayerCodec = t.type({
   name: t.string,
   group: t.string,
-  asset: t.string
+  asset: t.string,
+  icon: t.union([t.string, t.undefined]),
+  iconHeightPxl: t.union([t.number, t.undefined])
 });
 
 export const ProjectConfigurationCodec = t.type({

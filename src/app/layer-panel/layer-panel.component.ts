@@ -116,7 +116,7 @@ export class LayerPanelComponent implements OnInit, OnDestroy {
 		 */
 		for (const group of this.currentGroupLayers) {
 			group.layers.forEach((layer) => {
-				if (layer.wfs || layer.sketch) {
+				if (this.isLayerEditable(layerName)) {
 					if (
 						layer.layerName.toLowerCase() === layerName.toLowerCase() &&
 						layer.onEdit
@@ -289,6 +289,15 @@ export class LayerPanelComponent implements OnInit, OnDestroy {
 			return false;
 		}else{
 			return layerInfo.isQueryable === true;
+		}
+	}
+
+	isLayerEditable(layerName: string): boolean {
+		const layerInfo =this.findLayerinGroups(layerName);
+		if(!layerInfo){
+			return false;
+		}else{
+			return (layerInfo.vectorLayerType === "WFS" || layerInfo.vectorLayerType === "SKETCH" || layerInfo.vectorLayerType === "CUSTOM_SKETCH");
 		}
 	}
 

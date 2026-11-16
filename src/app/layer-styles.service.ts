@@ -7,7 +7,8 @@ import { ProjectConfiguration } from "./config/project-config";
 import { AppconfigService } from "./config/appconfig.service";
 import { CustomSketchLayerService } from "./config/custom-sketch-layer-service";
 import { AppConstants } from "./app-constants";
-import { SketchType } from "./map/map.component";
+import { VectorLayerType } from "./map/map.component";
+import { KoboToolboxLayersService } from "./map/kobotoolbox-utils/kobotoolbox-layers.service";
 import { single } from "rxjs/operators";
 
 export interface LegendSymbol {
@@ -19,7 +20,7 @@ export interface LegendSymbol {
 export interface WFSLayerStyle {
 	styleFunc: (feature: Feature, resolution: number) => Style | Style[];
 	symbols: LegendSymbol[];
-	isSketch: SketchType;
+	vectorLayerType: VectorLayerType;
 	isSingleSymbol: boolean;
 }
 
@@ -45,6 +46,7 @@ export class LayerStyleService {
 		private openlayersService: OpenLayersService,
 		private customSketchLayerService: CustomSketchLayerService,
 		private config: AppconfigService,
+		private koboToolboxLayerService: KoboToolboxLayersService,
 	) {
 		this.projectSelectedSubscription =
 			this.openlayersService.qgsProjectUrl$.subscribe(
@@ -158,32 +160,64 @@ export class LayerStyleService {
 			this.layerStyles[layerName] = {
 				styleFunc: olStyleFunction,
 				symbols: parsedSymbols,
-				isSketch: "NONE",
+				vectorLayerType: "WFS",
 				isSingleSymbol: isSingleSymbol
 			};
 		}
 	}
 
-	public getLayerStyleConfig(layerName: string, isSketch: boolean): WFSLayerStyle {
+
+	public getLayerStyleConfig(layerName: string): WFSLayerStyle | undefined {
 		if (this.layerStyles[layerName]) {
 			return this.layerStyles[layerName];
 		}else {
-			if(isSketch){
-				return this.setSketchStyle(layerName)
-			}else{
-				return this.setDefaultStyle(layerName, "NONE");
-			}
+			return undefined;
 		}
-		return this.setSketchStyle(layerName);
 	}
 
-	public setSketchStyle(layerName: string): WFSLayerStyle {
+	public getOrCreateLayerStyleConfig(layerName: string, layerType: VectorLayerType): WFSLayerStyle {
+		const layerStyle = this.getLayerStyleConfig(layerName);
+		if (layerStyle) {
+			return layerStyle;
+		}else {
+			const isSketch = layerType === "SKETCH" || layerType === "CUSTOM_SKETCH" || layerType === "KOBO_TOOLBOX";
+			if(isSketch){
+				return this.setMarkerIconStyle(layerName, layerType)
+			}
+			else{
+				return this.setDefaultStyle(layerName, "WFS");
+			}
+		}
+	}
+
+	/**
+	 * Builds the style for a SKETCH, CUSTOM_SKETCH, or KOBO_TOOLBOX layer and adds it to style cache
+	 */
+	private setMarkerIconStyle(layerName: string, vectorLayerType: VectorLayerType = "SKETCH"): WFSLayerStyle {
+		const isKoboToolboxLayer = vectorLayerType === "KOBO_TOOLBOX";
 		const isCustomSketchLayer =
-			this.customSketchLayerService.isCustomSketchLayer(layerName);
+			!isKoboToolboxLayer && this.customSketchLayerService.isCustomSketchLayer(layerName);
 		let symbols: LegendSymbol[] = [];
 		let styleDict: Record<string, Style> = {};
 
-		if (isCustomSketchLayer) {
+		if (isKoboToolboxLayer) {
+			const koboConfig = this.koboToolboxLayerService.getConfigByLayerName(layerName);
+			const iconSrc = koboConfig?.icon;
+			if (!iconSrc) {
+				return this.setDefaultStyle(layerName, "KOBO_TOOLBOX");
+			}
+			const symbol = { title: layerName, iconSrc, id: layerName };
+			styleDict["default"] = this.defineCustomSketchStyle(
+				iconSrc,
+				koboConfig.iconHeightPxl || this.defaultIconHeightPxl,
+				() => {
+					const fallback = this.getFallbackStyle(); //fallback icon style if error loading the configured icon
+					styleDict["default"] = fallback.style;
+					symbol.iconSrc = fallback.iconSrc;
+				}
+			);
+			symbols.push(symbol);
+		} else if (isCustomSketchLayer) {
 			const layerDef =
 				this.customSketchLayerService.getConfigByLayerName(layerName)!;
 			layerDef.categories.forEach((category) => {
@@ -198,8 +232,8 @@ export class LayerStyleService {
 					() => {
 						const fallback = this.getFallbackStyle(); //fallback icon style if error loading the custom icon
 						styleDict[this.normalizeString(category.id)] = fallback.style;
-						symbol.iconSrc = fallback.iconSrc; 
-					}			
+						symbol.iconSrc = fallback.iconSrc;
+					}
 				);
 				symbols.push(symbol);
 			});
@@ -226,6 +260,12 @@ export class LayerStyleService {
 			? AppConstants.customSketchStyleAttr
 			: AppConstants.sketchStyleAttr;
 		const sketchStyleFunc = (feature: Feature) => {
+			// a KoboToolbox layer always uses its single configured icon -
+			// no per-feature attribute to switch on, unlike sketch layers
+			if (isKoboToolboxLayer) {
+				return styleDict["default"];
+			}
+
 			const value = this.normalizeString(feature.get(attr));
 			let style = styleDict[value];
 
@@ -250,20 +290,20 @@ export class LayerStyleService {
 		this.layerStyles[layerName] = {
 			styleFunc: sketchStyleFunc,
 			symbols: symbols,
-			isSketch: isCustomSketchLayer ? "CUSTOM_SKETCH" : "SKETCH",
-			isSingleSymbol: false
+			vectorLayerType: isKoboToolboxLayer ? "KOBO_TOOLBOX" : isCustomSketchLayer ? "CUSTOM_SKETCH" : "SKETCH",
+			isSingleSymbol: isKoboToolboxLayer
 		};
 
 		return this.layerStyles[layerName];
 	}
 
 
-	private setDefaultStyle(layerName: string, sketch: SketchType){
+	private setDefaultStyle(layerName: string, vectorLayerType: VectorLayerType){
 		const defaultStyleColor = "#6082B6"
 		const defaultStyle = this.defineSketchStyle(defaultStyleColor)
 		const styleConfig = {
 			styleFunc: () => {return defaultStyle},
-			isSketch: sketch,
+			vectorLayerType: vectorLayerType,
 			symbols: [{id: layerName, title: layerName, iconSrc: this.getColoredSvgBase64(defaultStyleColor)}],
 			isSingleSymbol: true
 		};

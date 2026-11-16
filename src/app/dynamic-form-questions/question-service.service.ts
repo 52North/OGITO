@@ -177,7 +177,7 @@ export class QuestionService {
      */
     layerGroups.forEach( group =>{
       group.layers.forEach(layer =>{
-        if (layer.wfs) {
+        if (layer.vectorLayerType === "WFS") {
          const questions = this.setLayerQuestions(layer.layerName, layer.fields);
          this.questions[layer.layerName] = questions; // no estoy segura de esto, es un dic...
         }
@@ -186,7 +186,11 @@ export class QuestionService {
     }
 
   getQuestions(layerName: any){
-    return (this.questions[layerName].sort((a, b) => a.order - b.order));
+    const questions = this.questions[layerName];
+    if (!questions) {
+      return questions; // no questions set for this layer (e.g. not a wfs layer) - let callers handle the falsy value
+    }
+    return questions.sort((a, b) => a.order - b.order);
   }
   toFormGroup(questions: QuestionBase<string>[] ) {
     const group: any = {};

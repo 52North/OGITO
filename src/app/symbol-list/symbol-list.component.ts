@@ -32,7 +32,7 @@ export class SymbolListComponent implements OnInit, OnDestroy {
 
 	constructor(
 		private openLayersService: OpenLayersService,
-		private mapQgsStyleService: LayerStyleService,
+		private layerStyleService: LayerStyleService,
 	) {
 		this.subscriptionToShowSymbols = this.openLayersService.showSymbolPanel$.subscribe(
 			(data) => {
@@ -47,7 +47,7 @@ export class SymbolListComponent implements OnInit, OnDestroy {
 
 		this.subscriptionToLayerEditing = this.openLayersService.layerEditing$.subscribe(
 			(data) => {
-				this.wfsLayerStyle = this.mapQgsStyleService.getLayerStyleConfig(data.layerName, false); //ToDO
+				this.wfsLayerStyle = this.layerStyleService.getLayerStyleConfig(data.layerName);
 				
 				// Pull the clean array of symbols directly from the new service
 				this.symbols = this.wfsLayerStyle?.symbols || [];
@@ -99,9 +99,9 @@ export class SymbolListComponent implements OnInit, OnDestroy {
 		// Set the property mapping for the OpenLayers styling evaluation
 		// We use the same constant used by style function to ensure they match
 		let propertyAttr = AppConstants.wfsLAyerStyleAttr;
-		if(this.wfsLayerStyle.isSketch === "CUSTOM_SKETCH"){
+		if(this.wfsLayerStyle.vectorLayerType === "CUSTOM_SKETCH"){
 			propertyAttr = AppConstants.customSketchStyleAttr;
-		}else if(this.wfsLayerStyle.isSketch === "SKETCH"){
+		}else if(this.wfsLayerStyle.vectorLayerType === "SKETCH"){
 			propertyAttr = AppConstants.sketchStyleAttr;
 		}
 

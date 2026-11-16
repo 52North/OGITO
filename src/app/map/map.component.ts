@@ -1,5 +1,5 @@
 import { ProjectConfiguration } from "./../config/project-config";
-import { createKoboToolboxLayers } from "./kobotoolbox-utils/kobotoolbox-layers";
+import { KoboToolboxLayersService } from "./kobotoolbox-utils/kobotoolbox-layers.service";
 import {
 	buildKoboToolboxFeatureInfoTable,
 	loadKoboToolboxAttachmentPreview,
@@ -199,7 +199,6 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 	private geolocationVectorSource: VectorSource;
 	private addedFeature: Feature;
 	private loadedProject?: ProjectConfiguration;
-	private koboToolboxLayers: VectorLayer<VectorSource>[] = [];
 	// bumped on every displayFeatureInfoKoboToolbox() call so a slow attachment
 	// response for a feature the user already navigated away from can tell it's
 	// stale and not overwrite whatever feature is showing now - see
@@ -250,6 +249,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 		private config: AppconfigService,
 		private sketchLayerInitializer: InitializeSketchlayersService,
 		private customSketchLayerService: CustomSketchLayerService,
+		private koboToolboxLayerService: KoboToolboxLayersService,
 		private lableLookUpTable: LabelLutService,
 		private http: HttpClient,
 	) {
@@ -512,7 +512,6 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 		const defaultVisible = !source
 			? true
 			: this.loadedProject.defaultVisibleLayers?.includes(sketchLayerName);
-		this.layerStyleService.setSketchStyle(sketchLayerName);
 		const self = this;
 		const sketchSource = source
 			? source
@@ -528,7 +527,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 			// getting default style
 			style: (feature, resolution) => {
 				const styleConfig =
-					this.layerStyleService.getLayerStyleConfig(sketchLayerName, true);
+					this.layerStyleService.getOrCreateLayerStyleConfig(sketchLayerName, "SKETCH");
 				return styleConfig.styleFunc(feature as Feature, resolution);
 			},
 		});
@@ -572,9 +571,9 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 		source: VectorSource,
 		groupName: string,
 	) {
-		const styleConfig = this.layerStyleService.getLayerStyleConfig(
+		const styleConfig = this.layerStyleService.getOrCreateLayerStyleConfig(
 			customSketchLayerName,
-			true
+			"CUSTOM_SKETCH"
 		);
 		const newVector = new VectorLayer({
 			source: source,
@@ -617,11 +616,11 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 		let geometryType: GeometryType | undefined = undefined;
 		let removable = false;
 		let legendSymbols: LegendSymbol[] | undefined = undefined;
-		if (sketch !== "NONE") {
+		if (sketch === "SKETCH" || sketch === "CUSTOM_SKETCH") {
 			geometryType = sketch === "CUSTOM_SKETCH" ? "Point" : "Multi";
 			if (sketch === "CUSTOM_SKETCH") {
 				legendSymbols =
-					this.layerStyleService.getLayerStyleConfig(layerName, true)?.symbols;
+					this.layerStyleService.getOrCreateLayerStyleConfig(layerName, sketch)?.symbols;
 			}
 		}
 		const layerItems: LayerInfo[] = [];
@@ -636,9 +635,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 			onIdentify: false,
 			onRanking: false,
 			visible: layer.olLayer.getVisible(),
-			wfs: false, // #TODO add forremove..
 			removable,
-			sketch: layer.sketch,
+			vectorLayerType: layer.sketch,
 			legendLayer: legendSymbols,
 			isQueryable: true
 		}; // sketch will be used to activate editing mode.. #TODO
@@ -804,7 +802,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 		this.qGsServerUrl = this.config.getAppConfig().qgisServerUrl;
 		this.mapZoom = projectConfig.initZoom;
 		this.srsID = this.config.getAppConfig().srs;
-		this.koboToolboxLayers = [];
+		this.koboToolboxLayerService.clear();
 
 		if(projectConfig.geocoder !== undefined && projectConfig.geocoder.baseUrl){
 			this.isGeocoderConfigured = true; //show address search in toolbar
@@ -847,9 +845,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 			layerTitle: defaultBackgroundLayer.get("name"),
 			fields: [],
 			geometryType: undefined,	
-			wfs: false,
 			removable: false,
-			sketch: "NONE",
+			vectorLayerType: "NONE",
 			legendLayer: undefined,
 			layerForNewFeatures: false,
 			layerForRanking: false,
@@ -896,17 +893,18 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 		 * See kobotoolbox-utils/kobotoolbox-layers.ts for the actual layer
 		 * construction.
 		 */
-		const createdLayers = createKoboToolboxLayers({
-			loadedProject: this.loadedProject,
-			qGsServerUrl: this.qGsServerUrl,
-			qgsProjectFile: this.qgsProjectFile,
-			srsID: this.srsID,
-			http: this.http,
-			groupsLayers: this.groupsLayers,
-			addOWSLayerToLayerPanel: (layerName, layer) =>
-				this.addOWSLayerToLayerPanel(layerName, layer),
-		});
-		this.koboToolboxLayers.push(...createdLayers);
+		this.koboToolboxLayerService.loadLayers(
+			{
+				loadedProject: this.loadedProject,
+				qGsServerUrl: this.qGsServerUrl,
+				qgsProjectFile: this.qgsProjectFile,
+				srsID: this.srsID,
+				groupsLayers: this.groupsLayers,
+				addOWSLayerToLayerPanel: (layerName, layer) =>
+					this.addOWSLayerToLayerPanel(layerName, layer),
+			},
+			this.layerStyleService,
+		);
 
 		this.groupsLayersSubject.next(this.groupsLayers);
 	}
@@ -1041,7 +1039,6 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 						layerName,
 						layerTitle,
 						legendUrl: urlResource,
-						wfs: layerIsWfs,
 						geometryType: geometryType,
 						onEdit: false,
 						onIdentify: false,
@@ -1053,7 +1050,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 						layerForRanking,
 						fields,
 						removable: false,
-						sketch: "NONE",
+						vectorLayerType: layerIsWfs ? "WFS" : "NONE",
 						isQueryable: !this.loadedProject.backgroundLayers?.map((bl) => bl.title.toLowerCase()).includes(layerName?.toLowerCase()) //background layers are not queryable
 					});
 				}
@@ -1087,7 +1084,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 				const layerInfo = this.findLayerinGroups(l);
 				if(layerInfo){
 					layerInfo.legendUrl = undefined;
-					layerInfo.legendLayer = this.layerStyleService.getLayerStyleConfig(l, false).symbols
+					layerInfo.legendLayer = this.layerStyleService.getOrCreateLayerStyleConfig(l, "WFS").symbols
 				}
 			})
 
@@ -1127,7 +1124,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 			}
 			this.container.nativeElement.style.display = "block";
 
-			if (this.koboToolboxLayers.includes(this.curInfoLayer as VectorLayer<VectorSource>)) {
+			if (this.koboToolboxLayerService.isKoboToolboxLayer(this.curInfoLayer)) {
 				this.displayFeatureInfoKoboToolbox(evt);
 				return;
 			}
@@ -2426,7 +2423,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 						style: (feature, resolution) => {
 							//wrap style func from style service because service loads the styles asynchronously and the style func needs to be updated when the styles are loaded
 							const styleConfig =
-								this.layerStyleService.getLayerStyleConfig(layerName, false);
+								this.layerStyleService.getOrCreateLayerStyleConfig(layerName, "WFS");
 							return styleConfig.styleFunc(feature as Feature, resolution);
 						},
 					});
@@ -2448,7 +2445,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 						operations: operationsLst,
 						geometryType: geom, // Dependent of QGIS project as the styles.
 						olLayer: wfsVectorLayer,
-						sketch: "NONE",
+						sketch: "WFS",
 					};
 					tnodes[layerName] = wfsLayer;
 					this.addOWSLayerToLayerPanel(layerName, wfsVectorLayer);
@@ -3734,7 +3731,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 			return;
 		}
 
-		const { html, attachmentCells } = buildKoboToolboxFeatureInfoTable(
+		const { html, attachmentCells: attachmentTableCells } = buildKoboToolboxFeatureInfoTable(
 			featureValues,
 			requestId,
 			this.qGsServerUrl,
@@ -3742,7 +3739,8 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
 		this.content.nativeElement.innerHTML = html;
 		this.adjustMapView();
 
-		attachmentCells.forEach(({ url, cellId }) =>
+		//load content for the attachment into the placeholder table cells
+		attachmentTableCells.forEach(({ url, cellId }) =>
 			loadKoboToolboxAttachmentPreview(
 				url,
 				cellId,
@@ -4333,7 +4331,7 @@ export interface EditLayer {
 	layerTitle: string;
 	operations: string[];
 	olLayer: VectorLayer<VectorSource>;
-	sketch: SketchType;
+	sketch: VectorLayerType;
 	lowerCorner?: number[];
 	upperCorner?: number[];
 }
@@ -4343,7 +4341,6 @@ export interface LayerInfo {
 	layerTitle: string;
 	legendUrl?: string;
 	legendLayer?: LegendSymbol[];
-	wfs: boolean;
 	geometryType?: GeometryType;
 	onEdit: boolean;
 	onIdentify: boolean;
@@ -4353,7 +4350,7 @@ export interface LayerInfo {
 	layerForRanking: boolean;
 	fields: any[];
 	removable: boolean;
-	sketch: SketchType;
+	vectorLayerType: VectorLayerType;
 	isQueryable?: boolean;
 }
 
@@ -4364,7 +4361,7 @@ export interface GroupLayerInfo {
 	layers: LayerInfo[];
 }
 
-export type SketchType = "NONE" | "SKETCH" | "CUSTOM_SKETCH";
+export type VectorLayerType = "WFS" | "SKETCH" | "CUSTOM_SKETCH" | "KOBO_TOOLBOX" | "NONE";
 
 export type GeometryType =
 	| "Multi"

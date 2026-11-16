@@ -8,16 +8,8 @@ export function escapeHtml(value: string): string {
 }
 
 /**
- * Validates that `value` actually matches the attachment-proxy query string
- * this app's own KOBOTOOLBOX service plugin emits (see
- * build_attachment_proxy_url() in
- * tools/qgis_server_plugins/kobotoolbox_plugin/submissions_to_geojson.py),
- * e.g. "?service=KOBOTOOLBOX&map=<path>&asset=<uid>&submission=<id>&attachment=<id>",
- * and if so resolves it into a full URL against the QGIS Server endpoint.
- * Returns null for anything else (including other kinds of URLs/strings),
- * which keeps it rendered as a plain value instead. `map` is required here
- * too since kobotoolbox_service.py now rejects any request without it.
- */
+ * Validates that `value` actually matches the attachment-proxy query string style that the KOBOTOOLBOX service plugin emits
+*/
 export function resolveKoboToolboxAttachmentUrl(
 	value: any,
 	qGsServerUrl: string,
@@ -50,12 +42,11 @@ export interface KoboToolboxFeatureInfoTable {
 }
 
 /**
- * Builds the feature-info popup's table HTML for one KoboToolbox feature's
+ * Builds the feature-info popup's table HTML for one KoboToolbox feature/submission
  * properties. Any property value matching the attachment-proxy URL shape
  * (see resolveKoboToolboxAttachmentUrl()) gets a placeholder cell instead of
- * its raw value, listed in `attachmentCells` for the caller to then load via
- * loadKoboToolboxAttachmentPreview() - this function itself does not fetch
- * anything, it only decides which values should be fetched.
+ * its raw value.
+ * This function itself does not fetch anything, it only decides which values should be fetched.
  */
 export function buildKoboToolboxFeatureInfoTable(
 	featureValues: Record<string, any>,
@@ -93,16 +84,7 @@ export function buildKoboToolboxFeatureInfoTable(
 }
 
 /**
- * Fetches one KoboToolbox attachment through the authenticated HttpClient
- * and renders it inline as an image/audio/video element into the DOM cell
- * identified by `cellId`, once its real Content-Type is known.
- *
- * `getCurrentRequestId()` is checked before touching the DOM - if it no
- * longer matches `requestId`, the user has already navigated to a different
- * feature and this (now stale) response is silently discarded. Without this,
- * a slow attachment response can land in a DOM cell that now belongs to a
- * different feature (two different features' cells can otherwise share the
- * same generated id).
+ * Fetches one KoboToolbox attachment and renders it inline as an image/audio/video element into the DOM (attachment placeholder cell)
  */
 export function loadKoboToolboxAttachmentPreview(
 	url: string,

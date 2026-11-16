@@ -2,40 +2,17 @@ import { HttpClient } from "@angular/common/http";
 import VectorSource from "ol/source/Vector";
 import VectorLayer from "ol/layer/Vector";
 import Layer from "ol/layer/Layer.js";
-import { Fill, Stroke, Style } from "ol/style";
-import CircleStyle from "ol/style/Circle";
 import { GeoJSON } from "ol/format";
 import { createAuthenticatedWfsLoader } from "../../auth/ol-http-loaders";
 import { ProjectConfiguration, KoboToolboxLayer } from "../../config/project-config";
 import type { GroupLayerInfo } from "../map.component";
-
-const KOBO_MARKER_COLOR = "#2E8B57";
-
-function buildKoboLegendIconSrc(): string {
-	return (
-		"data:image/svg+xml;base64," +
-		btoa(
-			`<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"><circle cx="12" cy="12" r="8" fill="${KOBO_MARKER_COLOR}" stroke="#000000" stroke-width="1.5"/></svg>`,
-		)
-	);
-}
-
-function buildKoboPointStyle(): Style {
-	return new Style({
-		image: new CircleStyle({
-			radius: 8,
-			fill: new Fill({ color: KOBO_MARKER_COLOR }),
-			stroke: new Stroke({ color: "#000000", width: 1.5 }),
-		}),
-	});
-}
+import { LayerStyleService } from "src/app/layer-styles.service";
 
 export interface CreateKoboToolboxLayersParams {
 	loadedProject: ProjectConfiguration;
 	qGsServerUrl: string;
 	qgsProjectFile: string;
 	srsID: string;
-	http: HttpClient;
 	groupsLayers: GroupLayerInfo[];
 	addOWSLayerToLayerPanel: (layerName: string, olWebServiceLayer: Layer) => void;
 }
@@ -52,14 +29,13 @@ export interface CreateKoboToolboxLayersParams {
  * feature-info clicks to displayFeatureInfoKoboToolbox()).
  */
 export function createKoboToolboxLayers(
-	params: CreateKoboToolboxLayersParams,
+	params: CreateKoboToolboxLayersParams, http: HttpClient, styleService: LayerStyleService
 ): VectorLayer<VectorSource>[] {
 	const {
 		loadedProject,
 		qGsServerUrl,
 		qgsProjectFile,
 		srsID,
-		http,
 		groupsLayers,
 		addOWSLayerToLayerPanel,
 	} = params;
@@ -69,18 +45,13 @@ export function createKoboToolboxLayers(
 		return [];
 	}
 
-	// a non-empty legendLayer/legendUrl is required - the layer panel
-	// disables a layer's whole expansion header (including its visibility
-	// checkbox) when both are empty, see layer-panel.component.html.
-	const koboLegendIconSrc = buildKoboLegendIconSrc();
-	const koboPointStyle = buildKoboPointStyle();
-
 	const createdLayers: VectorLayer<VectorSource>[] = [];
 
 	koboLayers.forEach((koboLayerConfig) => {
 		const layerName = koboLayerConfig.name;
 		const groupName = koboLayerConfig.group;
 		const visible = loadedProject.defaultVisibleLayers?.includes(layerName) || false;
+		const styleConfig = styleService.getOrCreateLayerStyleConfig(layerName, "KOBO_TOOLBOX");
 
 		// register the layer in the data model first - addOWSLayerToLayerPanel()
 		// only attaches the OL layer to a group that already has a matching
@@ -100,7 +71,6 @@ export function createKoboToolboxLayers(
 		groupLayerInfo.layers.push({
 			layerName,
 			layerTitle: layerName,
-			wfs: false,
 			geometryType: undefined,
 			onEdit: false,
 			onIdentify: false,
@@ -110,17 +80,12 @@ export function createKoboToolboxLayers(
 			layerForRanking: false,
 			fields: [],
 			removable: false,
-			sketch: "NONE",
+			vectorLayerType: "KOBO_TOOLBOX",
 			isQueryable: true,
-			legendLayer: [{ id: layerName, title: layerName, iconSrc: koboLegendIconSrc }],
+			legendLayer: styleConfig.symbols,
 		});
 
-		// &SERVICE=KOBOTOOLBOX&map=<qgs project path>&asset=<asset> on the QGIS
-		// Server endpoint - qgisServerUrl already ends in "?". &map is required
-		// by kobotoolbox_service.py, which validates it against projects.json
-		// the same way a "normal" QGIS Server request would use it. &full_labels=true
-		// asks for full question labels as property keys instead of short
-		// technical field names - the server defaults to false otherwise.
+		//requires &map parameter for authorization
 		const koboUrl =
 			qGsServerUrl +
 			"service=KOBOTOOLBOX&map=" +
@@ -135,15 +100,13 @@ export function createKoboToolboxLayers(
 				featureProjection: srsID,
 			}),
 		});
-		// createAuthenticatedWfsLoader() is really just a generic "fetch the
-		// whole URL as text through HttpClient and parse it with the source's
-		// own format" loader - reused here for GeoJSON too.
 		vectorSource.setLoader(createAuthenticatedWfsLoader(http, vectorSource, koboUrl));
 
 		const koboVectorLayer = new VectorLayer<VectorSource>({
 			source: vectorSource,
 			visible,
-			style: koboPointStyle,
+			style: styleConfig.styleFunc
+			    
 		});
 		koboVectorLayer.set("name", layerName);
 
